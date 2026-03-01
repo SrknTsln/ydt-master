@@ -5710,3 +5710,352 @@ body:has(#kids-page:not(.hidden)) .kw-world-bg { opacity: 1; }
     .sr-word { font-size:2rem; padding:18px 16px; }
     .cx-card { padding:16px 14px 14px; }
 }
+
+/* ════════════════════════════════════════════════════════
+   DASHBOARD (index-page) — Modern Mobile-First Redesign
+   Prefix: dash-
+   ════════════════════════════════════════════════════════ */
+
+/* ── Hero ── */
+.dash-hero {
+    background: linear-gradient(135deg, #e63946 0%, #c1121f 60%, #9d0208 100%);
+    border-radius: 0 0 24px 24px;
+    padding: 20px 18px 22px;
+    margin-bottom: 0;
+    position: relative;
+    overflow: hidden;
+}
+.dash-hero::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 180px; height: 180px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.07);
+}
+.dash-hero::after {
+    content: '';
+    position: absolute;
+    bottom: -50px; left: -30px;
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.05);
+}
+.dash-hero-inner { position: relative; z-index: 1; }
+.dash-badge {
+    display: inline-block;
+    background: rgba(255,255,255,.2);
+    color: #fff;
+    font-size: .62rem;
+    font-weight: 900;
+    letter-spacing: 1.5px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-bottom: 8px;
+}
+.dash-title {
+    font-size: clamp(1.5rem, 6vw, 2.2rem);
+    font-weight: 900;
+    color: #fff;
+    margin: 0 0 4px;
+    line-height: 1.1;
+}
+.dash-title em { color: #fde68a; font-style: normal; }
+.dash-sub {
+    font-size: .8rem;
+    color: rgba(255,255,255,.8);
+    margin: 0 0 14px;
+}
+.dash-goal-card {
+    background: rgba(255,255,255,.15);
+    border-radius: 14px;
+    padding: 12px 14px;
+    backdrop-filter: blur(4px);
+}
+.dash-goal-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 7px;
+}
+.dash-goal-label { font-size: .78rem; font-weight: 700; color: rgba(255,255,255,.9); }
+.dash-goal-nums  { font-size: .78rem; font-weight: 900; color: #fde68a; }
+.dash-goal-track {
+    height: 7px;
+    background: rgba(255,255,255,.25);
+    border-radius: 99px;
+    overflow: hidden;
+}
+.dash-goal-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #fde68a, #f59e0b);
+    border-radius: 99px;
+    width: 0%;
+    transition: width .6s cubic-bezier(.4,0,.2,1);
+}
+
+/* ── 4 KPI Kartları ── */
+.dash-kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    padding: 12px 14px;
+    background: var(--white);
+    border-bottom: 1.5px solid var(--border);
+}
+.dash-kpi {
+    border-radius: 14px;
+    padding: 12px 8px;
+    text-align: center;
+    border: 1.5px solid transparent;
+}
+.dash-kpi-val {
+    font-size: 1.35rem;
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 4px;
+}
+.dash-kpi-lbl {
+    font-size: .58rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    opacity: .75;
+}
+.dash-kpi-blue   { background: #dbeafe20; border-color: #93c5fd40; } .dash-kpi-blue   .dash-kpi-val { color: #2563eb; }
+.dash-kpi-green  { background: #dcfce720; border-color: #86efac40; } .dash-kpi-green  .dash-kpi-val { color: #16a34a; }
+.dash-kpi-orange { background: #ffedd520; border-color: #fdba7440; } .dash-kpi-orange .dash-kpi-val { color: #f97316; }
+.dash-kpi-red    { background: #fee2e220; border-color: #fca5a540; } .dash-kpi-red    .dash-kpi-val { color: #e63946; }
+
+/* ── Section Container ── */
+.dash-section {
+    padding: 16px 14px 4px;
+}
+.dash-section-hd {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.dash-section-title {
+    font-size: .78rem;
+    font-weight: 900;
+    color: var(--ink);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+}
+.dash-list-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.dash-list-lbl { font-size: .7rem; font-weight: 700; color: var(--ink3); }
+.dash-list-sel {
+    border: 1.5px solid var(--border);
+    border-radius: 9px;
+    padding: 5px 10px;
+    font-size: .72rem;
+    font-family: inherit;
+    font-weight: 700;
+    color: var(--ink);
+    background: var(--bg);
+    cursor: pointer;
+    outline: none;
+    min-width: 110px;
+    max-width: 180px;
+}
+.dash-list-sel:focus { border-color: var(--red); }
+
+/* ── Quick Actions Grid ── */
+.dash-quick-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin-bottom: 8px;
+}
+.dash-qa {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 14px 6px 12px;
+    border-radius: 16px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: center;
+    min-height: 84px;
+    transition: transform .15s, box-shadow .15s;
+    position: relative;
+    overflow: hidden;
+}
+.dash-qa:active { transform: scale(.94); }
+.dash-qa:hover  { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.1); }
+.dash-qa-icon  { font-size: 1.6rem; line-height: 1; }
+.dash-qa-title { font-size: .62rem; font-weight: 900; color: var(--ink); line-height: 1.2; }
+.dash-qa-desc  { font-size: .52rem; font-weight: 700; color: var(--ink3); }
+
+/* Renk varyantları */
+.dash-qa-1  { background: linear-gradient(135deg,#ede9fe,#dbeafe); border-color: #c4b5fd50; }
+.dash-qa-2  { background: linear-gradient(135deg,#fee2e2,#fef3c7); border-color: #fca5a550; }
+.dash-qa-3  { background: linear-gradient(135deg,#fee2e2,#fce7f3); border-color: #f8717150; }
+.dash-qa-4  { background: linear-gradient(135deg,#e0f2fe,#ccfbf1); border-color: #7dd3fc50; }
+.dash-qa-5  { background: linear-gradient(135deg,#fef3c7,#d1fae5); border-color: #fde68a50; }
+.dash-qa-6  { background: linear-gradient(135deg,#d1fae5,#e0f2fe); border-color: #6ee7b750; }
+.dash-qa-7  { background: linear-gradient(135deg,#f3e8ff,#ede9fe); border-color: #d8b4fe50; }
+.dash-qa-8  { background: linear-gradient(135deg,#fef3c7,#fff7ed); border-color: #fde68a50; }
+.dash-qa-9  { background: linear-gradient(135deg,#e0e7ff,#ede9fe); border-color: #a5b4fc50; }
+.dash-qa-10 { background: linear-gradient(135deg,#ecfdf5,#d1fae5); border-color: #6ee7b750; }
+
+/* ── Soru İstatistik Grid ── */
+.dash-sorustat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 8px;
+}
+.dash-ss-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 12px;
+    cursor: pointer;
+    transition: transform .13s, box-shadow .13s;
+}
+.dash-ss-item:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,0,0,.07); }
+.dash-ss-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; flex-shrink: 0;
+}
+.dash-ss-body { flex: 1; min-width: 0; }
+.dash-ss-label { font-size: .65rem; font-weight: 800; color: var(--ink3); margin-bottom: 2px; text-transform: uppercase; letter-spacing: .4px; }
+.dash-ss-nums  { font-size: .78rem; font-weight: 700; color: var(--ink); display: flex; align-items: center; gap: 3px; margin-bottom: 4px; }
+.dash-ss-slash { color: var(--ink3); }
+.dash-ss-pct   { font-size: .65rem; font-weight: 800; color: var(--ink3); margin-left: 4px; }
+.dash-ss-bar   { height: 4px; background: var(--border); border-radius: 3px; overflow: hidden; }
+
+/* ════════════════════════════
+   MOBİL (≤699px)
+   ════════════════════════════ */
+@media (max-width: 699px) {
+    .dash-hero { padding: 16px 14px 18px; border-radius: 0 0 20px 20px; }
+    .dash-title { font-size: 1.5rem; }
+
+    .dash-kpi-row { gap: 6px; padding: 10px 12px; }
+    .dash-kpi { padding: 10px 5px; border-radius: 12px; }
+    .dash-kpi-val { font-size: 1.15rem; }
+    .dash-kpi-lbl { font-size: .52rem; }
+
+    .dash-quick-grid {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 6px;
+    }
+    .dash-qa { padding: 10px 4px 8px; min-height: 72px; border-radius: 14px; }
+    .dash-qa-icon  { font-size: 1.35rem; }
+    .dash-qa-title { font-size: .56rem; }
+    .dash-qa-desc  { display: none; }
+
+    .dash-sorustat-grid { grid-template-columns: 1fr 1fr; gap: 6px; }
+    .dash-ss-item { padding: 10px 10px; gap: 8px; }
+    .dash-ss-icon { width: 30px; height: 30px; font-size: .95rem; }
+    .dash-ss-label { font-size: .58rem; }
+    .dash-ss-nums  { font-size: .72rem; }
+
+    .dash-section { padding: 12px 12px 2px; }
+}
+
+/* ════════════════════════════
+   MASAÜSTÜ (≥700px)
+   ════════════════════════════ */
+@media (min-width: 700px) {
+    .dash-hero { padding: 28px 32px 30px; border-radius: 0 0 28px 28px; }
+    .dash-hero-inner { max-width: 700px; }
+    .dash-title { font-size: 2rem; }
+    .dash-goal-card { max-width: 420px; }
+
+    .dash-kpi-row { padding: 16px 32px; gap: 12px; }
+    .dash-kpi { padding: 14px 10px; }
+    .dash-kpi-val { font-size: 1.6rem; }
+    .dash-kpi-lbl { font-size: .62rem; }
+
+    .dash-section { padding: 20px 32px 8px; }
+    .dash-quick-grid { grid-template-columns: repeat(5, 1fr); gap: 10px; }
+    .dash-qa { min-height: 96px; padding: 16px 8px 14px; border-radius: 18px; }
+    .dash-qa-icon  { font-size: 1.8rem; }
+    .dash-qa-title { font-size: .68rem; }
+    .dash-qa-desc  { font-size: .58rem; }
+
+    .dash-sorustat-grid { grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .dash-ss-item { padding: 14px 14px; }
+    .dash-ss-icon { width: 40px; height: 40px; font-size: 1.2rem; border-radius: 12px; }
+    .dash-ss-label { font-size: .68rem; }
+    .dash-ss-nums  { font-size: .82rem; }
+}
+
+
+/* ════════════════════════════════════════════════════════
+   MOBİL MODÜL DÜZELTME — cx-page / sr-page / tw-page
+   Mobil'de görünürlük ve overflow sorunlarını önler
+   ════════════════════════════════════════════════════════ */
+
+/* Tam ekran modüller: hidden olmadığında her zaman göster */
+.cx-page:not(.hidden),
+.sr-page:not(.hidden),
+.tw-page:not(.hidden) {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 100dvh !important;
+    width: 100% !important;
+    position: relative !important;
+    z-index: 1 !important;
+    overflow-x: hidden !important;
+}
+
+/* Gizli halde kesinlikle gizle */
+.cx-page.hidden,
+.sr-page.hidden,
+.tw-page.hidden {
+    display: none !important;
+}
+
+/* Mobil'de desktop-main overflow kısıtlamasını kaldır */
+@media (max-width: 699px) {
+    .desktop-main {
+        overflow-x: hidden;
+        min-height: 100dvh;
+    }
+    /* İçerik alanlarının minimum yüksekliği */
+    .cx-main,
+    .sr-main,
+    .tw-main {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+    }
+    /* Input alanları mobil'de tam genişlik */
+    .tw-input,
+    .cx-input-row input {
+        font-size: 16px !important; /* iOS zoom engellemek için */
+        min-height: 48px;
+    }
+    /* Dokunmatik hedefler en az 48px */
+    .tw-submit-btn,
+    .tw-btn-check,
+    .tw-btn-next,
+    .tw-btn-skip,
+    .sr-btn,
+    .cx-check-btn,
+    .cx-next-btn {
+        min-height: 48px;
+        touch-action: manipulation;
+    }
+}
+
