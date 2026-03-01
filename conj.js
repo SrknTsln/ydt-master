@@ -651,184 +651,382 @@ function cjGerund() {
 }
 
 /* ════════ EXERCISES ════════ */
-var CJ_BLANKS = [
-    { q:'She couldn\'t attend the meeting ___ her illness. (prepositional phrase — sebep)',
-      ans:['because of','due to','owing to','on account of'], hint:'"due to / because of / owing to / on account of" + isim' },
-    { q:'He has been living in Spain for 20 years; ___, he speaks fluent Spanish. (sonuç geçiş kelimesi)',
-      ans:['therefore','thus','hence','consequently','as a result'], hint:'"therefore / thus / hence / consequently / as a result"' },
-    { q:'I set out early ___ missing the train. (amaç — fear of + Ving)',
-      ans:['for fear of'], hint:'"for fear of" + V+ing = …korkusuyla' },
-    { q:'___ the economic crisis, many companies had to lay off workers. (zıtlık — prepozisyon)',
-      ans:['despite','in spite of','notwithstanding'], hint:'"despite / in spite of" + isim' },
-    { q:'___ sooner had I arrived home than it started raining. (zaman bağlacı)',
-      ans:['No','no'], hint:'"No sooner … than" = -ar -maz' },
-    { q:'___ watching the movie, she realized she had read the book. (reduction — aktif)',
-      ans:['While watching','After watching','While watching,','After watching,'], hint:'V+ing ile reduction yapısı' },
-    { q:'She goes to the library ___ being able to study. (amaç)',
-      ans:['with the aim of','with a view to'], hint:'"with the aim of / with a view to" + V+ing' },
-    { q:'___ he had many obstacles, he never gave up his dream. (zıtlık)',
-      ans:['Although','Though','Even though','Much as'], hint:'"although / though / even though" + cümle' },
-    { q:'I study English every day ___ improve my career. (amaç — infinitive)',
-      ans:['to','so as to','in order to'], hint:'"to / so as to / in order to" + V₁' },
-    { q:'The students worked so hard ___ they all passed the exam.',
-      ans:['that'], hint:'"so … that" = o kadar … ki' },
+/* ════════ SET SİSTEMİ — Conjunctions & Transitions ════════════
+   Set 1: Temel alıştırmalar (mevcut sorular)
+   Set 2: Test Yourself 1 (ÖYS/YDS kaynaklı — 1.B-10.D cevapları)
+   Set 3: Test Yourself 2 (1.B-10.D cevapları)
+   Set 4: Test Yourself 3 (1.E-10.E cevapları)
+   Yeni set: CJ_SETS dizisine ekle
+═══════════════════════════════════════════════════════════════ */
+var CJ_SETS = [
+    {
+        label: 'Set 1',
+        questions: [
+            {q:'The city was flooded ___ the heavy rain.',
+             opts:['because','due to','so that','although'],
+             cor:'b', hint:'"due to" + isim phrase = prepositional phrase'},
+            {q:'___ I earn enough money, I plan to go abroad.',
+             opts:['So that','In order that','As long as','Lest'],
+             cor:'c', hint:'"as long as" = "...sürece / madem ki" — sebep bildiren baglac'},
+            {q:'She is ___ talented ___ everyone admires her.',
+             opts:['so/that','such/that','too/to','enough/to'],
+             cor:'a', hint:'"so + adj + that" = o kadar yetenekli ki — sonuc bildiren yapi'},
+            {q:'___ the difficulties, she completed the project successfully.',
+             opts:['Although','Despite','However','Because of'],
+             cor:'b', hint:'"despite" + isim/noun phrase — cümle gelmez, isim gelir'},
+            {q:'No sooner ___ I left the house than it started to rain.',
+             opts:['did','have','had','was'],
+             cor:'c', hint:'"No sooner had + özne + V3 + than" — devrik yapi zorunlu'},
+            {q:'I study every day. ___, I expect to pass the exam.',
+             opts:['However','Therefore','Although','Despite'],
+             cor:'b', hint:'"Therefore" = bu nedenle — sonuc geçis kelimesi (transition)'},
+            {q:'She left early ___ missing the train.',
+             opts:['for fear that','for fear of','lest','so that'],
+             cor:'b', hint:'"for fear of" + V+ing — "for fear that" + cümle gelir'},
+            {q:'___ he had many obstacles, he never gave up his dream.',
+             opts:['Although','Due to','Because','So that'],
+             cor:'a', hint:'"although / though / even though" + cümle = zitlik'},
+            {q:'The students worked so hard ___ they all passed the exam.',
+             opts:['as','which','though','that'],
+             cor:'d', hint:'"so ... that" = o kadar ... ki — sonuc bildiren yapi'},
+            {q:'Both Ali ___ Ayse will come to the party.',
+             opts:['or','nor','and','but'],
+             cor:'c', hint:'"Both ... and" = hem ... hem de — iki özneyi baglar, fiil çogul olur'},
+        ]
+    },
+    {
+        label: 'Set 2 — Test 1',
+        questions: [
+            {q:'It wasn\'t because she was bored staying at home with her son that she returned to work; ........., she loves looking after him, but she needed the extra income. (T1-S1)',
+             opts:['on the other hand','on the contrary','therefore','nonetheless'],
+             cor:'b', hint:'"on the contrary" = tam aksine — önceki ifadeyi reddeder, tersini söyler'},
+            {q:'My nephew wants to become a doctor; ......... he takes a special interest in biology at school. (T1-S2)',
+             opts:['although','nevertheless','therefore','however'],
+             cor:'c', hint:'"therefore" = bu yüzden — önceki sebebin sonucunu verir'},
+            {q:'The play was ......... well rehearsed ......... suitable for families. In fact, it was a complete waste of time. (T1-S3)',
+             opts:['neither/nor','either/or','both/and','not only/but also'],
+             cor:'a', hint:'"neither ... nor" = ne ... ne de — ikisi de olumsuz'},
+            {q:'.......... he loves his work, he wasn\'t willing to forsake his holiday. (T1-S4)',
+             opts:['As soon as','Much as','Due to','However'],
+             cor:'b', hint:'"Much as" = "ne kadar ... olsa da" — zitlik bildiren konsesyon'},
+            {q:'......... staying at the best hotel in Brussels, she was not entirely satisfied with the service. (T1-S5)',
+             opts:['Although','Despite','Whereas','However'],
+             cor:'b', hint:'"Despite" + isim/gerund — cümle degil, sözcük öbegi gelir'},
+            {q:'........ had her broken arm mended ........ she broke her other wrist falling off her horse. (T1-S6)',
+             opts:['The moment/while','Neither/nor','Hardly/when','If only/still'],
+             cor:'c', hint:'"Hardly ... when" = "daha ... ki" — No sooner/than ile ayni anlam'},
+            {q:'You had better take some tablets with you ........ Pakistani food upsets you. (T1-S7)',
+             opts:['so that','as though','even if','in case'],
+             cor:'d', hint:'"in case" = ihtimaline karsi — olasi bir duruma hazirlik'},
+            {q:'......... restaurant you eat at in this town, you will be able to pay with your credit card. (T1-S8)',
+             opts:['Whichever','No matter','However','As soon as'],
+             cor:'a', hint:'"Whichever" = hangisi olursa olsun — No matter which ile ayni'},
+            {q:'.......... his invention changed the world, he never gained much financial success. (T1-S9)',
+             opts:['Despite','In contrast','No sooner','Although'],
+             cor:'e', hint:'"Although" + cümle = "her ne kadar ... olsa da" — zitlik'},
+            {q:'......... how many hours I spend revising, I don\'t seem to be able to catch up with the rest of the class. (T1-S10)',
+             opts:['Whereas','Although','Whenever','No matter'],
+             cor:'d', hint:'"No matter how" = "ne kadar ... olsa da" — However ile ayni'},
+        ]
+    },
+    {
+        label: 'Set 3 — Test 1',
+        questions: [
+            {q:'......... you tell me all the facilities your holiday village has, can I learn whether you have vacancies? (T1-S11)',
+             opts:['In case','Consequently','Afterwards','Before'],
+             cor:'d', hint:'"Before" = ...den önce — zaman baglaci, once + cümle'},
+            {q:'That part of South Africa is safe ........ you stay on the main highway. (T1-S12)',
+             opts:['as long as','whereas','whichever','no matter'],
+             cor:'a', hint:'"as long as" = "oldugu sürece" — sart bildiren baglac'},
+            {q:'In northern Italy it\'s quite rainy in summer, ........ it is typically hot and dry in the southern areas. (T1-S13)',
+             opts:['despite','nevertheless','whereas','therefore'],
+             cor:'c', hint:'"whereas" = "oysa ki" — dogrudan karsilik, while ile ayni'},
+            {q:'......... Craig\'s donation of £70,000 to her, Julia will now be able to have the surgery she needs. (T1-S14)',
+             opts:['Despite','Much as','Thanks to','However'],
+             cor:'c', hint:'"Thanks to" + isim = "sayesinde" — olumlu sebep bildiren preposition'},
+            {q:'Her new shoes could be ........ leather ........ plastic, but if they are plastic, they are a very good imitation. (T1-S15)',
+             opts:['such/as','neither/nor','whether/or','not only/but'],
+             cor:'c', hint:'"whether ... or" = "...mi ... mi" — iki secenek arasinda belirsizlik'},
+            {q:'After her divorce, the actress was ........ depressed ........ she committed suicide. (T1-S16)',
+             opts:['either/or','such/as','neither/nor','so/that'],
+             cor:'d', hint:'"so + adj + that" = o kadar depresif ki — sonuc bildiren yapi'},
+            {q:'......... does the course prepare teachers to teach English abroad, ....... it also instructs them on how to teach immigrants. (T1-S17)',
+             opts:['Not only/but','So/that','No sooner/when','Both/and'],
+             cor:'a', hint:'"Not only does ... but" — devrik cümle: Not only + yardimci + özne'},
+            {q:'......... an engineering failure between Shrewsbury and Wellington, the train will be delayed. (T1-S18)',
+             opts:['In spite of','In order that','Whenever','Owing to'],
+             cor:'d', hint:'"Owing to" + isim = "nedeniyle" — Due to / Because of ile ayni anlam'},
+            {q:'........ avoid a repetition of the fuel crisis in the UK, the government has been given special powers. (T1-S19)',
+             opts:['No matter','In order to','In case','Even though'],
+             cor:'b', hint:'"In order to" + fiil = "amac ile" — so as to ile ayni'},
+            {q:'Mandarin Chinese must be ........ difficult ........ Arabic for Europeans to learn. (T1-S20)',
+             opts:['so/that','not only/but also','as/as','much/than'],
+             cor:'c', hint:'"as ... as" = en az o kadar — esitlik karsilastirmasi'},
+        ]
+    },
+    {
+        label: 'Set 4 — Test 2',
+        questions: [
+            {q:'He still remembers his childhood very well ............ he is nearly fifty. (T2-S1)',
+             opts:['just as','besides','after','even though'],
+             cor:'d', hint:'"even though" = hala ... olsa bile — zitlik vurgular'},
+            {q:'Although we hadn\'t met for 20 years, ......... (T2-S2)',
+             opts:['I recognized him at once','it was a long time again','he has grown much older','she is much prettier than I am'],
+             cor:'a', hint:'"although" ile zitlik — 20 yil görüsülmemis ama tanimak mantikli sonuç'},
+            {q:'However long it may take ........... (T2-S3)',
+             opts:['we are determined to get to the top','we have never been there before','it was one of the most pleasant journeys','they successfully carried out the experiment'],
+             cor:'a', hint:'"However long it takes" = ne kadar uzun sürerse sürsün — kararlilik ifadesi'},
+            {q:'........... her temperature is so high, she will have to stay in bed for a few days. (T2-S4)',
+             opts:['Unless','Until','As','Whether'],
+             cor:'c', hint:'"As" = "madem ki / çünkü" — sebep bildiren baglac (since ile ayni)'},
+            {q:'The first applicant was both fast ............ efficient, ............. we hired her immediately. (T2-S5)',
+             opts:['also/so','but/and','so/but','or/and','and/so'],
+             cor:'e', hint:'"both fast and efficient" + "and so" = ve bu yüzden — correlative + sonuç'},
+            {q:'In the end I went by bus ...... (T2-S6)',
+             opts:['since I was feeling very tired','if I hadn\'t got up so late','that it stops so near the library','unless there has been a suitable train'],
+             cor:'a', hint:'"since I was feeling very tired" = yorgun oldugum için — sebep olarak mantikli'},
+            {q:'Some people argue that certain oriental relaxation techniques, ............. yoga and meditation, are extremely effective. (T2-S7)',
+             opts:['so','just as','such as','both'],
+             cor:'c', hint:'"such as" = "örnegin, gibi" — örnekleme prepositionu'},
+            {q:'You must always have a good breakfast every morning ....... late you are. (T2-S8)',
+             opts:['no matter','however','although','whatever'],
+             cor:'a', hint:'"no matter how late" = ne kadar geç olursa olsun — however ile ayni'},
+            {q:'......... the factory has been working at its lowest capacity. (T2-S9)',
+             opts:['Owing to the high efficiency of the new manager','Due to the shortage of some essential raw materials','Because of the considerable decrease in production','In spite of the cancellation of many important orders'],
+             cor:'b', hint:'"Due to the shortage of raw materials" = kapasite düsüsünün mantikli sebebi'},
+            {q:'........ all the problems she encountered, she managed to finish her homework on time. (T2-S10)',
+             opts:['By the time','In spite of','Even though','However'],
+             cor:'b', hint:'"In spite of" + isim = tüm sorunlara ragmen — Despite ile ayni'},
+        ]
+    },
+    {
+        label: 'Set 5 — Test 2',
+        questions: [
+            {q:'To many foreigners, cricket appears to be a slow and boring game, ....... (T2-S11)',
+             opts:['but in fact it requires a lot of skill and a quick eye','therefore it will make headline news','so there were a great number of amateur clubs','whereas it is team work rather than individual performance that matters'],
+             cor:'a', hint:'"but in fact" = zitlik — görünüste siki ama aslinda beceri ister'},
+            {q:'The official minimum wage is so low that several members of a family must work .......... earn enough. (T2-S12)',
+             opts:['otherwise','moreover','on the contrary','so that','in order to'],
+             cor:'e', hint:'"in order to" + fiil = amaç — so that + özne + fiil ile ayni anlam'},
+            {q:'......... this particular operation had been successful ........ there had been no complications. (T2-S13)',
+             opts:['neither/nor','either/or','so/as','not only/but also'],
+             cor:'d', hint:'"not only ... but also" = sadece ... degil, ayni zamanda'},
+            {q:'...... they vary in their arrangement and in their manner of presenting the material. (T2-S14)',
+             opts:['Whether the lives of all such authors are included in biographical reference books','If the book you want is listed in the catalogue','Since the table of contents appears at the front of the book','Although all good dictionaries contain essentially the same kind of information'],
+             cor:'d', hint:'"Although all good dictionaries ... they vary" — zitlik: hepsi iyi ama düzenleme farki var'},
+            {q:'Since the price of land is rising rapidly .......... (T2-S15)',
+             opts:['you have been lucky to find something at that price','he would have drawn all his money from the bank','the method of advertising would have been changed','there was no need to express your views so strongly'],
+             cor:'a', hint:'"since" = çünkü/madem ki — fiyat artiyor, bu fiyata bulmak sans'},
+            {q:'I may never be able to come back to Turkey, ........ I want to see as much as possible while I am here. (T2-S16)',
+             opts:['since','unless','because','so'],
+             cor:'d', hint:'"so" = bu yüzden — önceki sebebin sonucunu birlestirir'},
+            {q:'It doesn\'t look like rain but take an umbrella just ......... it does. (T2-S17)',
+             opts:['so as','in case','as if','so that'],
+             cor:'b', hint:'"in case it does" = yagmur yagma ihtimaline karsi — önlem amaçli'},
+            {q:'......... willingly he seems to have accepted the new job, I don\'t really think he likes the working conditions. (T2-S18)',
+             opts:['However','Although','So','Even'],
+             cor:'a', hint:'"However willingly" = ne kadar istekli görünse de — No matter how ile ayni'},
+            {q:'Our neighbour has promised to look after the cat ......... (T2-S19)',
+             opts:['until we left for Antalya last week','while we are away on holiday this June','whose kittens still weren\'t able to look after themselves','even if she preferred dogs to cats'],
+             cor:'b', hint:'"while we are away on holiday" = tatildeyken — zaman uyumu: future/present'},
+            {q:'Apple tea is .. refreshing .. healthy, so I recommend it as an alternative to black tea. (T2-S20)',
+             opts:['so/that','both/and','either/or','neither/nor'],
+             cor:'b', hint:'"both ... and" = hem ... hem de — iki olumlu özellik birlikte'},
+        ]
+    },
+    {
+        label: 'Set 6 — Test 3',
+        questions: [
+            {q:'She had ......... got on the bus ......... it hit a lorry. (T3-S1)',
+             opts:['no sooner/than','both/and','not only/but also','the sooner/the more','either/or'],
+             cor:'a', hint:'"no sooner ... than" = biner binmez — Hardly/when ile ayni anlam'},
+            {q:'.......... a broken sewage pipe near the Rodrigo De Freitas Lagoon in Brazil, 132 tons of fish died. (T3-S2)',
+             opts:['In order to','Though','As a result of','Because','Despite'],
+             cor:'c', hint:'"As a result of" + isim = sonucu olarak — because of ile ayni'},
+            {q:'.......... her son is at university, she has more time to do the things she enjoys. (T3-S3)',
+             opts:['As a result','Nevertheless','Because of','In contrast to','Now that'],
+             cor:'e', hint:'"Now that" = "simdi ki, madem ki" — degisen bir durumun sonucu'},
+            {q:'........ being colleagues, they are also good friends. (T3-S4)',
+             opts:['In order to','Besides','However','Not only','Moreover'],
+             cor:'b', hint:'"Besides" + isim/V-ing = "...in yani sira" — In addition to ile ayni'},
+            {q:'.......... she was taking the chicken out of the oven, her husband rang to inform her he would be eating out. (T3-S5)',
+             opts:['Until','Seeing that','As long as','Just as','Hardly'],
+             cor:'d', hint:'"Just as" = "tam ... siraya" — ayni anda gerçeklesen iki eylem'},
+            {q:'Due to her allergy, food which contains flour, ......... bread, cakes and pastry, is excluded from Edith\'s diet. (T3-S6)',
+             opts:['in case','as far as','even when','such as'],
+             cor:'d', hint:'"such as" = örnegin — somut örnekler verirken kullanilir'},
+            {q:'This rose-flavour Turkish delight is ......... delicious ........ we should buy some to take home. (T3-S7)',
+             opts:['as/as','both/and','not only/but','more/than','so/that'],
+             cor:'e', hint:'"so ... that" = o kadar lezzetli ki — sonuç cümlesi gelir'},
+            {q:'There is no single science of society. ......... there are several branches of learning that deal with it. (T3-S8)',
+             opts:['Instead','Or else','Thus','Besides'],
+             cor:'d', hint:'"Besides" = "üstelik, bunun yani sira" — ekleme geçis kelimesi'},
+            {q:'I\'ve left a message with Carol about all the details ....... the delivery comes while I\'m out. (T3-S9)',
+             opts:['unless','in case','when','until'],
+             cor:'b', hint:'"in case the delivery comes" = kargo gelirse diye — önlem amaçli'},
+            {q:'The run-down blocks of flats have ......... become depressing places to live in, ........ dangerous neighbourhoods to walk around. (T3-S10)',
+             opts:['the more/than','whether/or','not only/but also','so much/that','scarcely/when'],
+             cor:'c', hint:'"not only ... but also" = sadece yasanmaz hale gelmekle kalmamis, tehlikeli de'},
+        ]
+    },
+    /* -- YENI SET EKLEMEK ICIN BURAYA KOPYALA --
+    {
+        label: 'Set 7',
+        questions: [
+            {q:'Soru metni ___.',
+             opts:['A','B','C','D'],
+             cor:'a', hint:'Aciklama'},
+        ]
+    },
+    ------------------------------------------------- */
 ];
 
-var CJ_MCQS = [
-    { q:'The city was flooded ___ the heavy rain.',
-      opts:['because','due to','so that','although'],
-      cor:'b', hint:'"due to" + isim phrase (prepositional phrase)' },
-    { q:'___ I earn enough money, I plan to go abroad.',
-      opts:['So that','In order that','As long as','Lest'],
-      cor:'c', hint:'"as long as" = "madem ki, …sürece" (sebep)' },
-    { q:'She is ___ talented ___ everyone admires her.',
-      opts:['so … that','such … that','too … to','enough … to'],
-      cor:'a', hint:'"so + adj + that" = o kadar yetenekli ki' },
-    { q:'___ the difficulties, she completed the project successfully.',
-      opts:['Although','Despite','However','Because of'],
-      cor:'b', hint:'"despite" + isim/noun phrase' },
-    { q:'No sooner ___ I left the house than it started to rain.',
-      opts:['did','have','had','was'],
-      cor:'c', hint:'"No sooner had + özne + V₃ + than"' },
-    { q:'I study every day. ___, I expect to pass the exam.',
-      opts:['However','Therefore','Although','Despite'],
-      cor:'b', hint:'"Therefore" = bu nedenle (sonuç geçiş kelimesi)' },
-    { q:'___ not only the exam but also the presentation.',
-      opts:['She passed','She was passed','Not only she passed','Pass she'],
-      cor:'a', hint:'"not only … but also" ile özne başta — devrik yoksa normal yapı' },
-    { q:'He left early ___ missing the train.',
-      opts:['for fear that','for fear of','lest','so that'],
-      cor:'b', hint:'"for fear of" + V+ing' },
-];
+var _cjSetIdx     = 0;
+var _cjSetScore   = 0;
+var _cjSetChecked = {};
+var _cjSetAnswers = {};
 
 function cjExercises() {
-    var blankCards = CJ_BLANKS.map(function(q, i) {
-        return '<div class="gr-q-card" id="cjq-b' + i + '">'
-            + '<div class="gr-q-num">SORU ' + String(i+1).padStart(2,'0') + ' / BÖLÜM A</div>'
-            + '<div class="gr-q-text">' + q.q + '</div>'
-            + '<input class="gr-q-inp cj-inp" id="cj-inp-' + i + '" placeholder="doğru yapıyı yaz…" autocomplete="off"><br>'
-            + '<button class="gr-chk-btn" style="border-color:#16a34a;color:#16a34a" onclick="cjCheckBlank(' + i + ')">Kontrol Et</button>'
-            + '<div class="gr-fb" id="cj-fb-b' + i + '"></div>'
-            + '</div>';
+    _cjSetIdx = 0; _cjSetScore = 0; _cjSetChecked = {}; _cjSetAnswers = {};
+    return _cjBuildExercisePage();
+}
+
+function _cjBuildExercisePage() {
+    var set   = CJ_SETS[_cjSetIdx];
+    var total = set.questions.length;
+
+    var tabs = CJ_SETS.map(function(s, i) {
+        var active = i === _cjSetIdx
+            ? 'style="background:#16a34a;color:#fff;border-color:#16a34a;"' : '';
+        return '<button class="gr-set-tab" ' + active + ' onclick="cjSwitchSet(' + i + ')">' + s.label + '</button>';
     }).join('');
 
-    var mcqCards = CJ_MCQS.map(function(q, i) {
+    var qCards = set.questions.map(function(q, i) {
         var opts = q.opts.map(function(o, j) {
-            var letter = ['A','B','C','D'][j];
-            var lv = ['a','b','c','d'][j];
-            return '<div class="gr-opt" id="cj-opt-' + i + '-' + j + '" onclick="cjSelectOpt(' + i + ',' + j + ',\'' + lv + '\')">'
+            var letter = ['A','B','C','D','E'][j];
+            var lv     = ['a','b','c','d','e'][j];
+            var state  = _cjSetAnswers[_cjSetIdx + '_' + i];
+            var cls    = 'gr-opt';
+            if (_cjSetChecked[_cjSetIdx + '_' + i]) {
+                if (lv === q.cor)                         cls += ' ok';
+                else if (lv === state && state !== q.cor) cls += ' bad';
+            } else if (state === lv) cls += ' sel';
+            return '<div class="' + cls + '" id="cjso-' + i + '-' + j + '" onclick="cjSetOpt(' + i + ',' + j + ',\'' + lv + '\')">'
                 + '<span class="gr-opt-letter">' + letter + '</span>' + o + '</div>';
         }).join('');
-        return '<div class="gr-q-card" id="cjq-m' + i + '">'
-            + '<div class="gr-q-num">SORU ' + String(i+1).padStart(2,'0') + ' / BÖLÜM B</div>'
+
+        var checked = _cjSetChecked[_cjSetIdx + '_' + i];
+        var fbCls   = checked ? (checked === 'ok' ? 'gr-fb show ok' : 'gr-fb show bad') : 'gr-fb';
+        var fbTxt   = checked === 'ok'  ? 'Dogru! ' + q.hint
+                    : checked === 'bad' ? 'Yanlis. Dogru: ' + q.cor.toUpperCase() + ' -- ' + q.hint : '';
+        var cardCls = checked === 'ok' ? 'gr-q-card gr-c' : checked === 'bad' ? 'gr-q-card gr-w' : 'gr-q-card';
+        var btnDis  = checked ? 'disabled style="opacity:.4;pointer-events:none;"' : '';
+
+        return '<div class="' + cardCls + '" id="cjsc-' + i + '">'
+            + '<div class="gr-q-num">SORU ' + String(i+1).padStart(2,'0') + ' -- ' + set.label.toUpperCase() + '</div>'
             + '<div class="gr-q-text">' + q.q + '</div>'
             + '<div class="gr-mcq">' + opts + '</div>'
-            + '<button class="gr-chk-btn" style="margin-top:10px;border-color:#16a34a;color:#16a34a" onclick="cjCheckMCQ(' + i + ')">Kontrol Et</button>'
-            + '<div class="gr-fb" id="cj-fb-m' + i + '"></div>'
+            + '<button class="gr-chk-btn" style="margin-top:10px;border-color:#16a34a;color:#16a34a" onclick="cjCheckSetQ(' + i + ')" ' + btnDis + '>Kontrol Et</button>'
+            + '<div class="' + fbCls + '" id="cjsfb-' + i + '">' + fbTxt + '</div>'
             + '</div>';
     }).join('');
 
-    return cjH('✨ Pratik Yap', 'Alıştırmalar', CJ_TOTAL + ' soruluk interaktif test. Conjunctions & Transitions konuları.')
+    var nextBtn = _cjSetIdx < CJ_SETS.length - 1
+        ? '<button class="gr-retry-btn" style="background:#16a34a;color:#fff;border-color:#16a34a" onclick="cjNextSet()">Sonraki Set &rarr;</button>'
+        : '<span style="font-size:.8rem;color:var(--ink3);align-self:center">Tum setler tamamlandi!</span>';
+
+    return cjH('Conjunctions & Transitions', 'Alistirmalar', CJ_SETS.length + ' set x 10 soru -- Her seti tamamla, sonraki sete geç.')
         + '<div class="gr-quiz-wrap">'
-        + '<div class="gr-score-bar"><span class="gr-score-label">Canlı Puan</span><span class="gr-score-val" id="cj-live-score">0 / ' + CJ_TOTAL + '</span></div>'
-        + '<div class="gr-q-sec-hd">Bölüm A — Boşluk Doldurma</div>'
-        + blankCards
-        + '<div class="gr-q-sec-hd" style="margin-top:20px">Bölüm B — Çoktan Seçmeli</div>'
-        + mcqCards
-        + '<button class="gr-submit-btn" style="background:linear-gradient(135deg,#16a34a,#4ade80)" onclick="cjSubmitAll()">🎯 Tümünü Değerlendir & Sonucu Gör</button>'
+        + '<div class="gr-set-tabs">' + tabs + '</div>'
+        + '<div class="gr-score-bar">'
+        + '<span class="gr-score-label">' + set.label + ' Puani</span>'
+        + '<span class="gr-score-val" id="cj-live-score">' + _cjSetScore + ' / ' + total + '</span>'
+        + '</div>'
+        + qCards
+        + '<button class="gr-submit-btn" style="background:linear-gradient(135deg,#16a34a,#4ade80)" onclick="cjSubmitSet()">Seti Degerlendir & Sonucu Gor</button>'
         + '<div class="gr-result" id="cj-result">'
-        + '<div class="gr-res-score" id="cj-res-score" style="color:#16a34a">0/' + CJ_TOTAL + '</div>'
-        + '<div class="gr-res-lbl">Toplam Puan</div>'
+        + '<div class="gr-res-score" id="cj-res-score" style="color:#16a34a">0/' + total + '</div>'
+        + '<div class="gr-res-lbl">' + set.label + ' Tamamlandi</div>'
         + '<div class="gr-res-msg" id="cj-res-msg"></div>'
-        + '<button class="gr-retry-btn" style="border-color:#16a34a;color:#16a34a" onclick="_cjRenderSection(\'exercises\')">🔄 Tekrar Dene</button>'
-        + '</div></div>';
+        + '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px">'
+        + '<button class="gr-retry-btn" style="border-color:#16a34a;color:#16a34a" onclick="cjRetrySameSet()">Ayni Seti Tekrar</button>'
+        + nextBtn
+        + '</div></div></div>';
 }
 
-/* ════════ EXERCISE LOGIC ════════ */
-function _cjUpdScore() {
-    var el = document.getElementById('cj-live-score');
-    if (el) el.textContent = _cjScore + ' / ' + CJ_TOTAL;
-
-    if (typeof saveGrammarScore === 'function') saveGrammarScore('cj', _cjScore);
+function cjSwitchSet(idx) {
+    _cjSetIdx = idx; _cjSetScore = 0; _cjSetChecked = {}; _cjSetAnswers = {};
+    var cnt = document.getElementById('cj-content');
+    if (cnt) { cnt.innerHTML = _cjBuildExercisePage(); cnt.scrollTop = 0; }
 }
 
-function cjCheckBlank(i) {
-    var inp  = document.getElementById('cj-inp-' + i);
-    var fb   = document.getElementById('cj-fb-b' + i);
-    var card = document.getElementById('cjq-b' + i);
-    if (!inp || !fb) return;
-    var val = inp.value.trim().toLowerCase().replace(/\s+/g,' ');
-    if (!val) { fb.textContent = 'Bir cevap girin!'; fb.className = 'gr-fb show bad'; return; }
-    var correct = CJ_BLANKS[i].ans.map(function(a){ return a.toLowerCase().trim(); });
-    if (correct.indexOf(val) !== -1) {
-        inp.classList.add('ok'); card.classList.add('gr-c');
-        fb.textContent = '✅ Doğru! ' + CJ_BLANKS[i].ans[0];
-        fb.className = 'gr-fb show ok';
-        if (!_cjChecked['b'+i]) { _cjScore++; _cjChecked['b'+i] = true; _cjUpdScore(); }
-    } else {
-        inp.classList.add('bad'); card.classList.add('gr-w');
-        fb.textContent = '❌ Yanlış. Kabul edilen: ' + CJ_BLANKS[i].ans[0] + ' — ' + CJ_BLANKS[i].hint;
-        fb.className = 'gr-fb show bad';
-        if (!_cjChecked['b'+i]) _cjChecked['b'+i] = 'wrong';
-    }
-}
-
-function cjSelectOpt(qi, oi, letter) {
-    CJ_MCQS[qi].opts.forEach(function(_, j) {
-        var el = document.getElementById('cj-opt-' + qi + '-' + j);
-        if (el) el.classList.remove('sel');
+function cjSetOpt(qi, oi, letter) {
+    if (_cjSetChecked[_cjSetIdx + '_' + qi]) return;
+    CJ_SETS[_cjSetIdx].questions[qi].opts.forEach(function(_, j) {
+        var el = document.getElementById('cjso-' + qi + '-' + j);
+        if (el) el.className = 'gr-opt' + (j === oi ? ' sel' : '');
     });
-    var el = document.getElementById('cj-opt-' + qi + '-' + oi);
-    if (el) el.classList.add('sel');
-    _cjAnswers['m'+qi] = letter;
+    _cjSetAnswers[_cjSetIdx + '_' + qi] = letter;
 }
 
-function cjCheckMCQ(i) {
-    var q    = CJ_MCQS[i];
-    var sel  = _cjAnswers['m'+i];
-    var fb   = document.getElementById('cj-fb-m' + i);
-    var card = document.getElementById('cjq-m' + i);
-    if (!sel) { fb.textContent = 'Bir seçenek seçin!'; fb.className = 'gr-fb show bad'; return; }
-    var letters = ['a','b','c','d'];
+function cjCheckSetQ(qi) {
+    var q    = CJ_SETS[_cjSetIdx].questions[qi];
+    var sel  = _cjSetAnswers[_cjSetIdx + '_' + qi];
+    var fb   = document.getElementById('cjsfb-' + qi);
+    var card = document.getElementById('cjsc-' + qi);
+    if (!sel) { fb.textContent = 'Bir secenek secin!'; fb.className = 'gr-fb show bad'; return; }
+    var letters = ['a','b','c','d','e'];
     q.opts.forEach(function(_, j) {
-        var el = document.getElementById('cj-opt-' + i + '-' + j);
+        var el = document.getElementById('cjso-' + qi + '-' + j);
         if (!el) return;
         el.classList.remove('sel');
-        if (letters[j] === q.cor) el.classList.add('ok');
+        if (letters[j] === q.cor)                     el.classList.add('ok');
         else if (letters[j] === sel && sel !== q.cor) el.classList.add('bad');
     });
+    var btn = card.querySelector('.gr-chk-btn');
+    if (btn) { btn.disabled = true; btn.style.opacity = '.4'; btn.style.pointerEvents = 'none'; }
     if (sel === q.cor) {
         card.classList.add('gr-c');
-        fb.textContent = '✅ Doğru! ' + q.hint;
+        fb.textContent = 'Dogru! ' + q.hint;
         fb.className = 'gr-fb show ok';
-        if (!_cjChecked['m'+i]) { _cjScore++; _cjChecked['m'+i] = true; _cjUpdScore(); }
+        _cjSetChecked[_cjSetIdx + '_' + qi] = 'ok';
+        _cjSetScore++;
     } else {
         card.classList.add('gr-w');
-        fb.textContent = '❌ Yanlış. Doğru: ' + q.cor.toUpperCase() + '. ' + q.hint;
+        fb.textContent = 'Yanlis. Dogru: ' + q.cor.toUpperCase() + ' -- ' + q.hint;
         fb.className = 'gr-fb show bad';
-        if (!_cjChecked['m'+i]) _cjChecked['m'+i] = 'wrong';
+        _cjSetChecked[_cjSetIdx + '_' + qi] = 'bad';
     }
+    var el = document.getElementById('cj-live-score');
+    if (el) el.textContent = _cjSetScore + ' / ' + CJ_SETS[_cjSetIdx].questions.length;
 }
 
-function cjSubmitAll() {
-    var panel   = document.getElementById('cj-result');
-    var scoreEl = document.getElementById('cj-res-score');
-    var msgEl   = document.getElementById('cj-res-msg');
+function cjSubmitSet() {
+    var total = CJ_SETS[_cjSetIdx].questions.length;
+    var panel = document.getElementById('cj-result');
     if (!panel) return;
     panel.classList.add('show');
-    scoreEl.textContent = _cjScore + '/' + CJ_TOTAL;
-    var pct = Math.round((_cjScore / CJ_TOTAL) * 100);
-    msgEl.textContent = pct >= 88 ? '🎉 Mükemmel! Adverbial Clauses & Conjunctions konusuna tam hâkimsin!'
-                      : pct >= 66 ? '👏 Çok iyi! Zıtlık ve amaç bağlaçlarını biraz daha tekrar et.'
-                      : pct >= 44 ? '📚 İyi başlangıç. Cause, Result ve Contrast bölümlerine tekrar bak!'
-                      : '💪 Daha fazla pratik yapalım. Genel bakış kartlarından başla!';
+    document.getElementById('cj-res-score').textContent = _cjSetScore + '/' + total;
+    var pct = Math.round((_cjSetScore / total) * 100);
+    document.getElementById('cj-res-msg').textContent =
+        pct >= 90 ? 'Mukemmel! Bu seti harika geçirdin!'
+      : pct >= 70 ? 'Cok iyi! Kücük eksikler var.'
+      : pct >= 50 ? 'Orta duzey. Eksik konulara geri dön.'
+      :             'Daha fazla pratik gerekiyor!';
+    if (typeof saveGrammarScore === 'function') saveGrammarScore('cj', _cjSetScore);
     panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
+
+function cjRetrySameSet() { cjSwitchSet(_cjSetIdx); }
+function cjNextSet()      { if (_cjSetIdx < CJ_SETS.length - 1) cjSwitchSet(_cjSetIdx + 1); }
+
 
 /* ════════ GLOBALS ════════ */
 window.openConjSection    = openConjSection;
 window._cjRenderSection   = _cjRenderSection;
-window.cjCheckBlank       = cjCheckBlank;
-window.cjSelectOpt        = cjSelectOpt;
-window.cjCheckMCQ         = cjCheckMCQ;
-window.cjSubmitAll        = cjSubmitAll;
+window.cjSwitchSet        = cjSwitchSet;
+window.cjSetOpt           = cjSetOpt;
+window.cjCheckSetQ        = cjCheckSetQ;
+window.cjSubmitSet        = cjSubmitSet;
+window.cjRetrySameSet     = cjRetrySameSet;
+window.cjNextSet          = cjNextSet;

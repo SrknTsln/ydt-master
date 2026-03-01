@@ -11,7 +11,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
     width:228px;flex-shrink:0;background:var(--white);
     border-right:1px solid var(--border);
     display:flex;flex-direction:column;
-    position:sticky;top:0;height:100vh;overflow-y:auto;
+    position:sticky;top:0;height:100vh;overflow:hidden;
     z-index:100;
 }
 .sb-logo{padding:18px 18px 14px;border-bottom:1px solid var(--border);}
@@ -60,8 +60,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
 .sb-grammar-toggle[aria-expanded="true"] .sb-grammar-chev{transform:rotate(180deg);}
 
 /* Grammar list — collapsed by default */
-.sb-grammar-list{overflow:hidden;max-height:0;opacity:0;transition:max-height .3s cubic-bezier(.4,0,.2,1),opacity .22s ease;}
-.sb-grammar-list--open{max-height:600px;opacity:1;}
+.sb-grammar-list{overflow:hidden;max-height:0;opacity:0;transition:max-height .35s cubic-bezier(.4,0,.2,1),opacity .22s ease;}
+.sb-grammar-list--open{max-height:1000px;opacity:1;}
 
 /* Secondary section */
 .sb-secondary{display:flex;flex-direction:column;padding:0 8px 8px;flex-shrink:0;}

@@ -1694,13 +1694,13 @@ function renderSoruStats() {
     const gramTamamlanan = Object.values(gramScores).filter(v => v > 0).length;
     // Toplam max soru = GRAMMAR_MODULES toplamı
     const gramMaxSoru = typeof GRAMMAR_MODULES !== 'undefined'
-        ? GRAMMAR_MODULES.reduce((s, m) => s + m.total, 0) : 163;
+        ? GRAMMAR_MODULES.reduce((s, m) => s + m.total, 0) : 741;
 
     const ssGT = document.getElementById('ss-gram-total');
     const ssGCor = document.getElementById('ss-gram-cor');
     const ssGP = document.getElementById('ss-gram-pct');
     const ssGF = document.getElementById('ss-gram-fill');
-    if (ssGT) ssGT.textContent = gramTot > 0 ? gramTot + ' arşiv' : gramMaxSoru + ' soru';
+    if (ssGT) ssGT.textContent = gramMaxSoru + ' soru';
     if (ssGCor) ssGCor.textContent = gramTamamlanan + '/11 konu';
     if (ssGP) {
         ssGP.textContent = gramTamamlanan > 0 ? Math.round(gramTamamlanan / 11 * 100) + '%' : '';
@@ -1785,18 +1785,18 @@ function renderBankStats() {
 // 📐 GRAMMAR MODÜL TAMAMLANMA DURUMU (index.html)
 // ════════════════════════════════════════════════════════════
 const GRAMMAR_MODULES = [
-    { key: 'gr',  label: 'Tenses',              icon: '⏱️',  color: '#6366f1', total: 17, fn: "openGrammarSection('overview')" },
-    { key: 'md',  label: 'Modals',              icon: '⚡',  color: '#f59e0b', total: 15, fn: "openModalsSection('overview')" },
-    { key: 'pr',  label: 'Pronouns',            icon: '👤',  color: '#8b5cf6', total: 15, fn: "openPronounsSection('overview')" },
-    { key: 'pa',  label: 'Passive',             icon: '🔄',  color: '#0ea5e9', total: 15, fn: "openPassiveSection('overview')" },
-    { key: 'cn',  label: 'Conditionals',        icon: '🔀',  color: '#10b981', total: 15, fn: "openConditionalsSection('overview')" },
-    { key: 'rc',  label: 'Relative Clauses',    icon: '🔗',  color: '#e63946', total: 15, fn: "openRelativeSection('overview')" },
-    { key: 'nc',  label: 'Noun Clauses',        icon: '💬',  color: '#f97316', total: 15, fn: "openNounSection('overview')" },
-    { key: 'cj',  label: 'Adverbial Clauses',   icon: '🌿',  color: '#14b8a6', total: 18, fn: "openConjSection('overview')" },
-    { key: 'grd', label: 'Gerunds',             icon: '📝',  color: '#a855f7', total: 16, fn: "openGerundSection('overview')" },
-    { key: 'aa',  label: 'Adj & Adv',           icon: '🔵',  color: '#3b82f6', total: 16, fn: "openAdjAdvSection('overview')" },
-    { key: 'tq',  label: 'Tag Q & Quantifiers', icon: '❓',  color: '#ec4899', total: 16, fn: "openTagQuantSection('overview')" },
-];
+    { key: 'gr',  label: 'Tenses',              icon: '⏱️',  color: '#6366f1', total: 230, fn: "openGrammarSection('overview')" },
+    { key: 'md',  label: 'Modals',              icon: '⚡',  color: '#f59e0b', total: 170, fn: "openModalsSection('overview')" },
+    { key: 'pr',  label: 'Pronouns',            icon: '👤',  color: '#8b5cf6', total: 13,  fn: "openPronounsSection('overview')" },
+    { key: 'pa',  label: 'Passive',             icon: '🔄',  color: '#0ea5e9', total: 200, fn: "openPassiveSection('overview')" },
+    { key: 'cn',  label: 'Conditionals',        icon: '🔀',  color: '#10b981', total: 160, fn: "openConditionalsSection('overview')" },
+    { key: 'rc',  label: 'Relative Clauses',    icon: '🔗',  color: '#e63946', total: 15,  fn: "openRelativeSection('overview')" },
+    { key: 'nc',  label: 'Noun Clauses',        icon: '💬',  color: '#f97316', total: 150, fn: "openNounSection('overview')" },
+    { key: 'cj',  label: 'Adverbial Clauses',   icon: '🌿',  color: '#14b8a6', total: 18,  fn: "openConjSection('overview')" },
+    { key: 'grd', label: 'Gerunds',             icon: '📝',  color: '#a855f7', total: 150,  fn: "openGerundSection('overview')" },
+    { key: 'aa',  label: 'Adj & Adv',           icon: '🔵',  color: '#3b82f6', total: 18,  fn: "openAdjAdvSection('overview')" },
+    { key: 'tq',  label: 'Tag Q & Quantifiers', icon: '❓',  color: '#ec4899', total: 18,  fn: "openTagQuantSection('overview')" },
+]; // Toplam: 1010 soru
 
 function renderGrammarProgress() {
     const el = document.getElementById('idx-grammar-progress');
