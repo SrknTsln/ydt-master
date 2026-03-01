@@ -1,0 +1,2042 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YDT Master Pro - Tam Sürüm</title>
+    <link rel="stylesheet" href="stil.css">
+    <link rel="stylesheet" href="kids.css">
+</head>
+<body>
+
+<div id="loading-overlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(255,255,255,.95);flex-direction:column;align-items:center;justify-content:center;gap:16px;">
+    <div style="font-size:3rem;animation:spin 1s linear infinite">🔄</div>
+    <div style="font-weight:700;color:#e63946;font-size:1.1rem">Firebase'den yükleniyor...</div>
+    <div style="font-size:.8rem;color:#aaa">Veriler senkronize ediliyor</div>
+</div>
+
+<header class="mob-topbar">
+    <button class="mob-burger" id="mob-burger" onclick="mobToggleDrawer()">
+        <span></span><span></span><span></span>
+    </button>
+    <div class="mob-serkan-logo">
+        <svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="26" height="26" rx="8" fill="#e63946"/>
+            <text x="4" y="19" font-family="Georgia,serif" font-size="16" font-weight="900" fill="#fff" letter-spacing="-1">S</text>
+            <circle cx="20" cy="8" r="4" fill="#fff" opacity=".25"/>
+            <circle cx="20" cy="8" r="2.5" fill="#fff"/>
+        </svg>
+        <span>Serkan <em>Hoca</em></span>
+    </div>
+    <div class="mob-sync">
+        <div id="sync-dot-mob" style="width:7px;height:7px;border-radius:50%;background:#ccc;flex-shrink:0"></div>
+        <span id="sync-lbl-mob">Yerel</span>
+    </div>
+</header>
+
+<div class="mob-drawer-overlay" id="mob-overlay" onclick="mobCloseDrawer()"></div>
+<div class="mob-drawer" id="mob-drawer">
+    <div class="mob-drawer-head">
+        <div class="serkan-logo" style="padding:4px 0 8px;">
+            <div class="serkan-logo-icon">
+                <svg width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="38" height="38" rx="12" fill="#e63946"/>
+                    <text x="5" y="29" font-family="Georgia,serif" font-size="23" font-weight="900" fill="#fff" letter-spacing="-1">S</text>
+                    <circle cx="30" cy="10" r="6" fill="#fff" opacity=".2"/>
+                    <circle cx="30" cy="10" r="3.5" fill="#fff" opacity=".5"/>
+                    <circle cx="30" cy="10" r="1.8" fill="#fff"/>
+                </svg>
+            </div>
+            <div class="serkan-logo-text">
+                <div class="serkan-logo-name">Serkan <em>Hoca</em></div>
+                <div class="serkan-logo-sub">YDT İngilizce</div>
+            </div>
+        </div>
+    </div>
+    <div class="mob-drawer-sync">
+        <div id="sync-dot-drawer" style="width:7px;height:7px;border-radius:50%;background:#ccc;flex-shrink:0"></div>
+        <span id="sync-lbl-drawer">Yerel</span>
+    </div>
+    <nav class="mob-drawer-nav">
+        <div class="mob-drawer-sec">Ana Menü</div>
+        <button class="mob-drawer-btn active" id="di-home"     onclick="mobGoTo('index-page')">              <span class="mob-d-icon">🏠</span> Ana Sayfa</button>
+        <button class="mob-drawer-btn"        id="di-study"    onclick="mobRun(startStudyFromNav)">          <span class="mob-d-icon">📖</span> Kelime Öğren</button>
+        <button class="mob-drawer-btn"        id="di-quiz"     onclick="mobRun(startQuizFromNav)">           <span class="mob-d-icon">🎯</span> Vocabulary Test</button>
+        <button class="mob-drawer-btn"        id="di-ai-ydt"   onclick="mobRun(startAIQuizMode)">            <span class="mob-d-icon">🤖</span> AI Vocabulary Test</button>
+        <button class="mob-drawer-btn"        id="di-paragraf" onclick="mobRun(showParagrafListesi)">        <span class="mob-d-icon">📄</span> Paragraf Okuma</button>
+        <button class="mob-drawer-btn"        id="di-speaking" onclick="mobRun(()=>openSpeakingSection('overview'))"><span class="mob-d-icon">🗣️</span> Speaking</button>
+
+        <div class="mob-drawer-sec" style="margin-top:4px;">Alıştırmalar</div>
+        <button class="mob-drawer-btn" id="di-typing"  onclick="mobRun(startTypingQuiz)">  <span class="mob-d-icon">✍️</span> Yazarak Cevap</button>
+        <button class="mob-drawer-btn" id="di-context" onclick="mobRun(startContextMode)"> <span class="mob-d-icon">📝</span> Bağlam Cümlesi</button>
+        <button class="mob-drawer-btn" id="di-sm2"     onclick="mobRun(startSM2Review)">   <span class="mob-d-icon">🧠</span> SM-2 Tekrar <span class="mob-d-badge" id="di-sm2-badge" style="display:none"></span></button>
+
+        <!-- Grammar — daraltılabilir -->
+        <button class="mob-grammar-toggle" id="di-grammar-toggle" onclick="mobToggleGrammar()" aria-expanded="false" aria-controls="di-grammar-list">
+            <span class="mob-d-icon">📐</span>
+            <span class="mob-grammar-toggle-label">Grammar</span>
+            <svg class="mob-grammar-chev" width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </button>
+        <div class="mob-grammar-list" id="di-grammar-list" aria-hidden="true">
+            <button class="mob-drawer-btn mob-drawer-btn-sub" id="di-grammar-tenses"      onclick="mobRun(()=>openGrammarSection('overview'))">    <span class="mob-d-icon">⏱️</span> English Tenses</button>
+            <button class="mob-drawer-btn mob-drawer-btn-sub" id="di-grammar-modals"       onclick="mobRun(()=>openModalsSection('overview'))">     <span class="mob-d-icon">⚡</span> Modals</button>
+            <button class="mob-drawer-btn mob-drawer-btn-sub" id="di-grammar-pronouns"     onclick="mobRun(()=>openPronounsSection('overview'))">   <span class="mob-d-icon">👤</span> Pronouns</button>
+            <button class="mob-drawer-btn mob-drawer-btn-sub" id="di-grammar-passive"      onclick="mobRun(()=>openPassiveSection('overview'))">    <span class="mob-d-icon">🔄</span> Active / Passive</button>
+            <button class="mob-drawer-btn mob-drawer-btn-sub" id="di-grammar-conditionals" onclick="mobRun(()=>openConditionalsSection('overview'))"><span class="mob-d-icon">🔀</span> Conditionals</button>
+            <button class="mob-drawer-btn mob-drawer-btn-sub" id="di-grammar-relative"     onclick="mobRun(()=>openRelativeSection('overview'))">   <span class="mob-d-icon">🔗</span> Relative Clauses</button>
+            <button class="mob-drawer-btn mob-drawer-btn-sub" id="di-grammar-noun"         onclick="mobRun(()=>openNounSection('overview'))">       <span class="mob-d-icon">💬</span> Noun Clauses</button>
+            <button class="mob-drawer-btn mob-drawer-btn-sub" id="di-grammar-conj"         onclick="mobRun(()=>openConjSection('overview'))">       <span class="mob-d-icon">🌿</span> Adverbial Clauses</button>
+            <button class="mob-drawer-btn mob-drawer-btn-sub" id="di-grammar-gerund"       onclick="mobRun(()=>openGerundSection('overview'))">     <span class="mob-d-icon">📝</span> Gerunds &amp; Infinitives</button>
+            <button class="mob-drawer-btn mob-drawer-btn-sub" id="di-grammar-adjadv"       onclick="mobRun(()=>openAdjAdvSection('overview'))">     <span class="mob-d-icon">🔵</span> Adjectives &amp; Adverbs</button>
+            <button class="mob-drawer-btn mob-drawer-btn-sub" id="di-grammar-tagquant"     onclick="mobRun(()=>openTagQuantSection('overview'))">   <span class="mob-d-icon">❓</span> Tag Questions &amp; Quantifiers</button>
+        </div>
+
+        <!-- Secondary -->
+        <div class="mob-drawer-secondary-divider"></div>
+        <button class="mob-drawer-btn mob-drawer-btn-sec" id="di-kids"  onclick="mobRun(KW.open)">       <span class="mob-d-icon">🌍</span> Kids English</button>
+        <button class="mob-drawer-btn mob-drawer-btn-sec" id="di-games" onclick="mobRun(showGamesPage)"> <span class="mob-d-icon">🎮</span> Oyunlar</button>
+        <button class="mob-drawer-btn mob-drawer-btn-sec" id="di-stats" onclick="mobRun(showStatsPage)"> <span class="mob-d-icon">📊</span> İstatistik</button>
+        <button class="mob-drawer-btn mob-drawer-btn-sec" id="di-arsiv" onclick="mobRun(showAIArsiv)">   <span class="mob-d-icon">🗃️</span> Soru Bankası</button>
+
+        <!-- Admin — en alt -->
+        <div class="mob-drawer-admin-bar">
+            <button class="mob-drawer-btn mob-drawer-btn-admin" id="di-admin" onclick="mobGoTo('admin-page')">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0;opacity:.55;margin-right:2px;">
+                    <circle cx="7" cy="7" r="2.5" stroke="currentColor" stroke-width="1.4"/>
+                    <path d="M7 1v1.5M7 11.5V13M1 7h1.5M11.5 7H13M2.93 2.93l1.06 1.06M10.01 10.01l1.06 1.06M2.93 11.07l1.06-1.06M10.01 3.99l1.06-1.06" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                </svg>
+                Yönetim
+            </button>
+        </div>
+    </nav>
+</div>
+
+<nav class="mob-bottomnav">
+    <button class="mob-tab active" id="bn-home"     onclick="navTo('index-page')">        <span class="mob-tab-icon">🏠</span>Ana Sayfa</button>
+    <button class="mob-tab"        id="bn-study"    onclick="startStudyFromNav()">        <span class="mob-tab-icon">📖</span>Öğren</button>
+    <button class="mob-tab"        id="bn-quiz"     onclick="startQuizFromNav()">         <span class="mob-tab-icon">🎯</span>Vocab Test<span class="mob-tab-badge" id="bn-sm2-badge" style="display:none"></span></button>
+    <button class="mob-tab"        id="bn-stats"    onclick="showStatsPage()">            <span class="mob-tab-icon">📊</span>İstatistik</button>
+    <button class="mob-tab"        id="bn-exercise" onclick="showExercisePage()">         <span class="mob-tab-icon">✍️</span>Alıştır</button>
+</nav>
+
+<aside class="desktop-sidebar">
+    <div class="sb-logo" style="padding:20px 20px 14px;">
+        <div class="serkan-logo">
+            <div class="serkan-logo-icon">
+                <svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="44" height="44" rx="14" fill="#e63946"/>
+                    <text x="6" y="33" font-family="Georgia,serif" font-size="27" font-weight="900" fill="#fff" letter-spacing="-2">S</text>
+                    <circle cx="34" cy="12" r="7" fill="#fff" opacity=".2"/>
+                    <circle cx="34" cy="12" r="4" fill="#fff" opacity=".5"/>
+                    <circle cx="34" cy="12" r="2" fill="#fff"/>
+                </svg>
+            </div>
+            <div class="serkan-logo-text">
+                <div class="serkan-logo-name">Serkan <em>Hoca</em></div>
+                <div class="serkan-logo-sub">YDT İngilizce</div>
+            </div>
+        </div>
+    </div>
+    <div class="sb-sync">
+        <div id="sync-dot" style="width:7px;height:7px;border-radius:50%;background:#ccc;flex-shrink:0"></div>
+        <span id="sync-label">Yerel</span>
+    </div>
+    <!-- ── PRIMARY NAV ── -->
+    <nav class="sb-nav sb-nav-primary">
+        <div class="sb-sec">Ana Menü</div>
+        <button class="sb-btn active" id="sb-home"     onclick="navTo('index-page')">             <span class="sb-icon">🏠</span> Ana Sayfa</button>
+        <button class="sb-btn"        id="sb-study"    onclick="startStudyFromNav()">             <span class="sb-icon">📖</span> Kelime Öğren</button>
+        <button class="sb-btn"        id="sb-quiz"     onclick="startQuizFromNav()">              <span class="sb-icon">🎯</span> Vocabulary Test</button>
+        <button class="sb-btn"        id="sb-ai-ydt"   onclick="startAIQuizMode()">               <span class="sb-icon">🤖</span> AI Vocabulary Test</button>
+        <button class="sb-btn"        id="sb-paragraf" onclick="showParagrafListesi()">           <span class="sb-icon">📄</span> Paragraf Okuma</button>
+        <button class="sb-btn"        id="sb-speaking" onclick="openSpeakingSection('overview')"> <span class="sb-icon">🗣️</span> Speaking</button>
+
+        <div class="sb-sec" style="margin-top:4px;">Alıştırmalar</div>
+        <button class="sb-btn"        id="sb-typing"   onclick="showExerciseNav('typing')">  <span class="sb-icon">✍️</span> Yazarak Cevap</button>
+        <button class="sb-btn"        id="sb-context"  onclick="showExerciseNav('context')"> <span class="sb-icon">📝</span> Bağlam Cümlesi</button>
+        <button class="sb-btn"        id="sb-sm2"      onclick="showExerciseNav('sm2')">     <span class="sb-icon">🧠</span> SM-2 Tekrar <span class="sb-badge-pill" id="sb-sm2-badge" style="display:none"></span></button>
+
+        <!-- Grammar — daraltılabilir grup -->
+        <button class="sb-grammar-toggle" id="sb-grammar-toggle" onclick="sbToggleGrammar()" aria-expanded="false" aria-controls="sb-grammar-list">
+            <span class="sb-icon">📐</span>
+            <span class="sb-grammar-toggle-label">Grammar</span>
+            <svg class="sb-grammar-chev" width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </button>
+        <div class="sb-grammar-list" id="sb-grammar-list" aria-hidden="true">
+            <button class="sb-btn sb-btn-sub" id="sb-grammar-tenses"      onclick="openGrammarSection('overview')">    <span class="sb-icon">⏱️</span> English Tenses</button>
+            <button class="sb-btn sb-btn-sub" id="sb-grammar-modals"       onclick="openModalsSection('overview')">     <span class="sb-icon">⚡</span> Modals</button>
+            <button class="sb-btn sb-btn-sub" id="sb-grammar-pronouns"     onclick="openPronounsSection('overview')">   <span class="sb-icon">👤</span> Pronouns</button>
+            <button class="sb-btn sb-btn-sub" id="sb-grammar-passive"      onclick="openPassiveSection('overview')">    <span class="sb-icon">🔄</span> Active / Passive</button>
+            <button class="sb-btn sb-btn-sub" id="sb-grammar-conditionals" onclick="openConditionalsSection('overview')"><span class="sb-icon">🔀</span> Conditionals</button>
+            <button class="sb-btn sb-btn-sub" id="sb-grammar-relative"     onclick="openRelativeSection('overview')">   <span class="sb-icon">🔗</span> Relative Clauses</button>
+            <button class="sb-btn sb-btn-sub" id="sb-grammar-noun"         onclick="openNounSection('overview')">       <span class="sb-icon">💬</span> Noun Clauses</button>
+            <button class="sb-btn sb-btn-sub" id="sb-grammar-conj"         onclick="openConjSection('overview')">       <span class="sb-icon">🌿</span> Adverbial Clauses</button>
+            <button class="sb-btn sb-btn-sub" id="sb-grammar-gerund"       onclick="openGerundSection('overview')">     <span class="sb-icon">📝</span> Gerunds &amp; Infinitives</button>
+            <button class="sb-btn sb-btn-sub" id="sb-grammar-adjadv"       onclick="openAdjAdvSection('overview')">     <span class="sb-icon">🔵</span> Adjectives &amp; Adverbs</button>
+            <button class="sb-btn sb-btn-sub" id="sb-grammar-tagquant"     onclick="openTagQuantSection('overview')">   <span class="sb-icon">❓</span> Tag Questions &amp; Quantifiers</button>
+        </div>
+    </nav>
+
+    <!-- ── SECONDARY NAV ── -->
+    <div class="sb-secondary">
+        <div class="sb-secondary-divider"></div>
+        <nav class="sb-nav sb-nav-secondary">
+            <button class="sb-btn sb-btn-sec" id="sb-kids"  onclick="KW.open()">        <span class="sb-icon">🌍</span> Kids English</button>
+            <button class="sb-btn sb-btn-sec" id="sb-games" onclick="showGamesPage()">  <span class="sb-icon">🎮</span> Oyunlar</button>
+            <button class="sb-btn sb-btn-sec" id="sb-stats" onclick="showStatsPage()">  <span class="sb-icon">📊</span> İstatistik</button>
+            <button class="sb-btn sb-btn-sec" id="sb-arsiv" onclick="showAIArsiv()">    <span class="sb-icon">🗃️</span> Soru Bankası <span class="sb-badge-pill" id="arsiv-badge" style="display:none"></span></button>
+        </nav>
+        <div class="sb-admin-bar">
+            <button class="sb-btn sb-btn-admin" id="sb-admin" onclick="navTo('admin-page')">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0;opacity:.6">
+                    <circle cx="7" cy="7" r="2.5" stroke="currentColor" stroke-width="1.4"/>
+                    <path d="M7 1v1.5M7 11.5V13M1 7h1.5M11.5 7H13M2.93 2.93l1.06 1.06M10.01 10.01l1.06 1.06M2.93 11.07l1.06-1.06M10.01 3.99l1.06-1.06" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                </svg>
+                Yönetim
+            </button>
+        </div>
+    </div>
+</aside>
+
+<div class="desktop-main" id="desktop-main">
+
+    <div id="index-page" class="container index-container">
+
+        <!-- ══ HERO ══ -->
+        <div class="idx-hero">
+            <div class="idx-hero-left">
+                <span class="idx-badge">YDT MASTER</span>
+                <h1 class="idx-title">Kelime <em>Ustası</em> ol.</h1>
+                <p class="idx-sub">Hafıza teknikleriyle kalıcı İngilizce öğrenme</p>
+                <div class="idx-goal-wrap">
+                    <div class="idx-goal-row">
+                        <span>🎯 Günlük Hedef</span>
+                        <span id="daily-goal-text">0 / 40</span>
+                    </div>
+                    <div class="idx-goal-track">
+                        <div id="daily-goal-fill" class="idx-goal-fill"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="idx-hero-right">
+                <div class="idx-stats-grid">
+                    <div class="idx-stat-card">
+                        <span class="idx-stat-val" id="idx-total">0</span>
+                        <span class="idx-stat-lbl">Toplam Kelime</span>
+                    </div>
+                    <div class="idx-stat-card idx-stat-green">
+                        <span class="idx-stat-val" id="idx-learned">0</span>
+                        <span class="idx-stat-lbl">Öğrenilen</span>
+                    </div>
+                    <div class="idx-stat-card idx-stat-orange">
+                        <span class="idx-stat-val">🔥 <span id="idx-streak-val">0</span></span>
+                        <span class="idx-stat-lbl">Günlük Seri</span>
+                    </div>
+                    <div class="idx-stat-card idx-stat-blue">
+                        <span class="idx-stat-val" id="idx-accuracy">0%</span>
+                        <span class="idx-stat-lbl">Başarı</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ SORU İSTATİSTİKLERİ — TAM GENİŞLİK ══ -->
+        <div class="idx-sorustat-bar">
+            <div class="idx-sorustat-item" onclick="showAIArsiv()">
+                <div class="idx-sorustat-icon" style="background:#6366f115;color:#6366f1;">📝</div>
+                <div class="idx-sorustat-body">
+                    <div class="idx-sorustat-label">Kelime Soruları</div>
+                    <div class="idx-sorustat-nums">
+                        <span class="idx-sorustat-total" id="ss-kelime-total">—</span>
+                        <span class="idx-sorustat-slash">/</span>
+                        <span class="idx-sorustat-cor" id="ss-kelime-cor">—</span>
+                        <span class="idx-sorustat-done" id="ss-kelime-pct"></span>
+                    </div>
+                    <div class="idx-sorustat-bar-wrap">
+                        <div class="idx-sorustat-fill" id="ss-kelime-fill" style="background:#6366f1;width:0%"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="idx-sorustat-divider"></div>
+            <div class="idx-sorustat-item" onclick="startAIQuizMode()">
+                <div class="idx-sorustat-icon" style="background:#e6394615;color:#e63946;">🤖</div>
+                <div class="idx-sorustat-body">
+                    <div class="idx-sorustat-label">AI Vocabulary Test</div>
+                    <div class="idx-sorustat-nums">
+                        <span class="idx-sorustat-total" id="ss-ai-total">—</span>
+                        <span class="idx-sorustat-slash">/</span>
+                        <span class="idx-sorustat-cor" id="ss-ai-cor">—</span>
+                        <span class="idx-sorustat-done" id="ss-ai-pct"></span>
+                    </div>
+                    <div class="idx-sorustat-bar-wrap">
+                        <div class="idx-sorustat-fill" id="ss-ai-fill" style="background:#e63946;width:0%"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="idx-sorustat-divider"></div>
+            <div class="idx-sorustat-item" onclick="showParagrafListesi()">
+                <div class="idx-sorustat-icon" style="background:#0ea5e915;color:#0ea5e9;">📄</div>
+                <div class="idx-sorustat-body">
+                    <div class="idx-sorustat-label">Paragraf Soruları</div>
+                    <div class="idx-sorustat-nums">
+                        <span class="idx-sorustat-total" id="ss-para-total">—</span>
+                        <span class="idx-sorustat-slash">/</span>
+                        <span class="idx-sorustat-cor" id="ss-para-cor">— pasaj</span>
+                        <span class="idx-sorustat-done" id="ss-para-pct"></span>
+                    </div>
+                    <div class="idx-sorustat-bar-wrap">
+                        <div class="idx-sorustat-fill" id="ss-para-fill" style="background:#0ea5e9;width:0%"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="idx-sorustat-divider"></div>
+            <div class="idx-sorustat-item" onclick="navTo('grammar-page')">
+                <div class="idx-sorustat-icon" style="background:#10b98115;color:#10b981;">📐</div>
+                <div class="idx-sorustat-body">
+                    <div class="idx-sorustat-label">Grammar Soruları</div>
+                    <div class="idx-sorustat-nums">
+                        <span class="idx-sorustat-total" id="ss-gram-total">—</span>
+                        <span class="idx-sorustat-slash">/</span>
+                        <span class="idx-sorustat-cor" id="ss-gram-cor">— konu</span>
+                        <span class="idx-sorustat-done" id="ss-gram-pct"></span>
+                    </div>
+                    <div class="idx-sorustat-bar-wrap">
+                        <div class="idx-sorustat-fill" id="ss-gram-fill" style="background:#10b981;width:0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ ANA BODY: 2 KOLON ══ -->
+        <div class="idx-body">
+
+            <!-- SOL KOLON -->
+            <div class="idx-col">
+
+                <!-- Aktif liste -->
+                <div class="idx-section">
+                    <div class="idx-section-title">📚 Aktif Liste</div>
+                    <select id="list-selector" class="list-picker-select" style="margin:0;"></select>
+                </div>
+
+                <!-- Hızlı Başlat -->
+                <div class="idx-section">
+                    <div class="idx-section-title">⚡ Hızlı Başlat</div>
+                    <div class="idx-quick-grid">
+                        <button class="idx-quick-btn idx-q-study" onclick="startStudy()">
+                            <span class="idx-quick-icon">📖</span>
+                            <span class="idx-quick-title">Kelime Öğren</span>
+                            <span class="idx-quick-desc">Flip kart modu</span>
+                        </button>
+                        <button class="idx-quick-btn idx-q-quiz" onclick="startQuiz()">
+                            <span class="idx-quick-icon">🎯</span>
+                            <span class="idx-quick-title">Vocabulary Test</span>
+                            <span class="idx-quick-desc">Çoktan seçmeli</span>
+                        </button>
+                        <button class="idx-quick-btn idx-q-para" onclick="showParagrafListesi()">
+                            <span class="idx-quick-icon">📄</span>
+                            <span class="idx-quick-title">Paragraf Oku</span>
+                            <span class="idx-quick-desc">C1/C2 metinler</span>
+                        </button>
+                        <button class="idx-quick-btn idx-q-ai" onclick="startAIQuizMode()">
+                            <span class="idx-quick-icon">🤖</span>
+                            <span class="idx-quick-title">AI Vocabulary Test</span>
+                            <span class="idx-quick-desc">Gerçek sınav formatı</span>
+                        </button>
+                        <button class="idx-quick-btn idx-q-exercise" onclick="showExercisePage()">
+                            <span class="idx-quick-icon">✍️</span>
+                            <span class="idx-quick-title">Alıştırmalar</span>
+                            <span class="idx-quick-desc">Yazarak · SM-2 Tekrar</span>
+                        </button>
+                        <button class="idx-quick-btn idx-q-games" onclick="showGamesPage()">
+                            <span class="idx-quick-icon">🎮</span>
+                            <span class="idx-quick-title">Oyunlar</span>
+                            <span class="idx-quick-desc">Eğlenerek öğren</span>
+                        </button>
+                        <button class="idx-quick-btn" onclick="KW.open()" style="background:linear-gradient(135deg,#E3F2FD,#EDE7F6);border:2px solid #C5CAE9;">
+                            <span class="idx-quick-icon">🌍</span>
+                            <span class="idx-quick-title">Kids English</span>
+                            <span class="idx-quick-desc">Oyunla İngilizce öğren</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- En Zayıf 5 Kelime -->
+                <div class="idx-section">
+                    <div class="idx-section-title">🚨 Bugün En Zayıf 5 Kelimen
+                        <span class="idx-section-sub">— en çok hata yaptıkların</span>
+                    </div>
+                    <div id="idx-weak-words" class="idx-weak-list"></div>
+                </div>
+
+                <!-- Grammar Modül Durumu -->
+                <div class="idx-section">
+                    <div class="idx-section-title">📐 Grammar Modülleri
+                        <span class="idx-section-sub">— tamamlanma durumu</span>
+                    </div>
+                    <div id="idx-grammar-progress" class="idx-grammar-progress"></div>
+                </div>
+
+            </div>
+
+            <!-- SAĞ KOLON -->
+            <div class="idx-col">
+
+                <!-- SM-2 Tekrar Planı -->
+                <div class="idx-section">
+                    <div class="idx-section-title">🧠 Tekrar Planı
+                        <span class="idx-section-sub">— SM-2 algoritması</span>
+                    </div>
+                    <div id="idx-sm2-plan" class="idx-sm2-plan"></div>
+                </div>
+
+                <!-- Son 7 Gün Performansı -->
+                <div class="idx-section">
+                    <div class="idx-section-title">📈 Son 7 Gün Performansı</div>
+                    <div class="idx-perf-chart" id="idx-perf-chart"></div>
+                    <div class="idx-perf-legend">
+                        <span class="idx-perf-dot idx-perf-dot-correct"></span><span>Doğru</span>
+                        <span class="idx-perf-dot idx-perf-dot-wrong"></span><span>Yanlış</span>
+                    </div>
+                </div>
+
+                <!-- Kelime Türü Dağılımı -->
+                <div class="idx-section">
+                    <div class="idx-section-title">🔤 Kelime Türü Dağılımı</div>
+                    <div id="idx-pos-chart" class="idx-pos-chart"></div>
+                </div>
+
+                <!-- Faydalı Kaynaklar -->
+                <div class="idx-section">
+                    <div class="idx-section-title">🔗 Faydalı Kaynaklar</div>
+                    <div class="idx-links">
+                        <a class="idx-link" href="https://www.osym.gov.tr" target="_blank">
+                            <span class="idx-link-icon">🏛️</span>
+                            <div class="idx-link-body">
+                                <div class="idx-link-name">ÖSYM Resmi Site</div>
+                                <div class="idx-link-desc">Sınav takvimi ve başvuru</div>
+                            </div>
+                            <span class="idx-link-arr">↗</span>
+                        </a>
+                        <a class="idx-link" href="https://www.merriam-webster.com" target="_blank">
+                            <span class="idx-link-icon">📘</span>
+                            <div class="idx-link-body">
+                                <div class="idx-link-name">Merriam-Webster</div>
+                                <div class="idx-link-desc">İngilizce sözlük &amp; thesaurus</div>
+                            </div>
+                            <span class="idx-link-arr">↗</span>
+                        </a>
+                        <a class="idx-link" href="https://www.vocabulary.com" target="_blank">
+                            <span class="idx-link-icon">🧠</span>
+                            <div class="idx-link-body">
+                                <div class="idx-link-name">Vocabulary.com</div>
+                                <div class="idx-link-desc">Adaptif kelime öğrenme</div>
+                            </div>
+                            <span class="idx-link-arr">↗</span>
+                        </a>
+                        <a class="idx-link" href="https://www.deepl.com/translator" target="_blank">
+                            <span class="idx-link-icon">🌐</span>
+                            <div class="idx-link-body">
+                                <div class="idx-link-name">DeepL Çeviri</div>
+                                <div class="idx-link-desc">Bağlamsal çeviri</div>
+                            </div>
+                            <span class="idx-link-arr">↗</span>
+                        </a>
+                        <a class="idx-link" href="https://youglish.com" target="_blank">
+                            <span class="idx-link-icon">🎬</span>
+                            <div class="idx-link-body">
+                                <div class="idx-link-name">YouGlish</div>
+                                <div class="idx-link-desc">Kelimeleri YouTube'da dinle</div>
+                            </div>
+                            <span class="idx-link-arr">↗</span>
+                        </a>
+                        <a class="idx-link" href="https://quizlet.com" target="_blank">
+                            <span class="idx-link-icon">🃏</span>
+                            <div class="idx-link-body">
+                                <div class="idx-link-name">Quizlet</div>
+                                <div class="idx-link-desc">Hazır kart setleri</div>
+                            </div>
+                            <span class="idx-link-arr">↗</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- YDT Strateji -->
+                <div class="idx-section idx-tips-section">
+                    <div class="idx-section-title">💡 YDT Strateji</div>
+                    <div class="idx-tips">
+                        <div class="idx-tip">
+                            <span class="idx-tip-num">01</span>
+                            <span class="idx-tip-text">Günde <strong>en az 20 kelime</strong> tekrar et — SM-2 sistemi otomatik planlar.</span>
+                        </div>
+                        <div class="idx-tip">
+                            <span class="idx-tip-num">02</span>
+                            <span class="idx-tip-text">Paragraf okurken <strong>kırmızı kelimelere</strong> gel — bağlam içinde ezber kalıcı olur.</span>
+                        </div>
+                        <div class="idx-tip">
+                            <span class="idx-tip-num">03</span>
+                            <span class="idx-tip-text">AI ile <strong>YDT denemesi</strong> çöz — gerçek sınav formatını tanı.</span>
+                        </div>
+                        <div class="idx-tip">
+                            <span class="idx-tip-num">04</span>
+                            <span class="idx-tip-text">Mnemonic: kelimeyle Türkçe ses benzerliği kur, <strong>hikayeyle pekiştir.</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+    <div id="paragraf-liste-page" class="container hidden rh-page">
+
+        <!-- ══ HERO HEADER ══ -->
+        <div class="rh2-hero">
+            <div class="rh2-hero-bg"></div>
+            <div class="rh2-hero-content">
+                <div class="rh2-hero-eyebrow">
+                    <span class="rh2-hero-dot"></span>
+                    C1 / C2 Seviye
+                </div>
+                <h1 class="rh2-hero-title">Okuma & Anlama</h1>
+                <p class="rh2-hero-sub">Özgün metinlerle bağlam içinde kelime öğren, YDT soru tiplerini kavra</p>
+                <!-- Genel istatistik şeridi -->
+                <div class="rh2-hero-stats">
+                    <div class="rh2-hstat">
+                        <span class="rh2-hstat-val" id="rh2-stat-passages">—</span>
+                        <span class="rh2-hstat-lbl">Pasaj</span>
+                    </div>
+                    <div class="rh2-hstat-div"></div>
+                    <div class="rh2-hstat">
+                        <span class="rh2-hstat-val" id="rh2-stat-words">—</span>
+                        <span class="rh2-hstat-lbl">Kelime</span>
+                    </div>
+                    <div class="rh2-hstat-div"></div>
+                    <div class="rh2-hstat">
+                        <span class="rh2-hstat-val" id="rh2-stat-questions">—</span>
+                        <span class="rh2-hstat-lbl">Soru</span>
+                    </div>
+                    <div class="rh2-hstat-div"></div>
+                    <div class="rh2-hstat">
+                        <span class="rh2-hstat-val" id="rh2-stat-readmin">—</span>
+                        <span class="rh2-hstat-lbl">dk okuma</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ TAB SWITCH ══ -->
+        <div class="rh2-tabbar">
+            <button class="rh2-tab rh2-tab-active" id="rh-tab-ai" onclick="openReadingHub('ai')">
+                <span class="rh2-tab-icon">🤖</span>
+                <span>Günlük AI</span>
+                <span class="rh2-tab-pill" id="ai-daily-date-badge"></span>
+            </button>
+            <button class="rh2-tab" id="rh-tab-saved" onclick="openReadingHub('saved')">
+                <span class="rh2-tab-icon">📚</span>
+                <span>Yüklü Pasajlar</span>
+                <span class="rh2-tab-pill rh2-tab-pill-green" id="reading-hub-saved-count"></span>
+            </button>
+            <!-- Sağ: yenile -->
+            <div style="flex:1;"></div>
+            <button id="ai-daily-refresh-btn" onclick="generateAIDailyParagraflar(true)" class="rh2-refresh-btn" style="display:none;">
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                    <path d="M11.5 2A6 6 0 1 0 12 6.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                    <path d="M8.5 2H11.5V5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Yenile
+            </button>
+        </div>
+
+        <!-- ══ PANEL: AI ══ -->
+        <div id="ai-daily-paragraf-list" class="rh2-grid" style="display:none;">
+            <div class="rh2-loading">
+                <div class="rh2-loading-ring"></div>
+                <span>Günlük pasajlar üretiliyor…</span>
+            </div>
+        </div>
+
+        <!-- ══ PANEL: Yüklü ══ -->
+        <div id="paragraf-listesi-kutu" class="rh2-grid" style="display:none;"></div>
+
+    </div>
+
+    <div id="stats-page" class="container hidden">
+        <p class="page-title" style="margin-top:8px;">Gelişim Raporu</p>
+        <p class="page-sub">Tüm zamanlar</p>
+        <div class="stats-grid">
+            <div class="stat-card"><span class="stat-val" id="stat-total-words">0</span><span class="stat-label">Toplam Kelime</span></div>
+            <div class="stat-card"><span class="stat-val" id="stat-learned-words">0</span><span class="stat-label">Öğrenilen</span></div>
+            <div class="stat-card"><span class="stat-val" id="stat-avg-score">0%</span><span class="stat-label">Başarı Oranı</span></div>
+            <div class="stat-card"><span class="stat-val" id="stat-study-time">0</span><span class="stat-label">Dakika</span></div>
+        </div>
+
+        <!-- Streak & Rozetler -->
+        <div class="streak-card">
+            <div class="streak-flame">
+                <span id="stats-streak-num">0</span>
+                <span class="streak-fire">🔥</span>
+            </div>
+            <div class="streak-info">
+                <div class="streak-label">Günlük Seri</div>
+                <div class="streak-sub" id="stats-streak-sub">Bugün henüz çalışmadın</div>
+            </div>
+        </div>
+
+        <div class="badges-title">🏅 Rozetler</div>
+        <div class="badges-grid" id="badges-grid"></div>
+
+        <!-- Isı Haritası -->
+        <div class="heatmap-section">
+            <div class="heatmap-header">
+                <span class="heatmap-title">📊 Kelime Isı Haritası</span>
+                <select id="heatmap-list-sel" class="heatmap-list-sel" onchange="renderHeatmap()"></select>
+            </div>
+            <p style="font-size:0.72rem;color:var(--ink3);margin-bottom:10px;">Her kare bir kelime — renk hata sayısına göre değişir.</p>
+            <div id="heatmap-grid" class="heatmap-grid"></div>
+            <div class="heatmap-legend">
+                <span class="heatmap-leg-dot" style="background:#dcfce7;border-color:#bbf7d0;"></span><span>Harika</span>
+                <span class="heatmap-leg-dot" style="background:#fef9c3;border-color:#fde68a;"></span><span>Orta</span>
+                <span class="heatmap-leg-dot" style="background:#fee2e2;border-color:#fca5a5;"></span><span>Zayıf</span>
+                <span class="heatmap-leg-dot" style="background:#f3e8ff;border-color:#d8b4fe;"></span><span>Yeni</span>
+            </div>
+        </div>
+
+        <div class="top-errors">
+            <h4>⚠️ En Çok Hata Yapılanlar</h4>
+            <ol id="error-list" style="margin:0; padding-left:18px; font-size:0.85rem; color: var(--ink2);"></ol>
+        </div>
+    </div>
+
+    <div id="study-page" class="container hidden">
+        <!-- Üst bar -->
+        <div class="study-topbar">
+            <button class="back-btn-inline" onclick="exitModule()">←</button>
+            <div class="study-progress-wrap">
+                <div class="study-progress-track">
+                    <div class="study-progress-fill" id="study-prog-fill"></div>
+                </div>
+                <span class="study-progress-label" id="study-progress-label">1 / 10</span>
+            </div>
+            <button class="study-speak-btn" onclick="speakWord(document.getElementById('study-eng').innerText)" title="Sesli dinle">🔊</button>
+        </div>
+
+        <!-- Mini stat chips -->
+        <div class="study-chips">
+            <div class="study-chip study-chip-known" id="chip-known">✅ <span id="chip-known-count">0</span> Biliyorum</div>
+            <div class="study-chip study-chip-again" id="chip-again">🔁 <span id="chip-again-count">0</span> Tekrar</div>
+        </div>
+
+        <!-- Flip card -->
+        <div class="sfc-wrap" id="sfc-wrap">
+            <div class="sfc" id="sfc">
+
+                <!-- ── HERO: Kelime + fonetik ── -->
+                <div class="wc-hero">
+                    <button class="wc-speak-btn" onclick="event.stopPropagation();speakWord(document.getElementById('study-eng').innerText)" title="Sesli dinle">🔊</button>
+
+                    <div class="wc-hero-top">
+                        <span class="wc-list-tag" id="study-list-tag">Liste</span>
+                        <span id="study-pos-tag">—</span>
+                        <span class="wc-level-tag" id="study-level-tag">B2</span>
+                    </div>
+
+                    <div class="wc-word" id="study-eng">Word</div>
+
+                    <div class="wc-phonetic-row">
+                        <span class="wc-phonetic" id="study-phonetic"></span>
+                        <span class="wc-syllables" id="study-syllables"></span>
+                    </div>
+
+                    <div class="wc-streak-row" id="sfc-streak-row"></div>
+                </div>
+
+                <!-- ── ANLAM ── -->
+                <div class="wc-meaning-band">
+                    <div class="wc-tr-badge">TR</div>
+                    <div class="wc-tr-text" id="study-tr">Anlam</div>
+                </div>
+
+                <!-- ── BİLGİ GRID: POS + Morfoloji + Seviye + Kelime Ailesi ── -->
+                <div class="wc-info-grid" id="study-info-grid">
+                    <div class="wc-info-cell">
+                        <div class="wc-info-label">Sözcük Türü</div>
+                        <div class="wc-info-val" id="study-pos-full">—</div>
+                    </div>
+                    <div class="wc-info-cell">
+                        <div class="wc-info-label">Morfoloji</div>
+                        <div class="wc-info-val-sm" id="study-morphology">—</div>
+                    </div>
+                    <div class="wc-info-cell">
+                        <div class="wc-info-label">Kelime Ailesi</div>
+                        <div class="wc-info-val-sm" id="study-family">—</div>
+                    </div>
+                    <div class="wc-info-cell">
+                        <div class="wc-info-label">Performans</div>
+                        <div class="wc-info-val">
+                            <span class="wc-perf-pill wc-perf-err">❌ <span id="sfcb-err-count">0</span></span>
+                            <span class="wc-perf-pill wc-perf-ok" style="margin-left:4px;">🔥 <span id="sfcb-streak-count">0</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── ÖRNEK CÜMLELER ── -->
+                <div class="wc-sentences" id="study-sentences-wrap">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+                        <span style="font-size:.58rem;font-weight:800;letter-spacing:.9px;text-transform:uppercase;color:var(--ink3);">Örnek Cümleler</span>
+                        <button class="wc-ai-btn" id="study-gen-btn" onclick="generateStudySentences()">✨ AI ile üret</button>
+                    </div>
+                    <div id="study-sentences-list">
+                        <div style="font-size:.78rem;color:var(--ink3);font-style:italic;padding:4px 0;">Cümle üretmek için ✨ butonuna bas.</div>
+                    </div>
+                </div>
+
+                <!-- ── MNEMONİC & BAĞLAM ── -->
+                <div class="wc-extra" id="study-extra-blocks">
+                    <div class="wc-extra-block wc-extra-mnemonic" id="sfcb-mnemonic-block">
+                        <div class="wc-extra-icon">🧠</div>
+                        <div class="wc-extra-content">
+                            <div class="wc-extra-label">Mnemonic</div>
+                            <div class="wc-extra-val" id="study-mnemonic">—</div>
+                        </div>
+                    </div>
+                    <div class="wc-extra-block wc-extra-story" id="sfcb-story-block">
+                        <div class="wc-extra-icon">📖</div>
+                        <div class="wc-extra-content">
+                            <div class="wc-extra-label">Bağlam Cümlesi</div>
+                            <div class="wc-extra-val" id="study-story">—</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Aksiyon butonları -->
+        <div class="study-actions" id="study-actions">
+            <button class="study-btn-again" onclick="studyMarkAgain()">🔁 Tekrar Et</button>
+            <button class="study-btn-known" onclick="studyMarkKnown()">✅ Biliyorum!</button>
+        </div>
+
+        <!-- Klasik ileri/geri -->
+        <div class="study-nav-simple" id="study-nav-simple">
+            <button class="btn btn-ghost" style="flex:1;margin:0;" onclick="prevStudy()">← Geri</button>
+        </div>
+    </div>
+
+    <!-- Öğrenme Tamamlama Ekranı -->
+    <div id="study-done-page" class="container hidden">
+        <div class="sdone-emoji" id="sdone-emoji">🎉</div>
+        <div class="sdone-title" id="sdone-title">Liste Tamamlandı!</div>
+        <div class="sdone-sub" id="sdone-sub">Harika iş çıkardın!</div>
+        <div class="sdone-stats">
+            <div class="sdone-stat">
+                <span class="sdone-val" id="sdone-known">0</span>
+                <span class="sdone-lbl">Biliyorum</span>
+            </div>
+            <div class="sdone-stat sdone-stat-mid">
+                <span class="sdone-val" id="sdone-total">0</span>
+                <span class="sdone-lbl">Toplam</span>
+            </div>
+            <div class="sdone-stat">
+                <span class="sdone-val sdone-pct" id="sdone-pct">0%</span>
+                <span class="sdone-lbl">Başarı</span>
+            </div>
+        </div>
+        <div class="sdone-bar-wrap">
+            <div class="sdone-bar-fill" id="sdone-bar-fill"></div>
+        </div>
+        <div class="sdone-msg" id="sdone-msg"></div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:16px;">
+            <button class="btn" onclick="restartStudy()">🔄 Tekrar Çalış</button>
+            <button class="btn" style="background:#7c3aed;" onclick="restartStudyAgainOnly()">🎯 Sadece Tekrarları Çalış</button>
+            <button class="btn btn-ghost" style="margin:0;" onclick="exitModule()">Ana Sayfaya Dön</button>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         VOCABULARY TEST SAYFASI
+         ══════════════════════════════════════════ -->
+    <div id="quiz-page" class="container hidden" style="padding:0;">
+
+        <!-- ── Üst HUD (sabit) ── -->
+        <div class="qz-hud" id="qz-hud">
+            <button class="qz-exit-btn" onclick="exitModule()">✕</button>
+
+            <div class="qz-hud-center">
+                <div class="qz-hud-title">🎯 Vocabulary Test</div>
+                <div class="qz-progress-wrap">
+                    <div class="qz-progress-bar"><div id="qz-prog-fill" class="qz-prog-fill"></div></div>
+                    <span id="qz-prog-label" class="qz-prog-label">1 / 15</span>
+                </div>
+            </div>
+
+            <div class="qz-xp-badge" id="qz-xp-badge"><span id="qz-xp">0</span> XP</div>
+        </div>
+
+        <!-- ── Kaydırılabilir içerik alanı ── -->
+        <div class="qz-body" id="qz-body">
+
+            <!-- ── Combo & Meta ── -->
+            <div class="qz-meta-row" id="qz-meta-row">
+                <div class="qz-combo-box" id="qz-combo-box" style="opacity:0;transform:scale(.8);">
+                    <span class="qz-combo-fire">🔥</span>
+                    <span id="qz-combo-num">0</span>x Combo
+                </div>
+                <div class="qz-type-pill" id="qz-type-pill">MCQ</div>
+                <div class="qz-lives" id="qz-lives">❤️❤️❤️</div>
+            </div>
+
+            <!-- ── Soru Kartı ── -->
+            <div class="qz-card" id="qz-card">
+                <div class="qz-instruction" id="qz-instruction">Doğru anlamı seç</div>
+                <div class="qz-question-area" id="qz-question-area"></div>
+                <div id="qz-answer-area"></div>
+
+                <!-- ── Kompakt bilgi şeridi (cevap bekleniyor) ── -->
+                <div class="qz-info-panel" id="qz-info-panel">
+
+                    <!-- Zamanlayıcı -->
+                    <div class="qz-timer-wrap" id="qz-timer-wrap">
+                        <div class="qz-timer-bar-track">
+                            <div class="qz-timer-bar-fill" id="qz-timer-fill"></div>
+                        </div>
+                        <span class="qz-timer-label" id="qz-timer-label">15</span>
+                    </div>
+
+                    <!-- İki kolon: Mnemonic + Performans -->
+                    <div class="qz-info-cols">
+                        <div class="qz-info-card qz-info-mnem" id="qz-info-mnem" style="display:none;">
+                            <div class="qz-info-card-icon">💡</div>
+                            <div>
+                                <div class="qz-info-card-label">Bellek İpucu</div>
+                                <div class="qz-info-card-val" id="qz-mnem-text">—</div>
+                            </div>
+                        </div>
+                        <div class="qz-info-card qz-info-perf">
+                            <div class="qz-info-card-icon">📊</div>
+                            <div style="flex:1;">
+                                <div class="qz-info-card-label">Performans</div>
+                                <div class="qz-perf-row">
+                                    <span class="qz-perf-pill qz-perf-ok">✅ <span id="qz-perf-streak">0</span></span>
+                                    <span class="qz-perf-pill qz-perf-err">❌ <span id="qz-perf-err">0</span></span>
+                                </div>
+                                <div class="qz-perf-bar-wrap">
+                                    <div class="qz-perf-bar-fill" id="qz-perf-bar"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Kelime ailesi -->
+                    <div class="qz-family-row" id="qz-family-row" style="display:none;">
+                        <div class="qz-family-label">🔤 Kelime Ailesi</div>
+                        <div class="qz-family-chips" id="qz-family-chips"></div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- ── Sonuç Ekranı (kart ile aynı alanda) ── -->
+            <div class="qz-result" id="qz-result" style="display:none;">
+                <div class="qz-result-emoji" id="qz-res-emoji">🎉</div>
+                <div class="qz-result-title" id="qz-res-title">Mükemmel!</div>
+                <div class="qz-result-sub" id="qz-res-sub">Tüm soruları bitirdin</div>
+                <div class="qz-result-stats">
+                    <div class="qz-rs-box"><div class="qz-rs-num" id="qz-rs-xp">0</div><div class="qz-rs-lbl">XP Kazandın</div></div>
+                    <div class="qz-rs-box"><div class="qz-rs-num" id="qz-rs-correct">0</div><div class="qz-rs-lbl">Doğru</div></div>
+                    <div class="qz-rs-box"><div class="qz-rs-num" id="qz-rs-streak">0</div><div class="qz-rs-lbl">Max Combo</div></div>
+                </div>
+                <button class="qz-res-btn" onclick="startQuizFromNav()">🔄 Tekrar Oyna</button>
+                <button class="qz-res-btn qz-res-ghost" onclick="exitModule()">Ana Sayfaya Dön</button>
+            </div>
+
+        </div><!-- /qz-body -->
+
+        <!-- ── Detaylı Feedback Paneli (aşağı açılan) ── -->
+        <div class="qz-feedback qz-feedback-hidden" id="qz-feedback">
+
+            <!-- Özet satır -->
+            <div class="qz-fb-summary">
+                <div class="qz-fb-icon" id="qz-fb-icon">✓</div>
+                <div class="qz-fb-texts">
+                    <div class="qz-fb-title" id="qz-fb-title">Doğru!</div>
+                    <div class="qz-fb-sub" id="qz-fb-sub"></div>
+                </div>
+                <div class="qz-fb-xp-gain" id="qz-fb-xp-gain" style="display:none;">+10 XP</div>
+                <button class="qz-next-btn" onclick="nextQuestion()">Devam →</button>
+            </div>
+
+            <!-- Detay içeriği -->
+            <div class="qz-fb-detail" id="qz-fb-detail">
+                <div class="qz-fb-detail-cols">
+                    <!-- Sol: Anlam + örnek cümle -->
+                    <div class="qz-fb-def-block" id="qz-fb-def-block">
+                        <div class="qz-fb-def-eng" id="qz-fb-def-eng"></div>
+                        <div class="qz-fb-def-tr" id="qz-fb-def-tr"></div>
+                        <div class="qz-fb-story" id="qz-fb-story" style="display:none;"></div>
+                    </div>
+                    <!-- Sağ: Mnemonic -->
+                    <div class="qz-fb-mnem-block" id="qz-fb-mnem-block" style="display:none;">
+                        <div class="qz-fb-mnem-icon">🧠</div>
+                        <div class="qz-fb-mnem-text" id="qz-fb-mnem-text"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div id="admin-page" class="container hidden">
+
+        <!-- ══ ŞİFRE EKRANI ══ -->
+        <div id="admin-pin-overlay" style="position:absolute;inset:0;z-index:50;
+             background:var(--white);display:flex;flex-direction:column;align-items:center;
+             justify-content:center;padding:40px 24px;min-height:400px;">
+            <div style="font-size:2.5rem;margin-bottom:12px;">🔐</div>
+            <div style="font-size:1rem;font-weight:800;color:var(--ink);margin-bottom:4px;">Yönetim Paneli</div>
+            <div style="font-size:.78rem;color:var(--ink3);margin-bottom:28px;">Devam etmek için şifreyi girin</div>
+            <div style="display:flex;gap:10px;margin-bottom:20px;">
+                <div id="pin-dot-1" style="width:14px;height:14px;border-radius:50%;background:var(--border);transition:background .15s;"></div>
+                <div id="pin-dot-2" style="width:14px;height:14px;border-radius:50%;background:var(--border);transition:background .15s;"></div>
+                <div id="pin-dot-3" style="width:14px;height:14px;border-radius:50%;background:var(--border);transition:background .15s;"></div>
+                <div id="pin-dot-4" style="width:14px;height:14px;border-radius:50%;background:var(--border);transition:background .15s;"></div>
+            </div>
+            <div id="pin-error" style="font-size:.72rem;color:#ef4444;font-weight:700;min-height:18px;margin-bottom:12px;"></div>
+            <!-- Sayısal klavye -->
+            <div style="display:grid;grid-template-columns:repeat(3,64px);gap:10px;">
+                <button onclick="pinPress('1')" class="pin-key">1</button>
+                <button onclick="pinPress('2')" class="pin-key">2</button>
+                <button onclick="pinPress('3')" class="pin-key">3</button>
+                <button onclick="pinPress('4')" class="pin-key">4</button>
+                <button onclick="pinPress('5')" class="pin-key">5</button>
+                <button onclick="pinPress('6')" class="pin-key">6</button>
+                <button onclick="pinPress('7')" class="pin-key">7</button>
+                <button onclick="pinPress('8')" class="pin-key">8</button>
+                <button onclick="pinPress('9')" class="pin-key">9</button>
+                <button onclick="pinPress('back')" class="pin-key" style="font-size:1.1rem;">⌫</button>
+                <button onclick="pinPress('0')" class="pin-key">0</button>
+                <button onclick="pinPress('back')" class="pin-key" style="opacity:0;pointer-events:none;"></button>
+            </div>
+        </div>
+
+        <!-- ══ PANEL İÇERİĞİ (PIN doğrulanana kadar gizli) ══ -->
+        <div id="admin-panel-content" style="display:none;">
+        <p class="page-title">Yönetim Paneli</p>
+        <p class="page-sub">İçerik ve sistem ayarlarını yönetin</p>
+
+        <!-- ══ AI API ANAHTARLARI ══ -->
+        <div class="admin-section">
+            <div class="admin-section-title">🔑 AI API Anahtarları
+                <span style="font-size:.6rem;background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;border-radius:10px;padding:2px 8px;margin-left:6px;font-weight:700;vertical-align:middle;">Cascade Sistemi</span>
+            </div>
+            <p style="font-size:0.75rem;color:var(--ink3);margin-bottom:12px;line-height:1.6;">
+                Kota dolduğunda sistem otomatik olarak sıradaki servise geçer.
+                En az <strong>bir</strong> anahtar girilmesi yeterli — hepsi ücretsiz.
+            </p>
+
+            <!-- Cascade sırası görsel -->
+            <div class="cascade-order">
+                <div class="co-item" id="co-item-gemini"><span class="co-num">1</span><span class="co-icon">✨</span><span class="co-name">Gemini</span><span class="co-dot" id="co-dot-gemini">—</span></div>
+                <span class="co-arrow">›</span>
+                <div class="co-item" id="co-item-groq"><span class="co-num">2</span><span class="co-icon">⚡</span><span class="co-name">Groq</span><span class="co-dot" id="co-dot-groq">—</span></div>
+                <span class="co-arrow">›</span>
+                <div class="co-item" id="co-item-openrouter"><span class="co-num">3</span><span class="co-icon">🌐</span><span class="co-name">OpenRouter</span><span class="co-dot" id="co-dot-openrouter">—</span></div>
+                <span class="co-arrow">›</span>
+                <div class="co-item" id="co-item-mistral"><span class="co-num">4</span><span class="co-icon">🌪️</span><span class="co-name">Mistral</span><span class="co-dot" id="co-dot-mistral">—</span></div>
+            </div>
+
+            <!-- API key giriş satırları -->
+            <div class="akey-list">
+
+                <div class="akey-row">
+                    <div class="akey-header">
+                        <span class="akey-name">✨ Gemini</span>
+                        <a href="https://aistudio.google.com/app/apikey" target="_blank" class="akey-link">Ücretsiz al →</a>
+                    </div>
+                    <div class="akey-inputs">
+                        <input type="password" id="akey-gemini" class="admin-input" placeholder="AIza..." style="margin:0;flex:1;">
+                        <button class="akey-save-btn" onclick="saveApiKey('gemini','akey-gemini')">Kaydet</button>
+                    </div>
+                    <div class="akey-note">1.500 istek/gün · Gemini 2.5 Flash · En Zeki</div>
+                </div>
+
+                <div class="akey-row">
+                    <div class="akey-header">
+                        <span class="akey-name">⚡ Groq</span>
+                        <a href="https://console.groq.com/keys" target="_blank" class="akey-link">Ücretsiz al →</a>
+                    </div>
+                    <div class="akey-inputs">
+                        <input type="password" id="akey-groq" class="admin-input" placeholder="gsk_..." style="margin:0;flex:1;">
+                        <button class="akey-save-btn" onclick="saveApiKey('groq','akey-groq')">Kaydet</button>
+                    </div>
+                    <div class="akey-note">14.400 istek/gün · Llama 3.3 70B · En Hızlı ⚡</div>
+                </div>
+
+                <div class="akey-row">
+                    <div class="akey-header">
+                        <span class="akey-name">🌐 OpenRouter</span>
+                        <a href="https://openrouter.ai/keys" target="_blank" class="akey-link">Ücretsiz al →</a>
+                    </div>
+                    <div class="akey-inputs">
+                        <input type="password" id="akey-openrouter" class="admin-input" placeholder="sk-or-..." style="margin:0;flex:1;">
+                        <button class="akey-save-btn" onclick="saveApiKey('openrouter','akey-openrouter')">Kaydet</button>
+                    </div>
+                    <div class="akey-note">Llama 3.1 8B ücretsiz model · Kredi kartı gerektirmez</div>
+                </div>
+
+                <div class="akey-row">
+                    <div class="akey-header">
+                        <span class="akey-name">🌪️ Mistral AI</span>
+                        <a href="https://console.mistral.ai/api-keys" target="_blank" class="akey-link">Ücretsiz al →</a>
+                    </div>
+                    <div class="akey-inputs">
+                        <input type="password" id="akey-mistral" class="admin-input" placeholder="..." style="margin:0;flex:1;">
+                        <button class="akey-save-btn" onclick="saveApiKey('mistral','akey-mistral')">Kaydet</button>
+                    </div>
+                    <div class="akey-note">1 milyar token/ay · Mistral Small</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ AI Kelime Üretici ══ -->
+        <div class="admin-section ai-gen-section">
+            <div class="admin-section-title" style="color:#7c3aed;">🤖 AI Kelime Üretici</div>
+            <p style="font-size:0.78rem;color:var(--ink3);margin-bottom:10px;line-height:1.5;">Konu ve kelime sayısı gir — AI otomatik kelime, Türkçe anlam, mnemonic ve hikaye üretsin.</p>
+
+            <div style="display:flex;gap:8px;margin-bottom:8px;">
+                <div style="flex:1;">
+                    <label style="font-size:0.72rem;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px;">Konu / Tema</label>
+                    <input type="text" id="ai-gen-topic" class="admin-input" placeholder="ör: İş dünyası, Tıp, C1 sıfatlar..." style="margin:0;">
+                </div>
+                <div style="width:72px;">
+                    <label style="font-size:0.72rem;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px;">Sayı</label>
+                    <input type="number" id="ai-gen-count" class="admin-input" value="10" min="3" max="30" style="margin:0;text-align:center;">
+                </div>
+            </div>
+
+            <div style="display:flex;gap:8px;margin-bottom:12px;">
+                <div style="flex:1;">
+                    <label style="font-size:0.72rem;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px;">Seviye</label>
+                    <select id="ai-gen-level" class="admin-input" style="margin:0;">
+                        <option value="B2">B2 (Orta)</option>
+                        <option value="C1" selected>C1 (İleri)</option>
+                        <option value="C2">C2 (Uzman)</option>
+                        <option value="YDT">YDT Odaklı</option>
+                    </select>
+                </div>
+                <div style="flex:1;">
+                    <label style="font-size:0.72rem;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px;">Listeye Ekle</label>
+                    <select id="ai-gen-target-list" class="admin-input" style="margin:0;"></select>
+                </div>
+            </div>
+
+            <button id="ai-gen-btn" class="btn" style="background:linear-gradient(135deg,#7c3aed,#a855f7);margin-bottom:0;" onclick="aiGenerateWords()">
+                ✨ Kelimeleri Üret
+            </button>
+
+            <!-- Önizleme -->
+            <div id="ai-gen-preview" style="display:none;margin-top:12px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                    <span style="font-size:0.8rem;font-weight:700;color:var(--ink);">📋 Önizleme</span>
+                    <span id="ai-gen-preview-count" style="font-size:0.72rem;color:var(--ink3);"></span>
+                </div>
+                <div id="ai-gen-preview-list" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;"></div>
+                <div style="display:flex;gap:8px;margin-top:10px;">
+                    <button class="btn" style="flex:2;margin:0;background:#7c3aed;" onclick="aiGenSaveToList()">💾 Listeye Kaydet</button>
+                    <button class="btn btn-ghost" style="flex:1;margin:0;font-size:0.82rem;" onclick="aiGenDiscard()">✕ İptal</button>
+                </div>
+            </div>
+
+            <!-- Yükleniyor -->
+            <div id="ai-gen-loading" style="display:none;text-align:center;padding:20px 0;">
+                <div style="font-size:2rem;animation:spin 1s linear infinite;display:inline-block;">⚙️</div>
+                <div style="font-size:0.82rem;color:var(--ink3);margin-top:8px;" id="ai-gen-loading-text">AI kelimeler üretiyor...</div>
+            </div>
+        </div>
+
+        <div class="admin-section">
+            <div class="admin-section-title">📚 Kelime Listesi Yönetimi</div>
+            
+            <div style="background:var(--bg); border-radius:8px; padding:12px; margin-bottom:12px; text-align:left;">
+                <div style="font-size:0.85rem; font-weight:700; margin-bottom:8px; color:var(--ink);">+ Yeni Liste Oluştur</div>
+                <div style="display:flex; gap:6px;">
+                    <input type="text" id="new-list-name" placeholder="Yeni liste adı..." class="admin-input" style="margin:0; flex:1;">
+                    <button class="btn" onclick="createNewList()" style="margin:0; width:auto; padding:0 15px;">Ekle</button>
+                </div>
+            </div>
+
+            <div style="background:var(--bg); border-radius:8px; padding:12px; text-align:left;">
+                <div style="font-size:0.85rem; font-weight:700; margin-bottom:8px; color:var(--ink);">✏️ Mevcut Listeyi Düzenle</div>
+                <select id="edit-list-selector" class="admin-input" style="margin-bottom:8px;" onchange="loadListToTextarea()"></select>
+                <div style="display:flex; gap:6px; margin-bottom:8px;">
+                    <input type="text" id="rename-list-input" placeholder="Listeyi yeniden adlandır..." class="admin-input" style="margin:0; flex:1;">
+                    <button class="btn" onclick="renameList()" style="margin:0; width:auto; padding:0 12px; font-size:0.85rem;">İsim Değiştir</button>
+                </div>
+                
+                <div class="format-window" style="margin:8px 0; background:#fff;">
+                    <span style="font-size:0.75rem; font-weight:700; color:var(--ink2);">📋 AI Yapıştırma Formatı:</span>
+                    <div class="code-block" style="margin-top:4px;">Kelime:Anlam:Mnemonic:Hikaye</div>
+                </div>
+                
+                <textarea id="bulk-input" rows="6" class="admin-input" placeholder="Kelimeleri buraya yapıştırın..." style="margin-bottom:8px; font-family:monospace; font-size:0.85rem;"></textarea>
+                
+                <div style="display:flex; gap:8px;">
+                    <button class="btn" style="flex:2;" onclick="saveCurrentList()">💾 Kaydet</button>
+                    <button class="btn" style="flex:1; background:var(--red-soft); color:var(--red); border:1px solid var(--red);" onclick="deleteList()">🗑 Sil</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-section" style="margin-top: 20px;">
+            <div class="admin-section-title">📄 Paragraf Yönetimi</div>
+
+            <!-- Mevcut paragraflar listesi -->
+            <div id="admin-paragraf-liste" style="margin-bottom: 12px;"></div>
+
+            <!-- Yeni/Düzenle Formu -->
+            <div style="background:var(--white); border-radius:10px; padding:14px; border:1px solid var(--border);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <div style="font-size:0.85rem; font-weight:700; color:var(--ink);" id="paragraf-form-title">➕ Yeni Paragraf Ekle</div>
+                    <button id="paragraf-form-cancel-btn" onclick="cancelParagrafEdit()" style="display:none; font-size:0.75rem; background:none; border:none; color:var(--ink3); cursor:pointer; font-family:inherit;">✕ İptal</button>
+                </div>
+                <input type="hidden" id="edit-paragraf-index" value="-1">
+                <input type="text" id="new-p-title" class="admin-input" placeholder="Paragraf Başlığı" style="margin-bottom: 8px;">
+                <textarea id="new-p-text" class="admin-input" placeholder="Paragraf Metnini Buraya Yapıştırın..." style="height: 100px; resize: vertical; margin-bottom: 8px; font-family:inherit;"></textarea>
+                <textarea id="new-p-words" class="admin-input" placeholder="Zor Kelimeler (Örn: profound:derin, myriad:sayısız)" style="height: 60px; resize: vertical; margin-bottom: 10px; font-family:inherit;"></textarea>
+                <button class="btn" id="paragraf-save-btn" onclick="addParagrafFromAdmin()">💾 Paragrafı Kaydet</button>
+            </div>
+        </div>
+
+        <div class="admin-section" style="margin-top: 20px;">
+            <div class="admin-section-title">☁️ Sistem & Bulut Yedekleme</div>
+            <div class="firebase-status" style="margin-bottom:12px;">
+                <div id="sync-dot-admin" style="width:10px;height:10px;border-radius:50%;background:#ccc;flex-shrink:0;"></div>
+                <div>
+                    <div class="firebase-status-text">Realtime Database</div>
+                    <div class="firebase-status-sub">Değişiklikler otomatik kaydedilir</div>
+                </div>
+            </div>
+            <button class="btn" onclick="forceSyncNow()">🔄 Şimdi Senkronize Et</button>
+            <div style="display:flex; gap:8px; margin-top:8px;">
+                <button class="btn btn-ghost" style="flex:1; font-size:0.85rem;" onclick="exportData()">⬇️ İndir (Yedek Al)</button>
+                <button class="btn btn-ghost" style="flex:1; font-size:0.85rem;" onclick="document.getElementById('fileInput').click()">⬆️ Yükle (Geri Yükle)</button>
+            </div>
+            <input type="file" id="fileInput" class="hidden" accept=".json" onchange="importData(event)">
+        </div>
+
+        <!-- ══ SORU BANKASI YÖNETİMİ ══ -->
+        <div class="admin-section" style="margin-top:20px;border:1.5px solid #fecaca;">
+            <div class="admin-section-title" style="color:#dc2626;">🗃️ Soru Bankası Yönetimi</div>
+            <p style="font-size:.75rem;color:var(--ink3);margin-bottom:16px;line-height:1.6;">
+                Soru bankasındaki kayıtları buradan silebilirsiniz. Bu işlem geri alınamaz.
+            </p>
+
+            <!-- Kelime Soruları -->
+            <div style="background:var(--bg);border-radius:12px;padding:14px;margin-bottom:10px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+                    <div>
+                        <div style="font-size:.82rem;font-weight:700;color:var(--ink);">📝 Kelime Soruları</div>
+                        <div id="admin-arsiv-kelime-count" style="font-size:.7rem;color:var(--ink3);margin-top:2px;">Yükleniyor...</div>
+                    </div>
+                    <button onclick="adminClearArsiv('kelime')"
+                        style="font-size:.75rem;background:#fef2f2;border:1.5px solid #fca5a5;color:#dc2626;
+                               border-radius:9px;padding:7px 14px;cursor:pointer;font-family:inherit;font-weight:700;
+                               white-space:nowrap;">
+                        🗑 Tümünü Sil
+                    </button>
+                </div>
+            </div>
+
+            <!-- Paragraf Soruları (yakında) -->
+            <div style="background:var(--bg);border-radius:12px;padding:14px;margin-bottom:10px;opacity:.5;">
+                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+                    <div>
+                        <div style="font-size:.82rem;font-weight:700;color:var(--ink);">📄 Paragraf Soruları</div>
+                        <div style="font-size:.7rem;color:var(--ink3);margin-top:2px;">Yakında eklenecek</div>
+                    </div>
+                    <button disabled
+                        style="font-size:.75rem;background:#f1f5f9;border:1.5px solid var(--border);color:var(--ink3);
+                               border-radius:9px;padding:7px 14px;cursor:default;font-family:inherit;font-weight:700;">
+                        🗑 Tümünü Sil
+                    </button>
+                </div>
+            </div>
+
+            <!-- Gramer Soruları (yakında) -->
+            <div style="background:var(--bg);border-radius:12px;padding:14px;opacity:.5;">
+                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+                    <div>
+                        <div style="font-size:.82rem;font-weight:700;color:var(--ink);">📐 Gramer Soruları</div>
+                        <div style="font-size:.7rem;color:var(--ink3);margin-top:2px;">Yakında eklenecek</div>
+                    </div>
+                    <button disabled
+                        style="font-size:.75rem;background:#f1f5f9;border:1.5px solid var(--border);color:var(--ink3);
+                               border-radius:9px;padding:7px 14px;cursor:default;font-family:inherit;font-weight:700;">
+                        🗑 Tümünü Sil
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        </div><!-- /admin-panel-content -->
+    </div><!-- /admin-page -->
+
+    <div id="games-page" class="container hidden">
+        <p class="page-title">Oyunlar</p>
+        <p class="page-sub">Kelimelerini oynayarak pekiştir</p>
+        <div class="game-card" onclick="startMemoryGame(document.getElementById('game-list-selector').value)">
+            <div class="game-card-icon">🃏</div>
+            <div>
+                <div class="game-card-title">Memory</div>
+                <div class="game-card-desc">Kartları çevir, İngilizce-Türkçe çiftleri bul.</div>
+            </div>
+        </div>
+        <div class="game-card disabled">
+            <div class="game-card-icon">🌧️</div>
+            <div>
+                <div class="game-card-title">Kelime Yağmuru <span class="coming-soon">Yakında</span></div>
+                <div class="game-card-desc">Düşen kelimeleri zamanında yaz, can kaybetme!</div>
+            </div>
+        </div>
+        <div class="game-card disabled">
+            <div class="game-card-icon">🔤</div>
+            <div>
+                <div class="game-card-title">Anagram <span class="coming-soon">Yakında</span></div>
+                <div class="game-card-desc">Karışık harfleri doğru sıraya diz.</div>
+            </div>
+        </div>
+        <div style="margin-top:14px;">
+            <label style="font-size:0.78rem; font-weight:700; color:var(--ink3); text-transform:uppercase; letter-spacing:0.5px;">Liste Seç</label>
+            <select id="game-list-selector" style="margin-top:5px;"></select>
+        </div>
+    </div>
+
+    <div id="memory-page" class="container hidden">
+        <button class="back-btn" onclick="exitMemoryGame()">←</button>
+        <div class="mem-info-bar">
+            <h3>🃏 Memory</h3>
+            <div class="mem-stats">
+                <span>🔁 <span id="mem-moves">0</span></span>
+                <span>✅ <span id="mem-matches">0</span>/<span id="mem-total">0</span></span>
+                <span>⏱ <span id="mem-time">0:00</span></span>
+            </div>
+        </div>
+        <div id="memory-grid" style="display:grid; gap:8px; margin:4px 0;"></div>
+        <div id="memory-result" class="mem-result hidden">
+            <div style="font-size:2.2rem;">🎉</div>
+            <h2>Tebrikler!</h2>
+            <p id="mem-result-text"></p>
+            <button class="btn" onclick="startMemoryGame(currentActiveList)">🔄 Tekrar Oyna</button>
+            <button class="btn btn-ghost" style="margin-top:6px;" onclick="exitMemoryGame()">Ana Menü</button>
+        </div>
+    </div>
+
+    <div id="exercise-page" class="container hidden">
+        <p class="page-title">Alıştırmalar</p>
+        <p class="page-sub">Aktif öğrenme modları</p>
+        <div class="game-card" onclick="startTypingQuiz()">
+            <div class="game-card-icon">✍️</div>
+            <div>
+                <div class="game-card-title">Yazarak Cevap</div>
+                <div class="game-card-desc">Kelimeyi gör, Türkçe anlamı klavyeyle yaz. Harfler renklenerek değerlendirilir.</div>
+            </div>
+        </div>
+        <div class="game-card" onclick="startContextMode()">
+            <div class="game-card-icon">📝</div>
+            <div>
+                <div class="game-card-title">Bağlam Cümlesi</div>
+                <div class="game-card-desc">Cümledeki boşluğu doldur. Hikaye yoksa AI otomatik üretir ve kaydeder.</div>
+            </div>
+        </div>
+        <div class="game-card" onclick="startSM2Review()">
+            <div class="game-card-icon">🧠</div>
+            <div>
+                <div class="game-card-title">SM-2 Tekrar <span id="sm2-due-badge" style="background:var(--red);color:white;font-size:0.65rem;padding:2px 7px;border-radius:8px;margin-left:6px;font-weight:700;"></span></div>
+                <div class="game-card-desc">Bugün tekrar zamanı gelen kelimeler. Doğru cevapladıkça aralık uzar.</div>
+            </div>
+        </div>
+        <div style="margin-top:14px;">
+            <label style="font-size:0.78rem;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.5px;">Liste Seç</label>
+            <select id="exercise-list-selector" style="margin-top:5px;"></select>
+        </div>
+    </div>
+
+    <!-- ══ YAZARAK CEVAP — YENİ TASARIM ══ -->
+    <div id="typing-page" class="tw-page hidden">
+        <div class="tw-bg">
+            <div class="tw-orb tw-orb1"></div>
+            <div class="tw-orb tw-orb2"></div>
+            <div class="tw-orb tw-orb3"></div>
+        </div>
+        <header class="tw-header">
+            <button class="tw-exit-btn" onclick="exitTyping()" title="Çıkış">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <div class="tw-header-center">
+                <div class="tw-session-label">Yazarak Cevap</div>
+                <div class="tw-progress-bar-wrap"><div class="tw-progress-bar-fill" id="tw-progress-fill"></div></div>
+                <div class="tw-progress-nums"><span id="tw-q-num">1</span> / <span id="tw-q-total">0</span></div>
+            </div>
+            <div class="tw-header-right">
+                <div class="tw-score-pill">
+                    <span class="tw-score-icon">⚡</span>
+                    <span id="tw-score">0</span>
+                    <span class="tw-score-unit">puan</span>
+                </div>
+            </div>
+        </header>
+        <div class="tw-statsbar">
+            <div class="tw-stat-item"><span class="tw-stat-val" id="tw-streak">0</span><span class="tw-stat-lbl">🔥 Seri</span></div>
+            <div class="tw-stat-divider"></div>
+            <div class="tw-stat-item"><span class="tw-stat-val tw-green" id="tw-correct">0</span><span class="tw-stat-lbl">Doğru</span></div>
+            <div class="tw-stat-divider"></div>
+            <div class="tw-stat-item"><span class="tw-stat-val tw-red" id="tw-wrong">0</span><span class="tw-stat-lbl">Yanlış</span></div>
+            <div class="tw-stat-divider"></div>
+            <div class="tw-stat-item"><span class="tw-stat-val tw-purple" id="tw-accuracy">—</span><span class="tw-stat-lbl">Başarı</span></div>
+        </div>
+        <main class="tw-main">
+            <div class="tw-motivation" id="tw-motivation">
+                <span class="tw-mot-emoji" id="tw-mot-emoji">💪</span>
+                <span id="tw-mot-text">Hazır mısın? Hadi başlayalım!</span>
+            </div>
+            <div class="tw-card" id="tw-card">
+                <div class="tw-qtype-badge" id="tw-qtype-badge">
+                    <span id="tw-qtype-icon">✍️</span>
+                    <span id="tw-qtype-label">Tam Çeviri</span>
+                </div>
+                <div class="tw-question-area" id="tw-question-area">
+                    <div class="tw-word-display" id="tw-word-display" onclick="twSpeak()">
+                        <span id="tw-word-text">—</span>
+                        <button class="tw-speak-btn" title="Dinle">
+                            <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path d="M9.586 3.293A1 1 0 0 0 8 4v12a1 1 0 0 0 1.586.814l5-3.5a1 1 0 0 0 0-1.628l-5-3.5zM3 7a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h2V7H3z"/></svg>
+                        </button>
+                    </div>
+                    <div class="tw-hint-line" id="tw-hint-line"></div>
+                </div>
+                <div class="tw-context-wrap" id="tw-context-wrap" style="display:none;">
+                    <div class="tw-context-label">📖 Bağlam Cümlesi</div>
+                    <div class="tw-context-text" id="tw-context-text"></div>
+                </div>
+                <div class="tw-letter-hint-wrap" id="tw-letter-hint-wrap" style="display:none;">
+                    <div class="tw-letter-hint-label">🔡 Harf İpuçları</div>
+                    <div class="tw-letter-boxes" id="tw-letter-boxes"></div>
+                </div>
+                <div class="tw-input-wrap">
+                    <input id="tw-input" class="tw-input" type="text" placeholder="Cevabını yaz..."
+                           autocomplete="off" autocorrect="off" spellcheck="false"
+                           onkeydown="if(event.key==='Enter'){twAnswered?twNext():twCheck()}">
+                    <button class="tw-submit-btn" id="tw-submit-btn" onclick="twCheck()">
+                        <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M4 10h12M11 5l5 5-5 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                </div>
+                <div class="tw-chars" id="tw-chars"></div>
+                <div class="tw-feedback" id="tw-feedback"></div>
+                <div class="tw-actions">
+                    <button class="tw-btn-check" id="tw-btn-check" onclick="twCheck()">Kontrol Et</button>
+                    <button class="tw-btn-next" id="tw-btn-next" style="display:none;" onclick="twNext()">
+                        Sonraki <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                    <button class="tw-btn-skip" id="tw-btn-skip" onclick="twSkip()">Geç</button>
+                </div>
+            </div>
+            <div class="tw-help-row">
+                <button class="tw-help-btn" onclick="twToggleHelp()" id="tw-help-toggle">
+                    <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.6"/><path d="M8 11v-1M8 7a2 2 0 1 1 0-4 2 2 0 0 1 0 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                    Nasıl çalışır?
+                </button>
+            </div>
+            <div class="tw-help-panel" id="tw-help-panel">
+                <div class="tw-help-grid">
+                    <div class="tw-help-item"><span class="tw-help-icon">✍️</span><div><strong>Tam Çeviri</strong>Kelimeyi Türkçeye çevir</div></div>
+                    <div class="tw-help-item"><span class="tw-help-icon">🔡</span><div><strong>Harfli İpucu</strong>Bazı harfler gösterilir, geri kalanları tamamla</div></div>
+                    <div class="tw-help-item"><span class="tw-help-icon">📖</span><div><strong>Bağlam</strong>Cümleden yola çıkarak boşluğu doldur</div></div>
+                    <div class="tw-help-item"><span class="tw-help-icon">🔥</span><div><strong>Seri Bonusu</strong>Üst üste doğrular +bonus puan kazandırır!</div></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- SM-2 TEKRAR ─────────────────────────────────────── -->
+    <div id="sm2-page" class="sr-page hidden">
+
+        <header class="sr-header">
+            <button class="sr-exit-btn" onclick="exitSM2()">
+                <svg width="16" height="16" fill="none" viewBox="0 0 16 16"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <div class="sr-header-mid">
+                <span class="sr-label">SM-2 Tekrar</span>
+                <div class="sr-prog-track"><div class="sr-prog-fill" id="sr-prog-fill"></div></div>
+                <span class="sr-prog-text" id="sm2-progress">1 / 0</span>
+            </div>
+            <div class="sr-streak-pill">
+                <span id="sr-streak-num">0</span><span class="sr-streak-fire">🔥</span>
+            </div>
+        </header>
+
+        <div class="sr-statsbar">
+            <div class="sr-stat"><div class="sr-stat-val sr-green" id="sr-known">0</div><div class="sr-stat-lbl">Biliyorum</div></div>
+            <div class="sr-sdiv"></div>
+            <div class="sr-stat"><div class="sr-stat-val sr-orange" id="sr-hard">0</div><div class="sr-stat-lbl">Zor</div></div>
+            <div class="sr-sdiv"></div>
+            <div class="sr-stat"><div class="sr-stat-val sr-red" id="sr-forgot">0</div><div class="sr-stat-lbl">Bilmedim</div></div>
+            <div class="sr-sdiv"></div>
+            <div class="sr-stat"><div class="sr-stat-val sr-purple" id="sr-accuracy">—</div><div class="sr-stat-lbl">Başarı</div></div>
+        </div>
+
+        <main class="sr-main">
+
+            <div class="sr-motivation" id="sr-motivation">
+                <span id="sr-mot-icon">🧠</span>
+                <span id="sr-mot-text">Beyin antrenmanı başlıyor!</span>
+            </div>
+
+            <div class="sr-card" id="sr-card">
+
+                <div class="sr-front" id="sr-front">
+                    <div class="sr-card-eyebrow">
+                        <span class="sr-eyebrow-dot"></span> Kelimeyi hatırla
+                    </div>
+                    <div class="sr-word" id="sm2-word" onclick="speakWord(this.innerText)">—</div>
+                    <div class="sr-mnemonic" id="sm2-mnemonic"></div>
+                    <button class="sr-reveal-btn" id="sm2-show-btn" onclick="showSM2Answer()">
+                        <svg width="14" height="14" fill="none" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.6"/><path d="M8 5v3l2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                        Anlamı Göster
+                    </button>
+                </div>
+
+                <div class="sr-answer-zone" id="sm2-answer-section" style="display:none;">
+                    <div class="sr-answer-reveal">
+                        <div class="sr-answer-lbl">Türkçe Anlam</div>
+                        <div class="sr-answer-word" id="sm2-answer"></div>
+                    </div>
+                    <div class="sr-rate-question">Ne kadar kolaydı?</div>
+                    <div class="sr-rate-grid">
+                        <button class="sr-rate-btn sr-fail" onclick="rateSM2(0)">
+                            <span class="sr-rate-emoji">😰</span>
+                            <span class="sr-rate-title">Bilmedim</span>
+                            <span class="sr-rate-sub">Tekrar göster</span>
+                        </button>
+                        <button class="sr-rate-btn sr-hard" onclick="rateSM2(2)">
+                            <span class="sr-rate-emoji">😅</span>
+                            <span class="sr-rate-title">Zor</span>
+                            <span class="sr-rate-sub">Yakında tekrar</span>
+                        </button>
+                        <button class="sr-rate-btn sr-good" onclick="rateSM2(4)">
+                            <span class="sr-rate-emoji">🙂</span>
+                            <span class="sr-rate-title">İyi</span>
+                            <span class="sr-rate-sub">Birkaç gün</span>
+                        </button>
+                        <button class="sr-rate-btn sr-easy" onclick="rateSM2(5)">
+                            <span class="sr-rate-emoji">😎</span>
+                            <span class="sr-rate-title">Kolay</span>
+                            <span class="sr-rate-sub">Uzun süre</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <p class="sr-algo-note">
+                <svg width="11" height="11" fill="none" viewBox="0 0 12 12"><circle cx="6" cy="6" r="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M6 5v3M6 3.5v.3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+                SM-2 algoritması cevabına göre sonraki tekrar tarihini belirler
+            </p>
+        </main>
+    </div>
+
+    <!-- BAĞLAM CÜMLESİ ──────────────────────────────────── -->
+    <div id="context-page" class="cx-page hidden">
+
+        <header class="cx-header">
+            <button class="cx-exit-btn" onclick="exitContext()">
+                <svg width="16" height="16" fill="none" viewBox="0 0 16 16"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <div class="cx-header-mid">
+                <span class="cx-label">Bağlam Cümlesi</span>
+                <div class="cx-prog-track"><div class="cx-prog-fill" id="cx-prog-fill"></div></div>
+                <span class="cx-prog-text" id="ctx-progress">1 / 0</span>
+            </div>
+            <div class="cx-score-pill">
+                <span class="cx-score-icon">⚡</span>
+                <span id="ctx-score">0</span>
+                <span class="cx-score-unit">puan</span>
+            </div>
+        </header>
+
+        <div class="cx-statsbar">
+            <div class="cx-stat"><div class="cx-stat-val cx-green" id="cx-correct">0</div><div class="cx-stat-lbl">Doğru</div></div>
+            <div class="cx-sdiv"></div>
+            <div class="cx-stat"><div class="cx-stat-val cx-red" id="cx-wrong">0</div><div class="cx-stat-lbl">Yanlış</div></div>
+            <div class="cx-sdiv"></div>
+            <div class="cx-stat"><div class="cx-stat-val cx-purple" id="cx-accuracy">—</div><div class="cx-stat-lbl">Başarı</div></div>
+            <div class="cx-sdiv"></div>
+            <div class="cx-stat"><div class="cx-stat-val" id="cx-streak">0</div><div class="cx-stat-lbl">🔥 Seri</div></div>
+        </div>
+
+        <main class="cx-main">
+
+            <div class="cx-motivation" id="cx-motivation">
+                <span id="cx-mot-icon">📖</span>
+                <span id="cx-mot-text">Cümleyi oku, boşluğu doldur!</span>
+            </div>
+
+            <div class="cx-card">
+
+                <div class="cx-card-toprow">
+                    <div class="cx-card-eyebrow">
+                        <span class="cx-eyebrow-dot"></span> Boşluğu Doldur
+                    </div>
+                    <button id="ctx-regen-btn" class="cx-regen-btn" onclick="ctxRegenSentence()">
+                        <svg width="12" height="12" fill="none" viewBox="0 0 16 16"><path d="M13.5 2.5A6.5 6.5 0 1 0 14 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M14 2.5V6h-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        Yeni cümle
+                    </button>
+                </div>
+
+                <div class="cx-sentence-box">
+                    <div class="cx-sentence-eyebrow">📖 Bağlam Cümlesi</div>
+                    <div id="ctx-sentence" class="cx-sentence">Yükleniyor...</div>
+                </div>
+
+                <div class="cx-hint-bar">
+                    <span class="cx-hint-tag">🇹🇷 Türkçe ipucu</span>
+                    <strong id="ctx-hint" class="cx-hint-val">—</strong>
+                </div>
+
+                <div class="cx-input-row">
+                    <input id="ctx-input" class="cx-input" type="text"
+                        placeholder="İngilizce kelimeyi yaz..."
+                        autocomplete="off" autocorrect="off" spellcheck="false"
+                        onkeydown="if(event.key==='Enter'){ctxAnswered?ctxNext():ctxCheck()}">
+                    <button class="cx-go-btn" onclick="ctxCheck()">
+                        <svg width="17" height="17" fill="none" viewBox="0 0 20 20"><path d="M4 10h12M11 5l5 5-5 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                </div>
+
+                <div class="cx-feedback" id="ctx-feedback"></div>
+
+                <div class="cx-actions">
+                    <button class="cx-check-btn" id="ctx-check-btn" onclick="ctxCheck()">Kontrol Et</button>
+                    <button class="cx-next-btn" id="ctx-next-btn" style="display:none;" onclick="ctxNext()">
+                        Sonraki
+                        <svg width="13" height="13" fill="none" viewBox="0 0 16 16"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <div id="paragraf-oku-page" class="container hidden poku-page">
+
+        <!-- ══ TOP BAR ══ -->
+        <div class="poku-topbar">
+            <button class="poku-back-btn" onclick="showPage('paragraf-liste-page')">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                    <path d="M11 14L6 9l5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+            <div class="poku-topbar-meta">
+                <div class="poku-topbar-title" id="p-oku-baslik">Başlık</div>
+                <div class="poku-topbar-hints">
+                    <span class="poku-hint-chip">🔴 Kelimeye hover → anlam</span>
+                    <span class="poku-hint-chip">🔍 Cümleye tıkla → Grammar X-Ray</span>
+                    <button id="translate-mode-btn" onclick="toggleTranslateMode()" class="poku-translate-btn">
+                        🌐 Çeviri: Kapalı
+                    </button>
+                </div>
+            </div>
+            <div id="p-difficulty-badge"></div>
+        </div>
+
+        <!-- ══ BODY: 2 KOLON ══ -->
+        <div class="poku-body">
+
+            <!-- ── SOL: metin alanı ── -->
+            <div class="poku-main">
+
+                <!-- Metin kartı -->
+                <div class="poku-metin-card">
+                    <div id="p-oku-metin" class="poku-metin-inner"></div>
+                </div>
+
+                <!-- Grammar X-Ray -->
+                <div id="p-grammar-panel" class="p-grammar-panel" style="display:none; margin-top:16px;">
+                    <div class="p-grammar-header">
+                        <span>🔍 Grammar X-Ray</span>
+                        <button onclick="document.getElementById('p-grammar-panel').style.display='none'; document.querySelectorAll('.p-sentence.psa').forEach(s=>s.classList.remove('psa'))" class="p-grammar-close">✕</button>
+                    </div>
+                    <div id="p-grammar-content" class="p-grammar-content">
+                        <div class="p-grammar-loading">⏳ Analiz ediliyor...</div>
+                    </div>
+                </div>
+
+                <!-- YDT Soru Üretici -->
+                <div class="poku-ydt-section">
+                    <div id="p-ydt-saved-section" style="display:none; margin-bottom:14px;">
+                        <div id="p-ydt-saved-questions"></div>
+                    </div>
+                    <button class="p-ydt-gen-btn" id="p-ydt-gen-btn" onclick="generateYDTQuestions()">
+                        🎯 Bu paragraftan YDT sorusu üret
+                    </button>
+                    <div id="p-ydt-panel" style="display:none; margin-top:14px;">
+                        <div id="p-ydt-questions"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── SAĞ: sidebar ── -->
+            <aside class="poku-sidebar">
+
+                <!-- Paragraf İstatistikleri -->
+                <div class="poku-card poku-stat-card">
+                    <div class="poku-card-label">
+                        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1" y="6" width="2.5" height="6" rx="1" fill="currentColor"/><rect x="5" y="3.5" width="2.5" height="8.5" rx="1" fill="currentColor"/><rect x="9" y="1" width="2.5" height="11" rx="1" fill="currentColor"/></svg>
+                        Pasaj İstatistikleri
+                    </div>
+                    <div class="poku-stats-grid">
+                        <div class="poku-stat-item">
+                            <div class="poku-stat-num" id="ps-word-count">—</div>
+                            <div class="poku-stat-lbl">Kelime</div>
+                        </div>
+                        <div class="poku-stat-item">
+                            <div class="poku-stat-num" id="ps-sent-count">—</div>
+                            <div class="poku-stat-lbl">Cümle</div>
+                        </div>
+                        <div class="poku-stat-item poku-stat-accent">
+                            <div class="poku-stat-num" id="ps-voc-count">—</div>
+                            <div class="poku-stat-lbl">C1/C2</div>
+                        </div>
+                        <div class="poku-stat-item">
+                            <div class="poku-stat-num" id="ps-read-time">—</div>
+                            <div class="poku-stat-lbl">dk okuma</div>
+                        </div>
+                    </div>
+                    <!-- Okuma ilerlemesi progress bar -->
+                    <div class="poku-progress-wrap">
+                        <div class="poku-progress-label">
+                            <span>Okuma ilerlemesi</span>
+                            <span id="poku-progress-pct">0%</span>
+                        </div>
+                        <div class="poku-progress-track">
+                            <div class="poku-progress-fill" id="poku-progress-fill"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Genel Durum -->
+                <div class="poku-card">
+                    <div class="poku-card-label">
+                        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1l1.5 3.1L11.5 4.6l-2.5 2.4.6 3.4L6.5 8.8 3.4 10.4l.6-3.4L1.5 4.6l3.5-.5L6.5 1z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+                        Genel Durumun
+                    </div>
+                    <div class="poku-stats-grid">
+                        <div class="poku-stat-item">
+                            <div class="poku-stat-num" id="ps-total-words">—</div>
+                            <div class="poku-stat-lbl">Kelime Havuzu</div>
+                        </div>
+                        <div class="poku-stat-item poku-stat-green">
+                            <div class="poku-stat-num" id="ps-learned">—</div>
+                            <div class="poku-stat-lbl">Öğrenilen</div>
+                        </div>
+                        <div class="poku-stat-item">
+                            <div class="poku-stat-num" id="ps-accuracy">—</div>
+                            <div class="poku-stat-lbl">Başarı</div>
+                        </div>
+                        <div class="poku-stat-item poku-stat-fire">
+                            <div class="poku-stat-num" id="ps-streak">—</div>
+                            <div class="poku-stat-lbl">🔥 Seri</div>
+                        </div>
+                    </div>
+                </div>
+                <!-- İpucu -->
+                <div class="poku-tip">
+                    <span class="poku-tip-icon">💡</span>
+                    <span><strong>Kırmızı kelimelere</strong> fareyle gelin veya dokunun — anlam ve telaffuz görürsünüz.</span>
+                </div>
+
+            </aside>
+        </div>
+
+    </div>
+
+    <div id="profil-page" class="container hidden" style="text-align:left;">
+        <button class="back-btn" onclick="navTo('index-page')">←</button>
+
+        <!-- Üst profil kartı -->
+        <div class="profil-hero">
+            <div class="profil-avatar-wrap">
+                <div id="profil-avatar" class="profil-avatar">🎓</div>
+            </div>
+            <div class="profil-info">
+                <div id="profil-name" class="profil-name">Kullanıcı</div>
+                <div id="profil-goal" class="profil-goal">YDT'ye hazırlanıyorum</div>
+                <div class="profil-login-badge">🔒 Giriş sistemi yakında</div>
+            </div>
+        </div>
+
+        <!-- Hızlı istatistikler -->
+        <div class="profil-stats-row">
+            <div class="profil-stat-box">
+                <span id="profil-stat-words" class="profil-stat-val">0</span>
+                <span class="profil-stat-lbl">Kelime</span>
+            </div>
+            <div class="profil-stat-box">
+                <span id="profil-stat-learn" class="profil-stat-val">0</span>
+                <span class="profil-stat-lbl">Öğrenilen</span>
+            </div>
+            <div class="profil-stat-box">
+                <span id="profil-stat-acc" class="profil-stat-val">0%</span>
+                <span class="profil-stat-lbl">Başarı</span>
+            </div>
+            <div class="profil-stat-box">
+                <span id="profil-stat-streak" class="profil-stat-val">0 🔥</span>
+                <span class="profil-stat-lbl">Seri</span>
+            </div>
+            <div class="profil-stat-box">
+                <span id="profil-stat-time" class="profil-stat-val">0 dk</span>
+                <span class="profil-stat-lbl">Süre</span>
+            </div>
+            <div class="profil-stat-box">
+                <span id="profil-stat-badges" class="profil-stat-val">0</span>
+                <span class="profil-stat-lbl">Rozet</span>
+            </div>
+        </div>
+
+        <!-- Profil düzenle -->
+        <div class="admin-section" style="margin-top:16px;">
+            <div class="admin-section-title">✏️ Profil Bilgilerini Düzenle</div>
+
+            <label style="font-size:.75rem;font-weight:700;color:var(--ink2);margin-bottom:4px;display:block;">Adın</label>
+            <input id="profil-name-inp" type="text" placeholder="Adınızı girin..." style="margin-bottom:8px;">
+
+            <label style="font-size:.75rem;font-weight:700;color:var(--ink2);margin-bottom:4px;display:block;">Hedefin</label>
+            <input id="profil-goal-inp" type="text" placeholder="Örn: YDT'de 90+ almak" style="margin-bottom:10px;">
+
+            <label style="font-size:.75rem;font-weight:700;color:var(--ink2);margin-bottom:6px;display:block;">Avatar Seç</label>
+            <div class="avatar-picker">
+                <button class="avatar-opt selected" data-av="🎓" onclick="selectAvatar(this)">🎓</button>
+                <button class="avatar-opt" data-av="🦁" onclick="selectAvatar(this)">🦁</button>
+                <button class="avatar-opt" data-av="🦊" onclick="selectAvatar(this)">🦊</button>
+                <button class="avatar-opt" data-av="🐺" onclick="selectAvatar(this)">🐺</button>
+                <button class="avatar-opt" data-av="🦅" onclick="selectAvatar(this)">🦅</button>
+                <button class="avatar-opt" data-av="🧠" onclick="selectAvatar(this)">🧠</button>
+                <button class="avatar-opt" data-av="🚀" onclick="selectAvatar(this)">🚀</button>
+                <button class="avatar-opt" data-av="⚡" onclick="selectAvatar(this)">⚡</button>
+            </div>
+
+            <button id="profil-save-btn" class="btn" onclick="saveProfilInfo()" style="margin-top:10px;">💾 Kaydet</button>
+        </div>
+
+        <!-- Rozetler önizleme -->
+        <div class="admin-section" style="margin-top:10px;">
+            <div class="admin-section-title">🏅 Rozetlerim</div>
+            <div id="profil-badge-preview" class="profil-badge-grid"></div>
+        </div>
+
+        <!-- Gelecek özellikler placeholder -->
+        <div class="admin-section" style="margin-top:10px; opacity:0.5;">
+            <div class="admin-section-title">🔒 Çok Kullanıcılı Sistem (Yakında)</div>
+            <p style="font-size:.82rem;color:var(--ink2);line-height:1.6;">Her öğrenci kendi hesabıyla giriş yapabilecek, veriler ayrı ayrı saklanacak. Firebase Authentication entegrasyonu planlanmaktadır.</p>
+            <div style="display:flex;gap:8px;margin-top:10px;">
+                <div style="flex:1;background:var(--border);border-radius:8px;padding:10px;text-align:center;font-size:.72rem;font-weight:700;color:var(--ink3);">📧 E-posta Girişi</div>
+                <div style="flex:1;background:var(--border);border-radius:8px;padding:10px;text-align:center;font-size:.72rem;font-weight:700;color:var(--ink3);">🌐 Google ile Giriş</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KIDS ENGLISH PAGE -->
+    <div id="kids-page" class="container hidden kw-page-root">
+        <!-- kids.js renders here -->
+    </div>
+
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyC94N6Y8hxXmpFLrK6TvgVP4k-F9N6qX8A",
+        authDomain: "ydt-master.firebaseapp.com",
+        databaseURL: "https://ydt-master-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "ydt-master",
+        storageBucket: "ydt-master.firebasestorage.app",
+        messagingSenderId: "674787283521",
+        appId: "1:674787283521:web:fccca6b20e174f9e79ecc0"
+    };
+
+    const firebaseApp = initializeApp(firebaseConfig);
+    const db = getDatabase(firebaseApp);
+
+    let syncTimeout = null;
+
+    function setSyncStatus(s) {
+        const map = {
+            idle:    { color: '#aaa',    text: 'Yerel' },
+            syncing: { color: '#f39c12', text: 'Senkronize ediliyor...' },
+            ok:      { color: '#2ecc71', text: 'Senkronize ✓' },
+            error:   { color: '#e74c3c', text: 'Bağlantı hatası' }
+        };
+        ['sync-dot', 'sync-dot-admin', 'sync-dot-drawer'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.background = map[s].color;
+        });
+        ['sync-label', 'sync-lbl-drawer'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.innerText = map[s].text;
+        });
+    }
+
+    function sanitizeKey(k) { return k.replace(/[.#$\/\[\]]/g, '_'); }
+    function sanitizeAllData(data) {
+        const clean = {};
+        Object.keys(data).forEach(k => { clean[sanitizeKey(k)] = data[k]; });
+        return clean;
+    }
+    function buildKeyMap(data) {
+        const map = {};
+        Object.keys(data).forEach(k => { map[sanitizeKey(k)] = k; });
+        return map;
+    }
+    function restoreAllData(fbData, keyMap) {
+        const restored = {};
+        Object.keys(fbData).forEach(fbKey => {
+            const origKey = (keyMap && keyMap[fbKey]) ? keyMap[fbKey] : fbKey;
+            restored[origKey] = fbData[fbKey];
+        });
+        return restored;
+    }
+
+    window._saveData = function () {
+        localStorage.setItem('ydt_all_data', JSON.stringify(allData));
+        localStorage.setItem('ydt_stats', JSON.stringify(stats));
+        if (window.paragrafSorular) {
+            localStorage.setItem('ydt_paragraf_sorular', JSON.stringify(window.paragrafSorular));
+        }
+        if (window.aiArsiv) {
+            localStorage.setItem('ydt_ai_arsiv', JSON.stringify(window.aiArsiv));
+        }
+        saveToFirebase();
+    };
+
+    function saveToFirebase() {
+        setSyncStatus('syncing');
+        clearTimeout(syncTimeout);
+        syncTimeout = setTimeout(async () => {
+            try {
+                const keyMap = buildKeyMap(allData);
+                await set(ref(db, 'ydt/allData'), sanitizeAllData(allData));
+                await set(ref(db, 'ydt/stats'), stats);
+                await set(ref(db, 'ydt/keyMap'), keyMap);
+                if (window.paragrafSorular) {
+                    await set(ref(db, 'ydt/paragrafSorular'), window.paragrafSorular);
+                }
+                if (window.aiArsiv && window.aiArsiv.length) {
+                    await set(ref(db, 'ydt/aiArsiv'), window.aiArsiv);
+                }
+                setSyncStatus('ok');
+            } catch (e) {
+                setSyncStatus('error');
+                console.error('Firebase yazma hatası:', e);
+            }
+        }, 800);
+    }
+
+    async function initData() {
+        document.getElementById('loading-overlay').style.display = 'flex';
+        setSyncStatus('syncing');
+        try {
+            const snap = await get(ref(db, 'ydt'));
+            if (snap.exists()) {
+                const remote = snap.val();
+                const fbData = remote.allData || {};
+                const keyMap = remote.keyMap  || {};
+                allData = Object.keys(fbData).length ? restoreAllData(fbData, keyMap) : allData;
+                stats   = remote.stats || stats;
+                if (isNaN(stats.totalMinutes)) stats.totalMinutes = 0;
+                // paragrafSorular Firebase'den yükle
+                if (remote.paragrafSorular) {
+                    window.paragrafSorular = remote.paragrafSorular;
+                    localStorage.setItem('ydt_paragraf_sorular', JSON.stringify(remote.paragrafSorular));
+                }
+                // aiArsiv Firebase'den yükle
+                if (remote.aiArsiv) {
+                    window.aiArsiv = remote.aiArsiv;
+                    localStorage.setItem('ydt_ai_arsiv', JSON.stringify(remote.aiArsiv));
+                }
+                localStorage.setItem('ydt_all_data', JSON.stringify(allData));
+                localStorage.setItem('ydt_stats', JSON.stringify(stats));
+                setSyncStatus('ok');
+            } else {
+                const keyMap = buildKeyMap(allData);
+                await set(ref(db, 'ydt/allData'), sanitizeAllData(allData));
+                await set(ref(db, 'ydt/stats'), stats);
+                await set(ref(db, 'ydt/keyMap'), keyMap);
+                setSyncStatus('ok');
+            }
+        } catch (e) {
+            setSyncStatus('error');
+            console.warn('Firebase bağlantı hatası, offline devam ediliyor.', e);
+        }
+        document.getElementById('loading-overlay').style.display = 'none';
+        if (typeof updateSelectors === 'function') updateSelectors();
+        if (typeof updateIndexStats === 'function') updateIndexStats();
+        if (typeof updateDailyGoalBar === 'function') updateDailyGoalBar();
+    }
+
+    window.saveToFirebase = saveToFirebase;
+    window.db = db;
+    initData();
+</script>
+
+<script src="kelimeler.js"></script>
+<script src="motor.js"></script>
+<script src="grammar.js"></script>
+<script src="modals.js"></script>
+<script src="pronouns.js"></script>
+<script src="passive.js"></script>
+<script src="conditionals.js"></script>
+<script src="relative.js"></script>
+<script src="noun.js"></script>
+<script src="conj.js"></script>
+<script src="gerund.js"></script>
+<script src="adjadv.js"></script>
+<script src="tagquant.js"></script>
+<script src="speaking.js"></script>
+<script src="kids.js"></script>
+
+    <!-- AI YDT ARŞİV SAYFASI -->
+    <div id="ai-arsiv-page" class="hidden arsiv-full-page" style="text-align:left; width:100%; min-height:100vh; padding:28px 36px;">
+        <div style="max-width:900px; margin:0 auto;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; flex-wrap:wrap; gap:8px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <button class="back-btn" onclick="navTo('index-page')" style="position:static;">←</button>
+                    <p class="page-title" style="margin:0;">🗃️ Soru Bankası</p>
+                </div>
+                <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                    <select id="arsiv-list-filter" class="admin-input" style="margin:0; width:auto; min-width:140px; font-size:.8rem; padding:6px 10px;" onchange="renderArsiv()">
+                        <option value="">Tüm Listeler</option>
+                    </select>
+                    <button onclick="showImportSorularModal()" style="padding:6px 13px;border-radius:9px;border:1.5px solid #6366f1;background:#e0e7ff;color:#4f46e5;font-size:.78rem;font-weight:700;cursor:pointer;font-family:inherit;">
+                        📥 Kelime Paketi
+                    </button>
+                    <button onclick="showImportParagrafModal()" style="padding:6px 13px;border-radius:9px;border:1.5px solid #10b981;background:#d1fae5;color:#059669;font-size:.78rem;font-weight:700;cursor:pointer;font-family:inherit;">
+                        📖 Paragraf Paketi
+                    </button>
+                </div>
+            </div>
+            <p class="page-sub" style="margin-bottom:14px; padding-left:2px;">AI tarafından üretilen sorular türlerine göre gruplandırılarak burada saklanır. Her soru tekrar çözülebilir.</p>
+            <div id="arsiv-summary" style="margin-bottom:16px;"></div>
+            <div id="arsiv-content"></div>
+        </div>
+    </div>
+
+    <!-- GRAMMAR PAGE (Tenses) -->
+    <div id="grammar-page" class="hidden arsiv-full-page grammar-full-page">
+        <!-- grammar.js tarafından dinamik render edilir -->
+    </div>
+
+    <!-- MODALS PAGE -->
+    <div id="modals-page" class="hidden arsiv-full-page grammar-full-page">
+        <!-- modals.js tarafından dinamik render edilir -->
+    </div>
+
+    <!-- PRONOUNS PAGE -->
+    <div id="pronouns-page" class="hidden arsiv-full-page grammar-full-page">
+        <!-- pronouns.js tarafından dinamik render edilir -->
+    </div>
+
+    <!-- PASSIVE & CAUSATIVE PAGE -->
+    <div id="passive-page" class="hidden arsiv-full-page grammar-full-page">
+        <!-- passive.js tarafından dinamik render edilir -->
+    </div>
+
+    <!-- CONDITIONALS & WISH CLAUSES PAGE -->
+    <div id="conditionals-page" class="hidden arsiv-full-page grammar-full-page">
+        <!-- conditionals.js tarafından dinamik render edilir -->
+    </div>
+
+    <!-- RELATIVE CLAUSES PAGE -->
+    <div id="relative-page" class="hidden arsiv-full-page grammar-full-page">
+        <!-- relative.js tarafından dinamik render edilir -->
+    </div>
+
+    <!-- NOUN CLAUSES & REPORTED SPEECH PAGE -->
+    <div id="noun-page" class="hidden arsiv-full-page grammar-full-page">
+        <!-- noun.js tarafından dinamik render edilir -->
+    </div>
+
+    <!-- ADVERBIAL CLAUSES & CONJUNCTIONS PAGE -->
+    <div id="conj-page" class="hidden arsiv-full-page grammar-full-page">
+        <!-- conj.js tarafından dinamik render edilir -->
+    </div>
+
+    <!-- GERUNDS & INFINITIVES PAGE -->
+    <div id="gerund-page" class="hidden arsiv-full-page grammar-full-page">
+        <!-- gerund.js tarafından dinamik render edilir -->
+    </div>
+
+    <!-- ADJECTIVES & ADVERBS PAGE -->
+    <div id="adjadv-page" class="hidden arsiv-full-page grammar-full-page">
+        <!-- adjadv.js tarafından dinamik render edilir -->
+    </div>
+
+    <!-- TAG QUESTIONS & QUANTIFIERS PAGE -->
+    <div id="tagquant-page" class="hidden arsiv-full-page grammar-full-page">
+        <!-- tagquant.js tarafından dinamik render edilir -->
+    </div>
+
+    <!-- SPEAKING & KONUŞMA PAGE -->
+    <div id="speaking-page" class="hidden arsiv-full-page grammar-full-page">
+        <!-- speaking.js tarafından dinamik render edilir -->
+    </div>
+
+
+<script>
+/* ── Sidebar Grammar Collapse (Desktop) ── */
+function sbToggleGrammar() {
+    const btn  = document.getElementById('sb-grammar-toggle');
+    const list = document.getElementById('sb-grammar-list');
+    if (!btn || !list) return;
+    const open = btn.getAttribute('aria-expanded') === 'true';
+    btn.setAttribute('aria-expanded', String(!open));
+    list.setAttribute('aria-hidden',  String(open));
+    list.classList.toggle('sb-grammar-list--open', !open);
+}
+
+/* ── Mobil Drawer Grammar Collapse ── */
+function mobToggleGrammar() {
+    const btn  = document.getElementById('di-grammar-toggle');
+    const list = document.getElementById('di-grammar-list');
+    if (!btn || !list) return;
+    const open = btn.getAttribute('aria-expanded') === 'true';
+    btn.setAttribute('aria-expanded', String(!open));
+    list.setAttribute('aria-hidden',  String(open));
+    list.classList.toggle('mob-grammar-list--open', !open);
+}
+
+/* ── Merkezi Sayfa Temizleyici ─────────────────────────────────────
+   Herhangi bir sidebar/nav butonuna tıklanınca cx-page ve sr-page'i
+   otomatik gizle. Hangi modül dosyasının güncel olduğundan bağımsız
+   çalışır — "tıklayınca hiçbir şey olmaz" sorununu kökte çözer.
+─────────────────────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', function () {
+    function hideFullScreenPages() {
+        document.querySelectorAll('.cx-page, .sr-page, .tw-page').forEach(function (el) {
+            el.classList.add('hidden');
+        });
+    }
+    var sel = '.sb-btn, .sb-btn-sub, .mob-drawer-btn, .mob-tab';
+    document.querySelectorAll(sel).forEach(function (btn) {
+        btn.addEventListener('click', hideFullScreenPages, true);
+    });
+});
+</script>
+</body>
+</html>
