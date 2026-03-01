@@ -6,6 +6,7 @@
     <title>YDT Master Pro - Tam Sürüm</title>
     <link rel="stylesheet" href="stil.css">
     <link rel="stylesheet" href="kids.css">
+    <link rel="stylesheet" href="games.css">
 </head>
 <body>
 
@@ -1189,53 +1190,7 @@
     </div><!-- /admin-page -->
 
     <div id="games-page" class="container hidden">
-        <p class="page-title">Oyunlar</p>
-        <p class="page-sub">Kelimelerini oynayarak pekiştir</p>
-        <div class="game-card" onclick="startMemoryGame(document.getElementById('game-list-selector').value)">
-            <div class="game-card-icon">🃏</div>
-            <div>
-                <div class="game-card-title">Memory</div>
-                <div class="game-card-desc">Kartları çevir, İngilizce-Türkçe çiftleri bul.</div>
-            </div>
-        </div>
-        <div class="game-card disabled">
-            <div class="game-card-icon">🌧️</div>
-            <div>
-                <div class="game-card-title">Kelime Yağmuru <span class="coming-soon">Yakında</span></div>
-                <div class="game-card-desc">Düşen kelimeleri zamanında yaz, can kaybetme!</div>
-            </div>
-        </div>
-        <div class="game-card disabled">
-            <div class="game-card-icon">🔤</div>
-            <div>
-                <div class="game-card-title">Anagram <span class="coming-soon">Yakında</span></div>
-                <div class="game-card-desc">Karışık harfleri doğru sıraya diz.</div>
-            </div>
-        </div>
-        <div style="margin-top:14px;">
-            <label style="font-size:0.78rem; font-weight:700; color:var(--ink3); text-transform:uppercase; letter-spacing:0.5px;">Liste Seç</label>
-            <select id="game-list-selector" style="margin-top:5px;"></select>
-        </div>
-    </div>
-
-    <div id="memory-page" class="container hidden">
-        <button class="back-btn" onclick="exitMemoryGame()">←</button>
-        <div class="mem-info-bar">
-            <h3>🃏 Memory</h3>
-            <div class="mem-stats">
-                <span>🔁 <span id="mem-moves">0</span></span>
-                <span>✅ <span id="mem-matches">0</span>/<span id="mem-total">0</span></span>
-                <span>⏱ <span id="mem-time">0:00</span></span>
-            </div>
-        </div>
-        <div id="memory-grid" style="display:grid; gap:8px; margin:4px 0;"></div>
-        <div id="memory-result" class="mem-result hidden">
-            <div style="font-size:2.2rem;">🎉</div>
-            <h2>Tebrikler!</h2>
-            <p id="mem-result-text"></p>
-            <button class="btn" onclick="startMemoryGame(currentActiveList)">🔄 Tekrar Oyna</button>
-            <button class="btn btn-ghost" style="margin-top:6px;" onclick="exitMemoryGame()">Ana Menü</button>
-        </div>
+        <!-- GM.renderHub() tarafından dinamik olarak doldurulur -->
     </div>
 
     <div id="exercise-page" class="container hidden">
@@ -1897,6 +1852,7 @@
 
 <script src="kelimeler.js"></script>
 <script src="motor.js"></script>
+<script src="games.js"></script>
 <script src="grammar.js"></script>
 <script src="modals.js"></script>
 <script src="pronouns.js"></script>

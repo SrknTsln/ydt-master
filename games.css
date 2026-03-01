@@ -1,0 +1,432 @@
+/* ════════════════════════════════════════════════════════
+   games.css  —  Oyun Merkezi Stilleri v2.0
+   Prefix: gm-  (mevcut stillerle çakışmaz)
+   ════════════════════════════════════════════════════════ */
+
+/* ── Game Shell (tüm oyunlar için çerçeve) ── */
+.gm-game-shell {
+    display: flex; flex-direction: column;
+    min-height: calc(100vh - 60px);
+}
+.gm-game-topbar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 20px; background: var(--white);
+    position: sticky; top: 0; z-index: 10;
+    flex-wrap: wrap;
+}
+.gm-game-topbar-title {
+    font-size: .95rem; font-weight: 900; color: var(--ink);
+    flex: 1;
+}
+.gm-back-btn {
+    font-size: 1rem; border: none; background: var(--bg);
+    color: var(--ink3); cursor: pointer; padding: 7px 14px;
+    border-radius: 9px; font-weight: 700; font-family: inherit;
+    transition: background .12s;
+}
+.gm-back-btn:hover { background: var(--border); }
+.gm-area {
+    flex: 1;
+}
+
+/* ── HUB ── */
+.gm-hub { padding: 20px; max-width: 900px; margin: 0 auto; }
+.gm-hub-header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    margin-bottom: 18px; gap: 12px;
+}
+.gm-hub-title {
+    font-size: 1.4rem; font-weight: 900; color: var(--ink); margin-bottom: 2px;
+}
+.gm-hub-sub { font-size: .78rem; color: var(--ink3); font-weight: 600; }
+.gm-hub-score {
+    background: var(--bg); border-radius: 14px; padding: 10px 16px;
+    text-align: center; border: 1.5px solid var(--border); flex-shrink: 0;
+}
+
+/* Liste seç row */
+.gm-list-row {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    background: var(--bg); border-radius: 12px; padding: 10px 14px;
+    margin-bottom: 14px; border: 1.5px solid var(--border);
+}
+.gm-list-label { font-size: .72rem; font-weight: 800; color: var(--ink3); flex-shrink: 0; }
+.gm-list-sel {
+    flex: 1; min-width: 140px; border: 1.5px solid var(--border);
+    border-radius: 9px; padding: 7px 10px; font-size: .82rem;
+    font-family: inherit; font-weight: 700; color: var(--ink);
+    background: var(--white); cursor: pointer; outline: none;
+}
+.gm-list-sel:focus { border-color: var(--red); }
+.gm-list-count {
+    font-size: .72rem; font-weight: 800; color: var(--red);
+    background: var(--red-soft); padding: 3px 10px; border-radius: 20px;
+    flex-shrink: 0;
+}
+
+/* Tag filter */
+.gm-tags { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.gm-tag-btn {
+    border: 1.5px solid var(--border); background: var(--white); color: var(--ink3);
+    border-radius: 20px; padding: 5px 16px; font-size: .78rem; font-weight: 800;
+    cursor: pointer; font-family: inherit; transition: all .14s;
+}
+.gm-tag-btn:hover { border-color: var(--red); color: var(--red); }
+.gm-tag-btn.active { background: var(--red); color: white; border-color: var(--red); }
+
+/* Game grid */
+.gm-grid { display: flex; flex-direction: column; gap: 10px; }
+.gm-game-card {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--white); border: 1.5px solid var(--border);
+    border-radius: 16px; padding: 14px 16px; cursor: pointer;
+    transition: transform .14s, box-shadow .14s, border-color .14s;
+}
+.gm-game-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,.08);
+    border-color: #d1d5db;
+}
+.gm-game-card:active { transform: scale(.98); }
+.gm-disabled { opacity: .45; cursor: not-allowed; pointer-events: none; }
+.gm-game-icon {
+    width: 52px; height: 52px; border-radius: 14px; font-size: 1.8rem;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.gm-game-body { flex: 1; min-width: 0; }
+.gm-game-name { font-size: .95rem; font-weight: 900; color: var(--ink); margin-bottom: 2px; }
+.gm-game-desc { font-size: .74rem; color: var(--ink3); font-weight: 600; line-height: 1.4; }
+.gm-game-warn { font-size: .68rem; color: #f59e0b; font-weight: 700; margin-top: 3px; }
+.gm-game-tag {
+    font-size: .65rem; font-weight: 800; padding: 4px 10px;
+    border-radius: 20px; flex-shrink: 0; white-space: nowrap;
+}
+
+/* ── HUD (oyun içi üst bar) ── */
+.gm-rf-hud {
+    font-size: .8rem; font-weight: 800; color: var(--ink3);
+    background: var(--bg); padding: 5px 12px; border-radius: 20px;
+    margin-left: auto; border: 1.5px solid var(--border);
+    white-space: nowrap;
+}
+.gm-mem-stats { font-size: .78rem; font-weight: 800; color: var(--ink3); margin-left: auto; }
+
+/* ── Progress bar ── */
+.gm-prog-bar-wrap {
+    height: 7px; background: var(--border); border-radius: 4px;
+    overflow: hidden; margin-bottom: 14px;
+}
+.gm-prog-bar {
+    height: 100%; background: linear-gradient(90deg, var(--red), #f97316);
+    border-radius: 4px; transition: width .5s cubic-bezier(.4,0,.2,1);
+}
+
+/* ── Answer buttons ── */
+.gm-ans-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.gm-ans-btn {
+    background: var(--white); border: 2px solid var(--border); border-radius: 14px;
+    padding: 15px 10px; font-family: inherit; font-size: .9rem;
+    font-weight: 800; color: var(--ink); cursor: pointer; text-align: center;
+    min-height: 68px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 4px;
+    transition: border-color .13s, background .13s, transform .08s;
+}
+.gm-ans-btn:hover  { border-color: #9ca3af; background: var(--bg); }
+.gm-ans-btn:active { transform: scale(.93); }
+.gm-ans-correct { background:#dcfce7!important; border-color:#22c55e!important; color:#16a34a!important; animation:gmCorrectPop .35s; }
+.gm-ans-wrong   { background:#fee2e2!important; border-color:#f87171!important; color:#b91c1c!important; animation:gmWrongShake .35s; }
+
+/* ── Flash word ── */
+.gm-flash-word {
+    font-size: 2.6rem; font-weight: 900; color: var(--ink);
+    text-align: center; background: var(--bg); border-radius: 16px;
+    padding: 20px 16px; margin-bottom: 14px;
+    animation: gmWordPop .4s cubic-bezier(.34,1.56,.64,1);
+}
+
+/* ── Memory cards ── */
+.gm-mem-card {
+    aspect-ratio: 1; border-radius: 12px; cursor: pointer;
+    position: relative; transform-style: preserve-3d;
+    transition: transform .4s cubic-bezier(.4,0,.2,1);
+}
+.gm-mc-flip,.gm-mc-match { transform: rotateY(180deg); }
+.gm-mc-inner { position: absolute; inset: 0; transform-style: preserve-3d; }
+.gm-mc-front,.gm-mc-back {
+    position: absolute; inset: 0; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    backface-visibility: hidden; font-weight: 800; text-align: center;
+    padding: 6px; word-break: break-word; font-size: .8rem; line-height: 1.3;
+}
+.gm-mc-front { background: linear-gradient(135deg,#6366f1,#4f46e5); color: white; font-size: 1.6rem; }
+.gm-mc-back  { background: var(--white); color: var(--ink); transform: rotateY(180deg); border: 2px solid var(--border); }
+.gm-mc-back.gm-mc-eng { color: var(--red); }
+.gm-mc-match .gm-mc-front { background: linear-gradient(135deg,#22c55e,#16a34a); }
+.gm-mc-wrong .gm-mc-front { animation: gmWrongShake .35s; }
+
+/* ── Rainfall ── */
+.gm-rf-word {
+    position: absolute; background: linear-gradient(135deg,#0ea5e9,#0284c7);
+    color: white; border-radius: 20px; padding: 6px 14px;
+    font-weight: 800; font-size: .88rem; white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(14,165,233,.3);
+    animation: gmWordPop .3s cubic-bezier(.34,1.56,.64,1);
+}
+.gm-rf-input {
+    width: 100%; border: 2.5px solid #bae6fd; border-radius: 14px;
+    padding: 13px 16px; font-family: inherit; font-size: 1rem;
+    font-weight: 700; color: var(--ink); outline: none; background: white;
+    transition: border-color .2s; box-shadow: 0 4px 14px rgba(14,165,233,.15);
+}
+.gm-rf-input:focus { border-color: #0ea5e9; }
+
+/* ── Anagram tiles ── */
+.gm-ag-slot {
+    min-width: 36px; height: 40px; border-radius: 9px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 1.1rem; background: var(--white);
+    border: 2px dashed var(--border); color: var(--border); cursor: pointer;
+    transition: all .14s;
+}
+.gm-ag-slot.filled { background: var(--bg); border-color: #9ca3af; color: var(--ink); border-style: solid; }
+.gm-ag-tile {
+    width: 40px; height: 40px; border-radius: 9px; font-weight: 900; font-size: 1.1rem;
+    background: var(--white); border: 2px solid var(--border); color: var(--ink);
+    cursor: pointer; font-family: inherit; transition: all .13s;
+    box-shadow: 0 2px 6px rgba(0,0,0,.07);
+}
+.gm-ag-tile:hover:not(:disabled) { background: var(--red-soft); border-color: var(--red); color: var(--red); transform: translateY(-2px); }
+.gm-ag-tile:active:not(:disabled) { transform: scale(.88); }
+.gm-ag-used { opacity: .3; cursor: not-allowed; }
+.gm-ag-hint {
+    background: linear-gradient(135deg,#fefce8,#fef9c3);
+    border-radius: 14px; padding: 14px 16px; margin-bottom: 4px;
+    display: flex; flex-direction: column; gap: 4px;
+    border: 1.5px solid #fde68a;
+}
+
+/* ── Hangman ── */
+.gm-hg-keyboard {
+    display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;
+}
+.gm-hg-key {
+    width: 34px; height: 34px; border-radius: 8px; font-weight: 800;
+    font-size: .8rem; background: var(--white); border: 1.5px solid var(--border);
+    color: var(--ink); cursor: pointer; font-family: inherit; transition: all .12s;
+}
+.gm-hg-key:hover:not(:disabled) { background: var(--red-soft); color: var(--red); border-color: var(--red); }
+.gm-hg-key.right  { background: #dcfce7; border-color: #22c55e; color: #16a34a; }
+.gm-hg-key.wrong  { background: #fee2e2; border-color: #f87171; color: #b91c1c; opacity: .55; }
+
+/* ── Sentence Builder chips ── */
+.gm-chip {
+    background: var(--white); border: 2px solid var(--border); border-radius: 10px;
+    padding: 7px 12px; font-size: .88rem; font-weight: 800; color: var(--ink);
+    cursor: pointer; transition: all .13s; user-select: none;
+}
+.gm-chip:active { transform: scale(.91); }
+.gm-chip-in { background: linear-gradient(135deg,#10b981,#059669); color: white; border-color: transparent; }
+
+/* ── Translate Duel ── */
+.gm-td-dir-badge {
+    display: inline-block; background: var(--bg); border: 1.5px solid var(--border);
+    border-radius: 20px; padding: 5px 16px; font-size: .75rem; font-weight: 800;
+    color: var(--ink3); margin-bottom: 6px;
+}
+
+/* ── Spelling Pro ── */
+.gm-sp-card {
+    background: var(--bg); border-radius: 18px; padding: 20px 16px;
+    text-align: center;
+}
+.gm-sp-listen-btn {
+    background: linear-gradient(135deg,#a855f7,#7c3aed); color: white;
+    border: none; border-radius: 14px; padding: 14px 28px;
+    font-family: inherit; font-size: 1rem; font-weight: 800; cursor: pointer;
+    box-shadow: 0 5px 18px rgba(168,85,247,.35); transition: transform .15s;
+    display: inline-flex; align-items: center; gap: 8px;
+}
+.gm-sp-listen-btn:active { transform: scale(.94); }
+.gm-sp-speaking { animation: gmSpPulse .7s infinite; }
+@keyframes gmSpPulse {
+    0%,100% { box-shadow: 0 5px 18px rgba(168,85,247,.35); transform: scale(1); }
+    50%      { box-shadow: 0 0 0 10px rgba(168,85,247,.15); transform: scale(1.04); }
+}
+.gm-sp-blank {
+    min-width: 32px; height: 36px; border-radius: 8px; display: inline-flex;
+    align-items: center; justify-content: center; font-weight: 900; font-size: 1rem;
+    background: var(--white); border: 2px dashed var(--border); color: var(--border);
+    margin: 2px; transition: all .2s;
+}
+
+/* ── Input (oyun içi) ── */
+.gm-inp {
+    flex: 1; border: 2px solid var(--border); border-radius: 12px;
+    padding: 12px 14px; font-family: inherit; font-size: .95rem;
+    font-weight: 700; color: var(--ink); outline: none; background: var(--white);
+    transition: border-color .2s;
+}
+.gm-inp:focus { border-color: var(--red); }
+
+/* ── Buttons ── */
+.gm-btn-pri {
+    background: linear-gradient(135deg, var(--red), #f97316); color: white;
+    border: none; border-radius: 12px; padding: 12px 22px;
+    font-family: inherit; font-size: .88rem; font-weight: 800; cursor: pointer;
+    box-shadow: 0 4px 14px rgba(230,57,70,.28); transition: transform .13s, box-shadow .13s;
+}
+.gm-btn-pri:hover  { box-shadow: 0 6px 20px rgba(230,57,70,.38); transform: translateY(-1px); }
+.gm-btn-pri:active { transform: scale(.94); }
+.gm-btn-sec {
+    background: var(--white); color: var(--ink3); border: 1.5px solid var(--border);
+    border-radius: 12px; padding: 11px 20px; font-family: inherit;
+    font-size: .85rem; font-weight: 700; cursor: pointer; transition: all .13s;
+}
+.gm-btn-sec:hover  { border-color: var(--red); color: var(--red); }
+.gm-btn-sec:active { transform: scale(.94); }
+
+/* ── Result screen ── */
+.gm-result {
+    text-align: center; padding: 36px 24px; max-width: 440px; margin: 0 auto;
+}
+.gm-result-title {
+    font-size: 1.8rem; font-weight: 900; color: var(--ink); margin: 10px 0 4px;
+}
+.gm-result-stats {
+    display: flex; justify-content: center; gap: 0; flex-wrap: wrap;
+    background: var(--bg); border-radius: 16px; overflow: hidden;
+    border: 1.5px solid var(--border); margin: 16px 0;
+}
+.gm-rs-item {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    padding: 14px 20px; border-right: 1px solid var(--border); flex: 1; min-width: 70px;
+}
+.gm-rs-item:last-child { border-right: none; }
+.gm-rs-val { font-size: 1.3rem; font-weight: 900; color: var(--ink); }
+.gm-rs-lbl { font-size: .65rem; font-weight: 700; color: var(--ink3); text-transform: uppercase; letter-spacing: .5px; }
+
+/* ── Animations ── */
+@keyframes gmBounce  { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+@keyframes gmWordPop { from{transform:scale(.7);opacity:0} to{transform:scale(1);opacity:1} }
+@keyframes gmCorrectPop { 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
+@keyframes gmWrongShake { 0%,40%,80%{transform:translateX(0)} 20%,60%{transform:translateX(-6px)} 35%,75%{transform:translateX(6px)} }
+
+/* ── Mobile ── */
+@media (max-width: 699px) {
+    .gm-hub          { padding: 12px; }
+    .gm-game-topbar  { padding: 10px 14px; }
+    .gm-flash-word   { font-size: 2rem; padding: 16px; }
+    .gm-ans-btn      { min-height: 60px; font-size: .84rem; }
+    .gm-hg-key       { width: 30px; height: 30px; font-size: .72rem; }
+    .gm-grid         { gap: 8px; }
+    .gm-ag-tile      { width: 36px; height: 36px; font-size: 1rem; }
+    .gm-result       { padding: 20px 14px; }
+    .gm-rs-item      { padding: 10px 12px; }
+    .gm-hub-header   { flex-direction: column; }
+}
+
+/* ── Desktop Layout ── */
+@media (min-width: 700px) {
+
+    /* Hub container — daha geniş, daha havadar */
+    .gm-hub {
+        padding: 32px 36px;
+        max-width: 1100px;
+    }
+
+    .gm-hub-title  { font-size: 1.7rem; }
+    .gm-hub-sub    { font-size: .85rem; }
+
+    .gm-hub-score {
+        padding: 14px 24px;
+        min-width: 130px;
+    }
+    .gm-hub-score > div:last-child { font-size: 1.9rem; }
+
+    /* Liste seç row */
+    .gm-list-row { padding: 12px 18px; }
+    .gm-list-sel { font-size: .88rem; }
+    .gm-list-count { font-size: .78rem; }
+
+    /* Tag butonları biraz daha büyük */
+    .gm-tag-btn { font-size: .82rem; padding: 6px 20px; }
+
+    /* ── 2 kolonlu oyun grid ── */
+    .gm-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+    }
+
+    /* Kart içi tipografi iyileştirmesi */
+    .gm-game-card   { padding: 18px 20px; border-radius: 18px; gap: 16px; }
+    .gm-game-icon   { width: 60px; height: 60px; font-size: 2rem; border-radius: 16px; }
+    .gm-game-name   { font-size: 1rem; }
+    .gm-game-desc   { font-size: .78rem; }
+    .gm-game-tag    { font-size: .7rem; padding: 5px 13px; }
+
+    /* Hover efekti biraz daha belirgin */
+    .gm-game-card:hover {
+        box-shadow: 0 8px 28px rgba(0,0,0,.10);
+        transform: translateY(-3px);
+    }
+
+    /* Oyun içi topbar */
+    .gm-game-topbar { padding: 16px 28px; }
+    .gm-game-topbar-title { font-size: 1.05rem; }
+
+    /* Flash kelime */
+    .gm-flash-word { font-size: 3rem; padding: 28px 24px; }
+
+    /* Cevap butonları — masaüstünde 4 kolon */
+    .gm-ans-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .gm-ans-btn  { min-height: 80px; font-size: .95rem; border-radius: 16px; }
+
+    /* Result ekranı */
+    .gm-result       { padding: 48px 36px; max-width: 540px; }
+    .gm-result-title { font-size: 2rem; }
+    .gm-rs-val       { font-size: 1.5rem; }
+    .gm-rs-lbl       { font-size: .7rem; }
+
+    /* Progress bar */
+    .gm-prog-bar-wrap { height: 8px; margin-bottom: 18px; }
+
+    /* Hangman keyboard */
+    .gm-hg-key { width: 38px; height: 38px; font-size: .84rem; }
+
+    /* Input ve butonlar */
+    .gm-inp     { font-size: 1rem; padding: 14px 16px; }
+    .gm-btn-pri { font-size: .92rem; padding: 14px 26px; }
+    .gm-btn-sec { font-size: .88rem; padding: 12px 22px; }
+
+    /* Memory cards — daha büyük grid */
+    .gm-mc-front { font-size: 2rem; }
+    .gm-mc-back  { font-size: .88rem; }
+
+    /* Anagram tiles */
+    .gm-ag-tile { width: 46px; height: 46px; font-size: 1.2rem; }
+    .gm-ag-slot { min-width: 42px; height: 46px; font-size: 1.2rem; }
+
+    /* Rainfall input */
+    .gm-rf-input { font-size: 1.05rem; padding: 15px 18px; }
+}
+
+/* ── Game Area Wrapper (oyun içi içerik centeri) ── */
+.gm-area-wrap {
+    display: flex;
+    justify-content: center;
+}
+.gm-area-wrap > .gm-area {
+    width: 100%;
+}
+
+@media (min-width: 700px) {
+    .gm-area-wrap > .gm-area {
+        max-width: 720px;
+        padding: 0 8px;
+    }
+    /* Level Map ve geniş içerikler için tam genişlik */
+    .gm-area-wrap.gm-area-full > .gm-area {
+        max-width: 1000px;
+    }
+}
