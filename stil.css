@@ -5182,11 +5182,11 @@ body:has(#kids-page:not(.hidden)) .kw-world-bg { opacity: 1; }
    YAZARAK CEVAP — YENİ TASARIM (tw-*)
    ════════════════════════════════════════════════════════ */
 .tw-page {
-    position: fixed !important; inset: 0 !important; left: 228px !important;
+    position: fixed !important; inset: 0 !important; left: 0 !important;
     background: var(--bg) !important; display: flex !important;
     flex-direction: column !important; overflow: hidden !important;
-    z-index: 60 !important; font-family: 'Segoe UI', system-ui, sans-serif;
-    max-width: none !important; width: auto !important; padding: 0 !important;
+    z-index: 200 !important; font-family: 'Segoe UI', system-ui, sans-serif;
+    max-width: none !important; width: 100% !important; padding: 0 !important;
     margin: 0 !important; border-radius: 0 !important; border: none !important;
     box-shadow: none !important; text-align: left !important;
 }
@@ -5369,16 +5369,16 @@ body:has(#kids-page:not(.hidden)) .kw-world-bg { opacity: 1; }
    ═══════════════════════════════════════════════════════════════ */
 
 .sr-page {
-    position:fixed !important; inset:0 !important; left:228px !important;
+    position:fixed !important; inset:0 !important; left:0 !important;
     background:var(--bg) !important; display:flex !important;
     flex-direction:column !important; overflow:hidden !important;
-    z-index:60 !important; font-family:'Segoe UI',system-ui,sans-serif;
-    max-width:none !important; width:auto !important; padding:0 !important;
+    z-index:200 !important; font-family:'Segoe UI',system-ui,sans-serif;
+    max-width:none !important; width:100% !important; padding:0 !important;
     margin:0 !important; border-radius:0 !important;
     border:none !important; box-shadow:none !important;
 }
 .sr-page.hidden { display:none !important; }
-@media(max-width:699px){ .sr-page { left:0 !important; top:52px !important; bottom:60px !important; } }
+@media(max-width:699px){ .sr-page { top:52px !important; bottom:60px !important; } }
 
 /* Header */
 .sr-header {
@@ -5535,16 +5535,16 @@ body:has(#kids-page:not(.hidden)) .kw-world-bg { opacity: 1; }
    ═══════════════════════════════════════════════════════════════ */
 
 .cx-page {
-    position:fixed !important; inset:0 !important; left:228px !important;
+    position:fixed !important; inset:0 !important; left:0 !important;
     background:var(--bg) !important; display:flex !important;
     flex-direction:column !important; overflow:hidden !important;
-    z-index:60 !important; font-family:'Segoe UI',system-ui,sans-serif;
-    max-width:none !important; width:auto !important; padding:0 !important;
+    z-index:200 !important; font-family:'Segoe UI',system-ui,sans-serif;
+    max-width:none !important; width:100% !important; padding:0 !important;
     margin:0 !important; border-radius:0 !important;
     border:none !important; box-shadow:none !important;
 }
 .cx-page.hidden { display:none !important; }
-@media(max-width:699px){ .cx-page { left:0 !important; top:52px !important; bottom:60px !important; } }
+@media(max-width:699px){ .cx-page { top:52px !important; bottom:60px !important; } }
 
 /* Header */
 .cx-header {

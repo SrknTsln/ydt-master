@@ -19,29 +19,53 @@ let currentActiveList = "", studyIndex = 0, currentWord, score = 0, canAnswer = 
 // ══════════════════════════════════════════════
 // SAYFA VE MODÜL YÖNETİMİ
 // ══════════════════════════════════════════════
-function showPage(id) {
-    // Tüm normal container'ları gizle
+function _hideAllModulePages() {
     document.querySelectorAll('.container').forEach(c => c.classList.add('hidden'));
-    // Tam sayfa elemanları da gizle
     document.querySelectorAll('.arsiv-full-page').forEach(c => c.classList.add('hidden'));
-    // Özel tam ekran sayfalar: cx, sr, tw — display:none yerine hidden sınıfı kullan
+    document.querySelectorAll('.sp-page').forEach(c => {
+        c.classList.add('hidden');
+        c.style.display = 'none';
+    });
     document.querySelectorAll('.cx-page, .sr-page, .tw-page').forEach(c => {
         c.classList.add('hidden');
-        c.style.display = ''; // CSS'teki display değerini sıfırla
+        c.style.display = 'none';
     });
+}
+
+function showPage(id) {
     const target = document.getElementById(id);
+
+    // Hedef hariç tüm sayfaları gizle
+    document.querySelectorAll('.container').forEach(c => {
+        if (c.id !== id) c.classList.add('hidden');
+    });
+    document.querySelectorAll('.arsiv-full-page').forEach(c => {
+        if (c.id !== id) c.classList.add('hidden');
+    });
+    // sp-page (stats) — CSS display:flex var, inline none ile ez; hedef değilse
+    document.querySelectorAll('.sp-page').forEach(c => {
+        if (c.id !== id) { c.classList.add('hidden'); c.style.display = 'none'; }
+    });
+    // cx/sr/tw — CSS display:flex !important var, inline none ile ez; hedef değilse
+    document.querySelectorAll('.cx-page, .sr-page, .tw-page').forEach(c => {
+        if (c.id !== id) { c.classList.add('hidden'); c.style.display = 'none'; }
+    });
+
     if (!target) return;
+
+    // Hedefi aç: önce inline style temizle, sonra hidden kaldır
+    target.style.display = '';
     target.classList.remove('hidden');
-    // cx/sr/tw sayfaları için display'i zorla aç (mobil CSS çakışmalarına karşı)
+
+    // cx/sr/tw: tam ekran flex zorla
     if (target.classList.contains('cx-page') ||
         target.classList.contains('sr-page') ||
         target.classList.contains('tw-page')) {
         target.style.display = 'flex';
         target.style.flexDirection = 'column';
-        target.style.minHeight = '100dvh';
-        // Sayfayı en üste scroll et
         setTimeout(() => { target.scrollTop = 0; window.scrollTo(0,0); }, 10);
     }
+
     setNavActive(id);
 }
 
@@ -210,6 +234,7 @@ function showExerciseNav(mode) {
 // İSTATİSTİK SAYFASI
 // ══════════════════════════════════════════════
 function showStatsPage() {
+    showPage('stats-page');
     let total = 0, learned = 0, hard = 0, allWords = [];
     const lists = Object.keys(allData);
     lists.forEach(listName => {
@@ -3394,8 +3419,11 @@ function updateArsivBadge() {
 // ── Arşiv sayfası ────────────────────────────────────
 function showAIArsiv() {
     document.querySelectorAll('.container').forEach(c => c.classList.add('hidden'));
-    // arsiv-page container değil, ayrıca gizle
     document.querySelectorAll('.arsiv-full-page').forEach(c => c.classList.add('hidden'));
+    document.querySelectorAll('.cx-page, .sr-page, .tw-page').forEach(c => {
+        c.classList.add('hidden');
+        c.style.display = '';
+    });
     document.querySelectorAll('.sb-btn, .mob-drawer-btn').forEach(b => b.classList.remove('active'));
     const arsivBtn = document.getElementById('sb-arsiv');
     if (arsivBtn) arsivBtn.classList.add('active');
@@ -3408,6 +3436,9 @@ function showAIArsiv() {
         filterSel.innerHTML = '<option value="">Tüm Listeler</option>' +
             lists.map(l => `<option value="${l}">${l}</option>`).join('');
     }
+
+    // İlk açılışta overview göster
+    if (!window._arsivActiveSubList) window._arsivActiveSubList = 'overview';
 
     renderArsiv();
 }
@@ -7807,526 +7838,493 @@ const BANK_GROUP_SIZE = 10; // içerik alanında aynı anda gösterilen soru
 const PARA_GROUP_SIZE = 10; // paragraf grubu başına pasaj sayısı
 
 function renderArsiv() {
-    const arsiv  = window.aiArsiv || [];
-    const filter = document.getElementById('arsiv-list-filter')?.value || '';
-    const totalKelime = arsiv.length;
-    const kelimePages = Math.max(1, Math.ceil(totalKelime / BANK_PAGE_SIZE));
-    const kelimeCardOpen = window._kelimeCardOpen;
+    /* ═══════════════════════════════════════════════════════
+       SORU BANKASI — v4.0
+       Sol sidebar nav + sağ içerik alanı
+       bk- CSS sınıflarını tam kullanır
+       ═══════════════════════════════════════════════════════ */
 
-    // ── Paragraf istatistikleri ────────────────────────
-    const pSorular = window.paragrafSorular || {};
-    const pKeys    = Object.keys(pSorular);
-    const totalParagraf    = pKeys.reduce((s, k) => s + (pSorular[k].questions || []).length, 0);
-    const paragrafPasajSayisi = pKeys.length;
-    const paragrafPaketSayisi = typeof PARAGRAF_PAKETLERİ !== 'undefined'
-        ? PARAGRAF_PAKETLERİ.filter(pk => pk.pasajlar.some(p => {
-            const k = `p_${(p.baslik||'').replace(/[^a-zA-Z0-9ğüşıöçĞÜŞİÖÇ\s]/g,'').trim().slice(0,40)}_${(p.metin||'').length}`;
-            return pSorular[k];
-          })).length
-        : 0;
-    const paragrafCardOpen = window._paragrafCardOpen || false;
+    const arsiv   = window.aiArsiv || [];
+    const filter  = document.getElementById('arsiv-list-filter')?.value || '';
+    const sidebar = document.getElementById('bk-sidebar');
+    const cont    = document.getElementById('arsiv-content');
+    if (!sidebar || !cont) return;
 
-    // ── Gramer istatistikleri ──────────────────────────
-    const gramerArsiv   = window.aiGramerArsiv || [];
-    const totalGramer   = gramerArsiv.length;
-    const gramerPages   = Math.max(1, Math.ceil(totalGramer / BANK_PAGE_SIZE));
-    const gramerCardOpen = window._gramerCardOpen || false;
+    // ── Veri özeti ──────────────────────────────────────────
+    const filteredArsiv   = filter ? arsiv.filter(e => e.listName === filter) : arsiv;
+    const totalKelime     = filteredArsiv.length;
+    const kelimePages     = Math.max(1, Math.ceil(totalKelime / BANK_PAGE_SIZE));
 
-    // Gramer sub-liste butonları
-    const gramerSubBtnsHtml = totalGramer === 0
-        ? `<div style="text-align:center;padding:12px 8px;color:var(--ink3);font-size:.74rem;">Henüz soru eklenmedi</div>`
-        : Array.from({length: gramerPages}, (_, i) => {
-            const pageNum  = i + 1;
-            const key      = `gramer_${pageNum}`;
-            const start    = i * BANK_PAGE_SIZE + 1;
-            const end      = Math.min((i + 1) * BANK_PAGE_SIZE, totalGramer);
-            const isActive = window._arsivActiveSubList === key;
-            return `<button onclick="selectArsivSubList('${key}')"
-                style="display:flex;align-items:center;justify-content:space-between; width:100%;padding:9px 12px;border-radius:10px; border:1.5px solid ${isActive ? '#f59e0b' : 'var(--border)'}; background:${isActive ? '#fef3c7' : 'var(--white)'}; cursor:pointer;font-family:inherit;text-align:left;margin-bottom:4px;">
-                <span style="font-size:.8rem;font-weight:700;color:${isActive ? '#d97706' : 'var(--ink)'};">Gramer Soruları ${pageNum}</span>
-                <div style="display:flex;align-items:center;gap:8px;">
-                    <span style="font-size:.68rem;color:${isActive ? '#f59e0b' : 'var(--ink3)'};font-weight:600;">Soru ${start}–${end}</span>
-                    <span style="font-size:.65rem;font-weight:800;border-radius:99px;padding:1px 7px; background:${isActive ? '#f59e0b' : 'var(--border)'}; color:${isActive ? '#fff' : 'var(--ink3)'};">${end - start + 1}</span>
+    const pSorular        = window.paragrafSorular || {};
+    const pKeys           = Object.keys(pSorular);
+    const totalParagraf   = pKeys.reduce((s, k) => s + (pSorular[k].questions||[]).length, 0);
+    const paraGroupCount  = Math.max(1, Math.ceil(pKeys.length / PARA_GROUP_SIZE));
+
+    const gramerArsiv     = window.aiGramerArsiv || [];
+    const totalGramer     = gramerArsiv.length;
+    const gramerPages     = Math.max(1, Math.ceil(totalGramer / BANK_PAGE_SIZE));
+
+    const clozeArsiv      = window.aiClozeArsiv      || [];
+    const yakinArsiv      = window.aiYakinArsiv       || [];
+    const paraComArsiv    = window.aiParaComArsiv     || [];
+    const diyalogArsiv    = window.aiDiyalogArsiv     || [];
+    const durumArsiv      = window.aiDurumArsiv       || [];
+    const paraBozArsiv    = window.aiParaBozArsiv     || [];
+
+    const grandTotal = totalKelime + totalParagraf + totalGramer +
+                       clozeArsiv.length + yakinArsiv.length + paraComArsiv.length +
+                       diyalogArsiv.length + durumArsiv.length + paraBozArsiv.length;
+
+    // Badge güncelle
+    const badge = document.getElementById('bk-total-badge');
+    if (badge) badge.textContent = grandTotal || '—';
+
+    // ── Aktif seçim ─────────────────────────────────────────
+    const active = window._arsivActiveSubList || 'overview';
+
+    // ── Kategoriler tanımı ──────────────────────────────────
+    const cats = [
+        {
+            key: 'kelime', theme: 'bkt-kelime', icon: '📝', label: 'Kelime', count: totalKelime,
+            desc: 'Çoktan seçmeli', color: '#4f46e5',
+            subs: Array.from({length: kelimePages}, (_, i) => ({
+                key: `kelime_${i+1}`,
+                label: `Kelime Soruları ${i+1}`,
+                range: `${i*BANK_PAGE_SIZE+1}–${Math.min((i+1)*BANK_PAGE_SIZE, totalKelime)}`,
+                count: Math.min(BANK_PAGE_SIZE, totalKelime - i*BANK_PAGE_SIZE)
+            }))
+        },
+        {
+            key: 'paragraf', theme: 'bkt-paragraf', icon: '📖', label: 'Paragraf', count: totalParagraf,
+            desc: `${pKeys.length} pasaj`, color: '#059669',
+            subs: pKeys.length === 0
+                ? [{key:'paragraf_import', label:'Paket Yükle', range:'', count:0, isImport:true}]
+                : Array.from({length: paraGroupCount}, (_, gi) => {
+                    const sk = gi * PARA_GROUP_SIZE;
+                    const ek = Math.min((gi+1)*PARA_GROUP_SIZE, pKeys.length);
+                    const gc = pKeys.slice(sk, ek).reduce((s,k)=>s+(pSorular[k].questions||[]).length,0);
+                    return { key:`paragraf_g${gi+1}`, label:`Pasajlar ${gi+1}`, range:`${sk+1}–${ek}. pasaj`, count:gc };
+                })
+        },
+        {
+            key: 'gramer', theme: 'bkt-gramer', icon: '⚙️', label: 'Gramer', count: totalGramer,
+            desc: 'Grammar soruları', color: '#d97706',
+            subs: Array.from({length: gramerPages}, (_, i) => ({
+                key: `gramer_${i+1}`,
+                label: `Gramer Soruları ${i+1}`,
+                range: `${i*BANK_PAGE_SIZE+1}–${Math.min((i+1)*BANK_PAGE_SIZE, totalGramer)}`,
+                count: Math.min(BANK_PAGE_SIZE, totalGramer - i*BANK_PAGE_SIZE)
+            }))
+        }
+    ];
+
+    const ydt_cats = [
+        { key:'cloze',    theme:'bkt-cloze',    icon:'🔵', label:'Cloze Test',         count:clozeArsiv.length,   desc:'Boşluk doldurma',    color:'#7c3aed', coming: clozeArsiv.length===0 },
+        { key:'yakin',    theme:'bkt-yakin',     icon:'🔤', label:'Yakın Anlamlı',       count:yakinArsiv.length,   desc:'Cümle eşleşme',      color:'#be185d', coming: yakinArsiv.length===0 },
+        { key:'paraCom',  theme:'bkt-ptamam',    icon:'🧩', label:'Para. Tamamlama',     count:paraComArsiv.length, desc:'Paragraf tamamlama', color:'#0d9488', coming: paraComArsiv.length===0 },
+        { key:'diyalog',  theme:'bkt-diyalog',   icon:'💬', label:'Diyalog Tamamlama',   count:diyalogArsiv.length, desc:'Diyalog boşlukları', color:'#c2410c', coming: diyalogArsiv.length===0 },
+        { key:'durum',    theme:'bkt-durum',     icon:'🎭', label:'Durum Soruları',       count:durumArsiv.length,   desc:'Bağlamsal sorular',  color:'#b45309', coming: durumArsiv.length===0 },
+        { key:'paraBoz',  theme:'bkt-butunluk',  icon:'🚫', label:'Para. Bütünlüğü',     count:paraBozArsiv.length, desc:'Yabancı cümle bul',  color:'#4d7c0f', coming: paraBozArsiv.length===0 }
+    ];
+
+    // ════════════════════════════
+    // SOL SIDEBAR OLUŞTUR
+    // ════════════════════════════
+    let sbHtml = '';
+
+    // Overview butonu
+    sbHtml += `
+    <button class="bk-nav-cat-btn ${active==='overview'?'bk-cat-open':''}"
+            onclick="selectArsivSubList('overview')" style="border-radius:10px;margin-bottom:2px;">
+        <div class="bk-nav-cat-icon" style="background:#f3f4f6;color:#6b7280;">📊</div>
+        <div class="bk-nav-cat-info">
+            <span class="bk-nav-cat-name">Genel Bakış</span>
+            <span class="bk-nav-cat-count">${grandTotal} toplam soru</span>
+        </div>
+    </button>`;
+
+    // Ana kategoriler
+    sbHtml += `<div class="bk-nav-section-label">Ana Kategoriler</div>`;
+    cats.forEach(cat => {
+        const isOpen = active.startsWith(cat.key);
+        sbHtml += `
+        <div class="bk-nav-cat ${cat.theme}">
+            <button class="bk-nav-cat-btn ${isOpen?'bk-cat-open':''}"
+                    onclick="bkToggleCat('${cat.key}')">
+                <div class="bk-nav-cat-icon">${cat.icon}</div>
+                <div class="bk-nav-cat-info">
+                    <span class="bk-nav-cat-name">${cat.label}</span>
+                    <span class="bk-nav-cat-count">${cat.count} soru</span>
                 </div>
-            </button>`;
-          }).join('');
-
-    // Paragraf sub-liste butonları — GRUPLU (PARA_GROUP_SIZE pasaj/grup)
-    const paraGroupCount = Math.max(1, Math.ceil(pKeys.length / PARA_GROUP_SIZE));
-    const paragrafSubBtnsHtml = pKeys.length === 0
-        ? `<div style="text-align:center;padding:12px 8px;">
-               <button onclick="showImportParagrafModal()"
-                 style="padding:7px 16px;border-radius:9px;border:none;background:linear-gradient(135deg,#10b981,#059669); color:#fff;font-size:.78rem;font-weight:700;cursor:pointer;font-family:inherit;">
-                   📥 Paket Yükle
-               </button>
-           </div>`
-        : Array.from({length: paraGroupCount}, (_, gi) => {
-            const key       = `paragraf_g${gi + 1}`;
-            const isActive  = window._arsivActiveSubList === key;
-            const startIdx  = gi * PARA_GROUP_SIZE;
-            const endIdx    = Math.min((gi + 1) * PARA_GROUP_SIZE, pKeys.length) - 1;
-            const groupKeys = pKeys.slice(startIdx, endIdx + 1);
-            const groupQCount = groupKeys.reduce((s,k) => s + (pSorular[k].questions||[]).length, 0);
-            const pasajStart = startIdx + 1;
-            const pasajEnd   = endIdx + 1;
-            return `<button onclick="selectArsivSubList('${key}')"
-                style="display:flex;align-items:center;justify-content:space-between; width:100%;padding:9px 12px;border-radius:10px; border:1.5px solid ${isActive ? '#10b981' : 'var(--border)'}; background:${isActive ? '#d1fae5' : 'var(--white)'}; cursor:pointer;font-family:inherit;text-align:left;margin-bottom:4px;"> <span style="font-size:.8rem;font-weight:700;color:${isActive ? '#059669' : 'var(--ink)'};"> Paragraf Soruları ${gi + 1} </span>
-                <div style="display:flex;align-items:center;gap:7px;">
-                    <span style="font-size:.67rem;color:${isActive ? '#059669' : 'var(--ink3)'};font-weight:600;">
-                        ${pasajStart}–${pasajEnd}. pasaj
-                    </span>
-                    <span style="font-size:.65rem;font-weight:800;border-radius:99px;padding:1px 7px; background:${isActive ? '#10b981' : 'var(--border)'}; color:${isActive ? '#fff' : 'var(--ink3)'};"> ${groupQCount}
-                    </span>
-                </div>
-            </button>`;
-          }).join('') + `<button onclick="showImportParagrafModal()"
-                style="width:100%;padding:7px 12px;border-radius:10px;border:1.5px dashed #10b981; background:none;cursor:pointer;font-family:inherit;color:#059669; font-size:.74rem;font-weight:700;margin-top:4px;"> ➕ Yeni Paket Yükle
-            </button>`;
-
-    // Aktif sub-liste içeriği (50'lik dilim)
-    const subMatch   = (window._arsivActiveSubList || '').match(/^kelime_(\d+)$/);
-    const pageIdx    = subMatch ? parseInt(subMatch[1]) - 1 : 0;
-    const pageOffset = pageIdx * BANK_PAGE_SIZE;
-    let subItems     = arsiv.slice(pageIdx * BANK_PAGE_SIZE, (pageIdx + 1) * BANK_PAGE_SIZE);
-    if (filter) subItems = subItems.filter(e => e.listName === filter);
-
-    // 10'luk grup hesapla
-    const totalGroups = Math.max(1, Math.ceil(subItems.length / BANK_GROUP_SIZE));
-    const groupPage   = Math.min(window._arsivGroupPage || 1, totalGroups);
-    window._arsivGroupPage = groupPage;
-    const groupOffset = (groupPage - 1) * BANK_GROUP_SIZE;
-    const activeItems = subItems.slice(groupOffset, groupOffset + BANK_GROUP_SIZE);
-
-    // ── Sub-liste butonları ────────────────────────────
-    const subBtnsHtml = Array.from({length: kelimePages}, (_, i) => {
-        const pageNum  = i + 1;
-        const key      = `kelime_${pageNum}`;
-        const start    = i * BANK_PAGE_SIZE + 1;
-        const end      = Math.min((i + 1) * BANK_PAGE_SIZE, totalKelime);
-        const isActive = window._arsivActiveSubList === key;
-        return `
-        <button onclick="selectArsivSubList('${key}')"
-            style="display:flex;align-items:center;justify-content:space-between; width:100%;padding:9px 12px;border-radius:10px; border:1.5px solid ${isActive ? '#6366f1' : 'var(--border)'}; background:${isActive ? '#e0e7ff' : 'var(--white)'}; cursor:pointer;font-family:inherit;text-align:left;margin-bottom:4px;"> <span style="font-size:.8rem;font-weight:700;color:${isActive ? '#4f46e5' : 'var(--ink)'};"> Kelime Soruları ${pageNum} </span>
-            <div style="display:flex;align-items:center;gap:8px;">
-                <span style="font-size:.68rem;color:${isActive ? '#6366f1' : 'var(--ink3)'};font-weight:600;">
-                    Soru ${start}–${end}
-                </span>
-                <span style="font-size:.65rem;font-weight:800;border-radius:99px;padding:1px 7px; background:${isActive ? '#6366f1' : 'var(--border)'}; color:${isActive ? '#fff' : 'var(--ink3)'};"> ${end - start + 1}
-                </span>
-            </div>
-        </button>`;
-    }).join('');
-
-    // ── İstatistik kartları ────────────────────────────
-    // Yeni kategori verileri
-    const clozeArsiv   = window.aiClozeArsiv   || [];
-    const yakinArsiv   = window.aiYakinArsiv   || [];
-    const diyalogArsiv = window.aiDiyalogArsiv || [];
-    const durumArsiv   = window.aiDurumArsiv   || [];
-    const paraComArsiv = window.aiParaComArsiv || [];
-    const paraBozArsiv = window.aiParaBozArsiv || [];
-
-    // Hangi panel açık?
-    const _activePanel = kelimeCardOpen ? 'kelime' : paragrafCardOpen ? 'paragraf' : gramerCardOpen ? 'gramer'
-        : window._clozeCardOpen ? 'cloze' : window._yakinCardOpen ? 'yakin'
-        : window._diyalogCardOpen ? 'diyalog' : window._durumCardOpen ? 'durum'
-        : window._paraComCardOpen ? 'paraCom' : window._paraBozCardOpen ? 'paraBoz' : '';
-
-    // Kategori kartı HTML yardımcısı
-    function bankCatCard(key, icon, label, count, colorMain, colorLight, openFlag, toggleFn, subHtml) {
-        const isOpen = openFlag;
-        return `<button onclick="${toggleFn}()"
-            style="flex:1;min-width:160px;max-width:220px;background:var(--white);
-                   border:1.5px solid ${isOpen ? colorMain : colorLight};
-                   border-radius:${isOpen ? '14px 14px 0 0' : '14px'};
-                   padding:12px 14px;cursor:pointer;font-family:inherit;text-align:left;position:relative;overflow:hidden;">
-            <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${colorMain};"></div>
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-                <div style="font-size:.58rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:${colorMain};">${icon} ${label}</div>
-                <span style="font-size:.8rem;color:${colorMain};transform:${isOpen ? 'rotate(180deg)' : ''};display:inline-block;">▼</span>
-            </div>
-            <div style="font-size:1.8rem;font-weight:900;color:var(--ink);line-height:1;">${count}</div>
-            <div style="font-size:.62rem;color:var(--ink3);margin-top:3px;">soru</div>
-        </button>
-        ${isOpen ? `<div style="grid-column:1/-1;background:var(--bg);border:1.5px solid ${colorMain};border-top:none;border-radius:0 0 12px 12px;padding:8px 8px 4px;margin-bottom:4px;">${subHtml}</div>` : ''}`;
-    }
-
-    document.getElementById('arsiv-summary').innerHTML = `
-        <div style="margin-bottom:18px;">
-            <div style="font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:var(--ink3);margin-bottom:12px;display:flex;align-items:center;gap:8px;">
-                <span style="width:4px;height:14px;background:linear-gradient(180deg,var(--red),#f59e0b);border-radius:2px;display:inline-block;"></span>
-                Soru Kategorileri
-            </div>
-
-            <!-- Üst sıra: ana kategoriler -->
-            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:0;">
-
-                ${bankCatCard('kelime','📝','Kelime',totalKelime,'#6366f1','#e0e7ff',kelimeCardOpen,'toggleKelimeCard',subBtnsHtml)}
-                ${bankCatCard('paragraf','📖','Paragraf',totalParagraf,'#10b981','#d1fae5',paragrafCardOpen,'toggleParagrafBankCard',paragrafSubBtnsHtml)}
-                ${bankCatCard('gramer','⚙️','Gramer',totalGramer,'#f59e0b','#fef3c7',gramerCardOpen,'toggleGramerCard',gramerSubBtnsHtml)}
-
-            </div>
-
-            <!-- YDT Soru Tipleri başlığı -->
-            <div style="font-size:.58rem;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:var(--ink3);margin:16px 0 10px;display:flex;align-items:center;gap:8px;">
-                <span style="width:4px;height:14px;background:linear-gradient(180deg,#7c3aed,#e63946);border-radius:2px;display:inline-block;"></span>
-                YDT Soru Tipleri
-            </div>
-
-            <!-- Alt sıra: yeni kategoriler -->
-            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;">
-
-                <!-- Cloze Test -->
-                <div style="background:var(--white);border:1.5px solid #fce7f3;border-radius:14px;padding:12px 14px;position:relative;overflow:hidden;">
-                    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#db2777,#e63946);"></div>
-                    <div style="font-size:.58rem;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#db2777;margin-bottom:4px;">🔠 Cloze Test</div>
-                    <div style="font-size:1.8rem;font-weight:900;color:var(--ink);line-height:1;">${clozeArsiv.length}</div>
-                    <div style="font-size:.6rem;color:var(--ink3);margin-top:3px;">Boşluk doldurma</div>
-                    ${clozeArsiv.length === 0 ? '<div style="font-size:.58rem;color:#db277770;margin-top:6px;font-style:italic;">Yakında eklenecek</div>' : ''}
-                </div>
-
-                <!-- Yakın Anlamlı Cümle -->
-                <div style="background:var(--white);border:1.5px solid #ede9fe;border-radius:14px;padding:12px 14px;position:relative;overflow:hidden;">
-                    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#7c3aed,#6366f1);"></div>
-                    <div style="font-size:.58rem;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#7c3aed;margin-bottom:4px;">🔀 Yakın Anlamlı</div>
-                    <div style="font-size:1.8rem;font-weight:900;color:var(--ink);line-height:1;">${yakinArsiv.length}</div>
-                    <div style="font-size:.6rem;color:var(--ink3);margin-top:3px;">Cümle eşleme</div>
-                    ${yakinArsiv.length === 0 ? '<div style="font-size:.58rem;color:#7c3aed70;margin-top:6px;font-style:italic;">Yakında eklenecek</div>' : ''}
-                </div>
-
-                <!-- Paragraf Tamamlama -->
-                <div style="background:var(--white);border:1.5px solid #ccfbf1;border-radius:14px;padding:12px 14px;position:relative;overflow:hidden;">
-                    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#0d9488,#10b981);"></div>
-                    <div style="font-size:.58rem;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#0d9488;margin-bottom:4px;">📄 Para. Tamamlama</div>
-                    <div style="font-size:1.8rem;font-weight:900;color:var(--ink);line-height:1;">${paraComArsiv.length}</div>
-                    <div style="font-size:.6rem;color:var(--ink3);margin-top:3px;">Paragraf tamamlama</div>
-                    ${paraComArsiv.length === 0 ? '<div style="font-size:.58rem;color:#0d948870;margin-top:6px;font-style:italic;">Yakında eklenecek</div>' : ''}
-                </div>
-
-                <!-- Diyalog Tamamlama -->
-                <div style="background:var(--white);border:1.5px solid #dbeafe;border-radius:14px;padding:12px 14px;position:relative;overflow:hidden;">
-                    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#2563eb,#0ea5e9);"></div>
-                    <div style="font-size:.58rem;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#2563eb;margin-bottom:4px;">💬 Diyalog Tamamlama</div>
-                    <div style="font-size:1.8rem;font-weight:900;color:var(--ink);line-height:1;">${diyalogArsiv.length}</div>
-                    <div style="font-size:.6rem;color:var(--ink3);margin-top:3px;">Diyalog boşlukları</div>
-                    ${diyalogArsiv.length === 0 ? '<div style="font-size:.58rem;color:#2563eb70;margin-top:6px;font-style:italic;">Yakında eklenecek</div>' : ''}
-                </div>
-
-                <!-- Durum Soruları -->
-                <div style="background:var(--white);border:1.5px solid #ffedd5;border-radius:14px;padding:12px 14px;position:relative;overflow:hidden;">
-                    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#f97316,#f59e0b);"></div>
-                    <div style="font-size:.58rem;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#f97316;margin-bottom:4px;">🎭 Durum Soruları</div>
-                    <div style="font-size:1.8rem;font-weight:900;color:var(--ink);line-height:1;">${durumArsiv.length}</div>
-                    <div style="font-size:.6rem;color:var(--ink3);margin-top:3px;">Bağlamsal sorular</div>
-                    ${durumArsiv.length === 0 ? '<div style="font-size:.58rem;color:#f9731670;margin-top:6px;font-style:italic;">Yakında eklenecek</div>' : ''}
-                </div>
-
-                <!-- Paragraf Bütünlüğünü Bozan -->
-                <div style="background:var(--white);border:1.5px solid #fee2e2;border-radius:14px;padding:12px 14px;position:relative;overflow:hidden;">
-                    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#e63946,#dc2626);"></div>
-                    <div style="font-size:.58rem;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#e63946;margin-bottom:4px;">🚫 Para. Bütünlüğü</div>
-                    <div style="font-size:1.8rem;font-weight:900;color:var(--ink);line-height:1;">${paraBozArsiv.length}</div>
-                    <div style="font-size:.6rem;color:var(--ink3);margin-top:3px;">Yabancı cümle bul</div>
-                    ${paraBozArsiv.length === 0 ? '<div style="font-size:.58rem;color:#e6394670;margin-top:6px;font-style:italic;">Yakında eklenecek</div>' : ''}
-                </div>
-
+                <span class="bk-nav-cat-badge">${cat.count}</span>
+                <span class="bk-nav-cat-chev">▾</span>
+            </button>
+            <div class="bk-nav-sub ${isOpen?'bk-sub-open':''}">
+                ${cat.subs.map(sub => sub.isImport
+                    ? `<button class="bk-nav-add-btn" onclick="showImportParagrafModal()">＋ Paket Yükle</button>`
+                    : `<button class="bk-nav-sub-btn ${active===sub.key?'bk-sub-active':''}"
+                                onclick="selectArsivSubList('${sub.key}')">
+                            <span class="bk-nsb-label">${sub.label}</span>
+                            <span class="bk-nsb-badge">${sub.count}</span>
+                        </button>`
+                ).join('')}
             </div>
         </div>`;
+    });
 
-    // ── İçerik alanı ──────────────────────────────────
-    const cont = document.getElementById('arsiv-content');
-    const activePageNum = subMatch ? parseInt(subMatch[1]) : 1;
+    // YDT Soru Tipleri
+    sbHtml += `<div class="bk-nav-section-label">YDT Soru Tipleri</div>`;
+    ydt_cats.forEach(cat => {
+        const isActive = active === cat.key;
+        sbHtml += `
+        <div class="bk-nav-cat ${cat.theme}">
+            <button class="bk-nav-cat-btn ${isActive?'bk-cat-open':''}"
+                    onclick="selectArsivSubList('${cat.key}')">
+                <div class="bk-nav-cat-icon">${cat.icon}</div>
+                <div class="bk-nav-cat-info">
+                    <span class="bk-nav-cat-name">${cat.label}</span>
+                    <span class="bk-nav-cat-count">${cat.coming ? 'Yakında' : cat.count+' soru'}</span>
+                </div>
+                ${!cat.coming ? `<span class="bk-nav-cat-badge">${cat.count}</span>` : ''}
+            </button>
+        </div>`;
+    });
 
-    // ── GRAMER SUB-LİSTESİ SEÇİLİYSE ───────────────────
-    const gramerMatch = (window._arsivActiveSubList || '').match(/^gramer_(\d+)$/);
+    sidebar.innerHTML = sbHtml;
+
+    // Mobil pill bar
+    const mobBar = document.getElementById('bk-mob-sub-bar');
+    if (mobBar) {
+        const allNavCats = [
+            {key:'overview', icon:'📊', label:'Genel', theme:''},
+            ...cats.map(c=>({...c})),
+            ...ydt_cats.map(c=>({...c}))
+        ];
+        mobBar.innerHTML = allNavCats.map(c =>
+            `<button class="bk-mob-sub-pill ${active===c.key||active.startsWith(c.key)?'bk-mob-active':''} ${c.theme||''}"
+                     onclick="selectArsivSubList('${c.key}')">
+                ${c.icon} ${c.label||c.key}
+            </button>`
+        ).join('');
+        mobBar.style.display = '';
+    }
+
+    // ════════════════════════════
+    // İÇERİK ALANI
+    // ════════════════════════════
+
+    // ─── GENEL BAKIŞ ────────────────────────────────────
+    if (active === 'overview') {
+        let ovHtml = `
+        <div class="bk-content-hdr">
+            <div class="bk-content-hdr-l">
+                <div class="bk-stripe" style="background:#6366f1;"></div>
+                <span class="bk-content-type-pill" style="background:#e0e7ff;color:#4f46e5;">Tüm Kategoriler</span>
+                <span class="bk-content-title">Soru Bankası Genel Bakış</span>
+            </div>
+            <span class="bk-content-meta">${grandTotal} toplam soru</span>
+        </div>
+        <div class="bk-overview">`;
+
+        const ovItems = [
+            ...cats.map(c=>({icon:c.icon,label:c.label,count:c.count,theme:c.theme,desc:c.desc,key:c.key})),
+            ...ydt_cats.map(c=>({icon:c.icon,label:c.label,count:c.count,theme:c.theme,desc:c.desc,key:c.key,coming:c.coming}))
+        ];
+        ovItems.forEach(item => {
+            ovHtml += `
+            <div class="bk-ov-card ${item.theme}" onclick="selectArsivSubList('${item.key}')">
+                <div class="bk-ov-icon">${item.icon}</div>
+                <div class="bk-ov-count">${item.count}</div>
+                <div class="bk-ov-label">${item.label}</div>
+                <div class="bk-ov-sub">${item.coming ? '🔒 Yakında eklenecek' : item.desc}</div>
+                <div class="bk-ov-arrow">→</div>
+            </div>`;
+        });
+        ovHtml += `</div>`;
+        cont.innerHTML = ovHtml;
+        return;
+    }
+
+    // ─── YDT "YAKINDA" KATEGORİLER ──────────────────────
+    const ydtMatch = ydt_cats.find(c => c.key === active);
+    if (ydtMatch && ydtMatch.coming) {
+        cont.innerHTML = `
+        <div class="bk-empty">
+            <div class="bk-empty-ico">${ydtMatch.icon}</div>
+            <div class="bk-empty-title">${ydtMatch.label}</div>
+            <div class="bk-empty-sub">${ydtMatch.desc} soruları hazırlanıyor. Yakında bu kategoride sorular eklenecek!</div>
+        </div>`;
+        return;
+    }
+
+    // ─── GRAMER SUB-LİSTESİ ─────────────────────────────
+    const gramerMatch = active.match(/^gramer_(\d+)$/);
     if (gramerMatch) {
-        const gPageIdx  = parseInt(gramerMatch[1]) - 1;
-        const gItems    = gramerArsiv.slice(gPageIdx * BANK_PAGE_SIZE, (gPageIdx + 1) * BANK_PAGE_SIZE);
-        const gGroups   = Math.max(1, Math.ceil(gItems.length / BANK_GROUP_SIZE));
-        const gGroupPg  = Math.min(window._arsivGroupPage || 1, gGroups);
+        const gPI   = parseInt(gramerMatch[1]) - 1;
+        const gSlice = gramerArsiv.slice(gPI * BANK_PAGE_SIZE, (gPI+1) * BANK_PAGE_SIZE);
+        const gGroups = Math.max(1, Math.ceil(gSlice.length / BANK_GROUP_SIZE));
+        const gGroupPg = Math.min(window._arsivGroupPage || 1, gGroups);
         window._arsivGroupPage = gGroupPg;
-        const gActive   = gItems.slice((gGroupPg - 1) * BANK_GROUP_SIZE, gGroupPg * BANK_GROUP_SIZE);
-
+        const gActive = gSlice.slice((gGroupPg-1)*BANK_GROUP_SIZE, gGroupPg*BANK_GROUP_SIZE);
         if (!window._bankQMap) window._bankQMap = {};
 
         let gHtml = `
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
-            <div style="display:flex;align-items:center;gap:10px;">
-                <div style="width:4px;height:20px;background:linear-gradient(180deg,#f59e0b,#d97706);border-radius:2px;"></div>
-                <span style="font-size:.8rem;font-weight:800;color:var(--ink2);">⚙️ Gramer Soruları ${gramerMatch[1]}</span>
-                <span style="font-size:.68rem;background:#fef3c7;color:#d97706;border-radius:8px;padding:2px 9px;font-weight:700;">${gItems.length} soru</span>
+        <div class="bk-content-hdr">
+            <div class="bk-content-hdr-l">
+                <div class="bk-stripe"></div>
+                <span class="bk-content-type-pill">⚙️ Gramer</span>
+                <span class="bk-content-title">Gramer Soruları ${gramerMatch[1]}</span>
             </div>
-            <span style="font-size:.68rem;color:var(--ink3);">${gItems.length} soruda ${(gGroupPg-1)*BANK_GROUP_SIZE+1}–${Math.min(gGroupPg*BANK_GROUP_SIZE,gItems.length)}. gösteriliyor</span>
+            <span class="bk-content-meta">${gSlice.length} soru · ${(gGroupPg-1)*BANK_GROUP_SIZE+1}–${Math.min(gGroupPg*BANK_GROUP_SIZE,gSlice.length)} gösteriliyor</span>
         </div>`;
 
         gActive.forEach((item, idx) => {
-            const globalIdx = (gGroupPg - 1) * BANK_GROUP_SIZE + idx;
-            const qNum = gPageIdx * BANK_PAGE_SIZE + globalIdx + 1;
+            const globalIdx = (gGroupPg-1)*BANK_GROUP_SIZE + idx;
+            const qNum = gPI*BANK_PAGE_SIZE + globalIdx + 1;
             const qId  = `gq_${qNum}`;
-            window._bankQMap[qId] = { correct: item.correct, explanation: item.explanation || '', options: item.options || {} };
-            const userAns = window._bankAnswers?.[qId];
+            window._bankQMap[qId] = { correct: item.correct, explanation: item.explanation||'', options: item.options||{} };
+            const userAns  = window._bankAnswers?.[qId];
             const revealed = window._bankRevealed?.[qId];
 
             gHtml += `
-            <div style="background:var(--white);border:1.5px solid ${revealed ? (userAns === item.correct ? '#d1fae5' : '#fee2e2') : 'var(--border)'};border-radius:14px;padding:16px 18px;margin-bottom:12px;">
-                <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px;">
-                    <span style="font-size:.62rem;font-weight:800;background:#fef3c7;color:#d97706;border-radius:8px;padding:2px 8px;white-space:nowrap;margin-top:1px;">${qNum}. ⚙️</span>
-                    <div style="font-size:.83rem;font-weight:600;color:var(--ink);line-height:1.6;">${item.question || ''}</div>
+            <div class="bk-q-card ${revealed ? (userAns===item.correct?'bk-correct':'bk-wrong') : ''}">
+                <div class="bk-q-meta-row">
+                    <span class="bk-q-num">${qNum}.</span>
+                    <span class="bk-q-type-chip">⚙️ Gramer</span>
+                    <span class="bk-q-date">#${qNum}</span>
+                    ${revealed ? `<button class="bk-q-reset" onclick="resetBankQuestion('${qId}')" style="display:inline-flex;">↺ Tekrar</button>` : ''}
                 </div>
-                <div style="display:flex;flex-direction:column;gap:6px;">
-                    ${Object.entries(item.options || {}).map(([k, v]) => {
-                        const isCorrect = k === item.correct;
-                        const isChosen  = k === userAns;
-                        let bg = 'var(--bg)', border = 'var(--border)', color = 'var(--ink)';
-                        if (revealed) {
-                            if (isCorrect) { bg='#d1fae5'; border='#10b981'; color='#065f46'; }
-                            else if (isChosen) { bg='#fee2e2'; border='#ef4444'; color='#991b1b'; }
-                        } else if (isChosen) { bg='#fef3c7'; border='#f59e0b'; }
-                        return '<button onclick="bankSelectGramer(\'' + qId + '\',\'' + k + '\')" style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;border:1.5px solid ' + border + ';background:' + bg + ';cursor:pointer;font-family:inherit;text-align:left;transition:all .15s;"><span style="font-size:.7rem;font-weight:800;min-width:18px;color:' + color + ';">' + k + ')</span><span style="font-size:.8rem;color:' + color + ';">' + v + '</span>' + (revealed && isCorrect ? '<span style="margin-left:auto;font-size:.75rem;">✅</span>' : '') + (revealed && isChosen && !isCorrect ? '<span style="margin-left:auto;font-size:.75rem;">❌</span>' : '') + '</button>';
+                <div class="bk-q-text">${item.question||''}</div>
+                <div class="bk-opts">
+                    ${Object.entries(item.options||{}).map(([k,v]) => {
+                        const isC = k === item.correct;
+                        const isCh = k === userAns;
+                        let cls = '';
+                        if (revealed) { cls = isC ? 'bk-opt-c' : (isCh ? 'bk-opt-w' : ''); }
+                        else if (isCh) cls = 'bk-opt-c';
+                        return `<button class="bk-opt ${cls}" onclick="bankSelectGramer('${qId}','${k}')" ${revealed?'disabled':''}>
+                            <span class="bk-opt-key">${k}</span>
+                            <span class="bk-opt-text">${v}</span>
+                            ${revealed&&isC?'<span style="margin-left:auto">✅</span>':''}
+                            ${revealed&&isCh&&!isC?'<span style="margin-left:auto">❌</span>':''}
+                        </button>`;
                     }).join('')}
                 </div>
-                ${revealed && item.explanation ? '<div style="margin-top:10px;padding:10px 12px;background:#fef3c7;border-radius:10px;font-size:.76rem;color:#92400e;line-height:1.6;">💡 ' + item.explanation + '</div>' : ''}
-                ${!revealed ? '<button onclick="bankRevealGramer(\'' + qId + '\')" style="margin-top:10px;padding:6px 16px;border-radius:9px;border:none;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;font-size:.75rem;font-weight:700;cursor:pointer;font-family:inherit;">Cevabı Gör</button>' : ''}
+                ${item.explanation && revealed ? `
+                <div class="bk-exp ${userAns===item.correct?'bk-exp-c':'bk-exp-w'}" style="display:block;">
+                    <span class="bk-exp-lbl ${userAns===item.correct?'bk-exp-c':'bk-exp-w'}">💡 Açıklama</span>
+                    ${item.explanation}
+                </div>` : ''}
+                ${!revealed ? `<div style="padding:0 16px 14px;"><button onclick="bankRevealGramer('${qId}')"
+                    style="padding:6px 16px;border-radius:9px;border:none;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;font-size:.75rem;font-weight:700;cursor:pointer;font-family:inherit;">
+                    Cevabı Gör</button></div>` : ''}
             </div>`;
         });
 
         if (gGroups > 1) {
-            gHtml += `<div style="display:flex;justify-content:center;gap:6px;padding:10px 0 4px;flex-wrap:wrap;">`;
-            for (let p = 1; p <= gGroups; p++) {
-                const isAct = p === gGroupPg;
-                gHtml += `<button onclick="setArsivGroupPage(${p})" style="width:32px;height:32px;border-radius:8px;border:1.5px solid ${isAct ? '#f59e0b' : 'var(--border)'};background:${isAct ? '#f59e0b' : 'var(--white)'};color:${isAct ? '#fff' : 'var(--ink)'};font-size:.75rem;font-weight:700;cursor:pointer;">${p}</button>`;
+            gHtml += `<div class="bk-pager">
+                <button class="bk-pg-btn" onclick="setArsivGroupPage(${gGroupPg-1})" ${gGroupPg<=1?'disabled':''}>‹</button>`;
+            for (let p=1; p<=gGroups; p++) {
+                gHtml += `<button class="bk-pg-btn ${p===gGroupPg?'bk-pg-act':''}" onclick="setArsivGroupPage(${p})">${(p-1)*BANK_GROUP_SIZE+1}–${Math.min(p*BANK_GROUP_SIZE,gSlice.length)}</button>`;
             }
-            gHtml += `</div>`;
+            gHtml += `<button class="bk-pg-btn" onclick="setArsivGroupPage(${gGroupPg+1})" ${gGroupPg>=gGroups?'disabled':''}>›</button></div>`;
         }
-
         cont.innerHTML = gHtml;
         return;
     }
 
-    // ── PARAGRAF SUB-LİSTESİ SEÇİLİYSE ────────────────
-    // ── PARAGRAF GRUP SEÇİLİYSE ────────────────────────
-    const paragrafGMatch = (window._arsivActiveSubList || '').match(/^paragraf_g(\d+)$/);
-    // Legacy single-pasaj match (backward compat)
-    const paragrafSingleMatch = (window._arsivActiveSubList || '').match(/^paragraf_(\d+)$/) &&
-                                 !(window._arsivActiveSubList || '').startsWith('paragraf_g');
-    if (paragrafGMatch) {
-        const groupNum  = parseInt(paragrafGMatch[1]);   // 1-based
-        const startIdx  = (groupNum - 1) * PARA_GROUP_SIZE;
-        const groupKeys = Object.keys(pSorular).slice(startIdx, startIdx + PARA_GROUP_SIZE);
-
-        if (!groupKeys.length) {
-            cont.innerHTML = `<div style="text-align:center;padding:60px 20px;color:var(--ink3); background:var(--white);border-radius:16px;border:1px solid var(--border);">
-                <div style="font-size:3rem;margin-bottom:12px;">📖</div>
-                <div style="font-weight:800;font-size:1rem;margin-bottom:6px;">Bu grupta pasaj bulunamadı</div>
-            </div>`;
-            return;
-        }
-
+    // ─── PARAGRAF SUB-LİSTESİ ───────────────────────────
+    const paraGMatch = active.match(/^paragraf_g(\d+)$/);
+    if (paraGMatch) {
+        const groupNum  = parseInt(paraGMatch[1]);
+        const startIdx  = (groupNum-1) * PARA_GROUP_SIZE;
+        const groupKeys = pKeys.slice(startIdx, startIdx + PARA_GROUP_SIZE);
         if (!window._bankQMap) window._bankQMap = {};
         if (!window._paraGroupPage) window._paraGroupPage = {};
-        const pgKey = `g${groupNum}`;
+        const pgKey   = `g${groupNum}`;
         const curPage = window._paraGroupPage[pgKey] || 1;
-        const totalPasajPages = groupKeys.length;
+        const activePK = groupKeys[curPage-1];
+        const pData    = activePK ? pSorular[activePK] : null;
 
-        // Sayfalandırma: her sayfa = 1 pasaj (navigate with buttons)
-        // Aktif pasajı göster
-        const activePasajKey = groupKeys[curPage - 1];
-        const pData = activePasajKey ? pSorular[activePasajKey] : null;
-
-        let pHtml = '';
-
-        // ── Grup başlığı
-        pHtml += `
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
-            <div style="display:flex;align-items:center;gap:10px;">
-                <div style="width:4px;height:20px;background:linear-gradient(180deg,#10b981,#059669);border-radius:2px;"></div>
-                <span style="font-size:.8rem;font-weight:800;color:var(--ink2);">📖 Paragraf Soruları ${groupNum}</span>
-                <span style="font-size:.68rem;background:#d1fae5;color:#059669;border-radius:8px;padding:2px 9px;font-weight:700;">
-                    ${startIdx + curPage}. pasaj · ${(pData?.questions||[]).length} soru
-                </span>
+        let pHtml = `
+        <div class="bk-content-hdr">
+            <div class="bk-content-hdr-l">
+                <div class="bk-stripe" style="background:#10b981;"></div>
+                <span class="bk-content-type-pill" style="background:#d1fae5;color:#059669;">📖 Paragraf</span>
+                <span class="bk-content-title">Pasajlar ${groupNum}</span>
             </div>
-            <span style="font-size:.68rem;color:var(--ink3);">${groupKeys.length} pasajda ${curPage}. gösteriliyor</span>
+            <span class="bk-content-meta">${startIdx+curPage}. pasaj · ${(pData?.questions||[]).length} soru</span>
         </div>`;
 
-        if (pData && pData.questions && pData.questions.length) {
+        if (pData?.questions?.length) {
             window._currentPasajBaslik = pData.baslik || '';
             pHtml += `
-            <div style="background:var(--white);border:1.5px solid #d1fae5;border-radius:14px;padding:18px 20px;margin-bottom:16px;font-size:.82rem;line-height:1.85;color:var(--ink2);">
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-                    <span style="font-size:.75rem;font-weight:800;color:var(--ink);">${stripNumPrefix(pData.baslik) || 'Paragraf'}</span>
-                    <button onclick="goToPasajOku()"
-                        style="margin-left:auto;padding:4px 12px;border-radius:8px;border:1.5px solid #10b981;background:#d1fae5;color:#059669;font-size:.7rem;font-weight:700;cursor:pointer;font-family:inherit;">
-                        📖 Okuma Moduna Geç →
-                    </button>
+            <div class="bk-pasaj-wrap">
+                <div class="bk-pasaj-hdr">
+                    <span class="bk-pasaj-title">${stripNumPrefix(pData.baslik)||'Paragraf'}</span>
+                    <button class="bk-pasaj-goto" onclick="goToPasajOku()">📖 Okuma Modu →</button>
                 </div>
-                <div style="border-top:1px solid #d1fae5;padding-top:12px;font-style:normal;text-align:justify;hyphens:auto;font-size:.8rem;">
-                    ${(pData.metin||'').replace(/\n/g,'<br>')}
-                </div>
+                <div class="bk-pasaj-body">${(pData.metin||'').replace(/\n/g,'<br>')}</div>
             </div>`;
 
             pData.questions.forEach((q, qi) => {
-                const qId = `pq_${activePasajKey}_${qi}`;
-                window._bankQMap[qId] = {
-                    correct: q.answer,
-                    explanation: q.explanation || '',
-                    options: {}
-                };
-                (q.options || []).forEach(opt => {
-                    window._bankQMap[qId].options[opt[0]] = opt.slice(3);
-                });
-                const optsHtml = (q.options || []).map(opt => {
-                    const letter = opt[0];
-                    return `<button class="sb-opt-btn" id="opt_${qId}_${letter}"
-                        onclick="solveBankQuestion('${qId}','${letter}')"
-                        style="display:flex;align-items:flex-start;gap:10px;width:100%;padding:10px 14px; border-radius:10px;border:1.5px solid var(--border);background:var(--white); cursor:pointer;font-family:inherit;text-align:left;margin-bottom:6px;font-size:.78rem;"> <span style="font-weight:800;color:#059669;min-width:16px;">${letter}</span>
-                        <span>${opt.slice(3)}</span>
-                    </button>`;
-                }).join('');
+                const qId = `pq_${activePK}_${qi}`;
+                window._bankQMap[qId] = { correct: q.answer, explanation: q.explanation||'', options:{} };
+                (q.options||[]).forEach(opt => { window._bankQMap[qId].options[opt[0]] = opt.slice(3); });
 
                 pHtml += `
-                <div class="sb-question-card" style="background:var(--white);border:1.5px solid var(--border); border-radius:16px;padding:18px 16px;margin-bottom:14px;">
-                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-                        <span style="font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px; background:#d1fae5;color:#059669;border-radius:6px;padding:2px 8px;">${q.type || 'Reading'}</span>
+                <div class="bk-q-card" id="qcard_${qId}">
+                    <div class="bk-q-meta-row">
+                        <span class="bk-q-num" style="background:#d1fae5;color:#059669;">${qi+1}.</span>
+                        <span class="bk-q-type-chip">${q.type||'Reading'}</span>
                     </div>
-                    <div style="font-size:.84rem;font-weight:600;color:var(--ink);margin-bottom:14px;line-height:1.6;">${q.question}</div>
-                    <div id="opts_${qId}">${optsHtml}</div>
-                    <div id="exp_${qId}" style="display:none;margin-top:12px;padding:12px;background:#f0fdf4; border-radius:10px;border-left:3px solid #10b981;font-size:.78rem;line-height:1.6;color:var(--ink);">
-                        <strong style="color:#059669;">💡 Açıklama:</strong><br>${q.explanation || ''}
+                    <div class="bk-q-text">${q.question}</div>
+                    <div class="bk-opts" id="opts_${qId}">
+                        ${(q.options||[]).map(opt=>{
+                            const letter=opt[0];
+                            return `<button class="bk-opt sb-opt-btn" id="opt_${qId}_${letter}"
+                                onclick="solveBankQuestion('${qId}','${letter}')">
+                                <span class="bk-opt-key">${letter}</span>
+                                <span class="bk-opt-text">${opt.slice(3)}</span>
+                            </button>`;
+                        }).join('')}
                     </div>
+                    <div class="bk-exp" id="exp_${qId}"></div>
                 </div>`;
             });
         }
 
-        // ── Alt sayfalandırma ─────────────────────────────
-        if (totalPasajPages > 1) {
-            const prevDis = curPage <= 1;
-            const nextDis = curPage >= totalPasajPages;
-
-            const pageBtnsHtml = groupKeys.map((gk, gi) => {
-                const pg      = gi + 1;
-                const gTitle  = stripNumPrefix(pSorular[gk]?.baslik || `Pasaj ${startIdx + pg}`);
-                const isAct   = pg === curPage;
-                return `<button onclick="setParagrafGroupPage('${pgKey}',${pg})"
-                    title="${gTitle}"
-                    style="padding:6px 11px;border-radius:8px;font-size:.78rem;font-weight:700; border:1.5px solid ${isAct ? '#10b981' : 'var(--border)'}; background:${isAct ? '#10b981' : 'var(--white)'}; color:${isAct ? '#fff' : 'var(--ink3)'};cursor:pointer;font-family:inherit; transition:background .1s,border-color .1s;"> ${startIdx + pg} </button>`;""
-            }).join('');
-
-            pHtml += `
-            <div style="display:flex;align-items:center;justify-content:center; gap:6px;flex-wrap:wrap;margin-top:18px;padding-top:14px;border-top:1px solid var(--border);">
-                <button onclick="setParagrafGroupPage('${pgKey}',${curPage - 1})" ${prevDis ? 'disabled' : ''}
-                    style="padding:6px 12px;border-radius:8px;font-size:.82rem;font-weight:700; border:1.5px solid var(--border);background:var(--white); color:${prevDis ? 'var(--border)' : 'var(--ink3)'}; cursor:${prevDis ? 'default' : 'pointer'};font-family:inherit;">‹</button> ${pageBtnsHtml} <button onclick="setParagrafGroupPage('${pgKey}',${curPage + 1})" ${nextDis ? 'disabled' : ''}
-                    style="padding:6px 12px;border-radius:8px;font-size:.82rem;font-weight:700; border:1.5px solid var(--border);background:var(--white); color:${nextDis ? 'var(--border)' : 'var(--ink3)'}; cursor:${nextDis ? 'default' : 'pointer'};font-family:inherit;">›</button> </div>`;""
+        // Pasaj sayfalandırma
+        if (groupKeys.length > 1) {
+            pHtml += `<div class="bk-pager">
+                <button class="bk-pg-btn" onclick="setParagrafGroupPage('${pgKey}',${curPage-1})" ${curPage<=1?'disabled':''}>‹</button>`;
+            groupKeys.forEach((_, gi) => {
+                const pg = gi+1;
+                pHtml += `<button class="bk-pg-btn ${pg===curPage?'bk-pg-act':''}" onclick="setParagrafGroupPage('${pgKey}',${pg})">${startIdx+pg}</button>`;
+            });
+            pHtml += `<button class="bk-pg-btn" onclick="setParagrafGroupPage('${pgKey}',${curPage+1})" ${curPage>=groupKeys.length?'disabled':''}>›</button></div>`;
         }
 
         cont.innerHTML = pHtml;
         return;
     }
-    // ── /PARAGRAF RENDER END ────────────────────────────
 
+    // ─── KELİME SUB-LİSTESİ ─────────────────────────────
+    const kelMatch = active.match(/^kelime_(\d+)$/);
+    if (kelMatch) {
+        const pageIdx    = parseInt(kelMatch[1]) - 1;
+        const pageOffset = pageIdx * BANK_PAGE_SIZE;
+        let   subItems   = filteredArsiv.slice(pageOffset, pageOffset + BANK_PAGE_SIZE);
+        const totalGroups = Math.max(1, Math.ceil(subItems.length / BANK_GROUP_SIZE));
+        const groupPage   = Math.min(window._arsivGroupPage || 1, totalGroups);
+        window._arsivGroupPage = groupPage;
+        const activeItems = subItems.slice((groupPage-1)*BANK_GROUP_SIZE, groupPage*BANK_GROUP_SIZE);
 
-    if (!activeItems.length) {
-        cont.innerHTML = `<div style="text-align:center;padding:60px 20px;color:var(--ink3); background:var(--white);border-radius:16px;border:1px solid var(--border);">
-            <div style="font-size:3rem;margin-bottom:12px;">📝</div>
-            <div style="font-weight:800;font-size:1rem;margin-bottom:6px;color:var(--ink);">
-                ${totalKelime === 0 ? 'Kelime Soruları Bankası Boş' : 'Bu listede soru yok'}
+        if (!window._bankQMap) window._bankQMap = {};
+
+        if (!activeItems.length) {
+            cont.innerHTML = `<div class="bk-empty">
+                <div class="bk-empty-ico">📝</div>
+                <div class="bk-empty-title">Bu sayfada soru yok</div>
+                <div class="bk-empty-sub">Farklı bir kategori seçin ya da AI Vocabulary Test çözerek sorular ekleyin.</div>
+            </div>`;
+            return;
+        }
+
+        let html = `
+        <div class="bk-content-hdr">
+            <div class="bk-content-hdr-l">
+                <div class="bk-stripe"></div>
+                <span class="bk-content-type-pill">📝 Kelime</span>
+                <span class="bk-content-title">Kelime Soruları ${kelMatch[1]}</span>
             </div>
-            <div style="font-size:.82rem;line-height:1.6;">
-                ${totalKelime === 0 ? 'AI Vocabulary Test modunda sorular çözdükçe otomatik olarak buraya eklenecek.' : 'Farklı liste veya filtre seçin.'}
-            </div>
+            <span class="bk-content-meta">${subItems.length} soru · ${(groupPage-1)*BANK_GROUP_SIZE+1}–${Math.min(groupPage*BANK_GROUP_SIZE,subItems.length)} gösteriliyor</span>
         </div>`;
+
+        activeItems.forEach((q, idx) => {
+            const globalNum = pageOffset + (groupPage-1)*BANK_GROUP_SIZE + idx + 1;
+            const qId       = `aq_${globalNum}`;
+            window._bankQMap[qId] = { correct: q.correct, explanation: q.explanation||'', options: q.options||{} };
+            const tarih = q.date ? new Date(q.date).toLocaleDateString('tr-TR',{day:'2-digit',month:'2-digit'}) : '';
+            const userAns  = window._bankAnswers?.[qId];
+            const revealed = window._bankRevealed?.[qId];
+
+            const optsHtml = Object.entries(q.options||{}).map(([k,v]) => {
+                const isC  = k === q.correct;
+                const isCh = k === userAns;
+                let cls = '';
+                if (revealed) { cls = isC ? 'bk-opt-c' : (isCh ? 'bk-opt-w' : ''); }
+                else if (isCh) cls = 'bk-opt-c';
+                return `<button class="bk-opt sb-opt-btn ${cls}" id="opt_${qId}_${k}"
+                    onclick="solveBankQuestion('${qId}','${k}')" ${revealed?'disabled':''}>
+                    <span class="bk-opt-key">${k}</span>
+                    <span class="bk-opt-text">${v}</span>
+                    ${revealed&&isC?'<span style="margin-left:auto">✅</span>':''}
+                    ${revealed&&isCh&&!isC?'<span style="margin-left:auto">❌</span>':''}
+                </button>`;
+            }).join('');
+
+            html += `
+            <div class="bk-q-card ${revealed?(userAns===q.correct?'bk-correct':'bk-wrong'):''}">
+                <div class="bk-q-meta-row">
+                    <span class="bk-q-num">${globalNum}.</span>
+                    ${q.listName ? `<span class="bk-q-word-chip">📚 ${q.listName}</span>` : ''}
+                    ${q.word ? `<span class="bk-q-word-chip">🔑 ${q.word}</span>` : ''}
+                    <span class="bk-q-date">${tarih}</span>
+                    ${revealed ? `<button class="bk-q-reset" id="reset_${qId}" onclick="resetBankQuestion('${qId}')" style="display:inline-flex;">↺ Tekrar</button>` : ''}
+                </div>
+                <div class="bk-q-text">${q.question}</div>
+                <div class="bk-opts">${optsHtml}</div>
+                ${q.explanation && revealed ? `
+                <div class="bk-exp ${userAns===q.correct?'bk-exp-c':'bk-exp-w'}" style="display:block;">
+                    <span class="bk-exp-lbl ${userAns===q.correct?'bk-exp-c':'bk-exp-w'}">💡 Açıklama</span>
+                    ${q.explanation}
+                </div>` : ''}
+            </div>`;
+        });
+
+        if (totalGroups > 1) {
+            html += `<div class="bk-pager">
+                <button class="bk-pg-btn" onclick="setArsivGroupPage(${groupPage-1})" ${groupPage<=1?'disabled':''}>‹</button>`;
+            for (let p=1; p<=totalGroups; p++) {
+                const gs = (p-1)*BANK_GROUP_SIZE+1, ge = Math.min(p*BANK_GROUP_SIZE, subItems.length);
+                html += `<button class="bk-pg-btn ${p===groupPage?'bk-pg-act':''}" onclick="setArsivGroupPage(${p})">${gs}–${ge}</button>`;
+            }
+            html += `<button class="bk-pg-btn" onclick="setArsivGroupPage(${groupPage+1})" ${groupPage>=totalGroups?'disabled':''}>›</button></div>`;
+        }
+
+        cont.innerHTML = html;
         return;
     }
 
-    if (!window._bankQMap) window._bankQMap = {};
-
-    const globalStart = pageOffset + groupOffset + 1;
-    const globalEnd   = pageOffset + groupOffset + activeItems.length;
-
-    let html = `
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
-        <div style="display:flex;align-items:center;gap:10px;">
-            <div style="width:4px;height:20px;background:linear-gradient(180deg,#6366f1,#8b5cf6);border-radius:2px;"></div>
-            <span style="font-size:.8rem;font-weight:800;color:var(--ink2);">📝 Kelime Soruları ${subMatch ? parseInt(subMatch[1]) : 1}</span>
-            <span style="font-size:.68rem;background:#e0e7ff;color:#6366f1;border-radius:8px;padding:2px 9px;font-weight:700;">
-                Soru ${globalStart}–${globalEnd}
-            </span>
-        </div>
-        <span style="font-size:.68rem;color:var(--ink3);">${subItems.length} soruda ${activeItems.length} gösteriliyor</span>
+    // Eşleşme yoksa overview'e dön
+    cont.innerHTML = `<div class="bk-empty">
+        <div class="bk-empty-ico">🗃️</div>
+        <div class="bk-empty-title">Kategori seçilmedi</div>
+        <div class="bk-empty-sub">Sol menüden bir kategori seçin.</div>
     </div>`;
-
-    activeItems.forEach((q, idx) => {
-        const globalNum = pageOffset + groupOffset + idx + 1;
-        const qId       = `bq${q.id || (String(q.word || '').replace(/\s/g,'') + (pageOffset + groupOffset + idx))}`;
-        const lastDate  = new Date(q.date);
-        const tarih     = `${lastDate.getDate()}.${lastDate.getMonth()+1}.${lastDate.getFullYear()}`;
-
-        window._bankQMap[qId] = {
-            correct:     q.correct,
-            explanation: q.explanation || '',
-            options:     q.options || {}
-        };
-
-        const optsHtml = Object.entries(q.options || {}).map(([k, v]) =>
-            `<button class="sb-opt-btn" id="opt_${qId}_${k}"
-                onclick="solveBankQuestion('${qId}','${k}')"
-                style="width:100%;text-align:left;padding:10px 13px;border-radius:9px; border:1.5px solid var(--border);background:var(--white); font-size:.85rem;font-weight:500;cursor:pointer;font-family:inherit; color:var(--ink);margin-bottom:4px;display:flex;align-items:center;gap:9px; transition:border-color .1s,background .1s;"> <span style="width:24px;height:24px;border-radius:50%;background:var(--bg); border:1.5px solid var(--border);display:inline-flex;align-items:center; justify-content:center;font-size:.7rem;font-weight:800;color:var(--ink3);flex-shrink:0;">${k}</span> <span>${v}</span> </button>` ).join(''); html += `
-        <div class="arsiv-word-card" style="background:var(--white);border:1px solid var(--border);border-radius:14px;margin-bottom:8px;overflow:hidden;">
-            <button onclick="toggleArsivCard(this)"
-                style="width:100%;background:none;border:none;padding:13px 16px; display:flex;align-items:center;gap:12px;cursor:pointer;font-family:inherit;text-align:left;">
-                <div style="width:8px;height:8px;border-radius:50%;background:#6366f1;flex-shrink:0;"></div>
-                <span style="flex:1;font-size:.95rem;font-weight:800;color:var(--ink);">Kelime Soru ${globalNum}</span>
-                <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-                    <span style="font-size:.66rem;color:var(--ink3);">${tarih}</span>
-                    <span class="arsiv-chevron" style="font-size:.72rem;color:var(--ink3);transition:transform .22s;display:inline-block;">▼</span>
-                </div>
-            </button>
-            <div class="arsiv-card-body" style="display:none;padding:0 14px 14px;border-top:1px solid var(--border);">
-                <div style="padding-top:12px;">
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                        <span style="font-size:.7rem;font-weight:800;color:#6366f1;background:#e0e7ff;border-radius:6px;padding:3px 10px;">Soru ${globalNum}</span>
-                        <button onclick="resetBankQuestion('${qId}')" id="reset_${qId}"
-                            style="font-size:.68rem;background:none;border:1px solid var(--border);color:var(--ink3); cursor:pointer;font-family:inherit;border-radius:6px;padding:2px 9px;display:none;">
-                            ↺ Tekrar Çöz
-                        </button>
-                    </div>
-                    <div style="font-size:.9rem;font-weight:600;color:var(--ink);line-height:1.65;margin-bottom:12px;">${q.question}</div>
-                    <div id="opts_${qId}">${optsHtml}</div>
-                    <div id="exp_${qId}" style="display:none;margin-top:12px;font-size:.8rem;color:var(--ink2); background:var(--bg);border-radius:9px;padding:12px 14px; border:1px solid var(--border);border-left:3px solid #6366f1;line-height:1.8;"></div> </div>
-            </div>
-        </div>`;
-    });
-
-    // ── Alt navigasyon: [1-10] [11-20] ... ──────────────
-    if (totalGroups > 1) {
-        const prevDisabled = groupPage <= 1;
-        const nextDisabled = groupPage >= totalGroups;
-
-        const pageBtns = Array.from({length: totalGroups}, (_, i) => {
-            const pg      = i + 1;
-            const gStart  = pageOffset + i * BANK_GROUP_SIZE + 1;
-            const gEnd    = pageOffset + Math.min((i + 1) * BANK_GROUP_SIZE, subItems.length);
-            const isAct   = pg === groupPage;
-            return `<button onclick="setArsivGroupPage(${pg})"
-                style="padding:7px 11px;border-radius:8px;font-size:.78rem;font-weight:700; border:1.5px solid ${isAct ? '#6366f1' : 'var(--border)'}; background:${isAct ? '#6366f1' : 'var(--white)'}; color:${isAct ? '#fff' : 'var(--ink3)'};cursor:pointer;font-family:inherit; white-space:nowrap;transition:background .1s,border-color .1s;"> ${gStart}–${gEnd} </button>`;""
-        }).join('');
-
-        html += `
-        <div style="display:flex;align-items:center;justify-content:center; gap:6px;flex-wrap:wrap;margin-top:18px;padding-top:14px;border-top:1px solid var(--border);">
-            <button onclick="setArsivGroupPage(${groupPage - 1})" ${prevDisabled ? 'disabled' : ''}
-                style="padding:7px 12px;border-radius:8px;font-size:.82rem;font-weight:700; border:1.5px solid var(--border);background:var(--white); color:${prevDisabled ? 'var(--border)' : 'var(--ink3)'}; cursor:${prevDisabled ? 'default' : 'pointer'};font-family:inherit;">‹</button> ${pageBtns} <button onclick="setArsivGroupPage(${groupPage + 1})" ${nextDisabled ? 'disabled' : ''}
-                style="padding:7px 12px;border-radius:8px;font-size:.82rem;font-weight:700; border:1.5px solid var(--border);background:var(--white); color:${nextDisabled ? 'var(--border)' : 'var(--ink3)'}; cursor:${nextDisabled ? 'default' : 'pointer'};font-family:inherit;">›</button> </div>`;""
-    }
-
-    cont.innerHTML = html;
 }
 
-function toggleKelimeCard() {
-    window._kelimeCardOpen = !window._kelimeCardOpen;
+// ─── Soru Bankası Kategori Toggle ────────────────────
+function bkToggleCat(catKey) {
+    // Aynı kategoriye tıklanınca ilk sub-listeyi aç
+    const catPrefixes = { kelime:'kelime_1', paragraf:'paragraf_g1', gramer:'gramer_1' };
+    const current = window._arsivActiveSubList || '';
+    if (current.startsWith(catKey)) {
+        // Zaten açık → overview'e dön
+        window._arsivActiveSubList = 'overview';
+    } else {
+        window._arsivActiveSubList = catPrefixes[catKey] || catKey;
+        window._arsivGroupPage = 1;
+    }
     renderArsiv();
 }
 
+function toggleKelimeCard()       { bkToggleCat('kelime');   }
+function toggleGramerCard()       { bkToggleCat('gramer');   }
+function toggleParagrafBankCard() { bkToggleCat('paragraf'); }
 
-// Grammar soru kaydetme
+
 function saveGramerSorusu(soruObj) {
     if (!window.aiGramerArsiv) window.aiGramerArsiv = [];
     window.aiGramerArsiv.push(soruObj);
@@ -8341,13 +8339,6 @@ function importGramerPaketi(sorular) {
     renderArsiv();
     return sorular.length;
 }
-function toggleGramerCard() {
-    window._gramerCardOpen   = !window._gramerCardOpen;
-    window._kelimeCardOpen   = false;
-    window._paragrafCardOpen = false;
-    renderArsiv();
-}
-
 function bankSelectGramer(qId, key) {
     if (!window._bankRevealed) window._bankRevealed = {};
     if (!window._bankAnswers)  window._bankAnswers  = {};
@@ -8362,40 +8353,17 @@ function bankRevealGramer(qId) {
     renderArsiv();
 }
 
-function toggleParagrafBankCard() {
-    window._paragrafCardOpen = !window._paragrafCardOpen;
-    window._kelimeCardOpen   = false;
-    renderArsiv();
-}
-
 function selectArsivSubList(key) {
     window._arsivActiveSubList = key;
-    window._arsivGroupPage     = 1; // yeni sub-listeye geçince 1. sayfadan başla
-
-    // İlgili kart açık kalsın, diğerleri kapansın
-    if (key.startsWith('kelime_')) {
-        window._kelimeCardOpen   = true;
-        window._paragrafCardOpen = false;
-        window._gramerCardOpen   = false;
-    } else if (key.startsWith('paragraf_')) {
-        window._kelimeCardOpen   = false;
-        window._paragrafCardOpen = true;
-        window._gramerCardOpen   = false;
-    } else if (key.startsWith('gramer_')) {
-        window._kelimeCardOpen   = false;
-        window._paragrafCardOpen = false;
-        window._gramerCardOpen   = true;
-    }
-
-    // Paragraf grubu değiştiyse o grubun sayfasını 1'e sıfırla
+    window._arsivGroupPage     = 1;
     const gMatch = key.match(/^paragraf_g(\d+)$/);
     if (gMatch) {
         if (!window._paraGroupPage) window._paraGroupPage = {};
         window._paraGroupPage[`g${gMatch[1]}`] = 1;
     }
     renderArsiv();
-    const cont = document.getElementById('arsiv-content');
-    if (cont) setTimeout(() => cont.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+    const cont = document.getElementById('bk-sidebar');
+    if (cont) cont.scrollTop = 0;
 }
 
 // Alt navigasyondan sayfa değiştir

@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>YDT Master Pro - Tam Sürüm</title>
     <link rel="stylesheet" href="stil.css">
+    <link rel="stylesheet" href="stats.css">
+    <link rel="stylesheet" href="bank.css">
     <link rel="stylesheet" href="kids.css">
     <link rel="stylesheet" href="games.css">
 </head>
@@ -1946,25 +1948,39 @@
 <script src="kids.js"></script>
 
     <!-- AI YDT ARŞİV SAYFASI -->
-    <div id="ai-arsiv-page" class="hidden arsiv-full-page" style="text-align:left; width:100%; min-height:100vh; background:var(--bg);">
-        <div style="max-width:960px; margin:0 auto; padding:0 0 40px;">
+    <div id="ai-arsiv-page" class="hidden arsiv-full-page">
 
-            <!-- Topbar -->
-            <div style="display:flex; align-items:center; gap:12px; padding:14px 20px; background:var(--white); border-bottom:1.5px solid var(--border); position:sticky; top:0; z-index:10;">
-                <button class="back-btn" onclick="navTo('index-page')" style="position:static; flex-shrink:0;">←</button>
-                <div style="flex:1;">
-                    <div style="font-size:1rem; font-weight:900; color:var(--ink);">🗃️ Soru Bankası</div>
-                    <div style="font-size:.68rem; color:var(--ink3); font-weight:600;">AI tarafından üretilen sorular kategorilere göre gruplandırılır</div>
-                </div>
-                <select id="arsiv-list-filter" class="admin-input" style="margin:0; width:auto; min-width:130px; font-size:.78rem; padding:6px 10px;" onchange="renderArsiv()">
+        <!-- ── TOPBAR ── -->
+        <div class="bk-topbar">
+            <button class="bk-back" onclick="navTo('index-page')" title="Geri">←</button>
+            <div style="flex:1;min-width:0;">
+                <span class="bk-topbar-title">🗃️ Soru Bankası
+                    <span class="bk-topbar-badge" id="bk-total-badge">—</span>
+                </span>
+            </div>
+            <div class="bk-topbar-actions">
+                <select id="arsiv-list-filter" class="bk-filter-sel" onchange="renderArsiv()">
                     <option value="">Tüm Listeler</option>
                 </select>
             </div>
+        </div>
 
-            <div style="padding:18px 20px 0;">
-                <div id="arsiv-summary" style="margin-bottom:16px;"></div>
-                <div id="arsiv-content"></div>
-            </div>
+        <!-- ── BODY: sidebar + content ── -->
+        <div class="bk-body">
+
+            <!-- LEFT SIDEBAR NAV -->
+            <nav class="bk-sidebar" id="bk-sidebar">
+                <!-- JS tarafından doldurulur -->
+            </nav>
+
+            <!-- MOBİL: alt kategori pill bar -->
+            <div class="bk-mob-sub-bar" id="bk-mob-sub-bar" style="display:none;"></div>
+
+            <!-- CONTENT -->
+            <main class="bk-content" id="arsiv-content">
+                <!-- renderArsiv() tarafından doldurulur -->
+            </main>
+
         </div>
     </div>
 
