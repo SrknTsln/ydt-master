@@ -20,50 +20,41 @@ let currentActiveList = "", studyIndex = 0, currentWord, score = 0, canAnswer = 
 // SAYFA VE MODÜL YÖNETİMİ
 // ══════════════════════════════════════════════
 function _hideAllModulePages() {
-    document.querySelectorAll('.container').forEach(c => c.classList.add('hidden'));
-    document.querySelectorAll('.arsiv-full-page').forEach(c => c.classList.add('hidden'));
-    document.querySelectorAll('.sp-page').forEach(c => {
-        c.classList.add('hidden');
-        c.style.display = 'none';
+    document.querySelectorAll('.container, .arsiv-full-page, .page-root').forEach(c => {
+        c.classList.add('hidden'); c.style.display = 'none';
     });
     document.querySelectorAll('.cx-page, .sr-page, .tw-page').forEach(c => {
-        c.classList.add('hidden');
-        c.style.display = 'none';
+        c.classList.add('hidden'); c.style.display = 'none';
     });
 }
 
 function showPage(id) {
     const target = document.getElementById(id);
 
-    // Hedef hariç tüm sayfaları gizle
-    document.querySelectorAll('.container').forEach(c => {
-        if (c.id !== id) c.classList.add('hidden');
-    });
-    document.querySelectorAll('.arsiv-full-page').forEach(c => {
-        if (c.id !== id) c.classList.add('hidden');
-    });
-    // sp-page (stats) — CSS display:flex var, inline none ile ez; hedef değilse
-    document.querySelectorAll('.sp-page').forEach(c => {
-        if (c.id !== id) { c.classList.add('hidden'); c.style.display = 'none'; }
-    });
-    // cx/sr/tw — CSS display:flex !important var, inline none ile ez; hedef değilse
-    document.querySelectorAll('.cx-page, .sr-page, .tw-page').forEach(c => {
-        if (c.id !== id) { c.classList.add('hidden'); c.style.display = 'none'; }
+    // TÜM sayfa elementlerini kapat — sınıf değişse bile ID ile yakala
+    // games.js container class'ı kaldırıyor, bu yüzden class bazlı seçici yetmez
+    document.querySelectorAll('[id$="-page"]').forEach(c => {
+        if (c.id !== id) {
+            c.classList.add('hidden');
+            c.style.display = 'none';
+        }
     });
 
     if (!target) return;
 
-    // Hedefi aç: önce inline style temizle, sonra hidden kaldır
-    target.style.display = '';
     target.classList.remove('hidden');
 
-    // cx/sr/tw: tam ekran flex zorla
     if (target.classList.contains('cx-page') ||
         target.classList.contains('sr-page') ||
         target.classList.contains('tw-page')) {
         target.style.display = 'flex';
         target.style.flexDirection = 'column';
         setTimeout(() => { target.scrollTop = 0; window.scrollTo(0,0); }, 10);
+    } else if (target.classList.contains('sp-page') ||
+               target.classList.contains('page-root')) {
+        target.style.display = 'flex';
+    } else {
+        target.style.display = '';
     }
 
     setNavActive(id);
@@ -113,13 +104,10 @@ function setNavActive(pageId) {
 }
 
 function navTo(pageId) {
+    if (pageId === 'stats-page') { showStatsPage(); return; }
     showPage(pageId);
     if (pageId === 'index-page') { updateIndexStats(); updateDailyGoalBar(); }
-    if (pageId === 'stats-page') showStatsPage();
-    if (pageId === 'admin-page') {
-        // Her açılışta PIN ekranını göster
-        adminShowPinOverlay();
-    }
+    if (pageId === 'admin-page') { adminShowPinOverlay(); }
 }
 
 // ══════════════════════════════════════════════
@@ -3418,16 +3406,10 @@ function updateArsivBadge() {
 
 // ── Arşiv sayfası ────────────────────────────────────
 function showAIArsiv() {
-    document.querySelectorAll('.container').forEach(c => c.classList.add('hidden'));
-    document.querySelectorAll('.arsiv-full-page').forEach(c => c.classList.add('hidden'));
-    document.querySelectorAll('.cx-page, .sr-page, .tw-page').forEach(c => {
-        c.classList.add('hidden');
-        c.style.display = '';
-    });
+    showPage('ai-arsiv-page');
     document.querySelectorAll('.sb-btn, .mob-drawer-btn').forEach(b => b.classList.remove('active'));
     const arsivBtn = document.getElementById('sb-arsiv');
     if (arsivBtn) arsivBtn.classList.add('active');
-    document.getElementById('ai-arsiv-page').classList.remove('hidden');
 
     // Filtre seçeneklerini güncelle
     const filterSel = document.getElementById('arsiv-list-filter');

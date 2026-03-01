@@ -1,0 +1,156 @@
+<!-- ═══════════════════════════════════════════════════════
+     PROFİL SAYFASI — index.html'deki mevcut profil-page'i
+     aşağıdakiyle değiştir (id="profil-page" div'i)
+     ═══════════════════════════════════════════════════════ -->
+    <div id="profil-page" class="container hidden" style="text-align:left; padding-bottom: 32px;">
+        <button class="back-btn" onclick="navTo('index-page')">←</button>
+
+        <!-- Google Auth Hero ─────────────────────────── -->
+        <div class="profil-google-hero">
+            <div class="profil-gh-top">
+                <!-- Fotoğraf: JS yükler, başta gizli -->
+                <img id="profil-gh-photo" class="profil-gh-photo"
+                     src="" alt="Profil" style="display:none;"
+                     onerror="this.style.display='none';document.getElementById('profil-gh-photo-placeholder').style.display='flex';">
+                <div id="profil-gh-photo-placeholder" class="profil-gh-photo-placeholder">🎓</div>
+
+                <div class="profil-gh-info">
+                    <div class="profil-gh-greeting">
+                        Hoş geldin, <span id="profil-gh-greeting-name">Kullanıcı</span>!
+                    </div>
+                    <div id="profil-gh-name" class="profil-gh-name">Yükleniyor…</div>
+                    <div id="profil-gh-email" class="profil-gh-email">—</div>
+                    <div class="profil-gh-badge">🔒 Veriler güvende · Google ile giriş</div>
+                </div>
+
+                <button class="profil-gh-logout" onclick="window.AuthModule && window.AuthModule.authSignOut()">
+                    Çıkış
+                </button>
+            </div>
+        </div>
+
+        <!-- Sync durumu ──────────────────────────────── -->
+        <div class="auth-sync-bar synced" id="auth-sync-bar">
+            <div class="auth-sync-dot"></div>
+            <span class="auth-sync-text">Veriler senkronize edildi</span>
+        </div>
+
+        <!-- Başarı Tablosu ───────────────────────────── -->
+        <div class="profil-basari">
+            <div class="profil-basari-title">🏆 Başarı Tablosu</div>
+            <div class="profil-basari-grid">
+                <div class="profil-basari-item">
+                    <span id="auth-stat-total" class="profil-basari-val">0</span>
+                    <span class="profil-basari-lbl">Toplam Soru</span>
+                </div>
+                <div class="profil-basari-item">
+                    <span id="auth-stat-accuracy" class="profil-basari-val">0%</span>
+                    <span class="profil-basari-lbl">Doğruluk</span>
+                </div>
+                <div class="profil-basari-item">
+                    <span id="auth-stat-time" class="profil-basari-val">0 dk</span>
+                    <span class="profil-basari-lbl">Çalışma Süresi</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hızlı İstatistikler (eski uyum) ─────────── -->
+        <div class="profil-stats-row">
+            <div class="profil-stat-box">
+                <span id="profil-stat-words" class="profil-stat-val">0</span>
+                <span class="profil-stat-lbl">Kelime</span>
+            </div>
+            <div class="profil-stat-box">
+                <span id="profil-stat-learn" class="profil-stat-val">0</span>
+                <span class="profil-stat-lbl">Öğrenilen</span>
+            </div>
+            <div class="profil-stat-box">
+                <span id="profil-stat-acc" class="profil-stat-val">0%</span>
+                <span class="profil-stat-lbl">Başarı</span>
+            </div>
+            <div class="profil-stat-box">
+                <span id="profil-stat-streak" class="profil-stat-val">0 🔥</span>
+                <span class="profil-stat-lbl">Seri</span>
+            </div>
+            <div class="profil-stat-box">
+                <span id="profil-stat-time" class="profil-stat-val">0 dk</span>
+                <span class="profil-stat-lbl">Süre</span>
+            </div>
+            <div class="profil-stat-box">
+                <span id="profil-stat-badges" class="profil-stat-val">0</span>
+                <span class="profil-stat-lbl">Rozet</span>
+            </div>
+        </div>
+
+        <!-- 3 Özellik Kartı ──────────────────────────── -->
+        <div style="font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);margin:18px 0 10px;">
+            📌 Bugün Ne Çalışmak İstersin?
+        </div>
+        <div class="profil-feature-cards">
+            <div class="profil-feat-card" onclick="navTo('quiz-page')">
+                <div class="profil-feat-icon">📖</div>
+                <div class="profil-feat-name">Kelime</div>
+                <div class="profil-feat-why">YDT'de her 3 sorudan biri kelime bilgisi ölçer. Günde 20 kelime öğren, sınav gününe hazır gel.</div>
+                <span class="profil-feat-cta">Başla →</span>
+            </div>
+            <div class="profil-feat-card" onclick="navTo('grammar-page')">
+                <div class="profil-feat-icon">🔤</div>
+                <div class="profil-feat-name">Gramer</div>
+                <div class="profil-feat-why">Tenses, passive, conditionals — YDT'nin temel gramer kalıplarını interaktif modüllerle pekiştir.</div>
+                <span class="profil-feat-cta">Başla →</span>
+            </div>
+            <div class="profil-feat-card" onclick="navTo('paragraf-liste-page')">
+                <div class="profil-feat-icon">🤖</div>
+                <div class="profil-feat-name">AI Paragraf</div>
+                <div class="profil-feat-why">Yapay zeka destekli okuma parçaları. Gerçek YDT formatında sorularla anlama hızını artır.</div>
+                <span class="profil-feat-cta">Başla →</span>
+            </div>
+        </div>
+
+        <!-- Profil Düzenle ───────────────────────────── -->
+        <div class="admin-section" style="margin-top:8px;">
+            <div class="admin-section-title">✏️ Profil Bilgilerini Düzenle</div>
+
+            <label style="font-size:.75rem;font-weight:700;color:var(--ink2);margin-bottom:4px;display:block;">Adın</label>
+            <input id="profil-name-inp" type="text" placeholder="Adınızı girin…" style="margin-bottom:8px;">
+
+            <label style="font-size:.75rem;font-weight:700;color:var(--ink2);margin-bottom:4px;display:block;">Hedefin</label>
+            <input id="profil-goal-inp" type="text" placeholder="Örn: YDT'de 90+ almak" style="margin-bottom:10px;">
+
+            <label style="font-size:.75rem;font-weight:700;color:var(--ink2);margin-bottom:6px;display:block;">Avatar Seç</label>
+            <div class="avatar-picker">
+                <button class="avatar-opt selected" data-av="🎓" onclick="selectAvatar(this)">🎓</button>
+                <button class="avatar-opt" data-av="🦁" onclick="selectAvatar(this)">🦁</button>
+                <button class="avatar-opt" data-av="🦊" onclick="selectAvatar(this)">🦊</button>
+                <button class="avatar-opt" data-av="🐺" onclick="selectAvatar(this)">🐺</button>
+                <button class="avatar-opt" data-av="🦅" onclick="selectAvatar(this)">🦅</button>
+                <button class="avatar-opt" data-av="🧠" onclick="selectAvatar(this)">🧠</button>
+                <button class="avatar-opt" data-av="🚀" onclick="selectAvatar(this)">🚀</button>
+                <button class="avatar-opt" data-av="⚡" onclick="selectAvatar(this)">⚡</button>
+            </div>
+
+            <button id="profil-save-btn" class="btn" onclick="saveProfilInfo()" style="margin-top:10px;">💾 Kaydet</button>
+        </div>
+
+        <!-- Rozetler ─────────────────────────────────── -->
+        <div class="admin-section" style="margin-top:10px;">
+            <div class="admin-section-title">🏅 Rozetlerim</div>
+            <div id="profil-badge-preview" class="profil-badge-grid"></div>
+        </div>
+
+        <!-- El ile Sync ──────────────────────────────── -->
+        <div style="text-align:center; margin-top:16px;">
+            <button onclick="window.AuthModule && window.AuthModule.syncNow()"
+                style="background:transparent;border:1.5px solid var(--border);border-radius:12px;
+                       padding:9px 20px;font-size:.78rem;font-weight:700;color:var(--ink3);cursor:pointer;">
+                ☁️ Şimdi Senkronize Et
+            </button>
+        </div>
+
+        <!-- Gizli eski uyum alanları ─────────────────── -->
+        <div style="display:none">
+            <span id="profil-name"></span>
+            <span id="profil-goal"></span>
+            <div id="profil-avatar"></div>
+        </div>
+    </div>
