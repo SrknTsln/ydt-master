@@ -1,0 +1,62 @@
+/* ═══════════════════════════════════════════════════════
+   MOBILE BOTTOM NAV FIX  —  stil.css dosyasının sonuna ekle
+   ═══════════════════════════════════════════════════════ */
+
+:root {
+    --bottom-nav-h: 60px;
+    --mobile-safe-bottom: calc(var(--bottom-nav-h) + 16px); /* 76px */
+}
+
+@media (max-width: 699px) {
+
+    /* Tüm ana container'lar */
+    .container,
+    .sp-page,
+    .sp-body,
+    #quiz-page,
+    #grammar-page,
+    #paragraf-liste-page,
+    #paragraf-page,
+    #stats-page,
+    #profil-page,
+    #kids-page {
+        padding-bottom: var(--mobile-safe-bottom) !important;
+    }
+
+    /* Scrollable inner wrapper'lar */
+    #admin-page .adm-content,
+    .modal-body,
+    .sp-body {
+        padding-bottom: var(--mobile-safe-bottom) !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Admin sayfası: fixed layout, content alanı boşluk alır */
+    #admin-page.container {
+        bottom: var(--bottom-nav-h) !important;
+        padding-bottom: 0 !important;
+    }
+
+    /* Modal içerikleri bottom nav'ın üstünde biter */
+    .modal-content,
+    .modal-card {
+        max-height: calc(100vh - var(--bottom-nav-h) - 32px) !important;
+        overflow-y: auto !important;
+    }
+}
+
+/* iPhone X+ notch / home indicator desteği */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+    @media (max-width: 699px) {
+        :root {
+            --mobile-safe-bottom: calc(
+                var(--bottom-nav-h) + 16px + env(safe-area-inset-bottom)
+            );
+        }
+        .bottom-nav, nav[class*="bottom"], div[class*="bottom-nav"] {
+            padding-bottom: env(safe-area-inset-bottom);
+            height: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom));
+        }
+    }
+}
