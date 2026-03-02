@@ -16,7 +16,6 @@ import {
     setDoc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// ── Firebase Config (index.html ile aynı proje) ──
 const firebaseConfig = {
     apiKey: "AIzaSyC94N6Y8hxXmpFLrK6TvgVP4k-F9N6qX8A",
     authDomain: "ydt-master.firebaseapp.com",
@@ -27,14 +26,11 @@ const firebaseConfig = {
     appId: "1:674787283521:web:fccca6b20e174f9e79ecc0"
 };
 
-// Çift init önleme
-const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+const app  = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db   = getFirestore(app);
 
-// ── Timer (çalışma süresi) ────────────────────────
 let timerInterval = null;
-
 function startTimer() {
     if (timerInterval) return;
     timerInterval = setInterval(() => {
@@ -42,10 +38,9 @@ function startTimer() {
             stats.totalMinutes = (stats.totalMinutes || 0) + 1;
             localStorage.setItem('ydt_stats', JSON.stringify(stats));
         }
-    }, 60000); // her 1 dk
+    }, 60000);
 }
 
-// ── Sync bar güncelle ─────────────────────────────
 function setSyncBar(state, text) {
     const bar = document.getElementById('auth-sync-bar');
     if (!bar) return;
@@ -54,88 +49,164 @@ function setSyncBar(state, text) {
     if (span) span.textContent = text;
 }
 
-// ── Profil UI güncelle ────────────────────────────
 function updateProfilUI(user) {
-    // Fotoğraf
-    const photo = document.getElementById('profil-gh-photo');
+    const photo       = document.getElementById('profil-gh-photo');
     const placeholder = document.getElementById('profil-gh-photo-placeholder');
     if (photo && user.photoURL) {
         photo.src = user.photoURL;
         photo.style.display = 'block';
         if (placeholder) placeholder.style.display = 'none';
     }
-
-    // İsim & email
     const displayName = user.displayName || 'Kullanıcı';
     const firstName   = displayName.split(' ')[0];
-
     const greetEl = document.getElementById('profil-gh-greeting-name');
     const nameEl  = document.getElementById('profil-gh-name');
     const emailEl = document.getElementById('profil-gh-email');
-
     if (greetEl) greetEl.textContent = firstName;
     if (nameEl)  nameEl.textContent  = displayName;
     if (emailEl) emailEl.textContent = user.email || '';
-
-    // Stats güncelle
     updateAuthStats();
+}
+
+function formatMinutes(mins) {
+    const m = Math.round(mins) || 0;
+    if (m < 60) return m + ' dk';
+    const h = Math.floor(m / 60);
+    const r = m % 60;
+    return r > 0 ? h + 's ' + r + 'dk' : h + 's';
 }
 
 function updateAuthStats() {
     if (typeof stats === 'undefined') return;
-    const total    = stats.totalAnswers  || 0;
+    const total    = stats.totalAnswers   || 0;
     const correct  = stats.correctAnswers || 0;
     const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
-    const minutes  = stats.totalMinutes  || 0;
-
+    const minutes  = stats.totalMinutes   || 0;
     const el1 = document.getElementById('auth-stat-total');
     const el2 = document.getElementById('auth-stat-accuracy');
     const el3 = document.getElementById('auth-stat-time');
     if (el1) el1.textContent = total;
     if (el2) el2.textContent = accuracy + '%';
-    if (el3) el3.textContent = minutes + ' dk';
+    if (el3) el3.textContent = formatMinutes(minutes);
+    updateProfilWidgets();
 }
 
-// ── Firestore'dan kullanıcı verisini yükle ────────
+function updateProfilWidgets() {
+    if (typeof stats === 'undefined') return;
+    const minutes = Math.round(stats.totalMinutes) || 0;
+    const correct = stats.correctAnswers || 0;
+
+    // XP & Seviye
+    const xp = correct * 10 + Math.floor(minutes / 5) * 5;
+    const level = Math.floor(xp / 500) + 1;
+    const xpInLevel = xp % 500;
+    const xpPct = Math.min(100, Math.round((xpInLevel / 500) * 100));
+    const lvlEl = document.getElementById('pp-level-num');
+    const xpEl  = document.getElementById('pp-xp-val');
+    const xpBar = document.getElementById('pp-xp-bar');
+    if (lvlEl) lvlEl.textContent = level;
+    if (xpEl)  xpEl.textContent  = xpInLevel + ' / 500 XP';
+    if (xpBar) xpBar.style.width = xpPct + '%';
+
+    // Günlük hedef (20 soru)
+    const todayKey = 'ydt_daily_' + new Date().toISOString().slice(0,10);
+    const todayAnswers = parseInt(localStorage.getItem(todayKey) || '0');
+    const dailyGoal = 20;
+    const dailyPct = Math.min(100, Math.round((todayAnswers / dailyGoal) * 100));
+    const dEl  = document.getElementById('pp-daily-val');
+    const dBar = document.getElementById('pp-daily-bar');
+    const dLbl = document.getElementById('pp-daily-lbl');
+    if (dEl)  dEl.textContent  = todayAnswers + ' / ' + dailyGoal + ' soru';
+    if (dBar) dBar.style.width = dailyPct + '%';
+    if (dLbl) dLbl.textContent = dailyPct >= 100 ? '🎉 Hedefe ulaştın!' : '%' + dailyPct + ' tamamlandı';
+
+    // Takvim
+    renderActivityCalendar();
+
+    // Motivasyon
+    const msgs = [
+        "Her gün 20 kelime = yılda 7.300 kelime. Başla! 💪",
+        "YDT'ye hazırlanmak bir maraton, sprint değil. 🏃",
+        "Bugün çalışmak, yarın özgüven demek. ✨",
+        "Küçük adımlar, büyük başarılar getirir. 🚀",
+        "Düzenlilik, yeteneği her zaman yener. 🔥",
+        "Beyin bir kas gibidir — egzersiz yapmazsan zayıflar. 🧠",
+        "En iyi zaman bugün. İkinci en iyi zaman da şimdi. ⚡",
+    ];
+    const mEl = document.getElementById('pp-motivation-text');
+    if (mEl) mEl.textContent = msgs[new Date().getDay() % msgs.length];
+}
+
+function renderActivityCalendar() {
+    const cal = document.getElementById('pp-calendar');
+    if (!cal) return;
+    cal.innerHTML = '';
+    const today = new Date();
+    for (let i = 27; i >= 0; i--) {
+        const d = new Date(today);
+        d.setDate(today.getDate() - i);
+        const key = 'ydt_daily_' + d.toISOString().slice(0,10);
+        const count = parseInt(localStorage.getItem(key) || '0');
+        const cell = document.createElement('div');
+        cell.className = 'pp-cal-cell';
+        cell.title = d.toLocaleDateString('tr-TR') + ': ' + count + ' soru';
+        cell.dataset.intensity = count === 0 ? 0 : count < 5 ? 1 : count < 15 ? 2 : count < 25 ? 3 : 4;
+        cal.appendChild(cell);
+    }
+}
+
 async function loadUserData(uid) {
     try {
         setSyncBar('syncing', 'Veriler yükleniyor…');
         const snap = await getDoc(doc(db, 'users', uid));
         if (snap.exists()) {
             const data = snap.data();
-            // allData
             if (data.allData && typeof allData !== 'undefined') {
                 allData = data.allData;
                 localStorage.setItem('ydt_all_data', JSON.stringify(allData));
             }
-            // stats
             if (data.stats && typeof stats !== 'undefined') {
                 stats = { ...stats, ...data.stats };
                 if (isNaN(stats.totalMinutes)) stats.totalMinutes = 0;
                 localStorage.setItem('ydt_stats', JSON.stringify(stats));
             }
+            if (data.paragraflar && Array.isArray(data.paragraflar) && data.paragraflar.length > 0) {
+                localStorage.setItem('ydt_paragraflar', JSON.stringify(data.paragraflar));
+                window.paragraflar = data.paragraflar;
+                if (typeof paragraflar !== 'undefined') {
+                    paragraflar.splice(0, paragraflar.length);
+                    data.paragraflar.forEach(function(p) { paragraflar.push(p); });
+                }
+            }
+            if (data.paragrafSorular && typeof data.paragrafSorular === 'object') {
+                localStorage.setItem('ydt_paragraf_sorular', JSON.stringify(data.paragrafSorular));
+                window.paragrafSorular = data.paragrafSorular;
+            }
         }
-        setSyncBar('synced', 'Veriler senkronize edildi');
-        // UI yenile
-        if (typeof updateSelectors === 'function') updateSelectors();
-        if (typeof updateIndexStats === 'function') updateIndexStats();
+        if (typeof updateSelectors    === 'function') updateSelectors();
+        if (typeof updateIndexStats   === 'function') updateIndexStats();
         if (typeof updateDailyGoalBar === 'function') updateDailyGoalBar();
+        if (typeof _populateParagrafListesi === 'function') _populateParagrafListesi();
+        if (typeof _updateRh2HeroStats      === 'function') _updateRh2HeroStats();
+        if (typeof showProfilPage           === 'function') showProfilPage();
     } catch (e) {
         console.warn('Firestore yükleme hatası:', e);
         setSyncBar('synced', 'Yerel veriler kullanılıyor');
     }
 }
 
-// ── Firestore'a kullanıcı verisini kaydet ─────────
 async function saveUserData(uid) {
     try {
         setSyncBar('syncing', 'Kaydediliyor…');
-        const payload = {
-            stats:     typeof stats   !== 'undefined' ? stats   : {},
-            allData:   typeof allData !== 'undefined' ? allData : {},
-            updatedAt: new Date().toISOString()
-        };
-        await setDoc(doc(db, 'users', uid), payload, { merge: true });
+        const paragraflarData = JSON.parse(localStorage.getItem('ydt_paragraflar') || '[]');
+        const paragrafSorularData = JSON.parse(localStorage.getItem('ydt_paragraf_sorular') || '{}');
+        await setDoc(doc(db, 'users', uid), {
+            stats:           typeof stats   !== 'undefined' ? stats   : {},
+            allData:         typeof allData !== 'undefined' ? allData : {},
+            paragraflar:     paragraflarData,
+            paragrafSorular: paragrafSorularData,
+            updatedAt:       new Date().toISOString()
+        }, { merge: true });
         setSyncBar('synced', 'Veriler senkronize edildi');
     } catch (e) {
         console.warn('Firestore kayıt hatası:', e);
@@ -143,11 +214,8 @@ async function saveUserData(uid) {
     }
 }
 
-// ── Login Overlay ─────────────────────────────────
 function showLoginOverlay() {
-    // Daha önce eklendiyse ekleme
     if (document.getElementById('login-overlay')) return;
-
     const overlay = document.createElement('div');
     overlay.id = 'login-overlay';
     overlay.innerHTML = `
@@ -155,31 +223,20 @@ function showLoginOverlay() {
             <div class="login-logo">🎓</div>
             <div class="login-title">YDT Master Pro</div>
             <div class="login-sub">Devam etmek için Google hesabınla giriş yap — verilerini her cihazdan ulaş.</div>
-
             <div class="login-features">
                 <div class="login-feat-row">
                     <span class="login-feat-icon">☁️</span>
-                    <div class="login-feat-text">
-                        <strong>Bulut Senkronizasyon</strong>
-                        Her cihazda aynı ilerleme
-                    </div>
+                    <div class="login-feat-text"><strong>Bulut Senkronizasyon</strong>Her cihazda aynı ilerleme</div>
                 </div>
                 <div class="login-feat-row">
                     <span class="login-feat-icon">📊</span>
-                    <div class="login-feat-text">
-                        <strong>Kişisel İstatistikler</strong>
-                        Gelişimini takip et
-                    </div>
+                    <div class="login-feat-text"><strong>Kişisel İstatistikler</strong>Gelişimini takip et</div>
                 </div>
                 <div class="login-feat-row">
                     <span class="login-feat-icon">🔒</span>
-                    <div class="login-feat-text">
-                        <strong>Güvenli & Özel</strong>
-                        Sadece sen erişebilirsin
-                    </div>
+                    <div class="login-feat-text"><strong>Güvenli & Özel</strong>Sadece sen erişebilirsin</div>
                 </div>
             </div>
-
             <button class="btn-google" id="btn-google-signin">
                 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -189,21 +246,12 @@ function showLoginOverlay() {
                 </svg>
                 Google ile Giriş Yap
             </button>
-
             <div class="login-divider">veya</div>
-
-            <button class="btn-guest" id="btn-guest">
-                Misafir olarak devam et
-            </button>
-
-            <div class="login-note">
-                Giriş yaparak gizlilik politikamızı kabul etmiş olursunuz. Verileriniz yalnızca sizinle paylaşılır.
-            </div>
+            <button class="btn-guest" id="btn-guest">Misafir olarak devam et</button>
+            <div class="login-note">Giriş yaparak gizlilik politikamızı kabul etmiş olursunuz.</div>
         </div>
     `;
     document.body.appendChild(overlay);
-
-    // Event listeners
     document.getElementById('btn-google-signin').addEventListener('click', authSignIn);
     document.getElementById('btn-guest').addEventListener('click', () => {
         overlay.classList.add('fade-out');
@@ -218,21 +266,15 @@ function hideLoginOverlay() {
     setTimeout(() => overlay.remove(), 400);
 }
 
-// ── Google Sign In ────────────────────────────────
 async function authSignIn() {
     const provider = new GoogleAuthProvider();
     try {
         await signInWithPopup(auth, provider);
-        // onAuthStateChanged halleder
     } catch (e) {
         console.error('Giriş hatası:', e.code, e.message);
-        if (e.code === 'auth/popup-blocked') {
-            alert('Popup engellendi. Lütfen tarayıcının popup engelleyicisini kapatın.');
-        }
     }
 }
 
-// ── Google Sign Out ───────────────────────────────
 async function authSignOut() {
     if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
     const user = auth.currentUser;
@@ -241,45 +283,53 @@ async function authSignOut() {
     showLoginOverlay();
 }
 
-// ── Manuel Sync ───────────────────────────────────
 async function syncNow() {
     const user = auth.currentUser;
     if (!user) { setSyncBar('synced', 'Giriş yapılmadı'); return; }
     await saveUserData(user.uid);
 }
 
-// ── Auth State Observer ───────────────────────────
+const ADMIN_EMAIL = 'stasalan@gmail.com';
+
+function updateAdminVisibility(email) {
+    const isAdmin = email === ADMIN_EMAIL;
+    // Sidebar butonu
+    const sbAdmin = document.getElementById('sb-admin');
+    if (sbAdmin) sbAdmin.style.display = isAdmin ? '' : 'none';
+    // Mobil drawer butonu
+    const diAdmin = document.getElementById('di-admin');
+    if (diAdmin) diAdmin.style.display = isAdmin ? '' : 'none';
+    // Sidebar admin bar wrapper (sb-admin-bar)
+    const sbAdminBar = document.querySelector('.sb-admin-bar');
+    if (sbAdminBar) {
+        // Profil butonu kalmalı, sadece admin butonunu gizle
+        const adminBtn = sbAdminBar.querySelector('#sb-admin');
+        if (adminBtn) adminBtn.style.display = isAdmin ? '' : 'none';
+    }
+    // window._currentUser kaydet (motor.js erişimi için)
+    window._currentUser = isAdmin ? { email } : null;
+}
+
 onAuthStateChanged(auth, async (user) => {
     if (user) {
-        // Giriş yapıldı
+        window._currentUser = user;
+        updateAdminVisibility(user.email);
         hideLoginOverlay();
         updateProfilUI(user);
         await loadUserData(user.uid);
         startTimer();
-
-        // Her 5 dk otomatik kaydet
         setInterval(() => saveUserData(user.uid), 5 * 60 * 1000);
-
-        // Sayfa kapanırken kaydet
         window.addEventListener('beforeunload', () => saveUserData(user.uid));
-
-        // window._saveData'yı override et (Firestore'a da yazsın)
         const originalSave = window._saveData;
         window._saveData = function() {
             if (typeof originalSave === 'function') originalSave();
             saveUserData(user.uid);
         };
-
     } else {
-        // Oturum yok — overlay göster
+        window._currentUser = null;
+        updateAdminVisibility(null);
         showLoginOverlay();
     }
 });
 
-// ── Public API ────────────────────────────────────
-window.AuthModule = {
-    authSignIn,
-    authSignOut,
-    syncNow,
-    updateAuthStats
-};
+window.AuthModule = { authSignIn, authSignOut, syncNow, updateAuthStats, updateProfilWidgets };

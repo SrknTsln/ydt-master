@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="stil.css">
     <link rel="stylesheet" href="auth.css">
     <link rel="stylesheet" href="stats.css">
+    <link rel="stylesheet" href="admin.css">
     <link rel="stylesheet" href="bank.css">
     <link rel="stylesheet" href="kids.css">
     <link rel="stylesheet" href="games.css">
@@ -106,7 +107,8 @@
 
         <!-- Admin — en alt -->
         <div class="mob-drawer-admin-bar">
-            <button class="mob-drawer-btn mob-drawer-btn-admin" id="di-admin" onclick="mobGoTo('admin-page')">
+            <button class="mob-drawer-btn mob-drawer-btn-sec" id="di-profil" onclick="mobGoTo('profil-page'); showProfilPage(); setTimeout(()=>window.AuthModule&&window.AuthModule.updateProfilWidgets(),100)" style="margin-bottom:4px;"><span class="mob-d-icon">👤</span> Profil</button>
+            <button class="mob-drawer-btn mob-drawer-btn-admin" id="di-admin" onclick="mobGoTo('admin-page')" style="display:none;">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0;opacity:.55;margin-right:2px;">
                     <circle cx="7" cy="7" r="2.5" stroke="currentColor" stroke-width="1.4"/>
                     <path d="M7 1v1.5M7 11.5V13M1 7h1.5M11.5 7H13M2.93 2.93l1.06 1.06M10.01 10.01l1.06 1.06M2.93 11.07l1.06-1.06M10.01 3.99l1.06-1.06" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
@@ -195,7 +197,10 @@
             <button class="sb-btn sb-btn-sec" id="sb-arsiv" onclick="showAIArsiv()">    <span class="sb-icon">🗃️</span> Soru Bankası <span class="sb-badge-pill" id="arsiv-badge" style="display:none"></span></button>
         </nav>
         <div class="sb-admin-bar">
-            <button class="sb-btn sb-btn-admin" id="sb-admin" onclick="navTo('admin-page')">
+            <button class="sb-btn sb-btn-sec" id="sb-profil" onclick="navTo('profil-page'); showProfilPage(); setTimeout(()=>window.AuthModule&&window.AuthModule.updateProfilWidgets(),100)" style="margin-bottom:4px;">
+                <span class="sb-icon">👤</span> Profil
+            </button>
+            <button class="sb-btn sb-btn-admin" id="sb-admin" onclick="navTo('admin-page')" style="display:none;">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0;opacity:.6">
                     <circle cx="7" cy="7" r="2.5" stroke="currentColor" stroke-width="1.4"/>
                     <path d="M7 1v1.5M7 11.5V13M1 7h1.5M11.5 7H13M2.93 2.93l1.06 1.06M10.01 10.01l1.06 1.06M2.93 11.07l1.06-1.06M10.01 3.99l1.06-1.06" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
@@ -977,296 +982,279 @@
 
     <div id="admin-page" class="container hidden">
 
-        <!-- ══ ŞİFRE EKRANI ══ -->
-        <div id="admin-pin-overlay" style="position:absolute;inset:0;z-index:50;
-             background:var(--white);display:flex;flex-direction:column;align-items:center;
-             justify-content:center;padding:40px 24px;min-height:400px;">
-            <div style="font-size:2.5rem;margin-bottom:12px;">🔐</div>
-            <div style="font-size:1rem;font-weight:800;color:var(--ink);margin-bottom:4px;">Yönetim Paneli</div>
-            <div style="font-size:.78rem;color:var(--ink3);margin-bottom:28px;">Devam etmek için şifreyi girin</div>
-            <div style="display:flex;gap:10px;margin-bottom:20px;">
-                <div id="pin-dot-1" style="width:14px;height:14px;border-radius:50%;background:var(--border);transition:background .15s;"></div>
-                <div id="pin-dot-2" style="width:14px;height:14px;border-radius:50%;background:var(--border);transition:background .15s;"></div>
-                <div id="pin-dot-3" style="width:14px;height:14px;border-radius:50%;background:var(--border);transition:background .15s;"></div>
-                <div id="pin-dot-4" style="width:14px;height:14px;border-radius:50%;background:var(--border);transition:background .15s;"></div>
+        <!-- ══ ERİŞİM ENGEL EKRANI ══ -->
+        <div id="admin-access-denied" style="display:none; position:absolute; inset:0; z-index:50;
+             background:var(--white); flex-direction:column; align-items:center; justify-content:center;
+             padding:40px 24px; min-height:400px;">
+            <div style="font-size:3rem; margin-bottom:16px;">🚫</div>
+            <div style="font-size:1rem; font-weight:800; color:var(--ink); margin-bottom:8px;">Erişim Reddedildi</div>
+            <div style="font-size:.8rem; color:var(--ink3); text-align:center; line-height:1.6; max-width:260px;">
+                Bu panel yalnızca yetkili yönetici hesabına açıktır.
             </div>
-            <div id="pin-error" style="font-size:.72rem;color:#ef4444;font-weight:700;min-height:18px;margin-bottom:12px;"></div>
-            <!-- Sayısal klavye -->
-            <div style="display:grid;grid-template-columns:repeat(3,64px);gap:10px;">
-                <button onclick="pinPress('1')" class="pin-key">1</button>
-                <button onclick="pinPress('2')" class="pin-key">2</button>
-                <button onclick="pinPress('3')" class="pin-key">3</button>
-                <button onclick="pinPress('4')" class="pin-key">4</button>
-                <button onclick="pinPress('5')" class="pin-key">5</button>
-                <button onclick="pinPress('6')" class="pin-key">6</button>
-                <button onclick="pinPress('7')" class="pin-key">7</button>
-                <button onclick="pinPress('8')" class="pin-key">8</button>
-                <button onclick="pinPress('9')" class="pin-key">9</button>
-                <button onclick="pinPress('back')" class="pin-key" style="font-size:1.1rem;">⌫</button>
-                <button onclick="pinPress('0')" class="pin-key">0</button>
-                <button onclick="pinPress('back')" class="pin-key" style="opacity:0;pointer-events:none;"></button>
-            </div>
-        </div>
-
-        <!-- ══ PANEL İÇERİĞİ (PIN doğrulanana kadar gizli) ══ -->
-        <div id="admin-panel-content" style="display:none;">
-        <p class="page-title">Yönetim Paneli</p>
-        <p class="page-sub">İçerik ve sistem ayarlarını yönetin</p>
-
-        <!-- ══ AI API ANAHTARLARI ══ -->
-        <div class="admin-section">
-            <div class="admin-section-title">🔑 AI API Anahtarları
-                <span style="font-size:.6rem;background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;border-radius:10px;padding:2px 8px;margin-left:6px;font-weight:700;vertical-align:middle;">Cascade Sistemi</span>
-            </div>
-            <p style="font-size:0.75rem;color:var(--ink3);margin-bottom:12px;line-height:1.6;">
-                Kota dolduğunda sistem otomatik olarak sıradaki servise geçer.
-                En az <strong>bir</strong> anahtar girilmesi yeterli — hepsi ücretsiz.
-            </p>
-
-            <!-- Cascade sırası görsel -->
-            <div class="cascade-order">
-                <div class="co-item" id="co-item-gemini"><span class="co-num">1</span><span class="co-icon">✨</span><span class="co-name">Gemini</span><span class="co-dot" id="co-dot-gemini">—</span></div>
-                <span class="co-arrow">›</span>
-                <div class="co-item" id="co-item-groq"><span class="co-num">2</span><span class="co-icon">⚡</span><span class="co-name">Groq</span><span class="co-dot" id="co-dot-groq">—</span></div>
-                <span class="co-arrow">›</span>
-                <div class="co-item" id="co-item-openrouter"><span class="co-num">3</span><span class="co-icon">🌐</span><span class="co-name">OpenRouter</span><span class="co-dot" id="co-dot-openrouter">—</span></div>
-                <span class="co-arrow">›</span>
-                <div class="co-item" id="co-item-mistral"><span class="co-num">4</span><span class="co-icon">🌪️</span><span class="co-name">Mistral</span><span class="co-dot" id="co-dot-mistral">—</span></div>
-            </div>
-
-            <!-- API key giriş satırları -->
-            <div class="akey-list">
-
-                <div class="akey-row">
-                    <div class="akey-header">
-                        <span class="akey-name">✨ Gemini</span>
-                        <a href="https://aistudio.google.com/app/apikey" target="_blank" class="akey-link">Ücretsiz al →</a>
-                    </div>
-                    <div class="akey-inputs">
-                        <input type="password" id="akey-gemini" class="admin-input" placeholder="AIza..." style="margin:0;flex:1;">
-                        <button class="akey-save-btn" onclick="saveApiKey('gemini','akey-gemini')">Kaydet</button>
-                    </div>
-                    <div class="akey-note">1.500 istek/gün · Gemini 2.5 Flash · En Zeki</div>
-                </div>
-
-                <div class="akey-row">
-                    <div class="akey-header">
-                        <span class="akey-name">⚡ Groq</span>
-                        <a href="https://console.groq.com/keys" target="_blank" class="akey-link">Ücretsiz al →</a>
-                    </div>
-                    <div class="akey-inputs">
-                        <input type="password" id="akey-groq" class="admin-input" placeholder="gsk_..." style="margin:0;flex:1;">
-                        <button class="akey-save-btn" onclick="saveApiKey('groq','akey-groq')">Kaydet</button>
-                    </div>
-                    <div class="akey-note">14.400 istek/gün · Llama 3.3 70B · En Hızlı ⚡</div>
-                </div>
-
-                <div class="akey-row">
-                    <div class="akey-header">
-                        <span class="akey-name">🌐 OpenRouter</span>
-                        <a href="https://openrouter.ai/keys" target="_blank" class="akey-link">Ücretsiz al →</a>
-                    </div>
-                    <div class="akey-inputs">
-                        <input type="password" id="akey-openrouter" class="admin-input" placeholder="sk-or-..." style="margin:0;flex:1;">
-                        <button class="akey-save-btn" onclick="saveApiKey('openrouter','akey-openrouter')">Kaydet</button>
-                    </div>
-                    <div class="akey-note">Llama 3.1 8B ücretsiz model · Kredi kartı gerektirmez</div>
-                </div>
-
-                <div class="akey-row">
-                    <div class="akey-header">
-                        <span class="akey-name">🌪️ Mistral AI</span>
-                        <a href="https://console.mistral.ai/api-keys" target="_blank" class="akey-link">Ücretsiz al →</a>
-                    </div>
-                    <div class="akey-inputs">
-                        <input type="password" id="akey-mistral" class="admin-input" placeholder="..." style="margin:0;flex:1;">
-                        <button class="akey-save-btn" onclick="saveApiKey('mistral','akey-mistral')">Kaydet</button>
-                    </div>
-                    <div class="akey-note">1 milyar token/ay · Mistral Small</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ══ AI Kelime Üretici ══ -->
-        <div class="admin-section ai-gen-section">
-            <div class="admin-section-title" style="color:#7c3aed;">🤖 AI Kelime Üretici</div>
-            <p style="font-size:0.78rem;color:var(--ink3);margin-bottom:10px;line-height:1.5;">Konu ve kelime sayısı gir — AI otomatik kelime, Türkçe anlam, mnemonic ve hikaye üretsin.</p>
-
-            <div style="display:flex;gap:8px;margin-bottom:8px;">
-                <div style="flex:1;">
-                    <label style="font-size:0.72rem;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px;">Konu / Tema</label>
-                    <input type="text" id="ai-gen-topic" class="admin-input" placeholder="ör: İş dünyası, Tıp, C1 sıfatlar..." style="margin:0;">
-                </div>
-                <div style="width:72px;">
-                    <label style="font-size:0.72rem;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px;">Sayı</label>
-                    <input type="number" id="ai-gen-count" class="admin-input" value="10" min="3" max="30" style="margin:0;text-align:center;">
-                </div>
-            </div>
-
-            <div style="display:flex;gap:8px;margin-bottom:12px;">
-                <div style="flex:1;">
-                    <label style="font-size:0.72rem;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px;">Seviye</label>
-                    <select id="ai-gen-level" class="admin-input" style="margin:0;">
-                        <option value="B2">B2 (Orta)</option>
-                        <option value="C1" selected>C1 (İleri)</option>
-                        <option value="C2">C2 (Uzman)</option>
-                        <option value="YDT">YDT Odaklı</option>
-                    </select>
-                </div>
-                <div style="flex:1;">
-                    <label style="font-size:0.72rem;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px;">Listeye Ekle</label>
-                    <select id="ai-gen-target-list" class="admin-input" style="margin:0;"></select>
-                </div>
-            </div>
-
-            <button id="ai-gen-btn" class="btn" style="background:linear-gradient(135deg,#7c3aed,#a855f7);margin-bottom:0;" onclick="aiGenerateWords()">
-                ✨ Kelimeleri Üret
+            <button onclick="navTo('index-page')" style="margin-top:24px; padding:10px 24px;
+                background:var(--red); color:#fff; border:none; border-radius:12px;
+                font-family:inherit; font-weight:700; font-size:.85rem; cursor:pointer;">
+                ← Ana Sayfaya Dön
             </button>
-
-            <!-- Önizleme -->
-            <div id="ai-gen-preview" style="display:none;margin-top:12px;">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                    <span style="font-size:0.8rem;font-weight:700;color:var(--ink);">📋 Önizleme</span>
-                    <span id="ai-gen-preview-count" style="font-size:0.72rem;color:var(--ink3);"></span>
-                </div>
-                <div id="ai-gen-preview-list" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;"></div>
-                <div style="display:flex;gap:8px;margin-top:10px;">
-                    <button class="btn" style="flex:2;margin:0;background:#7c3aed;" onclick="aiGenSaveToList()">💾 Listeye Kaydet</button>
-                    <button class="btn btn-ghost" style="flex:1;margin:0;font-size:0.82rem;" onclick="aiGenDiscard()">✕ İptal</button>
-                </div>
-            </div>
-
-            <!-- Yükleniyor -->
-            <div id="ai-gen-loading" style="display:none;text-align:center;padding:20px 0;">
-                <div style="font-size:2rem;animation:spin 1s linear infinite;display:inline-block;">⚙️</div>
-                <div style="font-size:0.82rem;color:var(--ink3);margin-top:8px;" id="ai-gen-loading-text">AI kelimeler üretiyor...</div>
-            </div>
         </div>
 
-        <div class="admin-section">
-            <div class="admin-section-title">📚 Kelime Listesi Yönetimi</div>
-            
-            <div style="background:var(--bg); border-radius:8px; padding:12px; margin-bottom:12px; text-align:left;">
-                <div style="font-size:0.85rem; font-weight:700; margin-bottom:8px; color:var(--ink);">+ Yeni Liste Oluştur</div>
-                <div style="display:flex; gap:6px;">
-                    <input type="text" id="new-list-name" placeholder="Yeni liste adı..." class="admin-input" style="margin:0; flex:1;">
-                    <button class="btn" onclick="createNewList()" style="margin:0; width:auto; padding:0 15px;">Ekle</button>
-                </div>
-            </div>
+        <!-- ══ PANEL İÇERİĞİ ══ -->
+        <div id="admin-panel-content" style="display:none; height:100%; overflow:hidden;">
 
-            <div style="background:var(--bg); border-radius:8px; padding:12px; text-align:left;">
-                <div style="font-size:0.85rem; font-weight:700; margin-bottom:8px; color:var(--ink);">✏️ Mevcut Listeyi Düzenle</div>
-                <select id="edit-list-selector" class="admin-input" style="margin-bottom:8px;" onchange="loadListToTextarea()"></select>
-                <div style="display:flex; gap:6px; margin-bottom:8px;">
-                    <input type="text" id="rename-list-input" placeholder="Listeyi yeniden adlandır..." class="admin-input" style="margin:0; flex:1;">
-                    <button class="btn" onclick="renameList()" style="margin:0; width:auto; padding:0 12px; font-size:0.85rem;">İsim Değiştir</button>
-                </div>
-                
-                <div class="format-window" style="margin:8px 0; background:#fff;">
-                    <span style="font-size:0.75rem; font-weight:700; color:var(--ink2);">📋 AI Yapıştırma Formatı:</span>
-                    <div class="code-block" style="margin-top:4px;">Kelime:Anlam:Mnemonic:Hikaye</div>
-                </div>
-                
-                <textarea id="bulk-input" rows="6" class="admin-input" placeholder="Kelimeleri buraya yapıştırın..." style="margin-bottom:8px; font-family:monospace; font-size:0.85rem;"></textarea>
-                
-                <div style="display:flex; gap:8px;">
-                    <button class="btn" style="flex:2;" onclick="saveCurrentList()">💾 Kaydet</button>
-                    <button class="btn" style="flex:1; background:var(--red-soft); color:var(--red); border:1px solid var(--red);" onclick="deleteList()">🗑 Sil</button>
-                </div>
-            </div>
-        </div>
-
-        <div class="admin-section" style="margin-top: 20px;">
-            <div class="admin-section-title">📄 Paragraf Yönetimi</div>
-
-            <!-- Mevcut paragraflar listesi -->
-            <div id="admin-paragraf-liste" style="margin-bottom: 12px;"></div>
-
-            <!-- Yeni/Düzenle Formu -->
-            <div style="background:var(--white); border-radius:10px; padding:14px; border:1px solid var(--border);">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                    <div style="font-size:0.85rem; font-weight:700; color:var(--ink);" id="paragraf-form-title">➕ Yeni Paragraf Ekle</div>
-                    <button id="paragraf-form-cancel-btn" onclick="cancelParagrafEdit()" style="display:none; font-size:0.75rem; background:none; border:none; color:var(--ink3); cursor:pointer; font-family:inherit;">✕ İptal</button>
-                </div>
-                <input type="hidden" id="edit-paragraf-index" value="-1">
-                <input type="text" id="new-p-title" class="admin-input" placeholder="Paragraf Başlığı" style="margin-bottom: 8px;">
-                <textarea id="new-p-text" class="admin-input" placeholder="Paragraf Metnini Buraya Yapıştırın..." style="height: 100px; resize: vertical; margin-bottom: 8px; font-family:inherit;"></textarea>
-                <textarea id="new-p-words" class="admin-input" placeholder="Zor Kelimeler (Örn: profound:derin, myriad:sayısız)" style="height: 60px; resize: vertical; margin-bottom: 10px; font-family:inherit;"></textarea>
-                <button class="btn" id="paragraf-save-btn" onclick="addParagrafFromAdmin()">💾 Paragrafı Kaydet</button>
-            </div>
-        </div>
-
-        <div class="admin-section" style="margin-top: 20px;">
-            <div class="admin-section-title">☁️ Sistem & Bulut Yedekleme</div>
-            <div class="firebase-status" style="margin-bottom:12px;">
-                <div id="sync-dot-admin" style="width:10px;height:10px;border-radius:50%;background:#ccc;flex-shrink:0;"></div>
-                <div>
-                    <div class="firebase-status-text">Realtime Database</div>
-                    <div class="firebase-status-sub">Değişiklikler otomatik kaydedilir</div>
-                </div>
-            </div>
-            <button class="btn" onclick="forceSyncNow()">🔄 Şimdi Senkronize Et</button>
-            <div style="display:flex; gap:8px; margin-top:8px;">
-                <button class="btn btn-ghost" style="flex:1; font-size:0.85rem;" onclick="exportData()">⬇️ İndir (Yedek Al)</button>
-                <button class="btn btn-ghost" style="flex:1; font-size:0.85rem;" onclick="document.getElementById('fileInput').click()">⬆️ Yükle (Geri Yükle)</button>
-            </div>
-            <input type="file" id="fileInput" class="hidden" accept=".json" onchange="importData(event)">
-        </div>
-
-        <!-- ══ SORU BANKASI YÖNETİMİ ══ -->
-        <div class="admin-section" style="margin-top:20px;border:1.5px solid #fecaca;">
-            <div class="admin-section-title" style="color:#dc2626;">🗃️ Soru Bankası Yönetimi</div>
-            <p style="font-size:.75rem;color:var(--ink3);margin-bottom:16px;line-height:1.6;">
-                Soru bankasındaki kayıtları buradan silebilirsiniz. Bu işlem geri alınamaz.
-            </p>
-
-            <!-- Kelime Soruları -->
-            <div style="background:var(--bg);border-radius:12px;padding:14px;margin-bottom:10px;">
-                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+            <!-- ── TOP BAR ── -->
+            <div class="adm-topbar">
+                <button class="adm-back" onclick="navTo('index-page')">←</button>
+                <div class="adm-topbar-brand">
+                    <span class="adm-topbar-icon">⚙️</span>
                     <div>
-                        <div style="font-size:.82rem;font-weight:700;color:var(--ink);">📝 Kelime Soruları</div>
-                        <div id="admin-arsiv-kelime-count" style="font-size:.7rem;color:var(--ink3);margin-top:2px;">Yükleniyor...</div>
+                        <div class="adm-topbar-title">Yönetim Paneli</div>
+                        <div class="adm-topbar-sub">stasalan@gmail.com</div>
                     </div>
-                    <button onclick="adminClearArsiv('kelime')"
-                        style="font-size:.75rem;background:#fef2f2;border:1.5px solid #fca5a5;color:#dc2626;
-                               border-radius:9px;padding:7px 14px;cursor:pointer;font-family:inherit;font-weight:700;
-                               white-space:nowrap;">
-                        🗑 Tümünü Sil
-                    </button>
+                </div>
+                <div class="adm-sync-pill">
+                    <div class="adm-sync-dot"></div>
+                    <span>Senkronize</span>
                 </div>
             </div>
 
-            <!-- Paragraf Soruları (yakında) -->
-            <div style="background:var(--bg);border-radius:12px;padding:14px;margin-bottom:10px;opacity:.5;">
-                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
-                    <div>
-                        <div style="font-size:.82rem;font-weight:700;color:var(--ink);">📄 Paragraf Soruları</div>
-                        <div style="font-size:.7rem;color:var(--ink3);margin-top:2px;">Yakında eklenecek</div>
-                    </div>
-                    <button disabled
-                        style="font-size:.75rem;background:#f1f5f9;border:1.5px solid var(--border);color:var(--ink3);
-                               border-radius:9px;padding:7px 14px;cursor:default;font-family:inherit;font-weight:700;">
-                        🗑 Tümünü Sil
-                    </button>
-                </div>
-            </div>
+            <!-- ── LAYOUT ── -->
+            <div class="adm-layout">
 
-            <!-- Gramer Soruları (yakında) -->
-            <div style="background:var(--bg);border-radius:12px;padding:14px;opacity:.5;">
-                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
-                    <div>
-                        <div style="font-size:.82rem;font-weight:700;color:var(--ink);">📐 Gramer Soruları</div>
-                        <div style="font-size:.7rem;color:var(--ink3);margin-top:2px;">Yakında eklenecek</div>
-                    </div>
-                    <button disabled
-                        style="font-size:.75rem;background:#f1f5f9;border:1.5px solid var(--border);color:var(--ink3);
-                               border-radius:9px;padding:7px 14px;cursor:default;font-family:inherit;font-weight:700;">
-                        🗑 Tümünü Sil
+                <!-- SOL SIDEBAR -->
+                <nav class="adm-sidebar">
+                    <button class="adm-tab active" data-tab="api" onclick="admSwitchTab('api')">
+                        <span class="adm-tab-icon">🔑</span><span>API Anahtarları</span>
                     </button>
-                </div>
-            </div>
-        </div>
+                    <button class="adm-tab" data-tab="words" onclick="admSwitchTab('words')">
+                        <span class="adm-tab-icon">📚</span><span>Kelime Listeleri</span>
+                    </button>
+                    <button class="adm-tab" data-tab="paragraf" onclick="admSwitchTab('paragraf')">
+                        <span class="adm-tab-icon">📄</span><span>Paragraflar</span>
+                    </button>
+                    <button class="adm-tab" data-tab="ai" onclick="admSwitchTab('ai')">
+                        <span class="adm-tab-icon">🤖</span><span>AI Üretici</span>
+                    </button>
+                    <button class="adm-tab" data-tab="bank" onclick="admSwitchTab('bank')">
+                        <span class="adm-tab-icon">🗃️</span><span>Soru Bankası</span>
+                    </button>
+                    <button class="adm-tab" data-tab="system" onclick="admSwitchTab('system')">
+                        <span class="adm-tab-icon">☁️</span><span>Sistem & Yedek</span>
+                    </button>
+                </nav>
 
+                <!-- CONTENT AREA -->
+                <div class="adm-content">
+
+                    <!-- TAB: API ANAHTARLARI -->
+                    <div class="adm-panel active" id="adm-tab-api">
+                        <div class="adm-panel-header">
+                            <div class="adm-panel-title">🔑 AI API Anahtarları</div>
+                            <div class="adm-panel-sub">Kota dolduğunda sistem otomatik sıradaki servise geçer.</div>
+                        </div>
+                        <div class="adm-cascade">
+                            <div class="adm-cascade-item" id="co-item-gemini"><span class="adm-cascade-num">1</span><span>✨</span><span class="adm-cascade-name">Gemini</span><span class="adm-cascade-dot" id="co-dot-gemini">—</span></div>
+                            <span class="adm-cascade-arrow">›</span>
+                            <div class="adm-cascade-item" id="co-item-groq"><span class="adm-cascade-num">2</span><span>⚡</span><span class="adm-cascade-name">Groq</span><span class="adm-cascade-dot" id="co-dot-groq">—</span></div>
+                            <span class="adm-cascade-arrow">›</span>
+                            <div class="adm-cascade-item" id="co-item-openrouter"><span class="adm-cascade-num">3</span><span>🌐</span><span class="adm-cascade-name">OpenRouter</span><span class="adm-cascade-dot" id="co-dot-openrouter">—</span></div>
+                            <span class="adm-cascade-arrow">›</span>
+                            <div class="adm-cascade-item" id="co-item-mistral"><span class="adm-cascade-num">4</span><span>🌪️</span><span class="adm-cascade-name">Mistral</span><span class="adm-cascade-dot" id="co-dot-mistral">—</span></div>
+                        </div>
+                        <div class="adm-keys-grid">
+                            <div class="adm-key-card">
+                                <div class="adm-key-header"><div class="adm-key-title">✨ Gemini</div><a href="https://aistudio.google.com/app/apikey" target="_blank" class="adm-key-link">Ücretsiz al →</a></div>
+                                <div class="adm-key-note">1.500 istek/gün · Gemini 2.5 Flash · En Zeki</div>
+                                <div class="adm-key-row"><input type="password" id="akey-gemini" class="adm-input" placeholder="AIza..."><button class="adm-btn-save" onclick="saveApiKey('gemini','akey-gemini')">Kaydet</button></div>
+                            </div>
+                            <div class="adm-key-card">
+                                <div class="adm-key-header"><div class="adm-key-title">⚡ Groq</div><a href="https://console.groq.com/keys" target="_blank" class="adm-key-link">Ücretsiz al →</a></div>
+                                <div class="adm-key-note">14.400 istek/gün · Llama 3.3 70B · En Hızlı</div>
+                                <div class="adm-key-row"><input type="password" id="akey-groq" class="adm-input" placeholder="gsk_..."><button class="adm-btn-save" onclick="saveApiKey('groq','akey-groq')">Kaydet</button></div>
+                            </div>
+                            <div class="adm-key-card">
+                                <div class="adm-key-header"><div class="adm-key-title">🌐 OpenRouter</div><a href="https://openrouter.ai/keys" target="_blank" class="adm-key-link">Ücretsiz al →</a></div>
+                                <div class="adm-key-note">Llama 3.1 8B ücretsiz · Kredi kartı gerekmez</div>
+                                <div class="adm-key-row"><input type="password" id="akey-openrouter" class="adm-input" placeholder="sk-or-..."><button class="adm-btn-save" onclick="saveApiKey('openrouter','akey-openrouter')">Kaydet</button></div>
+                            </div>
+                            <div class="adm-key-card">
+                                <div class="adm-key-header"><div class="adm-key-title">🌪️ Mistral AI</div><a href="https://console.mistral.ai/api-keys" target="_blank" class="adm-key-link">Ücretsiz al →</a></div>
+                                <div class="adm-key-note">1 milyar token/ay · Mistral Small</div>
+                                <div class="adm-key-row"><input type="password" id="akey-mistral" class="adm-input" placeholder="..."><button class="adm-btn-save" onclick="saveApiKey('mistral','akey-mistral')">Kaydet</button></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB: KELİME LİSTELERİ -->
+                    <div class="adm-panel" id="adm-tab-words">
+                        <div class="adm-panel-header">
+                            <div class="adm-panel-title">📚 Kelime Listesi Yönetimi</div>
+                            <div class="adm-panel-sub">Listeleri oluştur, düzenle, sil.</div>
+                        </div>
+                        <div class="adm-words-layout">
+                            <div class="adm-card">
+                                <div class="adm-card-title">➕ Yeni Liste</div>
+                                <div class="adm-key-row">
+                                    <input type="text" id="new-list-name" class="adm-input" placeholder="Liste adı...">
+                                    <button class="adm-btn-primary" onclick="createNewList()">Oluştur</button>
+                                </div>
+                            </div>
+                            <div class="adm-card" style="flex:2;">
+                                <div class="adm-card-title">✏️ Mevcut Liste Düzenle</div>
+                                <div style="display:flex; gap:8px; margin-bottom:10px;">
+                                    <select id="edit-list-selector" class="adm-input" style="flex:1;" onchange="loadListToTextarea()"></select>
+                                    <input type="text" id="rename-list-input" class="adm-input" style="flex:1;" placeholder="Yeni isim...">
+                                    <button class="adm-btn-ghost" onclick="renameList()">Yeniden Adlandır</button>
+                                </div>
+                                <div class="adm-format-hint">📋 Format: <code>Kelime:Anlam:Mnemonic:Hikaye</code></div>
+                                <textarea id="bulk-input" class="adm-textarea" rows="10" placeholder="Kelimeleri buraya yapıştırın..."></textarea>
+                                <div class="adm-btn-row" style="margin-top:10px;">
+                                    <button class="adm-btn-primary" style="flex:2;" onclick="saveCurrentList()">💾 Kaydet</button>
+                                    <button class="adm-btn-danger" style="flex:1;" onclick="deleteList()">🗑 Listeyi Sil</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB: PARAGRAFLAR -->
+                    <div class="adm-panel" id="adm-tab-paragraf">
+                        <div class="adm-panel-header">
+                            <div class="adm-panel-title">📄 Paragraf Yönetimi</div>
+                            <div class="adm-panel-sub">Okuma parçalarını ekle, düzenle, sil.</div>
+                        </div>
+                        <div class="adm-para-layout">
+                            <div class="adm-card" style="flex:1; overflow-y:auto;">
+                                <div class="adm-card-title">Mevcut Paragraflar</div>
+                                <div id="admin-paragraf-liste"></div>
+                            </div>
+                            <div class="adm-card" style="flex:1;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                                    <div class="adm-card-title" id="paragraf-form-title">➕ Yeni Paragraf</div>
+                                    <button id="paragraf-form-cancel-btn" onclick="cancelParagrafEdit()" style="display:none; font-size:.75rem; background:none; border:none; color:var(--ink3); cursor:pointer; font-family:inherit;">✕ İptal</button>
+                                </div>
+                                <input type="hidden" id="edit-paragraf-index" value="-1">
+                                <input type="text" id="new-p-title" class="adm-input" placeholder="Paragraf Başlığı" style="margin-bottom:8px;">
+                                <textarea id="new-p-text" class="adm-textarea" rows="7" placeholder="Paragraf metnini buraya yapıştırın..." style="margin-bottom:8px;"></textarea>
+                                <textarea id="new-p-words" class="adm-textarea" rows="3" placeholder="Zor Kelimeler: profound:derin, myriad:sayısız" style="margin-bottom:12px;"></textarea>
+                                <button class="adm-btn-primary" id="paragraf-save-btn" onclick="addParagrafFromAdmin()">💾 Paragrafı Kaydet</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB: AI ÜRETİCİ -->
+                    <div class="adm-panel" id="adm-tab-ai">
+                        <div class="adm-panel-header">
+                            <div class="adm-panel-title">🤖 AI Kelime Üretici</div>
+                            <div class="adm-panel-sub">Konu ve sayı gir — AI kelime, anlam, mnemonic ve hikaye üretsin.</div>
+                        </div>
+                        <div class="adm-ai-layout">
+                            <div class="adm-card" style="flex:1;">
+                                <div class="adm-card-title">Üretim Ayarları</div>
+                                <div class="adm-field">
+                                    <label class="adm-label">Konu / Tema</label>
+                                    <input type="text" id="ai-gen-topic" class="adm-input" placeholder="ör: İş dünyası, Tıp, C1 sıfatlar...">
+                                </div>
+                                <div style="display:flex; gap:8px;">
+                                    <div class="adm-field" style="flex:1;">
+                                        <label class="adm-label">Kelime Sayısı</label>
+                                        <input type="number" id="ai-gen-count" class="adm-input" value="10" min="3" max="30">
+                                    </div>
+                                    <div class="adm-field" style="flex:1;">
+                                        <label class="adm-label">Seviye</label>
+                                        <select id="ai-gen-level" class="adm-input">
+                                            <option value="B2">B2 (Orta)</option>
+                                            <option value="C1" selected>C1 (İleri)</option>
+                                            <option value="C2">C2 (Uzman)</option>
+                                            <option value="YDT">YDT Odaklı</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="adm-field">
+                                    <label class="adm-label">Hedef Liste</label>
+                                    <select id="ai-gen-target-list" class="adm-input"></select>
+                                </div>
+                                <button id="ai-gen-btn" class="adm-btn-ai" onclick="aiGenerateWords()">✨ Kelimeleri Üret</button>
+                                <div id="ai-gen-loading" style="display:none; text-align:center; padding:24px 0;">
+                                    <div style="font-size:2rem; animation:spin 1s linear infinite; display:inline-block;">⚙️</div>
+                                    <div style="font-size:.82rem; color:var(--ink3); margin-top:8px;" id="ai-gen-loading-text">Üretiliyor...</div>
+                                </div>
+                            </div>
+                            <div class="adm-card" style="flex:1.2;">
+                                <div class="adm-card-title">📋 Önizleme</div>
+                                <div id="ai-gen-preview" style="display:none;">
+                                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                                        <span id="ai-gen-preview-count" style="font-size:.75rem; color:var(--ink3); font-weight:700;"></span>
+                                    </div>
+                                    <div id="ai-gen-preview-list" style="max-height:340px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;"></div>
+                                    <div class="adm-btn-row" style="margin-top:12px;">
+                                        <button class="adm-btn-primary" style="flex:2;" onclick="aiGenSaveToList()">💾 Listeye Kaydet</button>
+                                        <button class="adm-btn-ghost" style="flex:1;" onclick="aiGenDiscard()">✕ İptal</button>
+                                    </div>
+                                </div>
+                                <div id="ai-gen-empty" style="color:var(--ink3); font-size:.82rem; padding:40px 0; text-align:center;">Kelimeler üretildikten sonra burada görünecek.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB: SORU BANKASI -->
+                    <div class="adm-panel" id="adm-tab-bank">
+                        <div class="adm-panel-header">
+                            <div class="adm-panel-title">🗃️ Soru Bankası Yönetimi</div>
+                            <div class="adm-panel-sub">Kaydedilmiş soruları görüntüle ve sil. Bu işlem geri alınamaz.</div>
+                        </div>
+                        <div class="adm-bank-grid">
+                            <div class="adm-bank-card">
+                                <div class="adm-bank-icon" style="background:#fef2f2; color:#dc2626;">📝</div>
+                                <div class="adm-bank-info">
+                                    <div class="adm-bank-name">Kelime Soruları</div>
+                                    <div class="adm-bank-count" id="admin-arsiv-kelime-count">Yükleniyor...</div>
+                                </div>
+                                <button class="adm-btn-danger-sm" onclick="adminClearArsiv('kelime')">🗑 Temizle</button>
+                            </div>
+                            <div class="adm-bank-card" style="opacity:.5;">
+                                <div class="adm-bank-icon" style="background:#f0f9ff; color:#0ea5e9;">📄</div>
+                                <div class="adm-bank-info"><div class="adm-bank-name">Paragraf Soruları</div><div class="adm-bank-count">Yakında</div></div>
+                                <button class="adm-btn-danger-sm" disabled>🗑 Temizle</button>
+                            </div>
+                            <div class="adm-bank-card" style="opacity:.5;">
+                                <div class="adm-bank-icon" style="background:#f5f3ff; color:#7c3aed;">📐</div>
+                                <div class="adm-bank-info"><div class="adm-bank-name">Gramer Soruları</div><div class="adm-bank-count">Yakında</div></div>
+                                <button class="adm-btn-danger-sm" disabled>🗑 Temizle</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB: SİSTEM & YEDEK -->
+                    <div class="adm-panel" id="adm-tab-system">
+                        <div class="adm-panel-header">
+                            <div class="adm-panel-title">☁️ Sistem & Bulut Yedekleme</div>
+                            <div class="adm-panel-sub">Veri senkronizasyonu ve yedekleme işlemleri.</div>
+                        </div>
+                        <div class="adm-system-grid">
+                            <div class="adm-card">
+                                <div class="adm-card-title">🔄 Senkronizasyon</div>
+                                <div class="adm-system-status">
+                                    <div id="sync-dot-admin" class="adm-sync-dot"></div>
+                                    <div>
+                                        <div style="font-size:.82rem; font-weight:700; color:var(--ink);">Realtime Database</div>
+                                        <div style="font-size:.7rem; color:var(--ink3);">Değişiklikler otomatik kaydedilir</div>
+                                    </div>
+                                </div>
+                                <button class="adm-btn-primary" onclick="forceSyncNow()">🔄 Şimdi Senkronize Et</button>
+                            </div>
+                            <div class="adm-card">
+                                <div class="adm-card-title">💾 Yedekleme</div>
+                                <p style="font-size:.78rem; color:var(--ink3); margin-bottom:14px; line-height:1.6;">Tüm verileri JSON olarak indir ya da geri yükle.</p>
+                                <div class="adm-btn-row">
+                                    <button class="adm-btn-ghost" style="flex:1;" onclick="exportData()">⬇️ İndir</button>
+                                    <button class="adm-btn-ghost" style="flex:1;" onclick="document.getElementById('fileInput').click()">⬆️ Yükle</button>
+                                </div>
+                                <input type="file" id="fileInput" class="hidden" accept=".json" onchange="importData(event)">
+                            </div>
+                        </div>
+                    </div>
+
+                </div><!-- /adm-content -->
+            </div><!-- /adm-layout -->
         </div><!-- /admin-panel-content -->
     </div><!-- /admin-page -->
 
@@ -1783,19 +1771,19 @@
             📌 Bugün Ne Çalışmak İstersin?
         </div>
         <div class="profil-feature-cards">
-            <div class="profil-feat-card" onclick="navTo('quiz-page')">
+            <div class="profil-feat-card" onclick="startQuizFromNav()">
                 <div class="profil-feat-icon">📖</div>
                 <div class="profil-feat-name">Kelime</div>
                 <div class="profil-feat-why">YDT'de her 3 sorudan biri kelime bilgisi ölçer. Günde 20 kelime öğren, sınav gününe hazır gel.</div>
                 <span class="profil-feat-cta">Başla →</span>
             </div>
-            <div class="profil-feat-card" onclick="navTo('grammar-page')">
+            <div class="profil-feat-card" onclick="openGrammarSection('overview')">
                 <div class="profil-feat-icon">🔤</div>
                 <div class="profil-feat-name">Gramer</div>
                 <div class="profil-feat-why">Tenses, passive, conditionals — YDT'nin temel gramer kalıplarını interaktif modüllerle pekiştir.</div>
                 <span class="profil-feat-cta">Başla →</span>
             </div>
-            <div class="profil-feat-card" onclick="navTo('paragraf-liste-page')">
+            <div class="profil-feat-card" onclick="showParagrafListesi()">
                 <div class="profil-feat-icon">🤖</div>
                 <div class="profil-feat-name">AI Paragraf</div>
                 <div class="profil-feat-why">Yapay zeka destekli okuma parçaları. Gerçek YDT formatında sorularla anlama hızını artır.</div>
@@ -1828,6 +1816,59 @@
         <div class="admin-section" style="margin-top:10px;">
             <div class="admin-section-title">🏅 Rozetlerim</div>
             <div id="profil-badge-preview" class="profil-badge-grid"></div>
+        </div>
+
+        <!-- Seviye & XP -->
+        <div class="pp-section" style="margin-top:12px;">
+            <div class="pp-section-title">⚡ Seviye & XP</div>
+            <div class="pp-level-row">
+                <div class="pp-level-badge">
+                    <span class="pp-level-lbl">SEVİYE</span>
+                    <span id="pp-level-num" class="pp-level-num">1</span>
+                </div>
+                <div class="pp-xp-col">
+                    <div class="pp-xp-top">
+                        <span class="pp-xp-label">Sonraki seviyeye</span>
+                        <span id="pp-xp-val" class="pp-xp-val">0 / 500 XP</span>
+                    </div>
+                    <div class="pp-bar-wrap">
+                        <div id="pp-xp-bar" class="pp-bar pp-bar-xp" style="width:0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Günlük Hedef -->
+        <div class="pp-section" style="margin-top:12px;">
+            <div class="pp-section-title">🎯 Günlük Hedef</div>
+            <div class="pp-daily-top">
+                <span id="pp-daily-val" class="pp-daily-val">0 / 20 soru</span>
+                <span id="pp-daily-lbl" class="pp-daily-lbl">%0 tamamlandı</span>
+            </div>
+            <div class="pp-bar-wrap" style="margin-top:8px;">
+                <div id="pp-daily-bar" class="pp-bar pp-bar-daily" style="width:0%"></div>
+            </div>
+        </div>
+
+        <!-- Çalışma Takvimi -->
+        <div class="pp-section" style="margin-top:12px;">
+            <div class="pp-section-title">📅 Son 28 Günlük Aktivite</div>
+            <div id="pp-calendar" class="pp-calendar"></div>
+            <div class="pp-cal-legend">
+                <span>Az</span>
+                <div class="pp-cal-cell" data-intensity="0"></div>
+                <div class="pp-cal-cell" data-intensity="1"></div>
+                <div class="pp-cal-cell" data-intensity="2"></div>
+                <div class="pp-cal-cell" data-intensity="3"></div>
+                <div class="pp-cal-cell" data-intensity="4"></div>
+                <span>Çok</span>
+            </div>
+        </div>
+
+        <!-- Motivasyon -->
+        <div class="pp-motivation" style="margin-top:12px;">
+            <div class="pp-motivation-icon">💡</div>
+            <div id="pp-motivation-text" class="pp-motivation-text">Yükleniyor…</div>
         </div>
 
         <!-- El ile Sync -->

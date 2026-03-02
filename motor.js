@@ -107,76 +107,59 @@ function navTo(pageId) {
     if (pageId === 'stats-page') { showStatsPage(); return; }
     showPage(pageId);
     if (pageId === 'index-page') { updateIndexStats(); updateDailyGoalBar(); }
-    if (pageId === 'admin-page') { adminShowPinOverlay(); }
+    if (pageId === 'admin-page') { adminCheckAccess(); }
 }
 
 // ══════════════════════════════════════════════
-// 🔐 YÖNETİM PANELİ PIN SİSTEMİ
+// 🔐 YÖNETİM PANELİ — Google Email Kontrolü
 // ══════════════════════════════════════════════
-const ADMIN_PIN = '0110';
-let _pinBuffer  = '';
+const ADMIN_EMAIL = 'stasalan@gmail.com';
 
-function adminShowPinOverlay() {
-    _pinBuffer = '';
-    updatePinDots();
-    document.getElementById('pin-error').textContent       = '';
-    const overlay = document.getElementById('admin-pin-overlay');
+function adminCheckAccess() {
+    const denied  = document.getElementById('admin-access-denied');
     const content = document.getElementById('admin-panel-content');
-    if (overlay) overlay.style.display = 'flex';
-    if (content) content.style.display = 'none';
+    // Firebase Auth üzerinden mevcut kullanıcıyı kontrol et
+    const user = (window.AuthModule && window._currentUser) ? window._currentUser : null;
+    const email = user ? user.email : null;
+
+    if (email === ADMIN_EMAIL) {
+        if (denied)  denied.style.display  = 'none';
+        if (content) content.style.display = 'flex';
+        content.style.flexDirection = 'column';
+        adminUnlockPanel();
+    } else {
+        if (denied)  denied.style.display  = 'flex';
+        if (content) content.style.display = 'none';
+    }
 }
 
 function adminUnlockPanel() {
-    document.getElementById('admin-pin-overlay').style.display = 'none';
-    document.getElementById('admin-panel-content').style.display = 'block';
     // Panel içeriğini yükle
     renderAdminParagrafListe();
-    const saved = localStorage.getItem('ydt_gemini_api_key');
-    const keyEl = document.getElementById('ai-gen-api-key');
-    const stEl  = document.getElementById('ai-gen-key-status');
-    if (saved && keyEl) keyEl.placeholder = '●●●●●●● (kayıtlı)';
-    if (saved && stEl)  stEl.innerHTML = '<span style="color:#22c55e;font-weight:700;">✓ Kayıtlı API anahtarı kullanılıyor</span>';
     const sel = document.getElementById('ai-gen-target-list');
     if (sel) { sel.innerHTML = ''; Object.keys(allData).forEach(n => sel.add(new Option(n, n))); }
     adminUpdateBankCounts();
+    admSwitchTab('api');
 }
 
-function pinPress(val) {
-    if (val === 'back') {
-        _pinBuffer = _pinBuffer.slice(0, -1);
-        updatePinDots();
-        document.getElementById('pin-error').textContent = '';
-        return;
+// Tab geçişi
+function admSwitchTab(tabId) {
+    document.querySelectorAll('.adm-tab').forEach(b => {
+        b.classList.toggle('active', b.dataset.tab === tabId);
+    });
+    document.querySelectorAll('.adm-panel').forEach(p => {
+        p.classList.toggle('active', p.id === 'adm-tab-' + tabId);
+    });
+    // AI tab: listeyi güncelle
+    if (tabId === 'ai') {
+        const sel = document.getElementById('ai-gen-target-list');
+        if (sel) { sel.innerHTML = ''; Object.keys(allData).forEach(n => sel.add(new Option(n, n))); }
+        const empty = document.getElementById('ai-gen-empty');
+        const prev  = document.getElementById('ai-gen-preview');
+        if (empty && prev && prev.style.display === 'none') empty.style.display = 'block';
     }
-    if (_pinBuffer.length >= 4) return;
-    _pinBuffer += val;
-    updatePinDots();
-
-    if (_pinBuffer.length === 4) {
-        if (_pinBuffer === ADMIN_PIN) {
-            // Doğru — kısa titreşim efekti sonra aç
-            const dots = document.querySelectorAll('[id^="pin-dot-"]');
-            dots.forEach(d => d.style.background = '#22c55e');
-            setTimeout(adminUnlockPanel, 350);
-        } else {
-            // Yanlış
-            document.getElementById('pin-error').textContent = '❌ Hatalı şifre';
-            const dots = document.querySelectorAll('[id^="pin-dot-"]');
-            dots.forEach(d => d.style.background = '#ef4444');
-            setTimeout(() => {
-                _pinBuffer = '';
-                updatePinDots();
-                document.getElementById('pin-error').textContent = '';
-            }, 800);
-        }
-    }
-}
-
-function updatePinDots() {
-    for (let i = 1; i <= 4; i++) {
-        const dot = document.getElementById(`pin-dot-${i}`);
-        if (dot) dot.style.background = i <= _pinBuffer.length ? '#6366f1' : 'var(--border)';
-    }
+    // Bank tab: sayıları güncelle
+    if (tabId === 'bank') adminUpdateBankCounts();
 }
 
 // Soru bankası sayaçlarını admin'de güncelle
@@ -8481,7 +8464,7 @@ function mobCloseDrawer() {
 function mobGoTo(pageId) {
     mobCloseDrawer();
     if (typeof showPage === 'function') showPage(pageId);
-    if (pageId === 'admin-page') adminShowPinOverlay();
+    if (pageId === 'admin-page') adminCheckAccess();
 }
 
 function mobRun(fn) {
@@ -9044,10 +9027,13 @@ window._populateParagrafListesi = _populateParagrafListesi;
 
 
 function showParagrafListesi() {
+    // Önce otomatik yüklemeyi dene
+    if (typeof autoLoadParagrafPaketleri === 'function') autoLoadParagrafPaketleri();
     _populateParagrafListesi();
     if (typeof showPage === 'function') showPage('paragraf-liste-page');
-    // Default: AI tabını aç
-    openReadingHub('ai');
+    // Yüklü pasaj varsa saved tabını aç, yoksa AI tabını
+    const hasSaved = paragraflar && paragraflar.length > 0;
+    openReadingHub(hasSaved ? 'saved' : 'ai');
 }
 
 function openReadingHub(type) {
@@ -12031,3 +12017,50 @@ async function _fetchWordTranslation(word) {
 window.toggleTranslateMode = toggleTranslateMode;
 
 
+
+// ══════════════════════════════════════════════
+// 📦 OTOMATİK PARAGRAF PAKETİ YÜKLE
+// Paragraflar boşsa tüm paketleri otomatik yükle
+// ══════════════════════════════════════════════
+function autoLoadParagrafPaketleri() {
+    if (typeof PARAGRAF_PAKETLERİ === 'undefined' || !PARAGRAF_PAKETLERİ.length) return;
+    if (typeof paragraflar === 'undefined') window.paragraflar = [];
+    window.paragrafSorular = window.paragrafSorular || {};
+
+    // Zaten yüklüyse tekrar yükleme
+    if (paragraflar.length > 0) return;
+
+    console.log('📦 Paragraf paketleri otomatik yükleniyor...');
+    PARAGRAF_PAKETLERİ.forEach(pk => {
+        if (!pk.pasajlar) return;
+        pk.pasajlar.forEach(p => {
+            const key = `p_${(p.baslik||'').replace(/[^a-zA-Z0-9ğüşıöçĞÜŞİÖÇ\s]/g,'').trim().slice(0,40)}_${(p.metin||'').length}`;
+            const already = paragraflar.findIndex(x =>
+                `p_${(x.baslik||'').replace(/[^a-zA-Z0-9ğüşıöçĞÜŞİÖÇ\s]/g,'').trim().slice(0,40)}_${(x.metin||'').length}` === key
+            );
+            const entry = { baslik: p.baslik, metin: p.metin, kelimeler: p.kelimeler || {} };
+            if (already === -1) paragraflar.push(entry);
+            else paragraflar[already] = entry;
+            window.paragrafSorular[key] = {
+                baslik: p.baslik,
+                savedAt: new Date().toISOString(),
+                questions: p.questions || []
+            };
+        });
+    });
+
+    localStorage.setItem('ydt_paragraflar', JSON.stringify(paragraflar));
+    localStorage.setItem('ydt_paragraf_sorular', JSON.stringify(window.paragrafSorular));
+    console.log(`✅ ${paragraflar.length} pasaj yüklendi.`);
+    if (typeof _populateParagrafListesi === 'function') _populateParagrafListesi();
+    if (typeof _updateRh2HeroStats      === 'function') _updateRh2HeroStats();
+}
+
+// Sayfa yüklenince çalıştır
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', autoLoadParagrafPaketleri);
+} else {
+    autoLoadParagrafPaketleri();
+}
+
+window.autoLoadParagrafPaketleri = autoLoadParagrafPaketleri;
