@@ -77,19 +77,36 @@ function exitModule() {
 // SIDEBAR / NAV YÖNETİMİ
 // ══════════════════════════════════════════════
 const NAV_MAP = {
-    'index-page':      { sb: 'sb-home',    di: 'di-home' },
-    'stats-page':      { sb: 'sb-stats',   di: 'di-stats' },
-    'admin-page':      { sb: 'sb-admin',   di: 'di-admin' },
-    'games-page':      { sb: 'sb-games',   di: 'di-games' },
-    'kids-page':       { sb: 'sb-kids',    di: 'di-kids'  },
-    'exercise-page':   { sb: 'sb-typing',  di: 'di-typing' },
-    'typing-page':     { sb: 'sb-typing',  di: 'di-typing' },
-    'context-page':    { sb: 'sb-context', di: 'di-context' },
-    'sm2-page':        { sb: 'sb-sm2',     di: 'di-sm2' },
-    'study-page':      { sb: 'sb-study',   di: 'di-study' },
-    'study-done-page': { sb: 'sb-study',   di: 'di-study' },
-    'quiz-page':       { sb: 'sb-quiz',    di: 'di-quiz' },
-    'memory-page':     { sb: 'sb-games',   di: 'di-games' },
+    'index-page':         { sb: 'sb-home',                    di: 'di-home' },
+    'stats-page':         { sb: 'sb-stats',                   di: 'di-stats' },
+    'admin-page':         { sb: 'sb-admin',                   di: 'di-admin' },
+    'games-page':         { sb: 'sb-games',                   di: 'di-games' },
+    'kids-page':          { sb: 'sb-kids',                    di: 'di-kids'  },
+    'exercise-page':      { sb: 'sb-typing',                  di: 'di-typing' },
+    'typing-page':        { sb: 'sb-typing',                  di: 'di-typing' },
+    'context-page':       { sb: 'sb-context',                 di: 'di-context' },
+    'sm2-page':           { sb: 'sb-sm2',                     di: 'di-sm2' },
+    'study-page':         { sb: 'sb-study',                   di: 'di-study' },
+    'study-done-page':    { sb: 'sb-study',                   di: 'di-study' },
+    'quiz-page':          { sb: 'sb-quiz',                    di: 'di-quiz' },
+    'memory-page':        { sb: 'sb-games',                   di: 'di-games' },
+    // Eksik rotalar eklendi
+    'profil-page':        { sb: 'sb-profil',                  di: 'di-profil' },
+    'paragraf-liste-page':{ sb: 'sb-paragraf',                di: 'di-paragraf' },
+    'paragraf-page':      { sb: 'sb-paragraf',                di: 'di-paragraf' },
+    'speaking-page':      { sb: 'sb-speaking',                di: 'di-speaking' },
+    'ai-arsiv-page':      { sb: 'sb-arsiv',                   di: 'di-arsiv' },
+    'grammar-page':       { sb: 'sb-grammar-tenses-m',        di: null },
+    'modals-page':        { sb: 'sb-grammar-modals-m',        di: null },
+    'pronouns-page':      { sb: 'sb-grammar-pronouns-m',      di: null },
+    'passive-page':       { sb: 'sb-grammar-passive-m',       di: null },
+    'conditionals-page':  { sb: 'sb-grammar-conditionals-m',  di: null },
+    'relative-page':      { sb: 'sb-grammar-relative-m',      di: null },
+    'noun-page':          { sb: 'sb-grammar-noun-m',          di: null },
+    'conj-page':          { sb: 'sb-grammar-conj-m',          di: null },
+    'gerund-page':        { sb: 'sb-grammar-gerund-m',        di: null },
+    'adjadv-page':        { sb: 'sb-grammar-adjadv-m',        di: null },
+    'tagquant-page':      { sb: 'sb-grammar-tagquant-m',      di: null },
 };
 
 function setNavActive(pageId) {
@@ -404,7 +421,9 @@ function showStatsPage() {
 // ══════════════════════════════════════════════
 function startQuiz() {
     currentActiveList = document.getElementById('list-selector').value;
-    if (allData[currentActiveList].length < 4) return alert("Hata: Test için listede en az 4 kelime olmalı!");
+    if (!currentActiveList || !allData[currentActiveList] || allData[currentActiveList].length < 4) {
+        _showAppToast('Quiz için en az 4 kelimeli bir liste seçin.'); return;
+    }
     startModule();
     score = 0;
     showPage('quiz-page');
@@ -1133,7 +1152,9 @@ let studyQueuePos = 0;
 
 function startStudy() {
     currentActiveList = document.getElementById('list-selector').value;
-    if (!allData[currentActiveList] || !allData[currentActiveList].length) return alert("Liste boş!");
+    if (!allData[currentActiveList] || !allData[currentActiveList].length) {
+        _showAppToast('Liste boş veya seçili değil!'); return;
+    }
     studyKnownSet.clear();
     studyAgainIdx = [];
     studyQueue    = allData[currentActiveList].map((_, i) => i);
@@ -1581,14 +1602,42 @@ function importData(e) {
 }
 
 function updateSelectors() {
-    [document.getElementById('list-selector'), document.getElementById('edit-list-selector')].forEach(s => {
-        s.innerHTML = "";
-        Object.keys(allData).forEach(n => s.add(new Option(n, n)));
+    // Her zaman güncel user-scoped allData'yı oku
+    if (typeof getUserKey === 'function') {
+        const raw = localStorage.getItem(getUserKey('all_data'));
+        if (raw) { try { allData = JSON.parse(raw); } catch(e) {} }
+    }
+
+    const keys = Object.keys(allData);
+
+    ['list-selector', 'edit-list-selector', 'exercise-list-selector',
+     'game-list-selector', 'ai-gen-target-list'].forEach(id => {
+        const s = document.getElementById(id);
+        if (!s) return;
+        const prev = s.value;
+        s.innerHTML = '';
+        keys.forEach(n => s.add(new Option(n, n)));
+        if (prev && allData[prev]) s.value = prev;
+        else if (keys.length) s.value = keys[0];
     });
+
+    // currentActiveList boşsa ilk listeye ata
+    if ((!currentActiveList || !allData[currentActiveList]) && keys.length) {
+        currentActiveList = keys[0];
+    }
+
     updateIndexStats();
 }
 
 function updateIndexStats() {
+    // User-scoped veri oku (getUserKey kelimeler.js'de tanımlı)
+    if (typeof getUserKey === 'function') {
+        const rawAD = localStorage.getItem(getUserKey('all_data'));
+        const rawST = localStorage.getItem(getUserKey('stats'));
+        if (rawAD) { try { allData = JSON.parse(rawAD); } catch(e) {} }
+        if (rawST) { try { stats   = JSON.parse(rawST);  if (isNaN(stats.totalMinutes)) stats.totalMinutes = 0; } catch(e) {} }
+    }
+
     let total = 0, learned = 0;
     Object.values(allData).forEach(list => {
         total += list.length;
@@ -1603,15 +1652,17 @@ function updateIndexStats() {
     document.getElementById('idx-accuracy').innerText = acc + '%';
 
     const today     = new Date().toDateString();
-    const lastDay   = localStorage.getItem('ydt_last_day');
-    let streak      = parseInt(localStorage.getItem('ydt_streak') || '0');
+    const streakKey = typeof getUserKey === 'function' ? getUserKey('streak')   : 'ydt_streak';
+    const dayKey    = typeof getUserKey === 'function' ? getUserKey('last_day') : 'ydt_last_day';
+    const lastDay   = localStorage.getItem(dayKey);
+    let streak      = parseInt(localStorage.getItem(streakKey) || '0');
     if (lastDay !== today) {
         const yesterday = new Date(Date.now() - 86400000).toDateString();
         if (lastDay === yesterday)  { streak++; }
         else if (lastDay)           { streak = 1; }
         else                        { streak = 1; }
-        localStorage.setItem('ydt_streak', streak);
-        localStorage.setItem('ydt_last_day', today);
+        localStorage.setItem(streakKey, streak);
+        localStorage.setItem(dayKey, today);
     }
     document.getElementById('idx-streak-val').innerText = streak;
 
@@ -2248,6 +2299,11 @@ function countSM2Due() {
 }
 
 function getSM2DueWords() {
+    // Her zaman güncel user-scoped allData oku
+    if (typeof getUserKey === 'function') {
+        const raw = localStorage.getItem(getUserKey('all_data'));
+        if (raw) { try { allData = JSON.parse(raw); } catch(e) {} }
+    }
     const now   = Date.now();
     let words   = [];
     Object.values(allData).forEach(list => list.forEach(w => {
@@ -2298,7 +2354,7 @@ function _srMotivation() {
 function startSM2Review() {
     sm2Pool = getSM2DueWords();
     if (sm2Pool.length === 0) {
-        return alert('Bugün tekrar edilecek kelime yok! 🎉\nEn erken tekrar: ' + getNextSM2DateStr());
+        _showAppToast('Bugün tekrar edilecek kelime yok! 🎉 En erken: ' + getNextSM2DateStr()); return;
     }
     sm2Idx = 0; sm2Known = 0; sm2Hard = 0; sm2Forgot = 0; sm2Streak = 0;
     startModule();
@@ -2412,10 +2468,17 @@ function _twPickMode(word) {
 }
 
 function startTypingQuiz() {
+    // Her zaman güncel user-scoped allData oku
+    if (typeof getUserKey === 'function') {
+        const raw = localStorage.getItem(getUserKey('all_data'));
+        if (raw) { try { allData = JSON.parse(raw); } catch(e) {} }
+    }
     const sel = document.getElementById('exercise-list-selector');
     const mainSel = document.getElementById('list-selector');
     const listName = (sel && sel.value) || (mainSel && mainSel.value) || Object.keys(allData)[0];
-    if (!listName || !allData[listName] || !allData[listName].length) return alert('Liste boş!');
+    if (!listName || !allData[listName] || !allData[listName].length) {
+        _showAppToast('Önce bir kelime listesi ekleyin veya seçin.'); return;
+    }
     currentActiveList = listName;
     twPool         = [...allData[listName]].sort(() => Math.random() - 0.5);
     twIdx          = 0;
@@ -2702,10 +2765,17 @@ function _cxMotivation() {
     if(e2) e2.textContent = m[1];
 }
 function startContextMode() {
+    // Her zaman güncel user-scoped allData oku
+    if (typeof getUserKey === 'function') {
+        const raw = localStorage.getItem(getUserKey('all_data'));
+        if (raw) { try { allData = JSON.parse(raw); } catch(e) {} }
+    }
     const sel = document.getElementById('exercise-list-selector');
     const mainSel = document.getElementById('list-selector');
     const listName = (sel && sel.value) || (mainSel && mainSel.value) || Object.keys(allData)[0];
-    if (!listName || !allData[listName] || !allData[listName].length) return alert('Liste boş!');
+    if (!listName || !allData[listName] || !allData[listName].length) {
+        _showAppToast('Önce bir kelime listesi ekleyin veya seçin.'); return;
+    }
     currentActiveList = listName;
     ctxPool       = [...allData[listName]].sort(() => Math.random() - 0.5);
     ctxIdx        = 0; ctxTotalScore = 0; ctxCorrect = 0; ctxWrong = 0; ctxStreak = 0;
@@ -12064,3 +12134,47 @@ if (document.readyState === 'loading') {
 }
 
 window.autoLoadParagrafPaketleri = autoLoadParagrafPaketleri;
+
+
+// ════════════════════════════════════════════════════════
+// PATCH: Uygulama geneli toast (alert yerine kullanılır)
+// ════════════════════════════════════════════════════════
+function _showAppToast(msg) {
+    const existing = document.getElementById('_app_toast');
+    if (existing) existing.remove();
+    const t = document.createElement('div');
+    t.id = '_app_toast';
+    t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:12px 20px;border-radius:12px;font-size:.84rem;font-weight:700;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,.3);max-width:80vw;text-align:center;pointer-events:none;';
+    t.textContent = '⚠️ ' + msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3500);
+}
+
+// ════════════════════════════════════════════════════════
+// PATCH: Bottom nav tab'larını aktif sayfa ile senkronize et
+// ════════════════════════════════════════════════════════
+(function _patchBottomNavSync() {
+    const BN_MAP = {
+        'index-page':          'bn-home',
+        'study-page':          'bn-study',
+        'study-done-page':     'bn-study',
+        'quiz-page':           'bn-quiz',
+        'stats-page':          'bn-stats',
+        'exercise-page':       'bn-exercise',
+        'typing-page':         'bn-exercise',
+        'context-page':        'bn-exercise',
+        'sm2-page':            'bn-exercise',
+    };
+    const _origSetNavActive = window.setNavActive || setNavActive;
+    function _patchedSetNavActive(pageId) {
+        _origSetNavActive(pageId);
+        // Bottom nav aktif state
+        document.querySelectorAll('.mob-tab').forEach(t => t.classList.remove('active'));
+        const bnId = BN_MAP[pageId];
+        if (bnId) {
+            const btn = document.getElementById(bnId);
+            if (btn) btn.classList.add('active');
+        }
+    }
+    window.setNavActive = _patchedSetNavActive;
+})();

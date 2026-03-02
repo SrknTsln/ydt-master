@@ -6061,84 +6061,99 @@ body:has(#kids-page:not(.hidden)) .kw-world-bg { opacity: 1; }
 
 
 
-/* ═══════════════════════════════════════════════════════════════════
-   MOBILE BOTTOM NAV FIX  —  v1.0
-   Bottom navigation bar (60px) altında kalan içerikleri düzeltir.
-   iPhone X+ home indicator için safe-area desteği dahildir.
-   ═══════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════
+   FIX: MOBILE BOTTOM NAV ÇAKIŞMASI  —  v2.0
+   ═══════════════════════════════════════════════════════════════ */
 
 :root {
-    --bottom-nav-h: 60px;
-    --mobile-safe-bottom: calc(var(--bottom-nav-h) + 16px); /* 76px */
+    --bnav-h: 60px;
+    --bnav-safe: calc(var(--bnav-h) + 20px);
 }
 
 @media (max-width: 699px) {
 
-    /* ── Tüm ana sayfa container'ları ── */
+    .desktop-main {
+        bottom: var(--bnav-h) !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 0 !important;
+    }
+
     .container,
+    .index-container,
+    .rh-page,
+    .arsiv-full-page,
+    .grammar-full-page,
+    .sp-page,
     #quiz-page,
-    #grammar-page,
+    #study-page,
+    #study-done-page,
+    #context-page,
+    #typing-page,
+    #exercise-page,
+    #sm2-page,
+    #memory-page,
     #paragraf-liste-page,
     #paragraf-page,
     #stats-page,
     #profil-page,
-    #kids-page {
-        padding-bottom: var(--mobile-safe-bottom) !important;
+    #kids-page,
+    #games-page,
+    #ai-arsiv-page,
+    #grammar-page, #modals-page, #pronouns-page, #passive-page,
+    #conditionals-page, #relative-page, #noun-page, #conj-page,
+    #gerund-page, #adjadv-page, #tagquant-page, #speaking-page {
+        padding-bottom: var(--bnav-safe) !important;
+        box-sizing: border-box;
     }
 
-    /* ── Stats sayfası kolonları ── */
-    .sp-page,
-    .sp-body,
-    .sp-col-left,
-    .sp-col-right {
-        padding-bottom: var(--mobile-safe-bottom) !important;
-    }
-
-    /* ── Scrollable inner wrapper'lar ── */
-    #admin-page .adm-content,
-    .modal-body,
-    .sp-body {
-        padding-bottom: var(--mobile-safe-bottom) !important;
-        overflow-y: auto !important;
-        -webkit-overflow-scrolling: touch;
-    }
-
-    /* ── Admin sayfası: fixed layout, content alanına padding ── */
     #admin-page.container {
-        bottom: var(--bottom-nav-h) !important;
+        bottom: var(--bnav-h) !important;
         padding-bottom: 0 !important;
     }
-
-    /* ── Modal içerikleri bottom nav'ın üstünde biter ── */
-    .modal-content,
-    .modal-card {
-        max-height: calc(100vh - var(--bottom-nav-h) - 32px) !important;
+    #admin-page .adm-content {
+        padding-bottom: var(--bnav-safe) !important;
         overflow-y: auto !important;
     }
 
-    /* ── Profil sayfası ── */
-    #profil-page {
+    .cx-page:not(.hidden),
+    .sr-page:not(.hidden),
+    .tw-page:not(.hidden) {
+        padding-bottom: var(--bnav-safe) !important;
+    }
+
+    .sp-body, .sp-col-left, .sp-col-right {
+        padding-bottom: var(--bnav-safe) !important;
+    }
+
+    .modal-content, .modal-card, .modal-body {
+        max-height: calc(100vh - var(--bnav-h) - 40px) !important;
         overflow-y: auto !important;
     }
 
-    /* ── Kids sayfası ── */
-    #kids-page .kids-content,
-    #kids-page > div {
-        padding-bottom: var(--mobile-safe-bottom) !important;
+    .mob-bottomnav {
+        z-index: 1000 !important;
+        height: var(--bnav-h);
+    }
+    .mob-tab {
+        min-height: 44px !important;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
     }
 }
 
-/* ── iPhone X+ notch / home indicator desteği ── */
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
     @media (max-width: 699px) {
         :root {
-            --mobile-safe-bottom: calc(
-                var(--bottom-nav-h) + 16px + env(safe-area-inset-bottom)
-            );
+            --bnav-safe: calc(var(--bnav-h) + 20px + env(safe-area-inset-bottom));
         }
         .mob-bottomnav {
-            height: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom));
+            height: calc(var(--bnav-h) + env(safe-area-inset-bottom));
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        .desktop-main {
+            bottom: calc(var(--bnav-h) + env(safe-area-inset-bottom)) !important;
         }
     }
 }
-/* ═══════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════ */
