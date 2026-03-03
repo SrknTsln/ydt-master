@@ -1682,7 +1682,6 @@ function updateIndexStats() {
     renderBankStats();
     renderGrammarProgress();
     renderSM2Plan();
-    if (typeof initDashToday === 'function') initDashToday();
 }
 
 // ════════════════════════════════════════════════
@@ -2361,7 +2360,6 @@ function _srMotivation() {
     if(e2) e2.textContent = m[1];
 }
 function startSM2Review() {
-    try {
     sm2Pool = getSM2DueWords();
     if (sm2Pool.length === 0) {
         _showAppToast('Bugün tekrar edilecek kelime yok! 🎉 En erken: ' + getNextSM2DateStr()); return;
@@ -2373,7 +2371,6 @@ function startSM2Review() {
     showPage('sm2-page');
     _srUpdate(); _srMotivation();
     loadSM2Q();
-    } catch(e) { console.error('[startSM2Review]', e); _showAppToast('Hata: ' + e.message); }
 }
 
 function loadSM2Q() {
@@ -2479,7 +2476,6 @@ function _twPickMode(word) {
 }
 
 function startTypingQuiz() {
-    try {
     // Her zaman güncel user-scoped allData oku
     if (typeof getUserKey === 'function') {
         const raw = localStorage.getItem(getUserKey('all_data'));
@@ -2502,7 +2498,6 @@ function startTypingQuiz() {
     showPage('typing-page');
     _twUpdateStats();
     _twLoadQ();
-    } catch(e) { console.error('[startTypingQuiz]', e); _showAppToast('Hata: ' + e.message); }
 }
 
 function _twLoadQ() {
@@ -2778,7 +2773,6 @@ function _cxMotivation() {
     if(e2) e2.textContent = m[1];
 }
 function startContextMode() {
-    try {
     // Her zaman güncel user-scoped allData oku
     if (typeof getUserKey === 'function') {
         const raw = localStorage.getItem(getUserKey('all_data'));
@@ -2797,7 +2791,6 @@ function startContextMode() {
     showPage('context-page');
     _cxUpdate(); _cxMotivation();
     ctxLoadQ();
-    } catch(e) { console.error('[startContextMode]', e); _showAppToast('Hata: ' + e.message); }
 }
 
 async function ctxLoadQ() {
@@ -9416,39 +9409,6 @@ function showAIToast(msg, type = 'info', duration) {
 // Provider tanımları — sırayla denenir
 const AI_PROVIDERS = [
     {
-        id: 'gemini', name: 'Gemini', icon: '✨',
-        lsKey: 'ydt_gemini_api_key',
-        note: 'Free: 1.500 istek/gün · Gemini 1.5 Flash',
-        keyHint: 'AIza...',
-        keyLink: 'https://aistudio.google.com/app/apikey',
-        async call(prompt) {
-            const key = localStorage.getItem(this.lsKey);
-            if (!key) throw new Error('no_key');
-
-            // gemini-2.0-flash önce, olmazsa 1.5-flash
-            let resp, data;
-            for (const model of ['gemini-2.0-flash', 'gemini-1.5-flash']) {
-                resp = await fetch(
-                    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
-                    { method:'POST', headers:{'Content-Type':'application/json'},
-                      body: JSON.stringify({ contents:[{parts:[{text: prompt + '\n\nReturn ONLY valid JSON. No markdown fences.'}]}] }) }
-                );
-                data = await resp.json();
-                // 404 = bu model yok, diğerini dene
-                if (data.error?.code === 404 || data.error?.status === 'NOT_FOUND') continue;
-                break; // ya başarılı ya da quota/auth hatası — döngüyü kır
-            }
-
-            // Hata varsa fırlat — cascade yakalasın
-            if (data.error) throw new Error(data.error.message || data.error.status || 'Gemini error');
-
-            const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-            const match = raw.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
-            if (!match) throw new Error('Gemini: geçerli JSON bulunamadı → ' + raw.slice(0,60));
-            return JSON.parse(match[0]);
-        }
-    },
-    {
         id: 'groq', name: 'Groq (Llama)', icon: '⚡',
         lsKey: 'ydt_groq_api_key',
         note: 'Free: 14.400 istek/gün · Llama 3.3 70B · Çok Hızlı',
@@ -9534,6 +9494,45 @@ const AI_PROVIDERS = [
             const match = raw.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
             if (!match) throw new Error('Mistral JSON parse hatası: ' + raw.slice(0,80));
             return JSON.parse(match[0]);
+        }
+    },
+    {
+        id: 'gemini', name: 'Gemini', icon: '✨',
+        lsKey: 'ydt_gemini_api_key',
+        note: 'Free: günde 20 istek (yedek) · Gemini Flash',
+        keyHint: 'AIza...',
+        keyLink: 'https://aistudio.google.com/app/apikey',
+        async call(prompt) {
+            const key = localStorage.getItem(this.lsKey);
+            if (!key) throw new Error('no_key');
+            // Kotası en yüksekten en düşüğe sıralı — 429 gelince sonrakine geç
+            const models = [
+                'gemini-2.0-flash-lite',
+                'gemini-1.5-flash-8b',
+                'gemini-1.5-flash',
+                'gemini-2.0-flash'
+            ];
+            let lastErr;
+            for (const model of models) {
+                try {
+                    const resp = await fetch(
+                        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
+                        { method:'POST', headers:{'Content-Type':'application/json'},
+                          body: JSON.stringify({ contents:[{parts:[{text: prompt + '\n\nReturn ONLY valid JSON. No markdown fences.'}]}] }) }
+                    );
+                    const data = await resp.json();
+                    if (data.error?.code === 404 || data.error?.status === 'NOT_FOUND') continue;
+                    if (data.error?.code === 429 || data.error?.status === 'RESOURCE_EXHAUSTED') {
+                        lastErr = new Error(data.error.message || 'Kota doldu'); continue;
+                    }
+                    if (data.error) throw new Error(data.error.message || data.error.status || 'Gemini error');
+                    const raw   = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                    const match = raw.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
+                    if (!match) throw new Error('Gemini: JSON bulunamadı → ' + raw.slice(0,60));
+                    return JSON.parse(match[0]);
+                } catch(e) { lastErr = e; }
+            }
+            throw lastErr || new Error('Gemini: tüm modeller başarısız');
         }
     }
 ];

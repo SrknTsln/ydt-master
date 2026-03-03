@@ -3622,13 +3622,14 @@ select:focus,input:focus,textarea:focus{border-color:var(--color-focus);}
 /* ── Top Bar ── */
 .poku-topbar {
     display: flex; align-items: center; gap: 12px;
-    padding: 10px 20px 10px;
+    padding: 10px 20px;
     background: white;
     border-bottom: 1.5px solid #eaeaf0;
     box-shadow: 0 2px 10px rgba(0,0,0,.05);
     flex-shrink: 0;
+    width: 100%;
+    box-sizing: border-box;
     z-index: var(--z-sticky);
-    min-height: 0;
 }
 .poku-back-btn {
     width: 34px; height: 34px; border-radius: 9px;
@@ -3645,19 +3646,21 @@ select:focus,input:focus,textarea:focus{border-color:var(--color-focus);}
     line-height: 1.2;
 }
 .poku-topbar-hints {
-    display: flex; flex-wrap: wrap; gap: 5px; align-items: center;
+    display: flex; flex-wrap: nowrap; gap: 6px; align-items: center;
     margin-top: 4px;
+    overflow: visible;
 }
 .poku-hint-chip {
     font-size: .6rem; font-weight: 700; color: #7090b0;
     background: #f0f4fa; border-radius: 5px; padding: 2px 7px;
-    white-space: nowrap;
+    white-space: nowrap; flex-shrink: 0;
 }
 .poku-translate-btn {
     font-size: .6rem; font-weight: 700; color: #6b7280;
     background: white; border: 1.5px solid #dde0e8;
-    border-radius: 20px; padding: 2px 9px; cursor: pointer;
+    border-radius: 20px; padding: 3px 10px; cursor: pointer;
     font-family: inherit; transition: all .15s;
+    white-space: nowrap; flex-shrink: 0;
 }
 .poku-translate-btn:hover { border-color: #10b981; color: #059669; }
 @media (max-width: 699px) {
@@ -3666,24 +3669,31 @@ select:focus,input:focus,textarea:focus{border-color:var(--color-focus);}
     .poku-hint-chip { display: none; }
 }
 
-/* ── Body: poku-body tüm içeriği scroll eder ── */
+/* ── Body: sadece flex container, scroll yapmaz ── */
 .poku-body {
     flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: stretch;
+    overflow: hidden;
+}
+
+/* ── Ana içerik (sol) — SADECE bu scroll eder ── */
+.poku-main {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    padding: 20px 20px 60px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
-    display: flex;
-    align-items: flex-start;
+    box-sizing: border-box;
 }
 
-/* ── Ana içerik (sol) ── */
-.poku-main {
-    flex: 1; min-width: 0;
-    padding: 20px 20px 60px;
-    display: flex; flex-direction: column; gap: 14px;
-}
-
-/* Metin kartı - overflow:visible olmalı ki grammar panel görünsün */
+/* Metin kartı */
 .poku-metin-card {
     background: white;
     border-radius: 18px;
@@ -3703,20 +3713,25 @@ select:focus,input:focus,textarea:focus{border-color:var(--color-focus);}
 /* YDT section */
 .poku-ydt-section { margin-top: 0; }
 
-/* ── Sidebar (sağ) — sticky, poku-body scroll'una bağlı ── */
+/* ── Sidebar (sağ) — kendi scroll'u, body yüksekliğine kilitli ── */
 .poku-sidebar {
-    width: 272px; flex-shrink: 0;
+    width: 272px;
+    flex-shrink: 0;
+    min-height: 0;
     padding: 20px 16px 40px 0;
-    display: flex; flex-direction: column; gap: 10px;
-    position: sticky; top: 0; align-self: flex-start;
-    max-height: calc(100vh - 80px);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
     overflow-y: auto;
+    overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
 }
+
+/* Mobil */
 @media (max-width: 1000px) {
-    .poku-body    { flex-direction: column; }
-    .poku-main    { padding: 14px 12px 40px; }
-    .poku-sidebar { width: 100%; position: static; max-height: none; padding: 0 12px 24px; }
+    .poku-body    { flex-direction: column; overflow-y: auto; overflow-x: hidden; }
+    .poku-main    { flex: none; overflow: visible; min-height: auto; padding: 14px 12px 24px; }
+    .poku-sidebar { width: 100%; overflow: visible; min-height: auto; padding: 0 12px 24px; }
 }
 
 /* ── Sidebar Card ── */
