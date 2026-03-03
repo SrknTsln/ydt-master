@@ -19,7 +19,7 @@
     background: #F0F4FF !important;
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch !important;
-    z-index: 50 !important;
+    z-index: var(--z-floating) !important;
     text-align: left !important;
     display: block !important;
 }
@@ -326,7 +326,7 @@
 .kw-toast {
     position: fixed; top: 80px; left: 50%;
     transform: translateX(-50%) translateY(-120px);
-    z-index: 9999; border-radius: 50px; padding: 11px 24px;
+    z-index: var(--z-toast); border-radius: 50px; padding: 11px 24px;
     font-family: 'Fredoka One', cursive; font-size: 1rem;
     transition: transform .35s cubic-bezier(.34,1.56,.64,1);
     white-space: nowrap; pointer-events: none; color: white;

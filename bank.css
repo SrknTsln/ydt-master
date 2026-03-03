@@ -22,7 +22,7 @@
     overflow: hidden !important;
     display: flex !important;
     flex-direction: column !important;
-    z-index: 50 !important;
+    z-index: var(--z-floating) !important;
     text-align: left !important;
     min-height: unset !important;
 }
@@ -34,7 +34,7 @@
 .bk-topbar {
     position: sticky;
     top: 0;
-    z-index: 100;
+    z-index: var(--z-dropdown);
     display: flex;
     align-items: center;
     gap: 10px;

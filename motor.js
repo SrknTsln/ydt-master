@@ -1630,6 +1630,14 @@ function updateSelectors() {
 }
 
 function updateIndexStats() {
+    // Skeleton'ları temizle — gerçek veri geldi
+    ['idx-total','idx-learned','idx-accuracy'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = '';
+    });
+    const streakEl0 = document.getElementById('idx-streak-val');
+    if (streakEl0) streakEl0.innerHTML = '';
+
     // User-scoped veri oku (getUserKey kelimeler.js'de tanımlı)
     if (typeof getUserKey === 'function') {
         const rawAD = localStorage.getItem(getUserKey('all_data'));
@@ -1674,6 +1682,7 @@ function updateIndexStats() {
     renderBankStats();
     renderGrammarProgress();
     renderSM2Plan();
+    if (typeof initDashToday === 'function') initDashToday();
 }
 
 // ════════════════════════════════════════════════
@@ -2352,6 +2361,7 @@ function _srMotivation() {
     if(e2) e2.textContent = m[1];
 }
 function startSM2Review() {
+    try {
     sm2Pool = getSM2DueWords();
     if (sm2Pool.length === 0) {
         _showAppToast('Bugün tekrar edilecek kelime yok! 🎉 En erken: ' + getNextSM2DateStr()); return;
@@ -2363,6 +2373,7 @@ function startSM2Review() {
     showPage('sm2-page');
     _srUpdate(); _srMotivation();
     loadSM2Q();
+    } catch(e) { console.error('[startSM2Review]', e); _showAppToast('Hata: ' + e.message); }
 }
 
 function loadSM2Q() {
@@ -2468,6 +2479,7 @@ function _twPickMode(word) {
 }
 
 function startTypingQuiz() {
+    try {
     // Her zaman güncel user-scoped allData oku
     if (typeof getUserKey === 'function') {
         const raw = localStorage.getItem(getUserKey('all_data'));
@@ -2490,6 +2502,7 @@ function startTypingQuiz() {
     showPage('typing-page');
     _twUpdateStats();
     _twLoadQ();
+    } catch(e) { console.error('[startTypingQuiz]', e); _showAppToast('Hata: ' + e.message); }
 }
 
 function _twLoadQ() {
@@ -2765,6 +2778,7 @@ function _cxMotivation() {
     if(e2) e2.textContent = m[1];
 }
 function startContextMode() {
+    try {
     // Her zaman güncel user-scoped allData oku
     if (typeof getUserKey === 'function') {
         const raw = localStorage.getItem(getUserKey('all_data'));
@@ -2783,6 +2797,7 @@ function startContextMode() {
     showPage('context-page');
     _cxUpdate(); _cxMotivation();
     ctxLoadQ();
+    } catch(e) { console.error('[startContextMode]', e); _showAppToast('Hata: ' + e.message); }
 }
 
 async function ctxLoadQ() {
@@ -2820,20 +2835,8 @@ function ctxDisplaySentence(sentence, word) {
 
 async function ctxGenerateSentence(w) {
     try {
-        const resp = await fetch('https://api.anthropic.com/v1/messages', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                model: 'claude-sonnet-4-20250514',
-                max_tokens: 120,
-                messages: [{
-                    role: 'user',
-                    content: `Write ONE English sentence (10-16 words) using the word "${w.eng}" (Turkish meaning: ${w.tr}). Academic style, like a YDT exam. Return ONLY the sentence, nothing else.`
-                }]
-            })
-        });
-        const data     = await resp.json();
-        const sentence = (data.content?.[0]?.text || '').trim();
+        const prompt = `Write ONE English sentence (10-16 words) using the word "${w.eng}" (Turkish meaning: ${w.tr}). Academic style, like a YDT exam. Return ONLY the sentence, nothing else.`;
+        const sentence = (await aiCall(prompt)).trim();
         if (sentence && sentence.toLowerCase().includes(w.eng.toLowerCase())) {
             w.story = sentence;
             window._saveData && window._saveData();
@@ -2845,8 +2848,10 @@ async function ctxGenerateSentence(w) {
             ctxDisplaySentence(fallback, w.eng);
         }
     } catch (e) {
-        document.getElementById('ctx-sentence').innerHTML =
-            `<em style="color:var(--red);">Üretilemedi — internet bağlantısını kontrol et.</em>`;
+        if (e.message !== 'no_api_key') {
+            document.getElementById('ctx-sentence').innerHTML =
+                `<em style="color:var(--color-danger);">Üretilemedi — internet bağlantısını kontrol et.</em>`;
+        }
     }
 }
 
@@ -8618,6 +8623,9 @@ function selectAvatar(el) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Tüm selector'ları başlangıçta doldur
+    updateSelectors();
+
     // Sidebar genişliğini CSS variable olarak ayarla
     function setSidebarWidth() {
         const sb = document.querySelector('.desktop-sidebar');
@@ -9466,26 +9474,43 @@ const AI_PROVIDERS = [
     {
         id: 'openrouter', name: 'OpenRouter', icon: '🌐',
         lsKey: 'ydt_openrouter_api_key',
-        note: 'Free: Llama 3.1 8B · Kredi kartı gerektirmez',
+        note: 'Free: Llama 3.3 8B · Kredi kartı gerektirmez',
         keyHint: 'sk-or-...',
         keyLink: 'https://openrouter.ai/keys',
         async call(prompt) {
             const key = localStorage.getItem(this.lsKey);
             if (!key) throw new Error('no_key');
-            const r = await fetch('https://openrouter.ai/api/v1/chat/completions',
-                { method:'POST',
-                  headers:{'Content-Type':'application/json','Authorization':`Bearer ${key}`,
-                           'HTTP-Referer':'https://ydt-master.web.app','X-Title':'YDT Master'},
-                  body: JSON.stringify({ model:'meta-llama/llama-3.1-8b-instruct:free', temperature:0.3,
-                    messages:[{role:'system',content:'You must respond with valid JSON only. No markdown, no explanation.'},
-                               {role:'user',content:prompt}] }) }
-            );
-            const d = await r.json();
-            if (d.error) throw new Error(d.error.message || JSON.stringify(d.error));
-            let raw = d.choices?.[0]?.message?.content || '';
-            const match = raw.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
-            if (!match) throw new Error('OpenRouter JSON parse hatası: ' + raw.slice(0,80));
-            return JSON.parse(match[0]);
+            // Güncel free modeller — sırayla dene
+            const models = [
+                'meta-llama/llama-3.3-8b-instruct:free',
+                'meta-llama/llama-3.1-70b-instruct:free',
+                'mistralai/mistral-7b-instruct:free',
+                'google/gemma-3-4b-it:free'
+            ];
+            let lastErr = null;
+            for (const model of models) {
+                try {
+                    const r = await fetch('https://openrouter.ai/api/v1/chat/completions',
+                        { method:'POST',
+                          headers:{'Content-Type':'application/json','Authorization':`Bearer ${key}`,
+                                   'HTTP-Referer':'https://ydt-master.web.app','X-Title':'YDT Master'},
+                          body: JSON.stringify({ model, temperature:0.3,
+                            messages:[{role:'system',content:'You must respond with valid JSON only. No markdown, no explanation.'},
+                                       {role:'user',content:prompt}] }) }
+                    );
+                    const d = await r.json();
+                    // Model bulunamadıysa sonraki modeli dene
+                    if (d.error?.code === 404 || (d.error?.message || '').includes('not found') || (d.error?.message || '').includes('No endpoints')) {
+                        lastErr = new Error(d.error.message); continue;
+                    }
+                    if (d.error) throw new Error(d.error.message || JSON.stringify(d.error));
+                    let raw = d.choices?.[0]?.message?.content || '';
+                    const match = raw.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
+                    if (!match) throw new Error('OpenRouter JSON parse hatası: ' + raw.slice(0,80));
+                    return JSON.parse(match[0]);
+                } catch(e) { lastErr = e; }
+            }
+            throw lastErr || new Error('OpenRouter: tüm modeller başarısız');
         }
     },
     {
@@ -9907,7 +9932,11 @@ function saveApiKey(providerId, inputId) {
     const val   = (input?.value || '').trim();
     const p     = AI_PROVIDERS.find(x => x.id === providerId);
     if (!p) return;
-    if (val && !val.startsWith('●')) localStorage.setItem(p.lsKey, val);
+    if (val && !val.startsWith('●')) {
+        localStorage.setItem(p.lsKey, val);
+        // Firestore'a da kaydet (cihazlar arası senkronizasyon)
+        if (window.AuthModule) window.AuthModule.syncNow();
+    }
     input.value = '';
     updateCascadeStatus();
     const btn = input.nextElementSibling;

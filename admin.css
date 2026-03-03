@@ -78,7 +78,7 @@
 }
 .adm-tab:hover { background: var(--bg); color: var(--ink); }
 .adm-tab.active {
-    background: var(--red-soft); color: var(--red);
+    background: var(--red-soft); color: var(--color-primary);
     font-weight: 800;
 }
 .adm-tab-icon { font-size: 1rem; width: 20px; text-align: center; flex-shrink: 0; }
@@ -117,7 +117,7 @@
     outline: none; transition: border-color .15s;
     box-sizing: border-box;
 }
-.adm-input:focus { border-color: var(--red); }
+.adm-input:focus { border-color: var(--color-primary); }
 .adm-textarea {
     width: 100%; padding: 10px 12px;
     border: 1.5px solid var(--border); border-radius: 10px;
@@ -126,7 +126,7 @@
     outline: none; resize: vertical;
     transition: border-color .15s; box-sizing: border-box;
 }
-.adm-textarea:focus { border-color: var(--red); }
+.adm-textarea:focus { border-color: var(--color-primary); }
 .adm-field { margin-bottom: 12px; }
 .adm-label {
     display: block; font-size: .7rem; font-weight: 800;
@@ -137,7 +137,7 @@
 /* ── Buttons ── */
 .adm-btn-primary {
     padding: 10px 18px; border-radius: 10px;
-    background: var(--red); color: #fff; border: none;
+    background: var(--color-primary); color: #fff; border: none;
     font-family: inherit; font-size: .82rem; font-weight: 700;
     cursor: pointer; transition: all .15s; white-space: nowrap;
 }
@@ -152,7 +152,7 @@
 .adm-btn-ghost:hover { border-color: var(--ink3); color: var(--ink); }
 .adm-btn-save {
     padding: 8px 16px; border-radius: 9px;
-    background: var(--red); color: #fff; border: none;
+    background: var(--color-primary); color: #fff; border: none;
     font-family: inherit; font-size: .78rem; font-weight: 700;
     cursor: pointer; white-space: nowrap; flex-shrink: 0;
     transition: background .15s;
@@ -208,7 +208,7 @@
 }
 .adm-key-title { font-size: .88rem; font-weight: 800; color: var(--ink); }
 .adm-key-link {
-    font-size: .7rem; font-weight: 700; color: var(--red);
+    font-size: .7rem; font-weight: 700; color: var(--color-primary);
     text-decoration: none;
 }
 .adm-key-link:hover { text-decoration: underline; }
@@ -246,7 +246,7 @@
     padding: 8px 12px; margin-bottom: 10px;
 }
 .adm-format-hint code {
-    font-family: monospace; color: var(--red); font-size: .78rem;
+    font-family: monospace; color: var(--color-primary); font-size: .78rem;
 }
 
 /* ── Paragraf Layout ── */

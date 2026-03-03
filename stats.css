@@ -170,7 +170,7 @@
     font-size: .72rem; font-family: inherit; font-weight: 700;
     color: var(--ink); background: var(--white); cursor: pointer; outline: none;
 }
-.sp-select:focus { border-color: var(--red); }
+.sp-select:focus { border-color: var(--color-primary); }
 .sp-hint { font-size: .7rem; color: var(--ink3); font-weight: 600; margin-bottom: 8px; }
 
 /* ════════════════════════════════════════════

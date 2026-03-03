@@ -14,10 +14,10 @@
 </head>
 <body>
 
-<div id="loading-overlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(255,255,255,.95);flex-direction:column;align-items:center;justify-content:center;gap:16px;">
-    <div style="font-size:3rem;animation:spin 1s linear infinite">🔄</div>
-    <div style="font-weight:700;color:#e63946;font-size:1.1rem">Firebase'den yükleniyor...</div>
-    <div style="font-size:.8rem;color:#aaa">Veriler senkronize ediliyor</div>
+<div id="loading-overlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-title">Hazırlanıyor...</div>
+    <div class="loading-sub">Veriler senkronize ediliyor</div>
 </div>
 
 <header class="mob-topbar">
@@ -127,9 +127,9 @@
     <button class="mob-tab"        id="bn-exercise" onclick="showExercisePage()">         <span class="mob-tab-icon">✍️</span>Alıştır</button>
 </nav>
 
-<aside class="desktop-sidebar">
-    <div class="sb-logo" style="padding:20px 20px 14px;">
-        <div class="serkan-logo">
+<aside class="desktop-sidebar" id="desktop-sidebar">
+    <div class="sb-logo" style="padding:20px 18px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);">
+        <div class="serkan-logo" style="flex:1;min-width:0;">
             <div class="serkan-logo-icon">
                 <svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect width="44" height="44" rx="14" fill="#e63946"/>
@@ -144,6 +144,11 @@
                 <div class="serkan-logo-sub">YDT İngilizce</div>
             </div>
         </div>
+        <button class="sb-collapse-btn" id="sb-collapse-btn" onclick="sbToggleCollapse()" title="Daralt / Genişlet">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                <path d="M8.5 2L4 6.5l4.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </button>
     </div>
     <div class="sb-sync">
         <div id="sync-dot" style="width:7px;height:7px;border-radius:50%;background:#ccc;flex-shrink:0"></div>
@@ -152,12 +157,12 @@
     <!-- ── PRIMARY NAV ── -->
     <nav class="sb-nav sb-nav-primary">
         <div class="sb-sec">Ana Menü</div>
-        <button class="sb-btn active" id="sb-home"     onclick="navTo('index-page')">             <span class="sb-icon">🏠</span> Ana Sayfa</button>
-        <button class="sb-btn"        id="sb-study"    onclick="startStudyFromNav()">             <span class="sb-icon">📖</span> Kelime Öğren</button>
-        <button class="sb-btn"        id="sb-quiz"     onclick="startQuizFromNav()">              <span class="sb-icon">🎯</span> Vocabulary Test</button>
-        <button class="sb-btn"        id="sb-ai-ydt"   onclick="startAIQuizMode()">               <span class="sb-icon">🤖</span> AI Vocabulary Test</button>
-        <button class="sb-btn"        id="sb-paragraf" onclick="showParagrafListesi()">           <span class="sb-icon">📄</span> Paragraf Okuma</button>
-        <button class="sb-btn"        id="sb-speaking" onclick="openSpeakingSection('overview')"> <span class="sb-icon">🗣️</span> Speaking</button>
+        <button class="sb-btn active" id="sb-home" title="Ana Sayfa" onclick="navTo('index-page')">             <span class="sb-icon">🏠</span> Ana Sayfa</button>
+        <button class="sb-btn"        id="sb-study" title="Kelime Öğren" onclick="startStudyFromNav()">             <span class="sb-icon">📖</span> Kelime Öğren</button>
+        <button class="sb-btn"        id="sb-quiz" title="Vocabulary Test" onclick="startQuizFromNav()">              <span class="sb-icon">🎯</span> Vocabulary Test</button>
+        <button class="sb-btn"        id="sb-ai-ydt" title="AI Vocab Test" onclick="startAIQuizMode()">               <span class="sb-icon">🤖</span> AI Vocabulary Test</button>
+        <button class="sb-btn"        id="sb-paragraf" title="Paragraf Okuma" onclick="showParagrafListesi()">           <span class="sb-icon">📄</span> Paragraf Okuma</button>
+        <button class="sb-btn"        id="sb-speaking" title="Speaking" onclick="openSpeakingSection('overview')"> <span class="sb-icon">🗣️</span> Speaking</button>
 
         <!-- Grammar — daraltılabilir grup (Ana Menü altında) -->
         <button class="sb-grammar-toggle" id="sb-grammar-toggle-main" onclick="sbToggleGrammarMain()" aria-expanded="false" aria-controls="sb-grammar-list-main" style="margin-top:2px;">
@@ -182,25 +187,25 @@
         </div>
 
         <div class="sb-sec" style="margin-top:4px;">Alıştırmalar</div>
-        <button class="sb-btn"        id="sb-typing"   onclick="showExerciseNav('typing')">  <span class="sb-icon">✍️</span> Yazarak Cevap</button>
-        <button class="sb-btn"        id="sb-context"  onclick="showExerciseNav('context')"> <span class="sb-icon">📝</span> Bağlam Cümlesi</button>
-        <button class="sb-btn"        id="sb-sm2"      onclick="showExerciseNav('sm2')">     <span class="sb-icon">🧠</span> SM-2 Tekrar <span class="sb-badge-pill" id="sb-sm2-badge" style="display:none"></span></button>
+        <button class="sb-btn"        id="sb-typing" title="Yazarak Cevap" onclick="showExerciseNav('typing')">  <span class="sb-icon">✍️</span> Yazarak Cevap</button>
+        <button class="sb-btn"        id="sb-context" title="Bağlam Cümlesi" onclick="showExerciseNav('context')"> <span class="sb-icon">📝</span> Bağlam Cümlesi</button>
+        <button class="sb-btn"        id="sb-sm2" title="SM-2 Tekrar" onclick="showExerciseNav('sm2')">     <span class="sb-icon">🧠</span> SM-2 Tekrar <span class="sb-badge-pill" id="sb-sm2-badge" style="display:none"></span></button>
     </nav>
 
     <!-- ── SECONDARY NAV ── -->
     <div class="sb-secondary">
         <div class="sb-secondary-divider"></div>
         <nav class="sb-nav sb-nav-secondary">
-            <button class="sb-btn sb-btn-sec" id="sb-kids"  onclick="KW.open()">        <span class="sb-icon">🌍</span> Kids English</button>
-            <button class="sb-btn sb-btn-sec" id="sb-games" onclick="showGamesPage()">  <span class="sb-icon">🎮</span> Oyunlar</button>
-            <button class="sb-btn sb-btn-sec" id="sb-stats" onclick="showStatsPage()">  <span class="sb-icon">📊</span> İstatistik</button>
-            <button class="sb-btn sb-btn-sec" id="sb-arsiv" onclick="showAIArsiv()">    <span class="sb-icon">🗃️</span> Soru Bankası <span class="sb-badge-pill" id="arsiv-badge" style="display:none"></span></button>
+            <button class="sb-btn sb-btn-sec" id="sb-kids" title="Kids English" onclick="KW.open()">        <span class="sb-icon">🌍</span> Kids English</button>
+            <button class="sb-btn sb-btn-sec" id="sb-games" title="Oyunlar" onclick="showGamesPage()">  <span class="sb-icon">🎮</span> Oyunlar</button>
+            <button class="sb-btn sb-btn-sec" id="sb-stats" title="İstatistik" onclick="showStatsPage()">  <span class="sb-icon">📊</span> İstatistik</button>
+            <button class="sb-btn sb-btn-sec" id="sb-arsiv" title="Soru Bankası" onclick="showAIArsiv()">    <span class="sb-icon">🗃️</span> Soru Bankası <span class="sb-badge-pill" id="arsiv-badge" style="display:none"></span></button>
         </nav>
         <div class="sb-admin-bar">
-            <button class="sb-btn sb-btn-sec" id="sb-profil" onclick="navTo('profil-page'); showProfilPage(); setTimeout(()=>window.AuthModule&&window.AuthModule.updateProfilWidgets(),100)" style="margin-bottom:4px;">
+            <button class="sb-btn sb-btn-sec" id="sb-profil" title="Profil" onclick="navTo('profil-page'); showProfilPage(); setTimeout(()=>window.AuthModule&&window.AuthModule.updateProfilWidgets(),100)" style="margin-bottom:4px;">
                 <span class="sb-icon">👤</span> Profil
             </button>
-            <button class="sb-btn sb-btn-admin" id="sb-admin" onclick="navTo('admin-page')" style="display:none;">
+            <button class="sb-btn sb-btn-admin" id="sb-admin" title="Yönetim" onclick="navTo('admin-page')" style="display:none;">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0;opacity:.6">
                     <circle cx="7" cy="7" r="2.5" stroke="currentColor" stroke-width="1.4"/>
                     <path d="M7 1v1.5M7 11.5V13M1 7h1.5M11.5 7H13M2.93 2.93l1.06 1.06M10.01 10.01l1.06 1.06M2.93 11.07l1.06-1.06M10.01 3.99l1.06-1.06" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
@@ -220,18 +225,36 @@
             <div class="dash-hero-inner">
                 <div class="dash-hero-greeting">
                     <span class="dash-badge">YDT MASTER PRO</span>
-                    <h1 class="dash-title">Kelime <em>Ustası</em> ol.</h1>
-                    <p class="dash-sub">Hafıza teknikleriyle kalıcı İngilizce öğrenme</p>
+                    <h1 class="dash-title" id="dash-title-text">Kelime <em>Ustası</em> ol.</h1>
+                    <p class="dash-sub" id="dash-sub-text">Hafıza teknikleriyle kalıcı İngilizce öğrenme</p>
                 </div>
-                <!-- Günlük Hedef -->
-                <div class="dash-goal-card">
-                    <div class="dash-goal-row">
-                        <span class="dash-goal-label">🎯 Günlük Hedef</span>
-                        <span class="dash-goal-nums" id="daily-goal-text">0 / 40</span>
-                    </div>
-                    <div class="dash-goal-track">
-                        <div id="daily-goal-fill" class="dash-goal-fill"></div>
-                    </div>
+            </div>
+        </div>
+
+        <!-- ══ GÜNÜN GÖREVİ CTA — hero dışında, beyaz kart ══ -->
+        <div class="dash-today-card" id="dash-today-card">
+            <div class="dash-today-top">
+                <div class="dash-today-left">
+                    <span class="dash-today-eyebrow">📅 Günün Görevi</span>
+                    <div class="dash-today-title" id="dash-today-title">Yükleniyor...</div>
+                    <div class="dash-today-meta" id="dash-today-meta"></div>
+                </div>
+                <div class="dash-today-icon" id="dash-today-icon">🎯</div>
+            </div>
+            <button class="dash-today-cta" id="dash-today-cta" onclick="dashTodayCTA()">
+                <span id="dash-today-cta-label">Başla</span>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+            <!-- Günlük Hedef -->
+            <div class="dash-today-goal">
+                <div class="dash-today-goal-row">
+                    <span class="dash-today-goal-label">🎯 Günlük Hedef</span>
+                    <span class="dash-today-goal-nums" id="daily-goal-text">0 / 40</span>
+                </div>
+                <div class="dash-today-goal-track">
+                    <div id="daily-goal-fill" class="dash-today-goal-fill"></div>
                 </div>
             </div>
         </div>
@@ -239,19 +262,19 @@
         <!-- ══ 4 KPI KART ══ -->
         <div class="dash-kpi-row">
             <div class="dash-kpi dash-kpi-blue">
-                <div class="dash-kpi-val" id="idx-total">0</div>
+                <div class="dash-kpi-val" id="idx-total"><span class="skeleton skeleton-val"></span></div>
                 <div class="dash-kpi-lbl">Kelime</div>
             </div>
             <div class="dash-kpi dash-kpi-green">
-                <div class="dash-kpi-val" id="idx-learned">0</div>
+                <div class="dash-kpi-val" id="idx-learned"><span class="skeleton skeleton-val"></span></div>
                 <div class="dash-kpi-lbl">Öğrenilen</div>
             </div>
             <div class="dash-kpi dash-kpi-orange">
-                <div class="dash-kpi-val">🔥 <span id="idx-streak-val">0</span></div>
+                <div class="dash-kpi-val">🔥 <span id="idx-streak-val"><span class="skeleton skeleton-val" style="width:32px"></span></span></div>
                 <div class="dash-kpi-lbl">Seri</div>
             </div>
             <div class="dash-kpi dash-kpi-red">
-                <div class="dash-kpi-val" id="idx-accuracy">0%</div>
+                <div class="dash-kpi-val" id="idx-accuracy"><span class="skeleton skeleton-val" style="width:44px"></span></div>
                 <div class="dash-kpi-lbl">Başarı</div>
             </div>
         </div>
@@ -368,7 +391,13 @@
                     <div class="idx-section-title">🚨 En Zayıf 5 Kelimen
                         <span class="idx-section-sub">— en çok hata yaptıkların</span>
                     </div>
-                    <div id="idx-weak-words" class="idx-weak-list"></div>
+                    <div id="idx-weak-words" class="idx-weak-list">
+                        <div class="skeleton skeleton-line w-80"></div>
+                        <div class="skeleton skeleton-line w-60"></div>
+                        <div class="skeleton skeleton-line w-80"></div>
+                        <div class="skeleton skeleton-line w-40"></div>
+                        <div class="skeleton skeleton-line w-60"></div>
+                    </div>
                 </div>
 
                 <!-- Grammar Modül Durumu -->
@@ -376,7 +405,9 @@
                     <div class="idx-section-title">📐 Grammar Modülleri
                         <span class="idx-section-sub">— tamamlanma durumu</span>
                     </div>
-                    <div id="idx-grammar-progress" class="idx-grammar-progress"></div>
+                    <div id="idx-grammar-progress" class="idx-grammar-progress">
+                        <div class="skeleton skeleton-panel"></div>
+                    </div>
                 </div>
 
                 <!-- YDT Strateji -->
@@ -399,13 +430,17 @@
                     <div class="idx-section-title">🧠 Tekrar Planı
                         <span class="idx-section-sub">— SM-2 algoritması</span>
                     </div>
-                    <div id="idx-sm2-plan" class="idx-sm2-plan"></div>
+                    <div id="idx-sm2-plan" class="idx-sm2-plan">
+                        <div class="skeleton skeleton-panel"></div>
+                    </div>
                 </div>
 
                 <!-- Son 7 Gün Performansı -->
                 <div class="idx-section">
                     <div class="idx-section-title">📈 Son 7 Gün Performansı</div>
-                    <div class="idx-perf-chart" id="idx-perf-chart"></div>
+                    <div class="idx-perf-chart" id="idx-perf-chart">
+                        <div class="skeleton skeleton-panel"></div>
+                    </div>
                     <div class="idx-perf-legend">
                         <span class="idx-perf-dot idx-perf-dot-correct"></span><span>Doğru</span>
                         <span class="idx-perf-dot idx-perf-dot-wrong"></span><span>Yanlış</span>
@@ -415,7 +450,9 @@
                 <!-- Kelime Türü Dağılımı -->
                 <div class="idx-section">
                     <div class="idx-section-title">🔤 Kelime Türü Dağılımı</div>
-                    <div id="idx-pos-chart" class="idx-pos-chart"></div>
+                    <div id="idx-pos-chart" class="idx-pos-chart">
+                        <div class="skeleton skeleton-panel"></div>
+                    </div>
                 </div>
 
                 <!-- Faydalı Kaynaklar -->
@@ -1952,6 +1989,9 @@
     }
 
     window._saveData = function () {
+        const uid = window._currentUser?.uid || 'guest';
+        localStorage.setItem(`ydt_${uid}_all_data`, JSON.stringify(allData));
+        // legacy key de güncelle (motor.js uyumu)
         localStorage.setItem('ydt_all_data', JSON.stringify(allData));
 
         if (window.paragrafSorular) {
@@ -1964,19 +2004,20 @@
     };
 
     function saveToFirebase() {
+        const uid = window._currentUser?.uid;
+        if (!uid) return; // Giriş yapılmamışsa yazma
         setSyncStatus('syncing');
         clearTimeout(syncTimeout);
         syncTimeout = setTimeout(async () => {
             try {
                 const keyMap = buildKeyMap(allData);
-                await set(ref(db, 'ydt/allData'), sanitizeAllData(allData));
-
-                await set(ref(db, 'ydt/keyMap'), keyMap);
+                await set(ref(db, `ydt_users/${uid}/allData`), sanitizeAllData(allData));
+                await set(ref(db, `ydt_users/${uid}/keyMap`), keyMap);
                 if (window.paragrafSorular) {
-                    await set(ref(db, 'ydt/paragrafSorular'), window.paragrafSorular);
+                    await set(ref(db, `ydt_users/${uid}/paragrafSorular`), window.paragrafSorular);
                 }
                 if (window.aiArsiv && window.aiArsiv.length) {
-                    await set(ref(db, 'ydt/aiArsiv'), window.aiArsiv);
+                    await set(ref(db, `ydt_users/${uid}/aiArsiv`), window.aiArsiv);
                 }
                 setSyncStatus('ok');
             } catch (e) {
@@ -1990,34 +2031,64 @@
         document.getElementById('loading-overlay').style.display = 'flex';
         setSyncStatus('syncing');
         try {
-            const snap = await get(ref(db, 'ydt'));
-            if (snap.exists()) {
-                const remote = snap.val();
-                const fbData = remote.allData || {};
-                const keyMap = remote.keyMap  || {};
-                allData = Object.keys(fbData).length ? restoreAllData(fbData, keyMap) : allData;
+            const uid = window._currentUser?.uid;
 
-
-                // paragrafSorular Firebase'den yükle
-                if (remote.paragrafSorular) {
-                    window.paragrafSorular = remote.paragrafSorular;
-                    localStorage.setItem('ydt_paragraf_sorular', JSON.stringify(remote.paragrafSorular));
-                }
-                // aiArsiv Firebase'den yükle
-                if (remote.aiArsiv) {
-                    window.aiArsiv = remote.aiArsiv;
-                    localStorage.setItem('ydt_ai_arsiv', JSON.stringify(remote.aiArsiv));
-                }
-                localStorage.setItem('ydt_all_data', JSON.stringify(allData));
-
-                setSyncStatus('ok');
-            } else {
-                const keyMap = buildKeyMap(allData);
-                await set(ref(db, 'ydt/allData'), sanitizeAllData(allData));
-
-                await set(ref(db, 'ydt/keyMap'), keyMap);
-                setSyncStatus('ok');
+            // Önce user-scoped path'e bak (yeni sistem)
+            let loaded = false;
+            if (uid) {
+                try {
+                    const snapUser = await get(ref(db, `ydt_users/${uid}`));
+                    if (snapUser.exists()) {
+                        const remote = snapUser.val();
+                        const fbData = remote.allData || {};
+                        const keyMap = remote.keyMap  || {};
+                        if (Object.keys(fbData).length) {
+                            allData = restoreAllData(fbData, keyMap);
+                            loaded = true;
+                        }
+                        if (remote.paragrafSorular) {
+                            window.paragrafSorular = remote.paragrafSorular;
+                            localStorage.setItem('ydt_paragraf_sorular', JSON.stringify(remote.paragrafSorular));
+                        }
+                        if (remote.aiArsiv) {
+                            window.aiArsiv = remote.aiArsiv;
+                            localStorage.setItem('ydt_ai_arsiv', JSON.stringify(remote.aiArsiv));
+                        }
+                    }
+                } catch(e2) { console.warn('user-scoped okuma hatası', e2); }
             }
+
+            // Yeni sistemde veri yoksa eski ydt/ path'inden al (migration)
+            if (!loaded) {
+                const snap = await get(ref(db, 'ydt'));
+                if (snap.exists()) {
+                    const remote = snap.val();
+                    const fbData = remote.allData || {};
+                    const keyMap = remote.keyMap  || {};
+                    allData = Object.keys(fbData).length ? restoreAllData(fbData, keyMap) : allData;
+                    if (remote.paragrafSorular) {
+                        window.paragrafSorular = remote.paragrafSorular;
+                        localStorage.setItem('ydt_paragraf_sorular', JSON.stringify(remote.paragrafSorular));
+                    }
+                    if (remote.aiArsiv) {
+                        window.aiArsiv = remote.aiArsiv;
+                        localStorage.setItem('ydt_ai_arsiv', JSON.stringify(remote.aiArsiv));
+                    }
+                    // Eski veriyi yeni sisteme taşı
+                    if (uid && Object.keys(fbData).length) {
+                        try {
+                            await set(ref(db, `ydt_users/${uid}/allData`), sanitizeAllData(allData));
+                            await set(ref(db, `ydt_users/${uid}/keyMap`), keyMap);
+                        } catch(e3) {}
+                    }
+                }
+            }
+
+            if (uid) {
+                localStorage.setItem(`ydt_${uid}_all_data`, JSON.stringify(allData));
+            }
+            localStorage.setItem('ydt_all_data', JSON.stringify(allData));
+            setSyncStatus('ok');
         } catch (e) {
             setSyncStatus('error');
             console.warn('Firebase bağlantı hatası, offline devam ediliyor.', e);
@@ -2155,11 +2226,24 @@
     async function _loadUserData(uid) {
         try {
             _authSyncBar('syncing', 'Veriler yükleniyor…');
+            // Önce sıfırla — önceki kullanıcının verisi kalmasın
+            stats   = { totalAnswers: 0, correctAnswers: 0, totalMinutes: 0 };
+            allData = {};
+            _updateAuthStats();
             const snap = await getDoc(doc(fsdb, 'users', uid));
             if (snap.exists()) {
                 const data = snap.data();
-                if (data.allData) { allData = data.allData; localStorage.setItem('ydt_all_data', JSON.stringify(allData)); }
-                if (data.stats)   { stats = { ...stats, ...data.stats }; if (isNaN(stats.totalMinutes)) stats.totalMinutes = 0; localStorage.setItem('ydt_stats', JSON.stringify(stats)); }
+                if (data.allData) { allData = data.allData; localStorage.setItem(`ydt_${uid}_all_data`, JSON.stringify(allData)); }
+                if (data.stats)   { stats = { ...data.stats }; if (isNaN(stats.totalMinutes)) stats.totalMinutes = 0; localStorage.setItem(`ydt_${uid}_stats`, JSON.stringify(stats)); }
+                // API keylerini Firestore'dan localStorage'a yükle
+                ['ydt_gemini_api_key','ydt_groq_api_key','ydt_openrouter_api_key','ydt_mistral_api_key'].forEach(k => {
+                    if (data[k]) localStorage.setItem(k, data[k]);
+                });
+            }
+            // Firestore'da stats yoksa localStorage'dan al (motor.js buraya yazar)
+            if (!stats.totalAnswers && !stats.totalMinutes) {
+                const rawST = localStorage.getItem(`ydt_${uid}_stats`) || localStorage.getItem('ydt_stats');
+                if (rawST) { try { const s = JSON.parse(rawST); if (s) { stats = s; if (isNaN(stats.totalMinutes)) stats.totalMinutes = 0; } } catch(e){} }
             }
             if (typeof updateSelectors    === 'function') updateSelectors();
             if (typeof updateIndexStats   === 'function') updateIndexStats();
@@ -2175,12 +2259,21 @@
     async function _saveUserData(uid) {
         try {
             _authSyncBar('syncing', 'Kaydediliyor…');
+            // API keylerini Firestore'a kaydet (şifreli değil, sadece admin kullanıcıya ait)
+            const apiKeyData = {};
+            ['ydt_gemini_api_key','ydt_groq_api_key','ydt_openrouter_api_key','ydt_mistral_api_key'].forEach(k => {
+                const v = localStorage.getItem(k);
+                if (v) apiKeyData[k] = v;
+            });
             await setDoc(doc(fsdb, 'users', uid), {
                 stats:     typeof stats   !== 'undefined' ? stats   : {},
                 allData:   typeof allData !== 'undefined' ? allData : {},
-                updatedAt: new Date().toISOString()
+                updatedAt: new Date().toISOString(),
+                ...apiKeyData
             }, { merge: true });
             _authSyncBar('synced', 'Kaydedildi ✓');
+            localStorage.setItem(`ydt_${uid}_stats`,    JSON.stringify(stats));
+            localStorage.setItem(`ydt_${uid}_all_data`, JSON.stringify(allData));
         } catch(e) {
             console.warn('Firestore kayıt hatası:', e);
         }
@@ -2255,6 +2348,10 @@
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             window._currentUser = user;
+            // Yeni kullanıcı — önce sıfırla, UI'da 0 göster
+            stats   = { totalAnswers: 0, correctAnswers: 0, totalMinutes: 0 };
+            allData = {};
+            _updateAuthStats();
             _updateAdminVisibility(user.email);
             _hideLoginOverlay();
             _updateProfilUI(user);
@@ -2263,14 +2360,21 @@
                 authTimerInterval = setInterval(() => {
                     if (typeof stats !== 'undefined') {
                         stats.totalMinutes = (stats.totalMinutes || 0) + 1;
-        
+                        _updateAuthStats(); // UI'ı güncelle
+                        // user-scoped localStorage'a da yaz
+                        const u = auth.currentUser;
+                        if (u) localStorage.setItem(`ydt_${u.uid}_stats`, JSON.stringify(stats));
                     }
                 }, 60000);
             }
             setInterval(() => _saveUserData(user.uid), 5 * 60 * 1000);
             window.addEventListener('beforeunload', () => _saveUserData(user.uid));
         } else {
+            // Çıkışta da sıfırla
+            stats   = { totalAnswers: 0, correctAnswers: 0, totalMinutes: 0 };
+            allData = {};
             window._currentUser = null;
+            _updateAuthStats();
             _updateAdminVisibility(null);
             _showLoginOverlay();
         }
@@ -2412,6 +2516,75 @@
 
 
 <script>
+/* ── Günün Görevi CTA ── */
+function initDashToday() {
+    // allData'nın yüklenmiş olduğundan emin ol
+    if (typeof getUserKey === 'function') {
+        const raw = localStorage.getItem(getUserKey('all_data'));
+        if (raw) { try { allData = JSON.parse(raw); } catch(e) {} }
+    }
+
+    const sm2Due  = (typeof countSM2Due === 'function') ? countSM2Due() : 0;
+    const allKeys = (typeof allData !== 'undefined') ? Object.keys(allData) : [];
+    const totalW  = allKeys.reduce((s,k) => s + (allData[k]||[]).length, 0);
+
+    const titleEl  = document.getElementById('dash-today-title');
+    const metaEl   = document.getElementById('dash-today-meta');
+    const iconEl   = document.getElementById('dash-today-icon');
+    const ctaLabel = document.getElementById('dash-today-cta-label');
+    if (!titleEl) return;
+
+    const hour   = new Date().getHours();
+    const greet  = hour < 12 ? 'Günaydın 🌅' : hour < 18 ? 'İyi günler ☀️' : 'İyi akşamlar 🌙';
+
+    if (sm2Due > 0) {
+        titleEl.innerHTML      = `<strong>${sm2Due}</strong> kelime tekrar seni bekliyor`;
+        metaEl.textContent     = 'SM-2 algoritması: bugünkü tekrarları tamamla';
+        iconEl.textContent     = '🧠';
+        ctaLabel.textContent   = 'Tekrara Başla';
+        window._dashCTAFn      = () => (typeof startSM2Review === 'function') && startSM2Review();
+    } else if (totalW === 0) {
+        titleEl.innerHTML      = 'İlk kelime listeni <strong>oluştur</strong>';
+        metaEl.textContent     = 'Yönetim panelinden kelime ekleyerek başla';
+        iconEl.textContent     = '✨';
+        ctaLabel.textContent   = 'Kelime Ekle';
+        window._dashCTAFn      = () => (typeof navTo === 'function') && navTo('admin-page');
+    } else {
+        const listName         = allKeys[0] || '';
+        const count            = allData[listName] ? allData[listName].length : totalW;
+        titleEl.innerHTML      = `${greet} — <strong>${count}</strong> kelime seni bekliyor`;
+        metaEl.textContent     = listName ? `📚 ${listName}` : 'Aktif liste';
+        iconEl.textContent     = '📖';
+        ctaLabel.textContent   = 'Öğrenmeye Başla';
+        window._dashCTAFn      = () => (typeof startStudy === 'function') && startStudy();
+    }
+}
+
+function dashTodayCTA() {
+    if (typeof window._dashCTAFn === 'function') window._dashCTAFn();
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    setTimeout(initDashToday, 600);
+});
+
+/* ── Sidebar Collapse Toggle ── */
+function sbToggleCollapse() {
+    const sb  = document.getElementById('desktop-sidebar');
+    const btn = document.getElementById('sb-collapse-btn');
+    if (!sb) return;
+    const collapsed = sb.classList.toggle('sb-collapsed');
+    localStorage.setItem('ydt_sb_collapsed', collapsed ? '1' : '0');
+}
+
+/* ── Sidebar initial state restore ── */
+document.addEventListener('DOMContentLoaded', function () {
+    if (localStorage.getItem('ydt_sb_collapsed') === '1') {
+        const sb = document.getElementById('desktop-sidebar');
+        if (sb) sb.classList.add('sb-collapsed');
+    }
+});
+
 /* ── Sidebar Grammar Collapse (Desktop) ── */
 function sbToggleGrammar() { sbToggleGrammarMain(); } // compat alias
 
@@ -2447,10 +2620,16 @@ document.addEventListener('DOMContentLoaded', function () {
     function hideFullScreenPages() {
         document.querySelectorAll('.cx-page, .sr-page, .tw-page').forEach(function (el) {
             el.classList.add('hidden');
+            el.style.display = 'none';
         });
     }
-    var sel = '.sb-btn, .sb-btn-sub, .mob-dra
-<script>
+    // Sadece modül DIŞI butonlara uygula — typing/context/sm2 açan butonları hariç tut
+    var sel = '.sb-btn:not(#sb-typing):not(#sb-context):not(#sb-sm2), .sb-btn-sub, .mob-drawer-btn:not(#di-typing):not(#di-context):not(#di-sm2)';
+    document.querySelectorAll(sel).forEach(function (btn) {
+        btn.addEventListener('click', hideFullScreenPages);
+    });
+});
+
 function ydtSignOut() {
     if (window.AuthModule && typeof window.AuthModule.authSignOut === 'function') {
         window.AuthModule.authSignOut();

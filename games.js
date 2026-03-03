@@ -18,6 +18,13 @@ function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').rep
 
 // allData'dan kelime havuzu al
 function getPool(listName){
+    // listName boşsa tüm listeler birleştirilir
+    if(!listName){
+        const all = Object.values(allData).flat().filter(w=>w.eng&&w.tr);
+        // eng'e göre tekrar temizle (aynı kelime birden fazla listede olabilir)
+        const seen = new Set();
+        return all.filter(w=>{ if(seen.has(w.eng)) return false; seen.add(w.eng); return true; });
+    }
     const d = allData[listName];
     if(!d||!d.length) return [];
     return d.filter(w=>w.eng&&w.tr);
@@ -96,9 +103,8 @@ const GAME_META = [
 function renderHub(){
     const pg=$id('games-page'); if(!pg) return;
     const score=getScore();
-    const listSel=$id('game-list-selector');
-    const curList=listSel?listSel.value:'';
-    const poolSize=curList?getPool(curList).length:0;
+    const pool=getPool(''); // tüm listeler birleşik
+    const poolSize=pool.length;
 
     const tags=['Tümü','Kelime','Cümle','Seviye'];
     const activeTag=pg.dataset.tag||'Tümü';
@@ -109,15 +115,7 @@ function renderHub(){
 
     const cards=filtered.map(g=>{
         const ok=poolSize>=g.min;
-        return `<div class="gm-game-card${ok?'':' gm-disabled'}" onclick="${ok?`GM.start('${g.id}')`:''}">
-            <div class="gm-game-icon" style="background:${g.color}18;color:${g.color};">${g.icon}</div>
-            <div class="gm-game-body">
-                <div class="gm-game-name">${g.name}</div>
-                <div class="gm-game-desc">${g.desc}</div>
-                ${!ok?`<div class="gm-game-warn">⚠️ En az ${g.min} kelime gerekli</div>`:''}
-            </div>
-            <div class="gm-game-tag" style="background:${g.color}18;color:${g.color};">${g.tag}</div>
-        </div>`;
+        return `<div class="gm-game-card${ok?'':' gm-disabled'}" ${!ok?`data-disabled-reason="En az ${g.min} kelime gerekli"`:''} onclick="${ok?`GM.start('${g.id}')`:''}">\n            <div class="gm-game-icon" style="background:${g.color}18;color:${g.color};">${g.icon}</div>\n            <div class="gm-game-body">\n                <div class="gm-game-name">${g.name}</div>\n                <div class="gm-game-desc">${g.desc}</div>\n            </div>\n            <div class="gm-game-tag" style="background:${g.color}18;color:${g.color};">${g.tag}</div>\n        </div>`;
     }).join('');
 
     pg.innerHTML=`
@@ -129,18 +127,13 @@ function renderHub(){
             </div>
             <div class="gm-hub-score">
                 <div style="font-size:.65rem;font-weight:800;color:var(--ink3);text-transform:uppercase;letter-spacing:1px;">Toplam Puan</div>
-                <div style="font-size:1.6rem;font-weight:900;color:var(--red);">🏆 ${score}</div>
+                <div style="font-size:1.6rem;font-weight:900;color:var(--color-primary);">🏆 ${score}</div>
             </div>
         </div>
-
         <div class="gm-list-row">
-            <label class="gm-list-label">📚 Aktif Liste</label>
-            <select id="game-list-selector" class="gm-list-sel" onchange="GM._reload()">
-                ${Object.keys(allData).map(n=>`<option value="${n}"${n===curList?' selected':''}>${n} (${(allData[n]||[]).length} kelime)</option>`).join('')}
-            </select>
+            <span class="gm-list-label">📚 Tüm Kelimeler</span>
             <span class="gm-list-count">${poolSize} kelime</span>
         </div>
-
         <div class="gm-tags">${tagHtml}</div>
         <div class="gm-grid">${cards}</div>
     </div>`;
@@ -151,8 +144,7 @@ function _reload(){ renderHub(); }
 
 // Oyun başlatıcı
 function start(gameId){
-    const listSel=$id('game-list-selector');
-    const listName=listSel?listSel.value:'';
+    const listName=''; // tüm kelimeler
     window._gmCurrentList=listName;
     if(typeof startModule==='function') startModule();
     switch(gameId){
