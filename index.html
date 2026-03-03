@@ -1953,7 +1953,7 @@
 
     window._saveData = function () {
         localStorage.setItem('ydt_all_data', JSON.stringify(allData));
-        localStorage.setItem('ydt_stats', JSON.stringify(stats));
+
         if (window.paragrafSorular) {
             localStorage.setItem('ydt_paragraf_sorular', JSON.stringify(window.paragrafSorular));
         }
@@ -1970,7 +1970,7 @@
             try {
                 const keyMap = buildKeyMap(allData);
                 await set(ref(db, 'ydt/allData'), sanitizeAllData(allData));
-                await set(ref(db, 'ydt/stats'), stats);
+
                 await set(ref(db, 'ydt/keyMap'), keyMap);
                 if (window.paragrafSorular) {
                     await set(ref(db, 'ydt/paragrafSorular'), window.paragrafSorular);
@@ -1996,8 +1996,8 @@
                 const fbData = remote.allData || {};
                 const keyMap = remote.keyMap  || {};
                 allData = Object.keys(fbData).length ? restoreAllData(fbData, keyMap) : allData;
-                stats   = remote.stats || stats;
-                if (isNaN(stats.totalMinutes)) stats.totalMinutes = 0;
+
+
                 // paragrafSorular Firebase'den yükle
                 if (remote.paragrafSorular) {
                     window.paragrafSorular = remote.paragrafSorular;
@@ -2009,12 +2009,12 @@
                     localStorage.setItem('ydt_ai_arsiv', JSON.stringify(remote.aiArsiv));
                 }
                 localStorage.setItem('ydt_all_data', JSON.stringify(allData));
-                localStorage.setItem('ydt_stats', JSON.stringify(stats));
+
                 setSyncStatus('ok');
             } else {
                 const keyMap = buildKeyMap(allData);
                 await set(ref(db, 'ydt/allData'), sanitizeAllData(allData));
-                await set(ref(db, 'ydt/stats'), stats);
+
                 await set(ref(db, 'ydt/keyMap'), keyMap);
                 setSyncStatus('ok');
             }
@@ -2263,7 +2263,7 @@
                 authTimerInterval = setInterval(() => {
                     if (typeof stats !== 'undefined') {
                         stats.totalMinutes = (stats.totalMinutes || 0) + 1;
-                        localStorage.setItem('ydt_stats', JSON.stringify(stats));
+        
                     }
                 }, 60000);
             }
