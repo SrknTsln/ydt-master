@@ -30,6 +30,135 @@ const app  = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db   = getFirestore(app);
 
+// ════════════════════════════════════════════════════
+// 🔑 KİŞİSEL localStorage NAMESPACE SİSTEMİ
+//
+// Her kullanıcının verisi kendi uid prefixi ile saklanır:
+//   "ydt_stats"  →  "u_<uid>_ydt_stats"
+//
+// motor.js ve diğer dosyalar hâlâ "ydt_stats" gibi
+// standart anahtarları kullanır. Biz burada localStorage'ı
+// bir proxy ile sarıyoruz: kullanıcı girince kendi
+// namespace'inden okur/yazar, çıkınca standart anahtarlar
+// temizlenir.
+// ════════════════════════════════════════════════════
+
+// Kullanıcıya özel anahtarlar (tam eşleşme)
+const PERSONAL_KEYS = [
+    'ydt_stats',
+    'ydt_all_data',
+    'ydt_paragraflar',
+    'ydt_paragraf_sorular',
+    'ydt_streak',
+    'ydt_last_day',
+    'ydt_perf_hist',
+    'ydt_daily',
+    'ydt_gr_scores',
+    'ydt_grammar_scores',
+    'ydt_badges',
+    'ydt_profile',
+    'ydtai_tot',
+    'ydtai_cor',
+    'ydtai_wrg',
+    'ydt_ai_arsiv',
+    'ydt_gramer_arsiv',
+];
+
+// Prefix ile başlayan kişisel anahtarlar (ydt_daily_2025-01-01 gibi)
+const PERSONAL_PREFIXES = [
+    'ydt_daily_',
+];
+
+let _currentUID = null;
+
+function _userKey(key) {
+    if (!_currentUID) return key;
+    return `u_${_currentUID}_${key}`;
+}
+
+function _isPersonalKey(key) {
+    if (PERSONAL_KEYS.includes(key)) return true;
+    return PERSONAL_PREFIXES.some(p => key.startsWith(p));
+}
+
+/**
+ * localStorage proxy kurulumu.
+ * Kullanıcı giriş yaptıktan sonra çağrılır.
+ * motor.js ve diğer dosyalar localStorage.getItem/setItem
+ * kullanmaya devam eder, biz altında sessizce uid-prefix ekleriz.
+ */
+function installLocalStorageProxy(uid) {
+    _currentUID = uid;
+
+    const _origGet    = Storage.prototype.getItem;
+    const _origSet    = Storage.prototype.setItem;
+    const _origRemove = Storage.prototype.removeItem;
+
+    // Daha önce proxy kurulmuşsa tekrar kurma
+    if (localStorage.__proxyInstalled) return;
+    localStorage.__proxyInstalled = true;
+
+    Storage.prototype.getItem = function(key) {
+        if (this === localStorage && _currentUID && _isPersonalKey(key)) {
+            const val = _origGet.call(this, _userKey(key));
+            if (val !== null) return val;
+            // Kullanıcıya özel veri yoksa eski paylaşımlı anahtara bak (ilk giriş geçiş desteği)
+            return _origGet.call(this, key);
+        }
+        return _origGet.call(this, key);
+    };
+
+    Storage.prototype.setItem = function(key, value) {
+        if (this === localStorage && _currentUID && _isPersonalKey(key)) {
+            _origSet.call(this, _userKey(key), value);
+            return;
+        }
+        _origSet.call(this, key, value);
+    };
+
+    Storage.prototype.removeItem = function(key) {
+        if (this === localStorage && _currentUID && _isPersonalKey(key)) {
+            _origRemove.call(this, _userKey(key));
+            return;
+        }
+        _origRemove.call(this, key);
+    };
+
+    // Orijinal metodları sakla (logout için)
+    localStorage.__origGet    = _origGet;
+    localStorage.__origSet    = _origSet;
+    localStorage.__origRemove = _origRemove;
+}
+
+/**
+ * Kullanıcı çıkış yaptığında standart anahtarları sıfırla
+ * ki bir sonraki kullanıcı temiz sayfa görünsün.
+ */
+function clearPersonalKeysFromStandard() {
+    if (!localStorage.__origGet) return;
+    const origGet    = localStorage.__origGet;
+    const origRemove = localStorage.__origRemove;
+
+    // Standart (prefix'siz) anahtarları temizle
+    PERSONAL_KEYS.forEach(key => {
+        origRemove.call(localStorage, key);
+    });
+
+    // Prefix'li günlük anahtarları temizle
+    const allKeys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+        allKeys.push(localStorage.key(i));
+    }
+    allKeys.forEach(k => {
+        if (k && PERSONAL_PREFIXES.some(p => k.startsWith(p)) && !k.startsWith('u_')) {
+            origRemove.call(localStorage, k);
+        }
+    });
+}
+
+// ════════════════════════════════════════════════════
+// TIMER
+// ════════════════════════════════════════════════════
 let timerInterval = null;
 function startTimer() {
     if (timerInterval) return;
@@ -41,6 +170,9 @@ function startTimer() {
     }, 60000);
 }
 
+// ════════════════════════════════════════════════════
+// SYNC BAR
+// ════════════════════════════════════════════════════
 function setSyncBar(state, text) {
     const bar = document.getElementById('auth-sync-bar');
     if (!bar) return;
@@ -49,6 +181,9 @@ function setSyncBar(state, text) {
     if (span) span.textContent = text;
 }
 
+// ════════════════════════════════════════════════════
+// PROFİL UI
+// ════════════════════════════════════════════════════
 function updateProfilUI(user) {
     const photo       = document.getElementById('profil-gh-photo');
     const placeholder = document.getElementById('profil-gh-photo-placeholder');
@@ -109,6 +244,7 @@ function updateProfilWidgets() {
     if (xpBar) xpBar.style.width = xpPct + '%';
 
     // Günlük hedef (20 soru)
+    // Günlük anahtar artık proxy üzerinden uid-prefix alıyor
     const todayKey = 'ydt_daily_' + new Date().toISOString().slice(0,10);
     const todayAnswers = parseInt(localStorage.getItem(todayKey) || '0');
     const dailyGoal = 20;
@@ -146,6 +282,7 @@ function renderActivityCalendar() {
         const d = new Date(today);
         d.setDate(today.getDate() - i);
         const key = 'ydt_daily_' + d.toISOString().slice(0,10);
+        // Proxy üzerinden uid-prefix'li anahtarı okur
         const count = parseInt(localStorage.getItem(key) || '0');
         const cell = document.createElement('div');
         cell.className = 'pp-cal-cell';
@@ -155,79 +292,181 @@ function renderActivityCalendar() {
     }
 }
 
+// ════════════════════════════════════════════════════
+// FİRESTORE — YÜKLEME
+// ════════════════════════════════════════════════════
 async function loadUserData(uid) {
     try {
         setSyncBar('syncing', 'Veriler yükleniyor…');
         const snap = await getDoc(doc(db, 'users', uid));
         if (snap.exists()) {
-            const data    = snap.data();
-            const cloudTs = data.updatedAt ? new Date(data.updatedAt).getTime() : 0;
-            const localTs = parseInt(localStorage.getItem(`ydt_${uid}_updatedAt`) || '0');
+            const data = snap.data();
 
-            if (cloudTs >= localTs) {
-                // Cloud daha yeni → yükle
-                if (data.allData) {
-                    allData = data.allData;
-                    localStorage.setItem(`ydt_${uid}_all_data`, JSON.stringify(allData));
-                }
-                if (data.stats) {
-                    stats = { ...stats, ...data.stats };
-                    if (isNaN(stats.totalMinutes)) stats.totalMinutes = 0;
-                    localStorage.setItem(`ydt_${uid}_stats`, JSON.stringify(stats));
-                }
-            } else {
-                // Local daha yeni → koru, cloud'a yaz
-                console.info('[Auth] Local data newer — pushing to cloud.');
-                await saveUserData(uid);
+            // allData — kelime listeleri (kişiye özel)
+            if (data.allData && typeof allData !== 'undefined') {
+                allData = data.allData;
+                localStorage.setItem('ydt_all_data', JSON.stringify(allData));
             }
 
-            if (data.paragraflar?.length > 0) {
-                localStorage.setItem('ydt_paragraflar', JSON.stringify(data.paragraflar));
+            // stats — kişisel istatistikler
+            if (data.stats && typeof stats !== 'undefined') {
+                stats = { ...stats, ...data.stats };
+                if (isNaN(stats.totalMinutes)) stats.totalMinutes = 0;
+                localStorage.setItem('ydt_stats', JSON.stringify(stats));
+            }
+
+            // Paragraflar — içerik (paylaşımlı, kişisel değil — üzerine yazma)
+            if (data.paragraflar && Array.isArray(data.paragraflar) && data.paragraflar.length > 0) {
+                // Paragraflar kişisel namespace DEĞİL, global içerik
+                // Proxy'yi bypass ederek standart anahtara yaz
+                const origSet = localStorage.__origSet || Storage.prototype.setItem;
+                origSet.call(localStorage, 'ydt_paragraflar', JSON.stringify(data.paragraflar));
                 window.paragraflar = data.paragraflar;
                 if (typeof paragraflar !== 'undefined') {
                     paragraflar.splice(0, paragraflar.length);
-                    data.paragraflar.forEach(p => paragraflar.push(p));
+                    data.paragraflar.forEach(function(p) { paragraflar.push(p); });
                 }
             }
-            if (data.paragrafSorular) {
-                localStorage.setItem('ydt_paragraf_sorular', JSON.stringify(data.paragrafSorular));
+
+            if (data.paragrafSorular && typeof data.paragrafSorular === 'object') {
+                const origSet = localStorage.__origSet || Storage.prototype.setItem;
+                origSet.call(localStorage, 'ydt_paragraf_sorular', JSON.stringify(data.paragrafSorular));
                 window.paragrafSorular = data.paragrafSorular;
             }
+
+            // Kişisel aktivite geçmişi (streak, daily, perf_hist)
+            if (data.userActivity) {
+                const act = data.userActivity;
+                if (act.streak !== undefined)   localStorage.setItem('ydt_streak',    String(act.streak));
+                if (act.lastDay !== undefined)   localStorage.setItem('ydt_last_day',  act.lastDay);
+                if (act.perfHist !== undefined)  localStorage.setItem('ydt_perf_hist', JSON.stringify(act.perfHist));
+                if (act.daily !== undefined)     localStorage.setItem('ydt_daily',     JSON.stringify(act.daily));
+                // Günlük tarih bazlı anahtarlar
+                if (act.dailyDates && typeof act.dailyDates === 'object') {
+                    Object.entries(act.dailyDates).forEach(([k, v]) => {
+                        localStorage.setItem(k, String(v));
+                    });
+                }
+            }
+
+            // Grammar skorları (kişisel)
+            if (data.grammarScores) {
+                localStorage.setItem('ydt_gr_scores',       JSON.stringify(data.grammarScores.gr  || {}));
+                localStorage.setItem('ydt_grammar_scores',  JSON.stringify(data.grammarScores.all || {}));
+            }
+
+            // AI arsiv (kişisel)
+            if (data.aiArsiv) {
+                localStorage.setItem('ydt_ai_arsiv',    JSON.stringify(data.aiArsiv.kelime || []));
+                localStorage.setItem('ydt_gramer_arsiv', JSON.stringify(data.aiArsiv.gramer || []));
+                window.aiArsiv       = data.aiArsiv.kelime || [];
+                window.aiGramerArsiv = data.aiArsiv.gramer || [];
+            }
+
+            // AI soru istatistikleri
+            if (data.aiStats) {
+                localStorage.setItem('ydtai_tot', String(data.aiStats.tot || 0));
+                localStorage.setItem('ydtai_cor', String(data.aiStats.cor || 0));
+                localStorage.setItem('ydtai_wrg', String(data.aiStats.wrg || 0));
+            }
         }
-        if (typeof updateSelectors          === 'function') updateSelectors();
-        if (typeof updateIndexStats         === 'function') updateIndexStats();
-        if (typeof updateDailyGoalBar       === 'function') updateDailyGoalBar();
+
+        if (typeof updateSelectors    === 'function') updateSelectors();
+        if (typeof updateIndexStats   === 'function') updateIndexStats();
+        if (typeof updateDailyGoalBar === 'function') updateDailyGoalBar();
         if (typeof _populateParagrafListesi === 'function') _populateParagrafListesi();
         if (typeof _updateRh2HeroStats      === 'function') _updateRh2HeroStats();
         if (typeof showProfilPage           === 'function') showProfilPage();
-        setSyncBar('synced', 'Veriler senkronize edildi');
+        setSyncBar('synced', 'Veriler yüklendi ✓');
     } catch (e) {
         console.warn('Firestore yükleme hatası:', e);
         setSyncBar('synced', 'Yerel veriler kullanılıyor');
     }
 }
 
+// ════════════════════════════════════════════════════
+// FİRESTORE — KAYDETME
+// ════════════════════════════════════════════════════
 async function saveUserData(uid) {
     try {
         setSyncBar('syncing', 'Kaydediliyor…');
-        const now = new Date().toISOString();
-        const paragraflarData     = JSON.parse(localStorage.getItem('ydt_paragraflar')      || '[]');
-        const paragrafSorularData = JSON.parse(localStorage.getItem('ydt_paragraf_sorular') || '{}');
+
+        // Günlük tarih bazlı anahtarları topla
+        const dailyDates = {};
+        const allStorageKeys = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            allStorageKeys.push(localStorage.key(i));
+        }
+        allStorageKeys.forEach(k => {
+            if (!k) return;
+            // uid-prefix'li ydt_daily_ anahtarlarını bul
+            const dailyPrefix = `u_${uid}_ydt_daily_`;
+            if (k.startsWith(dailyPrefix)) {
+                const shortKey = k.replace(`u_${uid}_`, '');
+                dailyDates[shortKey] = localStorage.__origGet
+                    ? localStorage.__origGet.call(localStorage, k)
+                    : localStorage.getItem(k);
+            }
+        });
+
+        // Grammar skorlarını oku (proxy üzerinden — uid-prefix'li)
+        const grScores  = JSON.parse(localStorage.getItem('ydt_gr_scores')      || '{}');
+        const allScores = JSON.parse(localStorage.getItem('ydt_grammar_scores') || '{}');
+
+        // AI istatistikleri
+        const aiTot = parseInt(localStorage.getItem('ydtai_tot') || '0');
+        const aiCor = parseInt(localStorage.getItem('ydtai_cor') || '0');
+        const aiWrg = parseInt(localStorage.getItem('ydtai_wrg') || '0');
+
+        // Paragrafları — proxy bypass ile global anahtardan oku
+        const origGet = localStorage.__origGet || Storage.prototype.getItem;
+        const paragraflarData  = JSON.parse(origGet.call(localStorage, 'ydt_paragraflar') || '[]');
+        const paragrafSorularData = JSON.parse(origGet.call(localStorage, 'ydt_paragraf_sorular') || '{}');
+
+        // Aktivite verileri
+        const streak  = localStorage.getItem('ydt_streak');
+        const lastDay = localStorage.getItem('ydt_last_day');
+        const perfHist = JSON.parse(localStorage.getItem('ydt_perf_hist') || '{}');
+        const daily    = JSON.parse(localStorage.getItem('ydt_daily')     || '{}');
+
         await setDoc(doc(db, 'users', uid), {
-            stats:           stats   || {},
-            allData:         allData || {},
+            stats:           typeof stats   !== 'undefined' ? stats   : {},
+            allData:         typeof allData !== 'undefined' ? allData : {},
             paragraflar:     paragraflarData,
             paragrafSorular: paragrafSorularData,
-            updatedAt:       now
+            updatedAt:       new Date().toISOString(),
+            userActivity: {
+                streak:     streak ? parseInt(streak) : 0,
+                lastDay:    lastDay || '',
+                perfHist:   perfHist,
+                daily:      daily,
+                dailyDates: dailyDates,
+            },
+            grammarScores: {
+                gr:  grScores,
+                all: allScores,
+            },
+            aiArsiv: {
+                kelime: window.aiArsiv       || [],
+                gramer: window.aiGramerArsiv || [],
+            },
+            aiStats: {
+                tot: aiTot,
+                cor: aiCor,
+                wrg: aiWrg,
+            },
         }, { merge: true });
-        localStorage.setItem(`ydt_${uid}_updatedAt`, Date.now().toString());
-        setSyncBar('synced', 'Veriler senkronize edildi');
+
+        setSyncBar('synced', 'Veriler senkronize edildi ✓');
     } catch (e) {
         console.warn('Firestore kayıt hatası:', e);
         setSyncBar('synced', 'Yerel kaydedildi');
     }
 }
 
+// ════════════════════════════════════════════════════
+// GİRİŞ OVERLAY
+// ════════════════════════════════════════════════════
 function showLoginOverlay() {
     if (document.getElementById('login-overlay')) return;
     const overlay = document.createElement('div');
@@ -280,6 +519,9 @@ function hideLoginOverlay() {
     setTimeout(() => overlay.remove(), 400);
 }
 
+// ════════════════════════════════════════════════════
+// AUTH İŞLEMLERİ
+// ════════════════════════════════════════════════════
 async function authSignIn() {
     const provider = new GoogleAuthProvider();
     try {
@@ -293,6 +535,24 @@ async function authSignOut() {
     if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
     const user = auth.currentUser;
     if (user) await saveUserData(user.uid);
+
+    // Çıkışta standart anahtarları temizle — sonraki kullanıcı temiz görünsün
+    clearPersonalKeysFromStandard();
+
+    // stats ve allData'yı sıfırla (global değişkenler)
+    if (typeof stats !== 'undefined') {
+        stats.totalAnswers   = 0;
+        stats.correctAnswers = 0;
+        stats.totalMinutes   = 0;
+    }
+
+    // Proxy uid'ini sıfırla
+    _currentUID = null;
+    if (localStorage.__proxyInstalled) {
+        // Proxy'yi kaldır (tekrar kurulabilmesi için)
+        delete localStorage.__proxyInstalled;
+    }
+
     await signOut(auth);
     showLoginOverlay();
 }
@@ -303,91 +563,63 @@ async function syncNow() {
     await saveUserData(user.uid);
 }
 
+// ════════════════════════════════════════════════════
+// ADMİN
+// ════════════════════════════════════════════════════
 const ADMIN_EMAIL = 'stasalan@gmail.com';
 
 function updateAdminVisibility(email) {
     const isAdmin = email === ADMIN_EMAIL;
-    // Sidebar butonu
     const sbAdmin = document.getElementById('sb-admin');
     if (sbAdmin) sbAdmin.style.display = isAdmin ? '' : 'none';
-    // Mobil drawer butonu
     const diAdmin = document.getElementById('di-admin');
     if (diAdmin) diAdmin.style.display = isAdmin ? '' : 'none';
-    // Sidebar admin bar wrapper (sb-admin-bar)
     const sbAdminBar = document.querySelector('.sb-admin-bar');
     if (sbAdminBar) {
-        // Profil butonu kalmalı, sadece admin butonunu gizle
         const adminBtn = sbAdminBar.querySelector('#sb-admin');
         if (adminBtn) adminBtn.style.display = isAdmin ? '' : 'none';
     }
-    // window._currentUser kaydet (motor.js erişimi için)
     window._currentUser = isAdmin ? { email } : null;
 }
 
+// ════════════════════════════════════════════════════
+// AUTH STATE — KULLANICI GİRİŞ/ÇIKIŞ DURUMU
+// ════════════════════════════════════════════════════
 onAuthStateChanged(auth, async (user) => {
     if (user) {
-        const isNewLogin = !window._currentUser;
-
         window._currentUser = user;
         updateAdminVisibility(user.email);
+
+        // 1. Önce localStorage proxy'sini kur (uid namespace)
+        installLocalStorageProxy(user.uid);
+
+        // 2. Giriş overlay'ini gizle
         hideLoginOverlay();
 
-        // 1. Önce user-scoped local veriyi yükle (guest→uid geçişi + DEFAULT_VOCAB merge)
-        if (typeof loadUserScopedData === 'function') loadUserScopedData();
-
-        // 2. Selector'ları local veriyle hemen doldur (boş sayfa sorunu çözülür)
-        if (typeof updateSelectors === 'function') updateSelectors();
-
+        // 3. Profil UI'ı güncelle (şimdilik yerel stats ile)
         updateProfilUI(user);
 
-        // 3. Firestore'dan senkronize et (async — UI zaten hazır)
+        // 4. Firestore'dan kişisel verileri yükle
         await loadUserData(user.uid);
 
-        // 4. Firestore sonrası selector'ları tekrar güncelle
-        if (typeof updateSelectors === 'function') updateSelectors();
-
+        // 5. Timer başlat
         startTimer();
 
-        // Post-login → Profil sayfasına yönlendir
-        if (isNewLogin) {
-            setTimeout(function () {
-                const indexPage = document.getElementById('index-page');
-                const isOnIndex = indexPage && !indexPage.classList.contains('hidden');
-                if (isOnIndex && typeof navTo === 'function') {
-                    navTo('profil-page');
-                    if (typeof showProfilPage === 'function') showProfilPage();
-                    if (window.AuthModule && window.AuthModule.updateProfilWidgets) {
-                        setTimeout(window.AuthModule.updateProfilWidgets, 150);
-                    }
-                }
-            }, 500);
-        }
+        // 6. Otomatik kayıt (5 dk'da bir)
+        setInterval(() => saveUserData(user.uid), 5 * 60 * 1000);
 
-        // Otomatik kayıt — 5 dakikada bir
-        const autoSaveInterval = setInterval(() => saveUserData(user.uid), 5 * 60 * 1000);
+        // 7. Sayfa kapanırken kaydet
+        window.addEventListener('beforeunload', () => saveUserData(user.uid));
 
-        // beforeunload yerine visibilitychange (async-safe)
-        const onHide = () => {
-            if (document.visibilityState === 'hidden') saveUserData(user.uid);
-        };
-        document.addEventListener('visibilitychange', onHide);
-
-        window._saveData = function () {
-            localStorage.setItem(`ydt_${user.uid}_all_data`, JSON.stringify(allData));
-            localStorage.setItem(`ydt_${user.uid}_stats`,    JSON.stringify(stats));
+        // 8. _saveData çağrıldığında Firestore'a da kaydet
+        const originalSave = window._saveData;
+        window._saveData = function() {
+            if (typeof originalSave === 'function') originalSave();
             saveUserData(user.uid);
         };
-
-        window._authCleanup = () => {
-            clearInterval(autoSaveInterval);
-            document.removeEventListener('visibilitychange', onHide);
-        };
-
     } else {
         window._currentUser = null;
         updateAdminVisibility(null);
-        if (typeof window._authCleanup  === 'function') window._authCleanup();
-        if (typeof loadUserScopedData   === 'function') loadUserScopedData();
         showLoginOverlay();
     }
 });
