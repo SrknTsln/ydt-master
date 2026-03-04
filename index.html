@@ -2188,6 +2188,7 @@ function sbToggleGrammar() {
     list.setAttribute('aria-hidden',  String(open));
     list.classList.toggle('sb-grammar-list--open', !open);
 }
+function sbToggleGrammarMain() { sbToggleGrammar(); }
 function mobToggleGrammar() {
     const btn  = document.getElementById('di-grammar-toggle-main');
     const list = document.getElementById('di-grammar-list-main');
@@ -2197,6 +2198,7 @@ function mobToggleGrammar() {
     list.setAttribute('aria-hidden',  String(open));
     list.classList.toggle('mob-grammar-list--open', !open);
 }
+function mobToggleGrammarMain() { mobToggleGrammar(); }
 (function() {
     if (localStorage.getItem('ydt_sb_collapsed') === '1') {
         const sb = document.getElementById('desktop-sidebar');
@@ -2263,9 +2265,9 @@ function mobToggleGrammar() {
 
     window._saveData = function () {
         const uid = window._currentUser?.uid || 'guest';
-        localStorage.setItem(`ydt_${uid}_all_data`, JSON.stringify(allData));
+        localStorage.setItem(`ydt_${uid}_all_data`, JSON.stringify(window.allData));
         // legacy key de güncelle (motor.js uyumu)
-        localStorage.setItem('ydt_all_data', JSON.stringify(allData));
+        localStorage.setItem('ydt_all_data', JSON.stringify(window.allData));
 
         if (window.paragrafSorular) {
             localStorage.setItem('ydt_paragraf_sorular', JSON.stringify(window.paragrafSorular));
@@ -2283,8 +2285,8 @@ function mobToggleGrammar() {
         clearTimeout(syncTimeout);
         syncTimeout = setTimeout(async () => {
             try {
-                const keyMap = buildKeyMap(allData);
-                await set(ref(db, `ydt_users/${uid}/allData`), sanitizeAllData(allData));
+                const keyMap = buildKeyMap(window.allData);
+                await set(ref(db, `ydt_users/${uid}/window.allData`), sanitizeAllData(window.allData));
                 await set(ref(db, `ydt_users/${uid}/keyMap`), keyMap);
                 if (window.paragrafSorular) {
                     await set(ref(db, `ydt_users/${uid}/paragrafSorular`), window.paragrafSorular);
@@ -2316,7 +2318,7 @@ function mobToggleGrammar() {
                         const fbData = remote.allData || {};
                         const keyMap = remote.keyMap  || {};
                         if (Object.keys(fbData).length) {
-                            allData = restoreAllData(fbData, keyMap);
+                            window.allData = restoreAllData(fbData, keyMap);
                             loaded = true;
                         }
                         if (remote.paragrafSorular) {
@@ -2338,7 +2340,7 @@ function mobToggleGrammar() {
                     const remote = snap.val();
                     const fbData = remote.allData || {};
                     const keyMap = remote.keyMap  || {};
-                    allData = Object.keys(fbData).length ? restoreAllData(fbData, keyMap) : allData;
+                    window.allData = Object.keys(fbData).length ? restoreAllData(fbData, keyMap) : window.allData;
                     if (remote.paragrafSorular) {
                         window.paragrafSorular = remote.paragrafSorular;
                         localStorage.setItem('ydt_paragraf_sorular', JSON.stringify(remote.paragrafSorular));
@@ -2350,7 +2352,7 @@ function mobToggleGrammar() {
                     // Eski veriyi yeni sisteme taşı
                     if (uid && Object.keys(fbData).length) {
                         try {
-                            await set(ref(db, `ydt_users/${uid}/allData`), sanitizeAllData(allData));
+                            await set(ref(db, `ydt_users/${uid}/window.allData`), sanitizeAllData(window.allData));
                             await set(ref(db, `ydt_users/${uid}/keyMap`), keyMap);
                         } catch(e3) {}
                     }
@@ -2358,9 +2360,9 @@ function mobToggleGrammar() {
             }
 
             if (uid) {
-                localStorage.setItem(`ydt_${uid}_all_data`, JSON.stringify(allData));
+                localStorage.setItem(`ydt_${uid}_all_data`, JSON.stringify(window.allData));
             }
-            localStorage.setItem('ydt_all_data', JSON.stringify(allData));
+            localStorage.setItem('ydt_all_data', JSON.stringify(window.allData));
             setSyncStatus('ok');
         } catch (e) {
             setSyncStatus('error');
@@ -2407,7 +2409,7 @@ function mobToggleGrammar() {
     }
 
     function _updateAuthStats() {
-        if (typeof stats === 'undefined') return;
+        if (typeof window.stats === 'undefined') return;
         const total   = stats.totalAnswers   || 0;
         const correct = stats.correctAnswers || 0;
         const acc     = total > 0 ? Math.round((correct / total) * 100) : 0;
@@ -2421,7 +2423,7 @@ function mobToggleGrammar() {
     }
 
     function _updateProfilWidgets() {
-        if (typeof stats === 'undefined') return;
+        if (typeof window.stats === 'undefined') return;
         const minutes = Math.round(stats.totalMinutes) || 0;
         const correct = stats.correctAnswers || 0;
         const xp = correct * 10 + Math.floor(minutes / 5) * 5;
@@ -2502,23 +2504,23 @@ function mobToggleGrammar() {
         try {
             _authSyncBar('syncing', 'Veriler yükleniyor…');
             // Önce sıfırla — önceki kullanıcının verisi kalmasın
-            stats   = { totalAnswers: 0, correctAnswers: 0, totalMinutes: 0 };
-            allData = {};
+            window.stats   = { totalAnswers: 0, correctAnswers: 0, totalMinutes: 0 };
+            window.allData = {};
             _updateAuthStats();
             const snap = await getDoc(doc(fsdb, 'users', uid));
             if (snap.exists()) {
                 const data = snap.data();
-                if (data.allData) { allData = data.allData; localStorage.setItem(`ydt_${uid}_all_data`, JSON.stringify(allData)); }
-                if (data.stats)   { stats = { ...data.stats }; if (isNaN(stats.totalMinutes)) stats.totalMinutes = 0; localStorage.setItem(`ydt_${uid}_stats`, JSON.stringify(stats)); }
+                if (data.allData) { window.allData = data.allData; localStorage.setItem(`ydt_${uid}_all_data`, JSON.stringify(window.allData)); }
+                if (data.stats)   { window.stats = { ...data.stats }; if (isNaN(stats.totalMinutes)) stats.totalMinutes = 0; localStorage.setItem(`ydt_${uid}_stats`, JSON.stringify(window.stats)); }
                 // API keylerini Firestore'dan localStorage'a yükle
                 ['ydt_gemini_api_key','ydt_groq_api_key','ydt_openrouter_api_key','ydt_mistral_api_key'].forEach(k => {
                     if (data[k]) localStorage.setItem(k, data[k]);
                 });
             }
-            // Firestore'da stats yoksa localStorage'dan al (motor.js buraya yazar)
+            // Firestore'da window.stats yoksa localStorage'dan al (motor.js buraya yazar)
             if (!stats.totalAnswers && !stats.totalMinutes) {
                 const rawST = localStorage.getItem(`ydt_${uid}_stats`) || localStorage.getItem('ydt_stats');
-                if (rawST) { try { const s = JSON.parse(rawST); if (s) { stats = s; if (isNaN(stats.totalMinutes)) stats.totalMinutes = 0; } } catch(e){} }
+                if (rawST) { try { const s = JSON.parse(rawST); if (s) { window.stats = s; if (isNaN(stats.totalMinutes)) stats.totalMinutes = 0; } } catch(e){} }
             }
             if (typeof updateSelectors    === 'function') updateSelectors();
             if (typeof updateIndexStats   === 'function') updateIndexStats();
@@ -2544,14 +2546,14 @@ function mobToggleGrammar() {
                 if (v) apiKeyData[k] = v;
             });
             await setDoc(doc(fsdb, 'users', uid), {
-                stats:     typeof stats   !== 'undefined' ? stats   : {},
-                allData:   typeof allData !== 'undefined' ? allData : {},
+                stats:     typeof window.stats   !== 'undefined' ? stats   : {},
+                allData:   typeof window.allData !== 'undefined' ? allData : {},
                 updatedAt: new Date().toISOString(),
                 ...apiKeyData
             }, { merge: true });
             _authSyncBar('synced', 'Kaydedildi ✓');
-            localStorage.setItem(`ydt_${uid}_stats`,    JSON.stringify(stats));
-            localStorage.setItem(`ydt_${uid}_all_data`, JSON.stringify(allData));
+            localStorage.setItem(`ydt_${uid}_stats`,    JSON.stringify(window.stats));
+            localStorage.setItem(`ydt_${uid}_all_data`, JSON.stringify(window.allData));
         } catch(e) {
             console.warn('Firestore kayıt hatası:', e);
         }
@@ -2592,7 +2594,7 @@ function mobToggleGrammar() {
             // Guest: localStorage'dan veriyi yükle, sonra dashboard'u tetikle
             try {
                 const raw = localStorage.getItem('ydt_all_data');
-                if (raw) allData = JSON.parse(raw);
+                if (raw) window.allData = JSON.parse(raw);
             } catch(e) {}
             document.dispatchEvent(new Event('ydtDataReady'));
         });
@@ -2633,8 +2635,8 @@ function mobToggleGrammar() {
         if (user) {
             window._currentUser = user;
             // Yeni kullanıcı — önce sıfırla, UI'da 0 göster
-            stats   = { totalAnswers: 0, correctAnswers: 0, totalMinutes: 0 };
-            allData = {};
+            window.stats   = { totalAnswers: 0, correctAnswers: 0, totalMinutes: 0 };
+            window.allData = {};
             _updateAuthStats();
             _updateAdminVisibility(user.email);
             _hideLoginOverlay();
@@ -2643,12 +2645,12 @@ function mobToggleGrammar() {
             if (typeof obCheckAndShow === 'function') obCheckAndShow();
             if (!authTimerInterval) {
                 authTimerInterval = setInterval(() => {
-                    if (typeof stats !== 'undefined') {
+                    if (typeof window.stats !== 'undefined') {
                         stats.totalMinutes = (stats.totalMinutes || 0) + 1;
                         _updateAuthStats(); // UI'ı güncelle
                         // user-scoped localStorage'a da yaz
                         const u = auth.currentUser;
-                        if (u) localStorage.setItem(`ydt_${u.uid}_stats`, JSON.stringify(stats));
+                        if (u) localStorage.setItem(`ydt_${u.uid}_stats`, JSON.stringify(window.stats));
                     }
                 }, 60000);
             }
@@ -2656,8 +2658,8 @@ function mobToggleGrammar() {
             window.addEventListener('beforeunload', () => _saveUserData(user.uid));
         } else {
             // Çıkışta da sıfırla
-            stats   = { totalAnswers: 0, correctAnswers: 0, totalMinutes: 0 };
-            allData = {};
+            window.stats   = { totalAnswers: 0, correctAnswers: 0, totalMinutes: 0 };
+            window.allData = {};
             window._currentUser = null;
             _updateAuthStats();
             _updateAdminVisibility(null);
@@ -2865,21 +2867,28 @@ document.addEventListener('ydtDataReady', function () {
     if (typeof obRenderLevelBanner === 'function') obRenderLevelBanner();
 }, { once: false });
 
-// Fallback: Firebase devre dışıysa veya guest localStorage zaten doluysa
-// DOMContentLoaded sonrası 400ms içinde event gelmezse tetikle
-document.addEventListener('DOMContentLoaded', function () {
+// Fallback: module script DOM'dan sonra çalışır — DOMContentLoaded zaten geçmiş olabilir
+// readyState kontrol ederek ya anında ya 400ms sonra tetikle
+(function startFallback() {
     let fired = false;
     document.addEventListener('ydtDataReady', () => { fired = true; }, { once: true });
-    setTimeout(() => {
-        if (!fired) {
-            try {
-                const raw = localStorage.getItem('ydt_all_data');
-                if (raw) allData = JSON.parse(raw);
-            } catch(e) {}
-            document.dispatchEvent(new Event('ydtDataReady'));
-        }
-    }, 800);
-});
+    function tryFallback() {
+        if (fired) return;
+        try {
+            // getUserKey varsa user-scoped, yoksa guest key
+            const key = (typeof getUserKey === 'function') ? getUserKey('all_data') : 'ydt_guest_all_data';
+            const raw = localStorage.getItem(key) || localStorage.getItem('ydt_all_data');
+            if (raw) allData = JSON.parse(raw);
+        } catch(e) {}
+        document.dispatchEvent(new Event('ydtDataReady'));
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => setTimeout(tryFallback, 400));
+    } else {
+        // DOMContentLoaded zaten geçti — Firebase yüklenmesine kısa süre ver, sonra tetikle
+        setTimeout(tryFallback, 400);
+    }
+})();
 
 /* ── Sidebar Grammar Collapse (Desktop) ── */
 function sbToggleGrammar() { sbToggleGrammarMain(); } // compat alias
@@ -2937,8 +2946,9 @@ function ydtSignOut() {
         }, 800);
     }
 }
+</script>
 
-<!-- ── Standart Boş Durum Şablonu — JS buildEmptyState() tarafından kullanılır ── -->
+<!-- ── Standart Boş Durum Şablonu ── -->
 <template id="tpl-empty-state">
     <div class="empty-state" role="status">
         <div class="empty-state-icon" aria-hidden="true"></div>
@@ -2947,4 +2957,3 @@ function ydtSignOut() {
         <button class="empty-state-cta btn" style="display:none;"></button>
     </div>
 </template>
-</script>

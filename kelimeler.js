@@ -9,8 +9,11 @@ function getUserKey(key) {
     return `ydt_${uid}_${key}`;
 }
 
-let allData = {};
-let stats   = {};
+// Global olarak tanımla — module script'ten window.allData ile erişilir
+window.allData = window.allData || {};
+window.stats   = window.stats   || {};
+var allData = window.allData;
+var stats   = window.stats;
 
 // Kelime nesnesi üretici — tekrar yazmayı önler
 function _w(eng, tr, pos, mnemonic) {
