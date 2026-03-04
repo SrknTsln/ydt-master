@@ -1,15 +1,32 @@
 :root{
-    --red:#e63946;--red-soft:#fdf1f2;--ink:#1a1a2e;--ink2:#555566;--ink3:#606070;
+    --red:#c1121f;--red-soft:#fdf1f2;--ink:#1a1a2e;--ink2:#555566;--ink3:#606070;
     --border:#ebebf0;--bg:#f7f7fb;--white:#ffffff;--green:#22c55e;--green-s:#f0fdf4;
 
     /* ── Semantic color tokens ── */
-    --color-primary:     #e63946;  /* CTA butonlar, brand vurgusu  */
+    --color-primary:     #c1121f;  /* CTA butonlar, brand vurgusu — #c1121f: 6.22:1 WCAG AA */
     --color-primary-soft:#fdf1f2;  /* CTA soft arka plan           */
     --color-active:      #e63946;  /* Nav active, seçili öğe       */
     --color-active-soft: #fdf1f2;  /* Active soft arka plan        */
     --color-focus:       #e63946;  /* Input / button focus outline */
     --color-danger:      #dc2626;  /* Hata, yanlış cevap, sil      */
     --color-danger-soft: #fef2f2;  /* Danger soft arka plan        */
+    /* ── Renk Paleti Tokens ── */
+    --c-purple:      #7c3aed; --c-purple-soft: #f5f3ff; --c-purple-border: #c4b5fd;
+    --c-blue:        #2563eb; --c-blue-soft:   #eff6ff; --c-blue-border:   #93c5fd;
+    --c-sky:         #0ea5e9; --c-sky-soft:    #f0f9ff; --c-sky-border:    #7dd3fc;
+    --c-teal:        #059669; --c-teal-soft:   #ecfdf5; --c-teal-border:   #6ee7b7;
+    --c-green:       #16a34a; --c-green-soft:  #f0fdf4; --c-green-border:  #bbf7d0;
+    --c-amber:       #ca8a04; --c-amber-soft:  #fef9c3; --c-amber-border:  #fde68a;
+    --c-orange:      #ea580c; --c-orange-soft: #fff7ed; --c-orange-border: #fed7aa;
+    --c-pink:        #e11d48; --c-pink-soft:   #fff1f2; --c-pink-border:   #fda4af;
+    --c-indigo:      #4f46e5; --c-indigo-soft: #eef2ff; --c-indigo-border: #a5b4fc;
+    --c-fuchsia:     #a21caf; --c-fuchsia-soft:#fdf4ff; --c-fuchsia-border:#f0abfc;
+    --c-violet:      #6366f1; --c-violet-soft: #eef2ff; --c-violet-border: #c7d2fe;
+    --c-sync-idle:   #cccccc; /* Sync dot varsayılan */
+    --c-saved-bg:    #dcfce7; --c-saved-color: #16a34a; /* API key kayıtlı badge */
+    --c-ai-gradient-from: #667eea; --c-ai-gradient-to: #764ba2; /* AI promo banner */
+    --c-code-bg:     #e2e8f0; /* Inline kod arka planı */
+    --c-info-bg:     #f8fafc; /* Bilgi kutusu arka planı */
 
     /* ── Z-index scale ── */
     --z-below:    -1;
@@ -47,7 +64,7 @@ html { font-size: 18px; } /* base 16px → 18px: tüm rem değerleri %12.5 büy�
 .loading-sub{font-size:.75rem;color:var(--ink3);}
 
 /* ═══ DESKTOP ≥700px: sidebar + centered card ═══ */
-body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:flex;min-height:100vh;}
+body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:var(--bg);display:flex;min-height:100vh;}
 .desktop-sidebar{
     width:228px;flex-shrink:0;background:var(--white);
     border-right:1px solid var(--border);
@@ -56,6 +73,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
     z-index:var(--z-dropdown);
     transition:width .22s cubic-bezier(.4,0,.2,1);
 }
+
+/* ── Standalone container sayfalar (study, profil vb.) desktop'ta ortalansın ── */
 
 /* ── Collapsed (dar) mod ── */
 .desktop-sidebar.sb-collapsed { width:62px; overflow-x:hidden; }
@@ -187,6 +206,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
 .sb-btn-admin:focus-visible{outline:2px solid var(--color-focus);outline-offset:1px;}
 
 .desktop-main{flex:1;display:flex;align-items:flex-start;justify-content:center;padding:28px 20px;min-height:100vh;}
+.desktop-main > .container { margin-left:auto; margin-right:auto; }
+
 
 /* ═══ MOBILE <700px ═══ */
 .mob-topbar{display:none;}
@@ -213,9 +234,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);display:fl
     .mob-logo em{color:var(--color-primary);font-style:normal;}
     .mob-sync{display:flex;align-items:center;gap:5px;font-size:.6rem;font-weight:600;color:var(--ink3);}
     .mob-burger{
-        width:38px;height:38px;flex-shrink:0;background:none;border:none;
+        width:44px;height:44px;flex-shrink:0;background:none;border:none;
         cursor:pointer;display:flex;flex-direction:column;
         align-items:center;justify-content:center;gap:5px;border-radius:10px;
+        /* ♿ Apple HIG & WCAG 2.5.5: minimum 44×44px touch target */
     }
     .mob-burger span{display:block;width:20px;height:2px;background:var(--ink);border-radius:2px;transition:transform .25s,opacity .25s;}
     .mob-burger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
@@ -1023,21 +1045,6 @@ select:focus,input:focus,textarea:focus{border-color:var(--color-focus);}
 
 
 /* ── Flip Card Study ── */
-.study-topbar{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
-.back-btn-inline{font-size:1.2rem;border:none;background:none;color:var(--ink3);cursor:pointer;flex-shrink:0;padding:4px 6px;border-radius:8px;}
-.back-btn-inline:hover{background:var(--bg);}
-.study-progress-wrap{flex:1;display:flex;flex-direction:column;gap:4px;}
-.study-progress-track{background:var(--border);border-radius:99px;height:6px;overflow:hidden;}
-.study-progress-fill{height:100%;background:linear-gradient(90deg,var(--color-primary),#f97316);border-radius:99px;width:0%;transition:width .45s cubic-bezier(.4,0,.2,1);}
-.study-progress-label{font-size:.62rem;font-weight:800;color:var(--ink3);text-align:right;}
-.study-speak-btn{border:none;background:var(--bg);border-radius:10px;padding:7px 10px;font-size:.95rem;cursor:pointer;flex-shrink:0;transition:background .12s;}
-.study-speak-btn:hover{background:var(--color-primary-soft);}
-
-.study-chips{display:flex;gap:8px;margin-bottom:12px;}
-.study-chip{flex:1;text-align:center;padding:6px 8px;border-radius:9px;font-size:.72rem;font-weight:700;}
-.study-chip-known{background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;}
-.study-chip-again{background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;}
-
 .study-topbar{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
 .back-btn-inline{font-size:1.2rem;border:none;background:none;color:var(--ink3);cursor:pointer;flex-shrink:0;padding:4px 6px;border-radius:8px;}
 .back-btn-inline:hover{background:var(--bg);}
@@ -3936,7 +3943,7 @@ select:focus,input:focus,textarea:focus{border-color:var(--color-focus);}
 #kids-page {
     width: 100%;
     max-width: 680px;
-    font-family: 'Nunito', 'Segoe UI', sans-serif;
+    font-family: 'Nunito', 'Plus Jakarta Sans', system-ui, sans-serif;
     padding: 0 4px 80px;
     position: relative;
 }
@@ -5296,7 +5303,7 @@ body:has(#kids-page:not(.hidden)) .kw-world-bg { opacity: 1; }
     position: fixed !important; inset: 0 !important; left: 0 !important;
     background: var(--bg) !important; display: flex !important;
     flex-direction: column !important; overflow: hidden !important;
-    z-index: var(--z-drawer-bg) !important; font-family: 'Segoe UI', system-ui, sans-serif;
+    z-index: var(--z-drawer-bg) !important; font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
     max-width: none !important; width: 100% !important; padding: 0 !important;
     margin: 0 !important; border-radius: 0 !important; border: none !important;
     box-shadow: none !important; text-align: left !important;
@@ -5483,7 +5490,7 @@ body:has(#kids-page:not(.hidden)) .kw-world-bg { opacity: 1; }
     position:fixed !important; inset:0 !important; left:0 !important;
     background:var(--bg) !important; display:flex !important;
     flex-direction:column !important; overflow:hidden !important;
-    z-index:var(--z-drawer-bg) !important; font-family:'Segoe UI',system-ui,sans-serif;
+    z-index:var(--z-drawer-bg) !important; font-family:'Plus Jakarta Sans',system-ui,sans-serif;
     max-width:none !important; width:100% !important; padding:0 !important;
     margin:0 !important; border-radius:0 !important;
     border:none !important; box-shadow:none !important;
@@ -5649,7 +5656,7 @@ body:has(#kids-page:not(.hidden)) .kw-world-bg { opacity: 1; }
     position:fixed !important; inset:0 !important; left:0 !important;
     background:var(--bg) !important; display:flex !important;
     flex-direction:column !important; overflow:hidden !important;
-    z-index:var(--z-drawer-bg) !important; font-family:'Segoe UI',system-ui,sans-serif;
+    z-index:var(--z-drawer-bg) !important; font-family:'Plus Jakarta Sans',system-ui,sans-serif;
     max-width:none !important; width:100% !important; padding:0 !important;
     margin:0 !important; border-radius:0 !important;
     border:none !important; box-shadow:none !important;
@@ -6107,6 +6114,20 @@ body:has(#kids-page:not(.hidden)) .kw-world-bg { opacity: 1; }
 .dash-qa-9  { background: linear-gradient(135deg,#e0e7ff,#ede9fe); border-color: #a5b4fc50; }
 .dash-qa-10 { background: linear-gradient(135deg,#ecfdf5,#d1fae5); border-color: #6ee7b750; }
 
+/* ── Soft hiyerarşi: ilk 3 birincil, geri kalanlar ikincil ── */
+.dash-quick-grid .dash-qa:nth-child(-n+3) {
+    padding: 16px 6px 14px;
+    min-height: 92px;
+    border-width: 2.5px;
+}
+.dash-quick-grid .dash-qa:nth-child(n+4) {
+    opacity: .78;
+    min-height: 76px;
+}
+.dash-quick-grid .dash-qa:nth-child(n+4):hover {
+    opacity: 1;
+}
+
 /* ── Soru İstatistik Grid ── */
 .dash-sorustat-grid {
     display: grid;
@@ -6170,9 +6191,74 @@ body:has(#kids-page:not(.hidden)) .kw-world-bg { opacity: 1; }
 }
 
 /* ════════════════════════════
-   MASAÜSTÜ (≥700px)
+   TABLET (700px–1023px) — iPad blind spot
+   Sidebar otomatik collapsed, içerik tam genişlik
    ════════════════════════════ */
-@media (min-width: 700px) {
+@media (min-width: 700px) and (max-width: 1023px) {
+    /* Sidebar dar mod — icon-only */
+    .desktop-sidebar {
+        width: 62px !important;
+        overflow-x: hidden;
+    }
+    .desktop-sidebar .serkan-logo-text,
+    .desktop-sidebar .sb-sync,
+    .desktop-sidebar .sb-sec,
+    .desktop-sidebar .sb-badge,
+    .desktop-sidebar .sb-badge-pill,
+    .desktop-sidebar .sb-grammar-toggle-label,
+    .desktop-sidebar .sb-grammar-chev,
+    .desktop-sidebar .sb-grammar-list { display: none !important; }
+
+    .desktop-sidebar .sb-logo {
+        padding: 14px 0 !important;
+        justify-content: center;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .desktop-sidebar .serkan-logo { justify-content: center; }
+    .desktop-sidebar .sb-collapse-btn { margin: 0 auto; }
+
+    .desktop-sidebar .sb-btn,
+    .desktop-sidebar .sb-btn-sub,
+    .desktop-sidebar .sb-btn-sec,
+    .desktop-sidebar .sb-btn-admin,
+    .desktop-sidebar .sb-grammar-toggle {
+        justify-content: center;
+        padding: 9px 0;
+        font-size: 0 !important;
+        gap: 0;
+        border-radius: 10px;
+    }
+    .desktop-sidebar .sb-icon { font-size: 1.15rem !important; margin: 0; }
+    .desktop-sidebar .sb-nav-primary,
+    .desktop-sidebar .sb-secondary { padding: 4px 6px; }
+    .desktop-sidebar .sb-secondary-divider { margin: 4px 4px 6px; }
+    .desktop-sidebar .sb-admin-bar { padding: 0 2px 4px; }
+
+    /* Tooltip tablet'te de aktif */
+    .desktop-sidebar .sb-btn[title],
+    .desktop-sidebar .sb-btn-sec[title] { position: relative; }
+    .desktop-sidebar .sb-btn[title]:hover::after,
+    .desktop-sidebar .sb-btn-sec[title]:hover::after {
+        content: attr(title);
+        position: absolute; left: 70px; top: 50%;
+        transform: translateY(-50%);
+        background: #1a1a2e; color: #fff;
+        padding: 5px 10px; border-radius: 8px;
+        font-size: .75rem; font-weight: 600;
+        white-space: nowrap; pointer-events: none;
+        z-index: var(--z-tooltip, 9000);
+        box-shadow: 0 4px 12px rgba(0,0,0,.2);
+    }
+
+    /* İçerik alanı geniş kalsın */
+    .desktop-main { padding: 20px 16px; }
+}
+
+/* ════════════════════════════
+   MASAÜSTÜ (≥1024px)
+   ════════════════════════════ */
+@media (min-width: 1024px) {
     .dash-hero { padding: 28px 32px 30px; border-radius: 0 0 28px 28px; }
     .dash-hero-inner { max-width: 700px; }
     .dash-title { font-size: 2rem; }
@@ -6492,54 +6578,295 @@ body:has(#kids-page:not(.hidden)) .kw-world-bg { opacity: 1; }
     
 }
 
-/* ══ 05 — 1 Primary + 9 Grid ══════════════════════ */
-
-/* İlk buton: tam satır genişliği, yatay layout */
-.dash-qa.dash-qa-primary-card {
-    grid-column: 1 / -1;
-    flex-direction: row !important;
-    align-items: center !important;
-    justify-content: flex-start !important;
-    text-align: left !important;
-    gap: 18px !important;
-    padding: 20px 24px !important;
-    min-height: 68px !important;
-    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
-    border-color: transparent !important;
-    box-shadow: 0 4px 16px rgba(79,70,229,.3);
-}
-.dash-qa.dash-qa-primary-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(79,70,229,.4) !important;
-}
-.dash-qa.dash-qa-primary-card .dash-qa-icon {
-    font-size: 2.2rem !important;
-    flex-shrink: 0;
-}
-.dash-qa.dash-qa-primary-card .dash-qa-title {
-    font-size: .95rem !important;
-    color: #fff !important;
-    line-height: 1.2;
-}
-.dash-qa.dash-qa-primary-card .dash-qa-desc {
-    font-size: .72rem !important;
-    color: rgba(255,255,255,.8) !important;
-    display: block !important;
-    margin-top: 2px;
-}
-
-@media (max-width: 699px) {
-    .dash-qa.dash-qa-primary-card {
-        padding: 16px 18px !important;
-        gap: 14px !important;
-    }
-    .dash-qa.dash-qa-primary-card .dash-qa-icon  { font-size: 1.8rem !important; }
-    .dash-qa.dash-qa-primary-card .dash-qa-title { font-size: .82rem !important; }
-    .dash-qa.dash-qa-primary-card .dash-qa-desc  { font-size: .68rem !important; display: block !important; }
-}
 @media (min-width: 700px) {
     .dash-quick-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
-    .dash-qa.dash-qa-primary-card { padding: 22px 28px !important; }
-    .dash-qa.dash-qa-primary-card .dash-qa-icon  { font-size: 2.4rem !important; }
-    .dash-qa.dash-qa-primary-card .dash-qa-title { font-size: 1.05rem !important; }
+}
+
+/* ── Accessibility: Görsel olarak gizli, screen reader'a görünür ── */
+.sr-only {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+
+/* ════════════════════════════════════════════════════════════
+   GLOBAL DARK MODE  —  prefers-color-scheme: dark
+   Token override — bileşen CSS'leri dokunulmaz kalır
+   ════════════════════════════════════════════════════════════ */
+@media (prefers-color-scheme: dark) {
+    :root {
+        /* ── Temel renkler ── */
+        --ink:    #e8e8f0;
+        --ink2:   #b0b0c8;
+        --ink3:   #7878a0;
+        --border: #2a2a3e;
+        --bg:     #0f0f1a;
+        --white:  #1a1a2e;
+
+        /* ── Semantic tokens ── */
+        --red:              #f87171;
+        --red-soft:         #2a0a0e;
+        --green:            #4ade80;
+        --green-s:          #052e16;
+        --color-primary:    #f87171;   /* dark'ta daha parlak kırmızı — kontrast */
+        --color-primary-soft: #2a0a0e;
+        --color-active:     #f87171;
+        --color-active-soft:#2a0a0e;
+        --color-focus:      #f87171;
+        --color-danger:     #f87171;
+        --color-danger-soft:#2a0a0e;
+
+        /* ── Renk paleti soft/border overrides ── */
+        --c-purple-soft:    #1e0a3c; --c-purple-border: #4c1d95;
+        --c-blue-soft:      #0a1628; --c-blue-border:   #1e3a8a;
+        --c-sky-soft:       #071c2e; --c-sky-border:    #075985;
+        --c-teal-soft:      #042f2e; --c-teal-border:   #065f46;
+        --c-green-soft:     #052e16; --c-green-border:  #14532d;
+        --c-amber-soft:     #1c1500; --c-amber-border:  #713f12;
+        --c-orange-soft:    #1c0f00; --c-orange-border: #7c2d12;
+        --c-pink-soft:      #2a0011; --c-pink-border:   #881337;
+        --c-indigo-soft:    #0f0e30; --c-indigo-border: #312e81;
+        --c-fuchsia-soft:   #1e0828; --c-fuchsia-border:#701a75;
+        --c-violet-soft:    #0f0e30; --c-violet-border: #312e81;
+        --c-sync-idle:      #444466;
+        --c-saved-bg:       #052e16; --c-saved-color: #4ade80;
+        --c-code-bg:        #1e2030;
+        --c-info-bg:        #13131f;
+    }
+
+    /* ── Kelime kartı hero gradyanı (dark'ta zaten koyu — iyileştirme) ── */
+    .wc-hero { background: linear-gradient(135deg, #0a0820 0%, #1a0f3a 100%); }
+
+    /* ── Sidebar ── */
+    .desktop-sidebar { background: #13131f; border-color: var(--border); }
+    .sb-btn:hover { background: #1e1e30; }
+    .sb-btn.active { background: #2a0a0e; color: var(--color-active); }
+
+    /* ── Mobil topbar & drawer ── */
+    .mob-topbar  { background: #13131f; border-color: var(--border); }
+    .mob-drawer  { background: #13131f; }
+    .mob-bottomnav { background: #13131f; border-color: var(--border); }
+    .mob-tab.active { color: var(--color-active); }
+
+    /* ── Kartlar & paneller ── */
+    .dash-kpi       { background: #1a1a2e; border-color: var(--border); }
+    .dash-today-card { background: #1a1a2e; border-color: var(--border); }
+    .idx-weak-list, .idx-sm2-wrap { background: #1a1a2e; border-color: var(--border); }
+
+    /* ── Dashboard quick grid ── */
+    .dash-qa-1  { background: linear-gradient(135deg,#1e0a3c,#0a1628); }
+    .dash-qa-2  { background: linear-gradient(135deg,#2a0a0e,#1c1500); }
+    .dash-qa-3  { background: linear-gradient(135deg,#2a0a0e,#2a0011); }
+    .dash-qa-4  { background: linear-gradient(135deg,#071c2e,#042f2e); }
+    .dash-qa-5  { background: linear-gradient(135deg,#1c1500,#052e16); }
+    .dash-qa-6  { background: linear-gradient(135deg,#052e16,#071c2e); }
+    .dash-qa-7  { background: linear-gradient(135deg,#1e0828,#1e0a3c); }
+    .dash-qa-8  { background: linear-gradient(135deg,#1c1500,#1c0f00); }
+    .dash-qa-9  { background: linear-gradient(135deg,#0f0e30,#1e0a3c); }
+    .dash-qa-10 { background: linear-gradient(135deg,#042f2e,#052e16); }
+
+    /* ── Input & form ── */
+    input, select, textarea {
+        background: #13131f;
+        color: var(--ink);
+        border-color: var(--border);
+    }
+    input::placeholder, textarea::placeholder { color: var(--ink3); }
+
+    /* ── Genel container ── */
+    .container { background: var(--bg); }
+    body { background: var(--bg); color: var(--ink); }
+}
+[data-theme="dark"] :root,
+[data-theme="dark"]:root {
+        /* ── Temel renkler ── */
+        --ink:    #e8e8f0;
+        --ink2:   #b0b0c8;
+        --ink3:   #7878a0;
+        --border: #2a2a3e;
+        --bg:     #0f0f1a;
+        --white:  #1a1a2e;
+
+        /* ── Semantic tokens ── */
+        --red:              #f87171;
+        --red-soft:         #2a0a0e;
+        --green:            #4ade80;
+        --green-s:          #052e16;
+        --color-primary:    #f87171;   /* dark'ta daha parlak kırmızı — kontrast */
+        --color-primary-soft: #2a0a0e;
+        --color-active:     #f87171;
+        --color-active-soft:#2a0a0e;
+        --color-focus:      #f87171;
+        --color-danger:     #f87171;
+        --color-danger-soft:#2a0a0e;
+
+        /* ── Renk paleti soft/border overrides ── */
+        --c-purple-soft:    #1e0a3c; --c-purple-border: #4c1d95;
+        --c-blue-soft:      #0a1628; --c-blue-border:   #1e3a8a;
+        --c-sky-soft:       #071c2e; --c-sky-border:    #075985;
+        --c-teal-soft:      #042f2e; --c-teal-border:   #065f46;
+        --c-green-soft:     #052e16; --c-green-border:  #14532d;
+        --c-amber-soft:     #1c1500; --c-amber-border:  #713f12;
+        --c-orange-soft:    #1c0f00; --c-orange-border: #7c2d12;
+        --c-pink-soft:      #2a0011; --c-pink-border:   #881337;
+        --c-indigo-soft:    #0f0e30; --c-indigo-border: #312e81;
+        --c-fuchsia-soft:   #1e0828; --c-fuchsia-border:#701a75;
+        --c-violet-soft:    #0f0e30; --c-violet-border: #312e81;
+        --c-sync-idle:      #444466;
+        --c-saved-bg:       #052e16; --c-saved-color: #4ade80;
+        --c-code-bg:        #1e2030;
+        --c-info-bg:        #13131f;
+    }
+
+    /* ── Kelime kartı hero gradyanı (dark'ta zaten koyu — iyileştirme) ── */
+    .wc-hero { background: linear-gradient(135deg, #0a0820 0%, #1a0f3a 100%); }
+
+    /* ── Sidebar ── */
+    .desktop-sidebar { background: #13131f; border-color: var(--border); }
+    .sb-btn:hover { background: #1e1e30; }
+    .sb-btn.active { background: #2a0a0e; color: var(--color-active); }
+
+    /* ── Mobil topbar & drawer ── */
+    .mob-topbar  { background: #13131f; border-color: var(--border); }
+    .mob-drawer  { background: #13131f; }
+    .mob-bottomnav { background: #13131f; border-color: var(--border); }
+    .mob-tab.active { color: var(--color-active); }
+
+    /* ── Kartlar & paneller ── */
+    .dash-kpi       { background: #1a1a2e; border-color: var(--border); }
+    .dash-today-card { background: #1a1a2e; border-color: var(--border); }
+    .idx-weak-list, .idx-sm2-wrap { background: #1a1a2e; border-color: var(--border); }
+
+    /* ── Dashboard quick grid ── */
+    .dash-qa-1  { background: linear-gradient(135deg,#1e0a3c,#0a1628); }
+    .dash-qa-2  { background: linear-gradient(135deg,#2a0a0e,#1c1500); }
+    .dash-qa-3  { background: linear-gradient(135deg,#2a0a0e,#2a0011); }
+    .dash-qa-4  { background: linear-gradient(135deg,#071c2e,#042f2e); }
+    .dash-qa-5  { background: linear-gradient(135deg,#1c1500,#052e16); }
+    .dash-qa-6  { background: linear-gradient(135deg,#052e16,#071c2e); }
+    .dash-qa-7  { background: linear-gradient(135deg,#1e0828,#1e0a3c); }
+    .dash-qa-8  { background: linear-gradient(135deg,#1c1500,#1c0f00); }
+    .dash-qa-9  { background: linear-gradient(135deg,#0f0e30,#1e0a3c); }
+    .dash-qa-10 { background: linear-gradient(135deg,#042f2e,#052e16); }
+
+    /* ── Input & form ── */
+    input, select, textarea {
+        background: #13131f;
+        color: var(--ink);
+        border-color: var(--border);
+    }
+    input::placeholder, textarea::placeholder { color: var(--ink3); }
+
+    /* ── Genel container ── */
+    .container { background: var(--bg); }
+    body { background: var(--bg); color: var(--ink); }
+
+/* ── data-theme="dark" — tüm dark bileşen override'ları ── */
+[data-theme="dark"] .wc-hero { background: linear-gradient(135deg, #0a0820 0%, #1a0f3a 100%); }
+[data-theme="dark"] .desktop-sidebar { background: #13131f; border-color: var(--border); }
+[data-theme="dark"] .sb-btn:hover { background: #1e1e30; }
+[data-theme="dark"] .sb-btn.active { background: #2a0a0e; color: var(--color-active); }
+[data-theme="dark"] .mob-topbar  { background: #13131f; border-color: var(--border); }
+[data-theme="dark"] .mob-drawer  { background: #13131f; }
+[data-theme="dark"] .mob-bottomnav { background: #13131f; border-color: var(--border); }
+[data-theme="dark"] .mob-tab.active { color: var(--color-active); }
+[data-theme="dark"] .dash-kpi       { background: #1a1a2e; border-color: var(--border); }
+[data-theme="dark"] .dash-today-card { background: #1a1a2e; border-color: var(--border); }
+[data-theme="dark"] .idx-weak-list, [data-theme="dark"] .idx-sm2-wrap { background: #1a1a2e; border-color: var(--border); }
+[data-theme="dark"] .dash-qa-1  { background: linear-gradient(135deg,#1e0a3c,#0a1628); }
+[data-theme="dark"] .dash-qa-2  { background: linear-gradient(135deg,#2a0a0e,#1c1500); }
+[data-theme="dark"] .dash-qa-3  { background: linear-gradient(135deg,#2a0a0e,#2a0011); }
+[data-theme="dark"] .dash-qa-4  { background: linear-gradient(135deg,#071c2e,#042f2e); }
+[data-theme="dark"] .dash-qa-5  { background: linear-gradient(135deg,#1c1500,#052e16); }
+[data-theme="dark"] .dash-qa-6  { background: linear-gradient(135deg,#052e16,#071c2e); }
+[data-theme="dark"] .dash-qa-7  { background: linear-gradient(135deg,#1e0828,#1e0a3c); }
+[data-theme="dark"] .dash-qa-8  { background: linear-gradient(135deg,#1c1500,#1c0f00); }
+[data-theme="dark"] .dash-qa-9  { background: linear-gradient(135deg,#0f0e30,#1e0a3c); }
+[data-theme="dark"] .dash-qa-10 { background: linear-gradient(135deg,#042f2e,#052e16); }
+[data-theme="dark"] input, [data-theme="dark"] select, [data-theme="dark"] textarea {
+    background: #13131f; color: var(--ink); border-color: var(--border);
+}
+[data-theme="dark"] input::placeholder, [data-theme="dark"] textarea::placeholder { color: var(--ink3); }
+[data-theme="dark"] .container { background: var(--bg); }
+[data-theme="dark"] body { background: var(--bg); color: var(--ink); }
+
+/* ── data-theme="light" — sistem dark olsa bile aydınlık zorla ── */
+[data-theme="light"] :root,
+[data-theme="light"]:root {
+    --ink:    #1a1a2e; --ink2:   #555566; --ink3:   #606070;
+    --border: #ebebf0; --bg:     #f7f7fb; --white:  #ffffff;
+    --red:    #c1121f; --red-soft: #fdf1f2; --green: #22c55e; --green-s: #f0fdf4;
+    --color-primary: #c1121f; --color-primary-soft: #fdf1f2;
+    --color-active: #e63946; --color-active-soft: #fdf1f2;
+    --color-danger: #dc2626; --color-danger-soft: #fef2f2;
+    --c-purple-soft: #f5f3ff; --c-purple-border: #c4b5fd;
+    --c-blue-soft:   #eff6ff; --c-blue-border:   #93c5fd;
+    --c-sky-soft:    #f0f9ff; --c-sky-border:    #7dd3fc;
+    --c-teal-soft:   #ecfdf5; --c-teal-border:   #6ee7b7;
+    --c-green-soft:  #f0fdf4; --c-green-border:  #bbf7d0;
+    --c-amber-soft:  #fef9c3; --c-amber-border:  #fde68a;
+    --c-orange-soft: #fff7ed; --c-orange-border: #fed7aa;
+    --c-pink-soft:   #fff1f2; --c-pink-border:   #fda4af;
+    --c-indigo-soft: #eef2ff; --c-indigo-border: #a5b4fc;
+    --c-fuchsia-soft:#fdf4ff; --c-fuchsia-border:#f0abfc;
+    --c-violet-soft: #eef2ff; --c-violet-border: #c7d2fe;
+    --c-sync-idle:   #cccccc;
+    --c-saved-bg:    #dcfce7; --c-saved-color: #16a34a;
+    --c-code-bg:     #e2e8f0;
+    --c-info-bg:     #f8fafc;
+}
+
+/* ── data-theme="light" bileşen override'ları ── */
+[data-theme="light"] .wc-hero { background: linear-gradient(135deg, #0f0c29 0%, #302b63 100%); }
+[data-theme="light"] .desktop-sidebar { background: #ffffff; border-color: #ebebf0; }
+[data-theme="light"] .sb-btn:hover    { background: #f4f4f8; }
+[data-theme="light"] .sb-btn.active   { background: #fdf1f2; color: #e63946; }
+[data-theme="light"] .mob-topbar      { background: #ffffff; border-color: #ebebf0; }
+[data-theme="light"] .mob-drawer      { background: #ffffff; }
+[data-theme="light"] .mob-bottomnav   { background: #ffffff; border-color: #ebebf0; }
+[data-theme="light"] .mob-tab.active  { color: #e63946; }
+[data-theme="light"] .dash-kpi        { background: #ffffff; border-color: #ebebf0; }
+[data-theme="light"] .dash-today-card { background: #ffffff; border-color: #ebebf0; }
+[data-theme="light"] body             { background: #f7f7fb; color: #1a1a2e; }
+[data-theme="light"] input, [data-theme="light"] select, [data-theme="light"] textarea {
+    background: #ffffff; color: #1a1a2e; border-color: #ebebf0;
+}
+
+/* ── dash-qa light renkler (sistem dark olsa da override et) ── */
+[data-theme="light"] .dash-qa-1  { background: linear-gradient(135deg,#ede9fe,#dbeafe); border-color: #c4b5fd50; }
+[data-theme="light"] .dash-qa-2  { background: linear-gradient(135deg,#fee2e2,#fef3c7); border-color: #fca5a550; }
+[data-theme="light"] .dash-qa-3  { background: linear-gradient(135deg,#fee2e2,#fce7f3); border-color: #f8717150; }
+[data-theme="light"] .dash-qa-4  { background: linear-gradient(135deg,#e0f2fe,#ccfbf1); border-color: #7dd3fc50; }
+[data-theme="light"] .dash-qa-5  { background: linear-gradient(135deg,#fef3c7,#d1fae5); border-color: #fde68a50; }
+[data-theme="light"] .dash-qa-6  { background: linear-gradient(135deg,#d1fae5,#e0f2fe); border-color: #6ee7b750; }
+[data-theme="light"] .dash-qa-7  { background: linear-gradient(135deg,#f3e8ff,#ede9fe); border-color: #d8b4fe50; }
+[data-theme="light"] .dash-qa-8  { background: linear-gradient(135deg,#fef3c7,#fff7ed); border-color: #fde68a50; }
+[data-theme="light"] .dash-qa-9  { background: linear-gradient(135deg,#e0e7ff,#ede9fe); border-color: #a5b4fc50; }
+[data-theme="light"] .dash-qa-10 { background: linear-gradient(135deg,#ecfdf5,#d1fae5); border-color: #6ee7b750; }
+/* ════════════════════════════════════════════════════════
+   EMPTY STATE — Standart boş durum komponenti
+   Kullanım: JS'te buildEmptyState({icon,title,sub,cta}) 
+   ════════════════════════════════════════════════════════ */
+.empty-state {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; padding: 28px 20px;
+    gap: 8px;
+}
+.empty-state-icon {
+    font-size: 2rem; line-height: 1;
+    margin-bottom: 4px;
+}
+.empty-state-title {
+    font-size: var(--text-sm); font-weight: 800;
+    color: var(--ink); line-height: 1.3;
+}
+.empty-state-sub {
+    font-size: var(--text-xs); font-weight: 600;
+    color: var(--ink3); line-height: 1.5;
+    max-width: 220px;
+}
+.empty-state-cta {
+    margin-top: 8px; padding: 10px 20px;
+    font-size: var(--text-xs); width: auto !important;
 }

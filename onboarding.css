@@ -359,7 +359,8 @@
 }
 .ob-restart-btn:hover { border-color: #e63946; color: #e63946; background: #fff5f5; }
 
-/* ── Sidebar Kids modu ── */
+/* ── Sidebar Kids modu (4-8 yaş) ── */
+/* sb-stats ve sb-arsiv hariç: tüm yaş gruplarında görünür kalır */
 .sb-kids-mode .sb-sec,
 .sb-kids-mode #sb-quiz,
 .sb-kids-mode #sb-ai-ydt,
@@ -370,10 +371,13 @@
 .sb-kids-mode #sb-typing,
 .sb-kids-mode #sb-context,
 .sb-kids-mode #sb-sm2,
-.sb-kids-mode .sb-secondary-divider,
-.sb-kids-mode #sb-arsiv,
-.sb-kids-mode #sb-stats {
+.sb-kids-mode .sb-secondary-divider {
     display: none !important;
+}
+/* İstatistik ve Soru Bankası: tüm yaş gruplarında görünür */
+.sb-kids-mode #sb-stats,
+.sb-kids-mode #sb-arsiv {
+    display: flex !important;
 }
 .sb-kids-mode .sb-nav-secondary {
     border-top: none;
@@ -390,16 +394,22 @@
 .mob-kids-mode #di-typing,
 .mob-kids-mode #di-context,
 .mob-kids-mode #di-sm2,
-.mob-kids-mode .mob-drawer-secondary-divider,
-.mob-kids-mode #di-arsiv,
-.mob-kids-mode #di-stats {
+.mob-kids-mode .mob-drawer-secondary-divider {
     display: none !important;
 }
+/* Drawer'da İstatistik ve Soru Bankası her zaman görünür */
+.mob-kids-mode #di-stats,
+.mob-kids-mode #di-arsiv {
+    display: flex !important;
+}
 
-/* Bottomnav kids modu */
+/* Bottomnav kids modu — İstatistik (bn-stats) görünür kalır */
 .bn-kids-mode #bn-quiz,
 .bn-kids-mode #bn-exercise {
     display: none !important;
+}
+.bn-kids-mode #bn-stats {
+    display: flex !important;
 }
 
 /* ── Seviye rozeti renkleri ── */

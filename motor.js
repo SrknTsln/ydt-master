@@ -163,6 +163,7 @@ function adminUnlockPanel() {
     const sel = document.getElementById('ai-gen-target-list');
     if (sel) { sel.innerHTML = ''; Object.keys(allData).forEach(n => sel.add(new Option(n, n))); }
     adminUpdateBankCounts();
+    updateCascadeStatus(); // API key kayıtlı ibarelerini güncelle
     admSwitchTab('api');
 }
 
@@ -183,15 +184,14 @@ function admSwitchTab(tabId) {
         if (empty && prev && prev.style.display === 'none') empty.style.display = 'block';
     }
     // Bank tab: sayıları güncelle
-    if (tabId === 'bank') adminUpdateBankCounts();
+    if (tabId === 'bank') {
+        adminUpdateBankCounts();
+        admLoadUserCount();
+    }
 }
 
 // Soru bankası sayaçlarını admin'de güncelle
-function adminUpdateBankCounts() {
-    const arsiv = window.aiArsiv || [];
-    const el = document.getElementById('admin-arsiv-kelime-count');
-    if (el) el.textContent = `${arsiv.length} soru · ${[...new Set(arsiv.map(e => e.word))].length} farklı kelime`;
-}
+// adminUpdateBankCounts → motor.js alt kısımda tanımlı
 
 // Soru bankası silme (admin'den)
 function adminClearArsiv(type) {
@@ -205,6 +205,217 @@ function adminClearArsiv(type) {
         adminUpdateBankCounts();
         showAIToast('✅ Kelime soruları silindi', 'info', 3000);
     }
+}
+
+/* ════════════════════════════════════════
+   KULLANICI SAYISI — Firebase Realtime DB
+   ydt_users/ altındaki node sayısını çek
+   ════════════════════════════════════════ */
+async function admLoadUserCount() {
+    const el = document.getElementById('adm-user-count');
+    if (!el) return;
+    el.textContent = '⏳';
+    try {
+        const db  = window.db;
+        const ref = window.dbRef;
+        const get = window.dbGet;
+        if (!db || !ref || !get) { el.textContent = 'DB hazır değil'; return; }
+        const snap = await get(ref(db, 'ydt_users'));
+        if (snap.exists()) {
+            const count = Object.keys(snap.val()).length;
+            el.textContent = `${count} kullanıcı`;
+        } else {
+            el.textContent = '0 kullanıcı';
+        }
+    } catch(e) {
+        el.textContent = 'Erişim hatası';
+        console.error('admLoadUserCount:', e);
+    }
+}
+
+/* ════════════════════════════════════════
+   SORU BANKASI DOSYA UPLOAD
+   PDF → pdfjs ile metin çıkar
+   DOCX → mammoth.js ile metin çıkar
+   Sonra satırları parse edip bankaya ekle
+   ════════════════════════════════════════ */
+async function admBankUpload(input, category) {
+    const file = input.files[0];
+    if (!file) return;
+    const statusEl = document.getElementById(`adm-upload-status-${category}`);
+
+    function setStatus(msg, type) {
+        if (!statusEl) return;
+        statusEl.style.display = 'block';
+        statusEl.style.background = type === 'ok' ? '#dcfce7' : type === 'err' ? '#fee2e2' : '#fef9c3';
+        statusEl.style.color     = type === 'ok' ? '#166534' : type === 'err' ? '#991b1b' : '#854d0e';
+        statusEl.textContent = msg;
+    }
+
+    setStatus('⏳ Dosya okunuyor...', 'info');
+    input.value = '';
+
+    try {
+        let rawText = '';
+        const ext = file.name.split('.').pop().toLowerCase();
+
+        if (ext === 'pdf') {
+            rawText = await _admReadPDF(file);
+        } else if (ext === 'docx' || ext === 'doc') {
+            rawText = await _admReadDOCX(file);
+        } else {
+            setStatus('❌ Desteklenmeyen format', 'err'); return;
+        }
+
+        if (!rawText.trim()) { setStatus('❌ Dosyadan metin okunamadı', 'err'); return; }
+
+        const questions = _admParseQuestions(rawText, category);
+        if (!questions.length) { setStatus('⚠️ Soru formatı tanınamadı', 'warn'); return; }
+
+        // Bankaya ekle
+        _admSaveToBank(questions, category);
+        setStatus(`✅ ${questions.length} soru eklendi`, 'ok');
+        adminUpdateBankCounts();
+
+    } catch(e) {
+        setStatus('❌ ' + e.message, 'err');
+        console.error('admBankUpload:', e);
+    }
+}
+
+async function _admReadPDF(file) {
+    // PDF.js CDN
+    if (!window.pdfjsLib) {
+        await new Promise((res, rej) => {
+            const s = document.createElement('script');
+            s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+            s.onload = res; s.onerror = rej;
+            document.head.appendChild(s);
+        });
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+            'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+    const ab   = await file.arrayBuffer();
+    const pdf  = await window.pdfjsLib.getDocument({ data: ab }).promise;
+    let text   = '';
+    for (let i = 1; i <= pdf.numPages; i++) {
+        const page    = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        text += content.items.map(s => s.str).join(' ') + '\n';
+    }
+    return text;
+}
+
+async function _admReadDOCX(file) {
+    // mammoth.js CDN
+    if (!window.mammoth) {
+        await new Promise((res, rej) => {
+            const s = document.createElement('script');
+            s.src = 'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js';
+            s.onload = res; s.onerror = rej;
+            document.head.appendChild(s);
+        });
+    }
+    const ab  = await file.arrayBuffer();
+    const res = await window.mammoth.extractRawText({ arrayBuffer: ab });
+    return res.value || '';
+}
+
+function _admParseQuestions(text, category) {
+    const questions = [];
+    const lines = text.split(/[\n\r]+/).map(l => l.trim()).filter(Boolean);
+
+    // Format 1: "Soru | A) ... | B) ... | C) ... | D) ... | Cevap: B"
+    // Format 2: Numaralı sorular (1. Soru metni  A)...  B)...)
+    let i = 0;
+    while (i < lines.length) {
+        const line = lines[i];
+
+        // Pipe formatı
+        if (line.includes('|') && line.toLowerCase().includes('cevap')) {
+            const parts = line.split('|').map(p => p.trim());
+            if (parts.length >= 6) {
+                const answerPart = parts.find(p => p.toLowerCase().startsWith('cevap'));
+                const answer = answerPart ? answerPart.replace(/cevap\s*:/i, '').trim() : '';
+                questions.push({
+                    category,
+                    q: parts[0],
+                    a: parts[1], b: parts[2], c: parts[3], d: parts[4],
+                    answer,
+                    addedAt: Date.now()
+                });
+            }
+            i++; continue;
+        }
+
+        // Numaralı format: satır "1." veya "1)" ile başlıyor
+        if (/^\d+[.)]\s/.test(line)) {
+            const qText = line.replace(/^\d+[.)]\s*/, '');
+            const opts  = {};
+            let j = i + 1;
+            while (j < lines.length && j < i + 6) {
+                const ol = lines[j];
+                const m  = ol.match(/^([A-Da-d])[.)]\s*(.+)/);
+                if (m) { opts[m[1].toUpperCase()] = m[2]; j++; }
+                else break;
+            }
+            // Cevap satırı
+            let answer = '';
+            if (j < lines.length && /cevap/i.test(lines[j])) {
+                answer = lines[j].replace(/cevap\s*:/i, '').trim().toUpperCase();
+                j++;
+            }
+            if (opts.A && opts.B) {
+                questions.push({
+                    category, q: qText,
+                    a: opts.A || '', b: opts.B || '', c: opts.C || '', d: opts.D || '',
+                    answer, addedAt: Date.now()
+                });
+            }
+            i = j; continue;
+        }
+        i++;
+    }
+    return questions;
+}
+
+function _admSaveToBank(questions, category) {
+    // Kategori bazlı bankalar localStorage'da tutulur
+    const key  = `ydt_bank_${category}`;
+    const existing = JSON.parse(localStorage.getItem(key) || '[]');
+    const merged   = [...existing, ...questions];
+    localStorage.setItem(key, JSON.stringify(merged));
+    // Firebase sync
+    if (window.AuthModule) window.AuthModule.syncNow();
+}
+
+function admBankGetCount(category) {
+    const key = `ydt_bank_${category}`;
+    return JSON.parse(localStorage.getItem(key) || '[]').length;
+}
+
+function adminUpdateBankCounts() {
+    const arsiv = window.aiArsiv || [];
+
+    // Kelime (aiArsiv = AI üretilen kelime soruları)
+    const elK = document.getElementById('admin-arsiv-kelime-count');
+    if (elK) elK.textContent = `${arsiv.length} soru · ${[...new Set(arsiv.map(e => e.word))].length} farklı kelime`;
+
+    // Dosyadan yüklenen kategoriler
+    const cats = [
+        { id: 'admin-arsiv-paragraf-count', key: 'paragraf',  label: 'soru' },
+        { id: 'admin-arsiv-gramer-count',   key: 'gramer',    label: 'soru' },
+        { id: 'admin-arsiv-cloze-count',    key: 'cloze',     label: 'soru' },
+        { id: 'admin-arsiv-yakin-count',    key: 'yakin',     label: 'soru' },
+        { id: 'admin-arsiv-diyalog-count',  key: 'diyalog',   label: 'soru' },
+        { id: 'admin-arsiv-paratam-count',  key: 'paratam',   label: 'soru' },
+        { id: 'admin-arsiv-durum-count',    key: 'durum',     label: 'soru' },
+        { id: 'admin-arsiv-parabut-count',  key: 'parabut',   label: 'soru' },
+    ];
+    cats.forEach(c => {
+        const el = document.getElementById(c.id);
+        if (el) el.textContent = `${admBankGetCount(c.key)} ${c.label}`;
+    });
 }
 
 function startQuizFromNav() {
@@ -8524,6 +8735,8 @@ function mobToggleDrawer() {
         drawer.classList.add('open');
         document.getElementById('mob-overlay').classList.add('open');
         document.getElementById('mob-burger').classList.add('open');
+        // ♿ Focus trap: Tab drawer içinde döngü yapar
+        trapFocus(drawer);
     }
 }
 
@@ -8534,6 +8747,8 @@ function mobCloseDrawer() {
     if (drawer)  drawer.classList.remove('open');
     if (overlay) overlay.classList.remove('open');
     if (burger)  burger.classList.remove('open');
+    // ♿ Focus trap kaldır, burger'a focus döner
+    releaseFocus();
 }
 
 function mobGoTo(pageId) {
@@ -9964,6 +10179,15 @@ function updateCascadeStatus() {
         if (dot)  { dot.textContent = has ? '✓' : '—'; dot.style.color = has ? '#22c55e' : '#d1d5db'; }
         if (item) item.classList.toggle('co-active', has);
         if (inp)  inp.placeholder = has ? '●●●●●●● (kayıtlı)' : p.keyHint;
+    });
+
+    // Kayıtlı ibaresi güncelle
+    AI_PROVIDERS.forEach(p => {
+        const statusEl = document.getElementById(`adm-keystatus-${p.id}`);
+        const cardEl   = document.getElementById(`adm-keycard-${p.id}`);
+        const has = !!localStorage.getItem(p.lsKey);
+        if (statusEl) statusEl.style.display = has ? 'inline-block' : 'none';
+        if (cardEl)   cardEl.style.borderColor = has ? '#86efac' : '';
     });
 
     // Kaç servis aktif?
@@ -12209,6 +12433,71 @@ function _showAppToast(msg) {
 })();
 
 // ══════════════════════════════════════════════
+// ♿ FOCUS TRAP — WCAG 2.1 SC 2.1.2
+// ══════════════════════════════════════════════
+// Kullanım: trapFocus(el) → drawer/modal açılışında
+//           releaseFocus() → kapanışında
+// ──────────────────────────────────────────────
+const FOCUSABLE = [
+    'a[href]','button:not([disabled])','input:not([disabled])',
+    'select:not([disabled])','textarea:not([disabled])',
+    '[tabindex]:not([tabindex="-1"])'
+].join(',');
+
+let _trapEl     = null;   // aktif trap container
+let _trapBefore = null;   // trap öncesi focus'lu eleman (restore için)
+let _trapHandler = null;  // aktif keydown listener ref
+
+function trapFocus(el) {
+    if (!el) return;
+    releaseFocus(); // önceki trap varsa temizle
+
+    _trapEl     = el;
+    _trapBefore = document.activeElement;
+
+    // İlk focusable elemana odaklan
+    const focusables = Array.from(el.querySelectorAll(FOCUSABLE));
+    if (focusables.length) focusables[0].focus();
+
+    _trapHandler = function(e) {
+        if (e.key !== 'Tab') return;
+        const items = Array.from(el.querySelectorAll(FOCUSABLE));
+        if (!items.length) { e.preventDefault(); return; }
+
+        const first = items[0];
+        const last  = items[items.length - 1];
+
+        if (e.shiftKey) {
+            // Shift+Tab: ilkteyse sona dön
+            if (document.activeElement === first) {
+                e.preventDefault();
+                last.focus();
+            }
+        } else {
+            // Tab: sondaysa başa dön
+            if (document.activeElement === last) {
+                e.preventDefault();
+                first.focus();
+            }
+        }
+    };
+
+    document.addEventListener('keydown', _trapHandler);
+}
+
+function releaseFocus() {
+    if (_trapHandler) {
+        document.removeEventListener('keydown', _trapHandler);
+        _trapHandler = null;
+    }
+    // Drawer kapanınca burger'a ya da önceki elemana dön
+    if (_trapBefore && typeof _trapBefore.focus === 'function') {
+        _trapBefore.focus();
+    }
+    _trapEl     = null;
+    _trapBefore = null;
+}
+
 // ⌨️  ESCAPE KEY — drawer & modal kapat
 // ══════════════════════════════════════════════
 document.addEventListener('keydown', function(e) {
@@ -12231,4 +12520,98 @@ document.addEventListener('keydown', function(e) {
     // 3. Herhangi bir fixed overlay (z-index yüksek)
     const anyOverlay = document.querySelector('[id$="-overlay"]:not(#mob-overlay)');
     if (anyOverlay) { anyOverlay.remove(); return; }
+});
+
+// ═══════════════════════════════════════════════════════════
+// 🌙 THEME TOGGLE — Aydınlık / Karanlık Mod
+// data-theme="dark" | "light" | (unset = sistem tercihi)
+// ═══════════════════════════════════════════════════════════
+(function initTheme() {
+    const saved = localStorage.getItem('ydtTheme');
+    if (saved) document.documentElement.setAttribute('data-theme', saved);
+    _syncThemeUI();
+})();
+
+function toggleTheme() {
+    const root = document.documentElement;
+    const current = root.getAttribute('data-theme');
+    const sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    let next;
+    if (!current) {
+        next = sysDark ? 'light' : 'dark';
+    } else {
+        next = current === 'dark' ? 'light' : 'dark';
+    }
+    root.setAttribute('data-theme', next);
+    localStorage.setItem('ydtTheme', next);
+    _syncThemeUI();
+}
+
+function _syncThemeUI() {
+    const root = document.documentElement;
+    const theme = root.getAttribute('data-theme');
+    const sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const isDark = theme === 'dark' || (!theme && sysDark);
+
+    const icon    = document.getElementById('theme-icon');
+    const sbIcon  = document.getElementById('sb-theme-icon');
+    const sbLabel = document.getElementById('sb-theme-label');
+
+    if (icon)    icon.textContent    = isDark ? '☀️' : '🌙';
+    if (sbIcon)  sbIcon.textContent  = isDark ? '☀️' : '🌙';
+    if (sbLabel) sbLabel.textContent = isDark ? 'Aydınlık Mod' : 'Karanlık Mod';
+}
+
+// Sistem tercihi değişirse senkronize et
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', _syncThemeUI);
+
+// ═══════════════════════════════════════════════════════════════
+// EMPTY STATE UTILITY  — buildEmptyState(el, {icon,title,sub,cta})
+// Tüm modüller bu fonksiyonu kullanır, tutarlı boş durum sağlanır
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Bir container'a standart boş durum içeriği yazar.
+ * @param {HTMLElement|string} target - Element veya id string
+ * @param {object} opts
+ *   opts.icon  {string}   — Emoji veya HTML
+ *   opts.title {string}   — Kısa başlık
+ *   opts.sub   {string}   — Açıklama metni (opsiyonel)
+ *   opts.cta   {string}   — CTA buton metni (opsiyonel)
+ *   opts.onCta {function} — CTA tıklaması (opsiyonel)
+ */
+function buildEmptyState(target, opts = {}) {
+    const el = typeof target === 'string' ? document.getElementById(target) : target;
+    if (!el) return;
+
+    const { icon = '📭', title = 'Henüz veri yok', sub = '', cta = '', onCta = null } = opts;
+
+    el.setAttribute('aria-busy', 'false');
+    el.innerHTML = `
+        <div class="empty-state" role="status" aria-label="${title}">
+            <div class="empty-state-icon" aria-hidden="true">${icon}</div>
+            <div class="empty-state-title">${title}</div>
+            ${sub  ? `<div class="empty-state-sub">${sub}</div>` : ''}
+            ${cta  ? `<button class="empty-state-cta btn" onclick="(${onCta && onCta.toString()})()">${cta}</button>` : ''}
+        </div>`;
+}
+
+/**
+ * aria-busy yönetimi yardımcısı.
+ * setLoading(el, true)  → skeleton gösterilirken busy=true
+ * setLoading(el, false) → veri gelince busy=false
+ */
+function setLoading(target, busy) {
+    const el = typeof target === 'string' ? document.getElementById(target) : target;
+    if (!el) return;
+    el.setAttribute('aria-busy', busy ? 'true' : 'false');
+}
+
+// Dashboard KPI ve today-card: veri gelince aria-busy=false yap
+document.addEventListener('ydtDataReady', () => {
+    setLoading('dash-kpi-row',    false);
+    setLoading('dash-today-card', false);
+    setLoading('idx-weak-words',  false);
+    setLoading('idx-grammar-progress', false);
+    setLoading('idx-sm2-plan',    false);
 });

@@ -163,11 +163,12 @@ const OB = {
    tamamlandıktan sonra çağrılır
    ════════════════════════════════════════════ */
 function obCheckAndShow() {
-    // Misafir modda veya daha önce tamamlandıysa gösterme
     if (OB.isDone()) {
-        obApplySavedProfile();
+        obApplySavedProfile(); // banner render içeriyor
         return;
     }
+    // Henüz test yapılmamış — önce banner'ı "test yap" modunda göster
+    setTimeout(obRenderLevelBanner, 150);
     obShow();
 }
 
@@ -175,6 +176,8 @@ function obCheckAndShow() {
 function obApplySavedProfile() {
     const p = OB.getProfile();
     if (p.ageGroup) obApplySidebar(p.ageGroup);
+    // Banner render — auth hazır olduğunda çağrılıyor
+    setTimeout(obRenderLevelBanner, 100);
 }
 
 /* ════════════════════════════════════════════
@@ -192,11 +195,33 @@ function obShow() {
 function obClose(skipAll = false) {
     const el = document.getElementById('onboarding-overlay');
     if (!el) return;
+
+    // "Atla" ile çıkıldıysa 16+ olarak kaydet — tüm modüller açık olsun
+    if (skipAll && !OB.ageGroup) {
+        OB.ageGroup = '16+';
+    }
+
     OB.saveProfile();
     OB.markDone();
     if (OB.ageGroup) obApplySidebar(OB.ageGroup);
     el.classList.add('ob-fade-out');
     setTimeout(() => el.remove(), 420);
+
+    // Dashboard güncelle + banner render et
+    if (typeof initDashToday === 'function') setTimeout(initDashToday, 100);
+    setTimeout(obRenderLevelBanner, 200);
+
+    // Starter Pack: kelime yoksa otomatik yükle
+    setTimeout(() => {
+        if (typeof allData === 'undefined') return;
+        const totalW = Object.keys(allData).reduce((s, k) => s + (allData[k] || []).length, 0);
+        if (totalW === 0 && typeof YDT_STARTER_PACK !== 'undefined') {
+            Object.keys(YDT_STARTER_PACK).forEach(k => { allData[k] = YDT_STARTER_PACK[k]; });
+            if (typeof _saveData === 'function') _saveData();
+            if (typeof initDashToday === 'function') initDashToday();
+            obShowStarterToast();
+        }
+    }, 500);
 
     // 16+ + seviye testi tamamlandıysa yönlendirme
     if (!skipAll && OB.levelResult && OB.ageGroup === '16+') {
@@ -517,7 +542,7 @@ function obShowResult() {
             </div>
         </div>
         <div class="ob-footer">
-            <button class="ob-btn-primary" onclick="obClose(false)">
+            <button class="ob-btn-primary" onclick="obCheckStarterPack()">
                 🚀 Öğrenmeye Başla
             </button>
         </div>`;
@@ -525,6 +550,98 @@ function obShowResult() {
     card.classList.remove('ob-step');
     void card.offsetWidth;
     card.classList.add('ob-step');
+}
+
+/* ════════════════════════════════════════════
+   ADIM 4 — Starter Pack (yeni kullanıcı için)
+   ════════════════════════════════════════════ */
+function obCheckStarterPack() {
+    const allKeys = (typeof allData !== 'undefined') ? Object.keys(allData) : [];
+    const totalW  = allKeys.reduce((s, k) => s + (allData[k] || []).length, 0);
+    if (totalW > 0) { obClose(false); return; }
+    obShowStarterPack();
+}
+
+function obShowStarterPack() {
+    OB.step = 4;
+    const card = document.querySelector('.ob-card');
+    if (!card) return;
+
+    let packInfo = { total: 0, lists: [] };
+    if (typeof YDT_STARTER_PACK !== 'undefined') {
+        Object.keys(YDT_STARTER_PACK).forEach(k => {
+            const cnt = YDT_STARTER_PACK[k].length;
+            packInfo.total += cnt;
+            packInfo.lists.push({ name: k, count: cnt });
+        });
+    }
+
+    const listRows = packInfo.lists.slice(0, 4).map(l =>
+        `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">
+            <span style="font-size:.82rem;font-weight:700;color:var(--ink);">${l.name}</span>
+            <span style="font-size:.75rem;font-weight:800;color:#0ea5e9;background:#f0f9ff;padding:2px 9px;border-radius:20px;">${l.count} kelime</span>
+        </div>`
+    ).join('');
+
+    card.innerHTML = `
+        <div class="ob-header">
+            <div class="ob-logo" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);">🚀</div>
+            <div class="ob-title">Hemen Başlayalım!</div>
+            <div class="ob-sub">Hiç kelimen yok. YDT için hazırlanmış <strong>${packInfo.total} kelimeyi</strong> tek tıkla yükle.</div>
+            <div class="ob-dots">
+                <div class="ob-dot done"></div>
+                <div class="ob-dot done"></div>
+                <div class="ob-dot done"></div>
+                <div class="ob-dot active" style="background:#0ea5e9;"></div>
+            </div>
+        </div>
+        <div class="ob-body">
+            <div style="background:#f0f9ff;border:1.5px solid #bae6fd;border-radius:14px;padding:16px 18px;margin-bottom:16px;">
+                <div style="font-size:.7rem;font-weight:900;text-transform:uppercase;letter-spacing:.6px;color:#0369a1;margin-bottom:10px;">📦 Paket İçeriği</div>
+                ${listRows}
+                ${packInfo.lists.length > 4 ? `<div style="font-size:.72rem;color:#0369a1;font-weight:700;padding-top:6px;">+${packInfo.lists.length - 4} liste daha...</div>` : ''}
+            </div>
+            <div style="display:flex;gap:8px;">
+                <div style="flex:1;background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:12px;text-align:center;">
+                    <div style="font-size:1.1rem;font-weight:900;color:#16a34a;">${packInfo.total}</div>
+                    <div style="font-size:.62rem;font-weight:800;color:#15803d;text-transform:uppercase;">Toplam Kelime</div>
+                </div>
+                <div style="flex:1;background:#fefce8;border:1.5px solid #fde047;border-radius:12px;padding:12px;text-align:center;">
+                    <div style="font-size:1.1rem;font-weight:900;color:#ca8a04;">${packInfo.lists.length}</div>
+                    <div style="font-size:.62rem;font-weight:800;color:#92400e;text-transform:uppercase;">Liste</div>
+                </div>
+                <div style="flex:1;background:#f5f3ff;border:1.5px solid #c4b5fd;border-radius:12px;padding:12px;text-align:center;">
+                    <div style="font-size:1.1rem;font-weight:900;color:#7c3aed;">YDT</div>
+                    <div style="font-size:.62rem;font-weight:800;color:#6d28d9;text-transform:uppercase;">Odaklı</div>
+                </div>
+            </div>
+        </div>
+        <div class="ob-footer">
+            <button class="ob-btn-primary" id="ob-sp-load-btn" onclick="obLoadStarterPack()" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);box-shadow:0 4px 14px rgba(14,165,233,.3);">
+                📥 Starter Pack'i Yükle (${packInfo.total} kelime)
+            </button>
+            <button class="ob-btn-secondary" onclick="obClose(false)">Atla, boş başlayacağım</button>
+        </div>`;
+
+    card.classList.remove('ob-step');
+    void card.offsetWidth;
+    card.classList.add('ob-step');
+}
+
+function obLoadStarterPack() {
+    const btn = document.getElementById('ob-sp-load-btn');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Yükleniyor...'; }
+
+    if (typeof YDT_STARTER_PACK !== 'undefined') {
+        if (typeof allData === 'undefined') window.allData = {};
+        Object.keys(YDT_STARTER_PACK).forEach(k => {
+            if (!allData[k]) allData[k] = YDT_STARTER_PACK[k];
+        });
+        if (typeof _saveData === 'function') _saveData();
+    }
+
+    if (btn) { btn.textContent = '✅ Yüklendi!'; btn.style.background = 'linear-gradient(135deg,#16a34a,#059669)'; }
+    setTimeout(() => { obClose(false); }, 700);
 }
 
 function obResultTitle(code) {
@@ -565,29 +682,38 @@ function obApplySidebar(ageGroup) {
 
     if (!sidebar) return;
 
+    // Tüm yaş gruplarında İstatistik her zaman görünür
+    ['sb-stats', 'di-stats', 'bn-stats'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.removeProperty('display');
+    });
+
     if (ageGroup === '4-8') {
         sidebar.classList.add('sb-kids-mode');
         if (drawer)    drawer.classList.add('mob-kids-mode');
         if (bottomnav) bottomnav.classList.add('bn-kids-mode');
 
-        // Dashboard hero metnini güncelle
         const titleEl = document.getElementById('dash-title-text');
         const subEl   = document.getElementById('dash-sub-text');
-        if (titleEl) titleEl.innerHTML = 'Merhaba! <em>Birlikte oğrenelim!</em>';
+        if (titleEl) titleEl.innerHTML = 'Merhaba! <em>Birlikte öğrenelim!</em>';
         if (subEl)   subEl.textContent = 'Renkli dünyada İngilizce keşfet 🌈';
 
     } else if (ageGroup === '9-12') {
-        // 9-12: sadece AI YDT ve Paragraf gizle
-        const toHide = ['sb-ai-ydt', 'sb-paragraf', 'sb-speaking',
-                        'sb-grammar-toggle-main', 'sb-grammar-list-main',
-                        'di-ai-ydt', 'di-paragraf', 'di-speaking',
-                        'di-grammar-toggle-main', 'di-grammar-list-main'];
+        // 9-12: AI YDT, Paragraf, Speaking, Grammar gizle
+        // Soru Bankası (sb-arsiv / di-arsiv) ve İstatistik görünür KALIR
+        const toHide = [
+            'sb-ai-ydt', 'sb-paragraf', 'sb-speaking',
+            'sb-grammar-toggle-main', 'sb-grammar-list-main',
+            'di-ai-ydt', 'di-paragraf', 'di-speaking',
+            'di-grammar-toggle-main', 'di-grammar-list-main'
+        ];
         toHide.forEach(id => {
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
         });
+
     }
-    // 16+ için hiçbir şeyi gizleme
+    // 16+: hiçbir şeyi gizleme — Soru Bankası + İstatistik zaten görünür
 }
 
 /* ════════════════════════════════════════════
@@ -649,6 +775,7 @@ function obUpdateProfilWidget() {
 function obRestartOnboarding() {
     const uid = window._currentUser?.uid || 'guest';
     localStorage.removeItem(`${OB.STORAGE_KEY}_${uid}`);
+    localStorage.removeItem(`${OB_BANNER_KEY}_${uid}`);
     OB.step = 1; OB.ageGroup = null; OB.quizIdx = 0;
     OB.quizScore = 0; OB.answered = false; OB.levelResult = null;
 
@@ -673,7 +800,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Auth yüklenmesini kısa bekle, sonra guest kontrolü
     setTimeout(() => {
         if (!OB.isDone()) obShow();
-        else { obApplySavedProfile(); if (typeof initDashToday === 'function') setTimeout(initDashToday, 300); }
+        else { obApplySavedProfile(); if (typeof initDashToday === 'function') setTimeout(initDashToday, 300); setTimeout(obRenderLevelBanner, 400); }
 
         // Profil sayfası açıldığında widget ekle (MutationObserver)
         const profilPage = document.getElementById('profil-page');
@@ -688,11 +815,226 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 1200);
 });
 
+
+/* ════════════════════════════════════════════
+   SEVİYE BANNER — dashboard'da gösterilir
+   Test çözülene kadar kalır, sonra kaybolur
+   ════════════════════════════════════════════ */
+
+const OB_BANNER_KEY = 'ydt_level_banner_dismissed';
+
+// Seviyeye göre banner içerikleri
+const OB_BANNER_DATA = {
+    'none': {
+        // Hiç test yapılmamış
+        gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        icon: '🎯',
+        badge: null,
+        title: 'İngilizce seviyeni öğren',
+        desc: 'Kısa bir seviye testiyle sana en uygun çalışma planını oluşturalım. Test sadece 10 soru, 3 dakika sürer.',
+        cta: 'Seviye Testini Başlat →',
+        ctaFn: 'obRestartOnboarding()',
+        dismissable: false   // Test yapılmadan kapatılamaz
+    },
+    'A1': {
+        gradient: 'linear-gradient(135deg, #74b9ff 0%, #0984e3 100%)',
+        icon: '🌱',
+        badge: 'A1 Başlangıç',
+        badgeColor: '#0984e3',
+        title: 'Merhaba! Temelden başlıyoruz.',
+        desc: 'Henüz yolun başındasın — bu harika! A1 seviyesinde günlük yaygın kelimeler, basit cümleler ve temel gramer yapıları seni hızla ilerletir. Günde 20 kelime ile 3 ayda A2\'ye ulaşabilirsin.',
+        cta: 'Kelime Öğrenmeye Başla →',
+        ctaFn: 'startStudy()',
+        dismissable: true
+    },
+    'A2': {
+        gradient: 'linear-gradient(135deg, #55efc4 0%, #00b894 100%)',
+        icon: '📗',
+        badge: 'A2 Temel',
+        badgeColor: '#00b894',
+        title: 'İyi bir temel kurdun. Şimdi genişletme zamanı.',
+        desc: 'A2\'de basit konuşmaları takip edebilir, günlük metinleri anlayabilirsin. Şimdi hedef: kelime dağarcığını 1000\'e çıkarmak ve present perfect, past simple gibi yapıları otomatik kullanmak.',
+        cta: 'Vocab Test ile Pekiştir →',
+        ctaFn: 'startQuiz()',
+        dismissable: true
+    },
+    'B1': {
+        gradient: 'linear-gradient(135deg, #fdcb6e 0%, #e17055 100%)',
+        icon: '📘',
+        badge: 'B1 Orta',
+        badgeColor: '#e17055',
+        title: 'Orta seviyedesin — YDT hedefine yaklaşıyorsun.',
+        desc: 'B1\'de bildik konularda kendini ifade edebilir, genel metinleri anlayabilirsin. YDT için kritik adım: paragraf okuma hızını artırmak ve B2 kelimelerini aktif kullanmak. AI testleriyle gerçek sınav deneyimi yaşa.',
+        cta: 'AI YDT Testini Dene →',
+        ctaFn: 'startAIQuizMode()',
+        dismissable: true
+    },
+    'B2': {
+        gradient: 'linear-gradient(135deg, #fd79a8 0%, #e84393 100%)',
+        icon: '📙',
+        badge: 'B2 Orta-İleri',
+        badgeColor: '#e84393',
+        title: 'Güçlü bir seviyedesin. YDT\'de üst dilime girme vakti.',
+        desc: 'B2\'de karmaşık metinleri anlayabilir, akıcı konuşabilirsin. YDT\'de 85+ almak için C1 kelimelerini tanımak ve paragraf sorularındaki çıkarım tekniklerini geliştirmek şart. Paragraf modülü senin için hazır.',
+        cta: 'Paragraf Oku →',
+        ctaFn: 'showParagrafListesi()',
+        dismissable: true
+    },
+    'C1': {
+        gradient: 'linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%)',
+        icon: '🏆',
+        badge: 'C1 İleri',
+        badgeColor: '#6c5ce7',
+        title: 'İleri seviyesin — YDT\'de maksimum puana çok yakınsın.',
+        desc: 'C1\'de akademik ve profesyonel metinleri rahatlıkla anlayabilirsin. YDT\'de 95+ için: okuma hızını artır, zaman yönetimini mükemmelleştir ve nadir C1 kelimelerini tara. AI test ile eksiklerini bul.',
+        cta: 'AI Test ile Eksik Bul →',
+        ctaFn: 'startAIQuizMode()',
+        dismissable: true
+    }
+};
+
+function obRenderLevelBanner() {
+    const bannerEl = document.getElementById('ob-level-banner');
+    if (!bannerEl) return;
+
+    const uid = window._currentUser?.uid || 'guest';
+    const dismissedKey = `${OB_BANNER_KEY}_${uid}`;
+
+    const p = OB.getProfile();
+    const level = p.level || 'none';
+    const data = OB_BANNER_DATA[level] || OB_BANNER_DATA['none'];
+
+    // Seviyesi olan kullanıcı dismiss ettiyse gizle
+    // Seviyesi olmayan (none): HER ZAMAN göster
+    if (data.dismissable && localStorage.getItem(dismissedKey)) {
+        bannerEl.style.display = 'none';
+        return;
+    }
+
+    const closeBtn = data.dismissable
+        ? `<button onclick="obDismissBanner()" aria-label="Kapat" style="
+            position:absolute;top:12px;right:12px;
+            background:rgba(255,255,255,0.2);border:none;color:white;
+            width:28px;height:28px;border-radius:50%;cursor:pointer;
+            font-size:14px;display:flex;align-items:center;justify-content:center;
+            line-height:1;flex-shrink:0;">✕</button>`
+        : '';
+
+    const badgeHtml = data.badge
+        ? `<span style="
+            display:inline-block;background:rgba(255,255,255,0.25);
+            color:white;font-size:.62rem;font-weight:900;letter-spacing:1.2px;
+            text-transform:uppercase;padding:3px 10px;border-radius:99px;
+            margin-bottom:8px;">${data.badge}</span><br>`
+        : '';
+
+    bannerEl.style.display = 'block';
+    bannerEl.innerHTML = `
+        <div style="
+            position:relative;
+            background:${data.gradient};
+            border-radius:16px;
+            padding:16px 18px 14px;
+            color:white;
+            overflow:hidden;
+            box-shadow:0 4px 16px rgba(0,0,0,0.13);">
+
+            <!-- Dekoratif daire -->
+            <div aria-hidden="true" style="
+                position:absolute;top:-25px;right:-25px;
+                width:110px;height:110px;
+                background:rgba(255,255,255,0.09);
+                border-radius:50%;pointer-events:none;"></div>
+
+            ${closeBtn}
+
+            <!-- İkon + rozet + etiket -->
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+                <span style="font-size:1.6rem;line-height:1;flex-shrink:0;" aria-hidden="true">${data.icon}</span>
+                <div style="flex:1;min-width:0;">
+                    <div style="font-size:.58rem;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;opacity:.75;margin-bottom:2px;">
+                        ${data.badge ? data.badge + ' · Seviyene Özel' : 'Seviye Testi'}
+                    </div>
+                    <div style="font-size:.92rem;font-weight:800;line-height:1.25;">
+                        ${data.title}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Açıklama -->
+            <div style="font-size:.76rem;line-height:1.6;opacity:.9;margin-bottom:12px;">
+                ${data.desc}
+            </div>
+
+            <!-- CTA -->
+            <button onclick="${data.ctaFn}" style="
+                background:rgba(255,255,255,0.22);
+                border:1.5px solid rgba(255,255,255,0.45);
+                color:white;font-weight:800;font-size:.78rem;
+                padding:8px 16px;border-radius:9px;cursor:pointer;
+                transition:background .15s;letter-spacing:.2px;"
+                onmouseover="this.style.background='rgba(255,255,255,0.35)'"
+                onmouseout="this.style.background='rgba(255,255,255,0.22)'">
+                ${data.cta}
+            </button>
+        </div>`;
+}
+
+function obDismissBanner() {
+    const uid = window._currentUser?.uid || 'guest';
+    localStorage.setItem(`${OB_BANNER_KEY}_${uid}`, '1');
+    const bannerEl = document.getElementById('ob-level-banner');
+    if (!bannerEl) return;
+    bannerEl.style.transition = 'opacity .2s, max-height .3s';
+    bannerEl.style.overflow = 'hidden';
+    bannerEl.style.opacity = '0';
+    bannerEl.style.maxHeight = bannerEl.offsetHeight + 'px';
+    requestAnimationFrame(() => {
+        bannerEl.style.maxHeight = '0';
+        bannerEl.style.marginTop = '0';
+    });
+    setTimeout(() => { bannerEl.style.display = 'none'; }, 320);
+}
+
 /* ════════════════════════════════════════════
    GLOBAL API
    ════════════════════════════════════════════ */
 window.OB = OB;
-window.obCheckAndShow   = obCheckAndShow;
+
+
+/* ════════════════════════════════════════════
+   STARTER PACK TOAST
+   ════════════════════════════════════════════ */
+function obShowStarterToast() {
+    const total = typeof YDT_STARTER_PACK !== 'undefined'
+        ? Object.values(YDT_STARTER_PACK).reduce((s, arr) => s + arr.length, 0)
+        : 500;
+
+    const toast = document.createElement('div');
+    toast.style.cssText = [
+        'position:fixed','bottom:80px','left:50%','transform:translateX(-50%) translateY(20px)',
+        'background:linear-gradient(135deg,#16a34a,#059669)','color:#fff',
+        'padding:14px 22px','border-radius:16px','font-size:.88rem','font-weight:700',
+        'box-shadow:0 8px 28px rgba(22,163,74,.35)','z-index:99999',
+        'display:flex','align-items:center','gap:10px',
+        'opacity:0','transition:opacity .3s, transform .3s','pointer-events:none',
+        'max-width:340px','white-space:normal'
+    ].join(';');
+    toast.innerHTML = `<span style="font-size:1.4rem;flex-shrink:0">🚀</span><span>${total} YDT kelimesi yüklendi!<br><small style="opacity:.85;font-weight:600">Starter Pack hazır, öğrenmeye başlayabilirsin.</small></span>`;
+    document.body.appendChild(toast);
+
+    requestAnimationFrame(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateX(-50%) translateY(0)';
+    });
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(-50%) translateY(10px)';
+        setTimeout(() => toast.remove(), 350);
+    }, 4000);
+}
+
+window.obCheckAndShow      = obCheckAndShow;
 window.obApplySavedProfile = obApplySavedProfile;
 window.obRestartOnboarding = obRestartOnboarding;
 window.obAddProfilWidget   = obAddProfilWidget;
