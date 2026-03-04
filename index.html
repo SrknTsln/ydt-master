@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="stats.css">
     <link rel="stylesheet" href="admin.css">
     <link rel="stylesheet" href="bank.css">
+    <link rel="stylesheet" href="onboarding.css">
     <link rel="stylesheet" href="kids.css">
     <link rel="stylesheet" href="games.css">
 </head>
@@ -64,50 +65,50 @@
     </div>
     <nav class="mob-drawer-nav">
         <div class="mob-drawer-sec">Ana Menü</div>
-        <button class="mob-drawer-btn active" id="di-home"     onclick="mobGoTo('index-page')">              <span class="mob-d-icon">🏠</span> Ana Sayfa</button>
-        <button class="mob-drawer-btn"        id="di-study"    onclick="mobRun(startStudyFromNav)">          <span class="mob-d-icon">📖</span> Kelime Öğren</button>
-        <button class="mob-drawer-btn"        id="di-quiz"     onclick="mobRun(startQuizFromNav)">           <span class="mob-d-icon">🎯</span> Vocabulary Test</button>
-        <button class="mob-drawer-btn"        id="di-ai-ydt"   onclick="mobRun(startAIQuizMode)">            <span class="mob-d-icon">🤖</span> AI Vocabulary Test</button>
-        <button class="mob-drawer-btn"        id="di-paragraf" onclick="mobRun(showParagrafListesi)">        <span class="mob-d-icon">📄</span> Paragraf Okuma</button>
-        <button class="mob-drawer-btn"        id="di-speaking" onclick="mobRun(()=>openSpeakingSection('overview'))"><span class="mob-d-icon">🗣️</span> Speaking</button>
+        <button class="mob-drawer-btn active" id="di-home"     onclick="mobGoTo('index-page')">              <span aria-hidden="true" class="mob-d-icon">🏠</span> Ana Sayfa</button>
+        <button class="mob-drawer-btn"        id="di-study"    onclick="mobRun(startStudyFromNav)">          <span aria-hidden="true" class="mob-d-icon">📖</span> Kelime Öğren</button>
+        <button class="mob-drawer-btn"        id="di-quiz"     onclick="mobRun(startQuizFromNav)">           <span aria-hidden="true" class="mob-d-icon">🎯</span> Vocabulary Test</button>
+        <button class="mob-drawer-btn"        id="di-ai-ydt"   onclick="mobRun(startAIQuizMode)">            <span aria-hidden="true" class="mob-d-icon">🤖</span> AI Vocabulary Test</button>
+        <button class="mob-drawer-btn"        id="di-paragraf" onclick="mobRun(showParagrafListesi)">        <span aria-hidden="true" class="mob-d-icon">📄</span> Paragraf Okuma</button>
+        <button class="mob-drawer-btn"        id="di-speaking" onclick="mobRun(()=>openSpeakingSection('overview'))"><span aria-hidden="true" class="mob-d-icon">🗣️</span> Speaking</button>
 
         <!-- Grammar — Speaking altında, Alıştırmalar üstünde -->
         <button class="mob-grammar-toggle" id="di-grammar-toggle-main" onclick="mobToggleGrammarMain()" aria-expanded="false" aria-controls="di-grammar-list-main">
-            <span class="mob-d-icon">📐</span>
+            <span aria-hidden="true" class="mob-d-icon">📐</span>
             <span class="mob-grammar-toggle-label">Grammar</span>
             <svg class="mob-grammar-chev" width="12" height="12" viewBox="0 0 12 12" fill="none">
                 <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
         </button>
         <div class="mob-grammar-list" id="di-grammar-list-main" aria-hidden="true">
-            <button class="mob-drawer-btn mob-drawer-btn-sub" onclick="mobRun(()=>openGrammarSection('overview'))">    <span class="mob-d-icon">⏱️</span> English Tenses</button>
-            <button class="mob-drawer-btn mob-drawer-btn-sub" onclick="mobRun(()=>openModalsSection('overview'))">     <span class="mob-d-icon">⚡</span> Modals</button>
-            <button class="mob-drawer-btn mob-drawer-btn-sub" onclick="mobRun(()=>openPronounsSection('overview'))">   <span class="mob-d-icon">👤</span> Pronouns</button>
-            <button class="mob-drawer-btn mob-drawer-btn-sub" onclick="mobRun(()=>openPassiveSection('overview'))">    <span class="mob-d-icon">🔄</span> Active / Passive</button>
-            <button class="mob-drawer-btn mob-drawer-btn-sub" onclick="mobRun(()=>openConditionalsSection('overview'))"><span class="mob-d-icon">🔀</span> Conditionals</button>
-            <button class="mob-drawer-btn mob-drawer-btn-sub" onclick="mobRun(()=>openRelativeSection('overview'))">   <span class="mob-d-icon">🔗</span> Relative Clauses</button>
-            <button class="mob-drawer-btn mob-drawer-btn-sub" onclick="mobRun(()=>openNounSection('overview'))">       <span class="mob-d-icon">💬</span> Noun Clauses</button>
-            <button class="mob-drawer-btn mob-drawer-btn-sub" onclick="mobRun(()=>openConjSection('overview'))">       <span class="mob-d-icon">🌿</span> Adverbial Clauses</button>
-            <button class="mob-drawer-btn mob-drawer-btn-sub" onclick="mobRun(()=>openGerundSection('overview'))">     <span class="mob-d-icon">📝</span> Gerunds &amp; Infinitives</button>
-            <button class="mob-drawer-btn mob-drawer-btn-sub" onclick="mobRun(()=>openAdjAdvSection('overview'))">     <span class="mob-d-icon">🔵</span> Adjectives &amp; Adverbs</button>
-            <button class="mob-drawer-btn mob-drawer-btn-sub" onclick="mobRun(()=>openTagQuantSection('overview'))">   <span class="mob-d-icon">❓</span> Tag Questions &amp; Quantifiers</button>
+            <button class="mob-drawer-btn mob-drawer-btn-sub" onclick="mobRun(()=>openGrammarSection('overview'))">    <span aria-hidden="true" class="mob-d-icon">⏱️</span> English Tenses</button>
+            <button class="mob-drawer-btn mob-drawer-btn-sub" onclick="mobRun(()=>openModalsSection('overview'))">     <span aria-hidden="true" class="mob-d-icon">⚡</span> Modals</button>
+            <button class="mob-drawer-btn mob-drawer-btn-sub" onclick="mobRun(()=>openPronounsSection('overview'))">   <span aria-hidden="true" class="mob-d-icon">👤</span> Pronouns</button>
+            <button class="mob-drawer-btn mob-drawer-btn-sub" onclick="mobRun(()=>openPassiveSection('overview'))">    <span aria-hidden="true" class="mob-d-icon">🔄</span> Active / Passive</button>
+            <button class="mob-drawer-btn mob-drawer-btn-sub" onclick="mobRun(()=>openConditionalsSection('overview'))"><span aria-hidden="true" class="mob-d-icon">🔀</span> Conditionals</button>
+            <button class="mob-drawer-btn mob-drawer-btn-sub" onclick="mobRun(()=>openRelativeSection('overview'))">   <span aria-hidden="true" class="mob-d-icon">🔗</span> Relative Clauses</button>
+            <button class="mob-drawer-btn mob-drawer-btn-sub" onclick="mobRun(()=>openNounSection('overview'))">       <span aria-hidden="true" class="mob-d-icon">💬</span> Noun Clauses</button>
+            <button class="mob-drawer-btn mob-drawer-btn-sub" onclick="mobRun(()=>openConjSection('overview'))">       <span aria-hidden="true" class="mob-d-icon">🌿</span> Adverbial Clauses</button>
+            <button class="mob-drawer-btn mob-drawer-btn-sub" onclick="mobRun(()=>openGerundSection('overview'))">     <span aria-hidden="true" class="mob-d-icon">📝</span> Gerunds &amp; Infinitives</button>
+            <button class="mob-drawer-btn mob-drawer-btn-sub" onclick="mobRun(()=>openAdjAdvSection('overview'))">     <span aria-hidden="true" class="mob-d-icon">🔵</span> Adjectives &amp; Adverbs</button>
+            <button class="mob-drawer-btn mob-drawer-btn-sub" onclick="mobRun(()=>openTagQuantSection('overview'))">   <span aria-hidden="true" class="mob-d-icon">❓</span> Tag Questions &amp; Quantifiers</button>
         </div>
 
         <div class="mob-drawer-sec" style="margin-top:4px;">Alıştırmalar</div>
-        <button class="mob-drawer-btn" id="di-typing"  onclick="mobRun(startTypingQuiz)">  <span class="mob-d-icon">✍️</span> Yazarak Cevap</button>
-        <button class="mob-drawer-btn" id="di-context" onclick="mobRun(startContextMode)"> <span class="mob-d-icon">📝</span> Bağlam Cümlesi</button>
-        <button class="mob-drawer-btn" id="di-sm2"     onclick="mobRun(startSM2Review)">   <span class="mob-d-icon">🧠</span> SM-2 Tekrar <span class="mob-d-badge" id="di-sm2-badge" style="display:none"></span></button>
+        <button class="mob-drawer-btn" id="di-typing"  onclick="mobRun(startTypingQuiz)">  <span aria-hidden="true" class="mob-d-icon">✍️</span> Yazarak Cevap</button>
+        <button class="mob-drawer-btn" id="di-context" onclick="mobRun(startContextMode)"> <span aria-hidden="true" class="mob-d-icon">📝</span> Bağlam Cümlesi</button>
+        <button class="mob-drawer-btn" id="di-sm2"     onclick="mobRun(startSM2Review)">   <span aria-hidden="true" class="mob-d-icon">🧠</span> SM-2 Tekrar <span class="mob-d-badge" id="di-sm2-badge" style="display:none"></span></button>
 
         <!-- Secondary -->
         <div class="mob-drawer-secondary-divider"></div>
-        <button class="mob-drawer-btn mob-drawer-btn-sec" id="di-kids"  onclick="mobRun(KW.open)">       <span class="mob-d-icon">🌍</span> Kids English</button>
-        <button class="mob-drawer-btn mob-drawer-btn-sec" id="di-games" onclick="mobRun(showGamesPage)"> <span class="mob-d-icon">🎮</span> Oyunlar</button>
-        <button class="mob-drawer-btn mob-drawer-btn-sec" id="di-stats" onclick="mobRun(showStatsPage)"> <span class="mob-d-icon">📊</span> İstatistik</button>
-        <button class="mob-drawer-btn mob-drawer-btn-sec" id="di-arsiv" onclick="mobRun(showAIArsiv)">   <span class="mob-d-icon">🗃️</span> Soru Bankası</button>
+        <button class="mob-drawer-btn mob-drawer-btn-sec" id="di-kids"  onclick="mobRun(KW.open)">       <span aria-hidden="true" class="mob-d-icon">🌍</span> Kids English</button>
+        <button class="mob-drawer-btn mob-drawer-btn-sec" id="di-games" onclick="mobRun(showGamesPage)"> <span aria-hidden="true" class="mob-d-icon">🎮</span> Oyunlar</button>
+        <button class="mob-drawer-btn mob-drawer-btn-sec" id="di-stats" onclick="mobRun(showStatsPage)"> <span aria-hidden="true" class="mob-d-icon">📊</span> İstatistik</button>
+        <button class="mob-drawer-btn mob-drawer-btn-sec" id="di-arsiv" onclick="mobRun(showAIArsiv)">   <span aria-hidden="true" class="mob-d-icon">🗃️</span> Soru Bankası</button>
 
         <!-- Admin — en alt -->
         <div class="mob-drawer-admin-bar">
-            <button class="mob-drawer-btn mob-drawer-btn-sec" id="di-profil" onclick="mobGoTo('profil-page'); showProfilPage(); setTimeout(()=>window.AuthModule&&window.AuthModule.updateProfilWidgets(),100)" style="margin-bottom:4px;"><span class="mob-d-icon">👤</span> Profil</button>
+            <button class="mob-drawer-btn mob-drawer-btn-sec" id="di-profil" onclick="mobGoTo('profil-page'); showProfilPage(); setTimeout(()=>window.AuthModule&&window.AuthModule.updateProfilWidgets(),100)" style="margin-bottom:4px;"><span aria-hidden="true" class="mob-d-icon">👤</span> Profil</button>
             <button class="mob-drawer-btn mob-drawer-btn-admin" id="di-admin" onclick="mobGoTo('admin-page')" style="display:none;">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0;opacity:.55;margin-right:2px;">
                     <circle cx="7" cy="7" r="2.5" stroke="currentColor" stroke-width="1.4"/>
@@ -120,11 +121,11 @@
 </div>
 
 <nav class="mob-bottomnav">
-    <button class="mob-tab active" id="bn-home"     onclick="navTo('index-page')">        <span class="mob-tab-icon">🏠</span>Ana Sayfa</button>
-    <button class="mob-tab"        id="bn-study"    onclick="startStudyFromNav()">        <span class="mob-tab-icon">📖</span>Öğren</button>
-    <button class="mob-tab"        id="bn-quiz"     onclick="startQuizFromNav()">         <span class="mob-tab-icon">🎯</span>Vocab Test<span class="mob-tab-badge" id="bn-sm2-badge" style="display:none"></span></button>
-    <button class="mob-tab"        id="bn-stats"    onclick="showStatsPage()">            <span class="mob-tab-icon">📊</span>İstatistik</button>
-    <button class="mob-tab"        id="bn-exercise" onclick="showExercisePage()">         <span class="mob-tab-icon">✍️</span>Alıştır</button>
+    <button class="mob-tab active" id="bn-home"     onclick="navTo('index-page')">        <span aria-hidden="true" class="mob-tab-icon">🏠</span>Ana Sayfa</button>
+    <button class="mob-tab"        id="bn-study"    onclick="startStudyFromNav()">        <span aria-hidden="true" class="mob-tab-icon">📖</span>Öğren</button>
+    <button class="mob-tab"        id="bn-quiz"     onclick="startQuizFromNav()">         <span aria-hidden="true" class="mob-tab-icon">🎯</span>Vocab Test<span class="mob-tab-badge" id="bn-sm2-badge" style="display:none"></span></button>
+    <button class="mob-tab"        id="bn-stats"    onclick="showStatsPage()">            <span aria-hidden="true" class="mob-tab-icon">📊</span>İstatistik</button>
+    <button class="mob-tab"        id="bn-exercise" onclick="showExercisePage()">         <span aria-hidden="true" class="mob-tab-icon">✍️</span>Alıştır</button>
 </nav>
 
 <aside class="desktop-sidebar" id="desktop-sidebar">
@@ -157,53 +158,53 @@
     <!-- ── PRIMARY NAV ── -->
     <nav class="sb-nav sb-nav-primary">
         <div class="sb-sec">Ana Menü</div>
-        <button class="sb-btn active" id="sb-home" title="Ana Sayfa" onclick="navTo('index-page')">             <span class="sb-icon">🏠</span> Ana Sayfa</button>
-        <button class="sb-btn"        id="sb-study" title="Kelime Öğren" onclick="startStudyFromNav()">             <span class="sb-icon">📖</span> Kelime Öğren</button>
-        <button class="sb-btn"        id="sb-quiz" title="Vocabulary Test" onclick="startQuizFromNav()">              <span class="sb-icon">🎯</span> Vocabulary Test</button>
-        <button class="sb-btn"        id="sb-ai-ydt" title="AI Vocab Test" onclick="startAIQuizMode()">               <span class="sb-icon">🤖</span> AI Vocabulary Test</button>
-        <button class="sb-btn"        id="sb-paragraf" title="Paragraf Okuma" onclick="showParagrafListesi()">           <span class="sb-icon">📄</span> Paragraf Okuma</button>
-        <button class="sb-btn"        id="sb-speaking" title="Speaking" onclick="openSpeakingSection('overview')"> <span class="sb-icon">🗣️</span> Speaking</button>
+        <button class="sb-btn active" id="sb-home" title="Ana Sayfa" onclick="navTo('index-page')">             <span aria-hidden="true" class="sb-icon">🏠</span> Ana Sayfa</button>
+        <button class="sb-btn"        id="sb-study" title="Kelime Öğren" onclick="startStudyFromNav()">             <span aria-hidden="true" class="sb-icon">📖</span> Kelime Öğren</button>
+        <button class="sb-btn"        id="sb-quiz" title="Vocabulary Test" onclick="startQuizFromNav()">              <span aria-hidden="true" class="sb-icon">🎯</span> Vocabulary Test</button>
+        <button class="sb-btn"        id="sb-ai-ydt" title="AI Vocab Test" onclick="startAIQuizMode()">               <span aria-hidden="true" class="sb-icon">🤖</span> AI Vocabulary Test</button>
+        <button class="sb-btn"        id="sb-paragraf" title="Paragraf Okuma" onclick="showParagrafListesi()">           <span aria-hidden="true" class="sb-icon">📄</span> Paragraf Okuma</button>
+        <button class="sb-btn"        id="sb-speaking" title="Speaking" onclick="openSpeakingSection('overview')"> <span aria-hidden="true" class="sb-icon">🗣️</span> Speaking</button>
 
         <!-- Grammar — daraltılabilir grup (Ana Menü altında) -->
         <button class="sb-grammar-toggle" id="sb-grammar-toggle-main" onclick="sbToggleGrammarMain()" aria-expanded="false" aria-controls="sb-grammar-list-main" style="margin-top:2px;">
-            <span class="sb-icon">📐</span>
+            <span aria-hidden="true" class="sb-icon">📐</span>
             <span class="sb-grammar-toggle-label">Grammar</span>
             <svg class="sb-grammar-chev" width="12" height="12" viewBox="0 0 12 12" fill="none">
                 <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
         </button>
         <div class="sb-grammar-list" id="sb-grammar-list-main" aria-hidden="true">
-            <button class="sb-btn sb-btn-sub" id="sb-grammar-tenses-m"      onclick="openGrammarSection('overview')">    <span class="sb-icon">⏱️</span> English Tenses</button>
-            <button class="sb-btn sb-btn-sub" id="sb-grammar-modals-m"       onclick="openModalsSection('overview')">     <span class="sb-icon">⚡</span> Modals</button>
-            <button class="sb-btn sb-btn-sub" id="sb-grammar-pronouns-m"     onclick="openPronounsSection('overview')">   <span class="sb-icon">👤</span> Pronouns</button>
-            <button class="sb-btn sb-btn-sub" id="sb-grammar-passive-m"      onclick="openPassiveSection('overview')">    <span class="sb-icon">🔄</span> Active / Passive</button>
-            <button class="sb-btn sb-btn-sub" id="sb-grammar-conditionals-m" onclick="openConditionalsSection('overview')"><span class="sb-icon">🔀</span> Conditionals</button>
-            <button class="sb-btn sb-btn-sub" id="sb-grammar-relative-m"     onclick="openRelativeSection('overview')">   <span class="sb-icon">🔗</span> Relative Clauses</button>
-            <button class="sb-btn sb-btn-sub" id="sb-grammar-noun-m"         onclick="openNounSection('overview')">       <span class="sb-icon">💬</span> Noun Clauses</button>
-            <button class="sb-btn sb-btn-sub" id="sb-grammar-conj-m"         onclick="openConjSection('overview')">       <span class="sb-icon">🌿</span> Adverbial Clauses</button>
-            <button class="sb-btn sb-btn-sub" id="sb-grammar-gerund-m"       onclick="openGerundSection('overview')">     <span class="sb-icon">📝</span> Gerunds &amp; Infinitives</button>
-            <button class="sb-btn sb-btn-sub" id="sb-grammar-adjadv-m"       onclick="openAdjAdvSection('overview')">     <span class="sb-icon">🔵</span> Adjectives &amp; Adverbs</button>
-            <button class="sb-btn sb-btn-sub" id="sb-grammar-tagquant-m"     onclick="openTagQuantSection('overview')">   <span class="sb-icon">❓</span> Tag Questions &amp; Quantifiers</button>
+            <button class="sb-btn sb-btn-sub" id="sb-grammar-tenses-m"      onclick="openGrammarSection('overview')">    <span aria-hidden="true" class="sb-icon">⏱️</span> English Tenses</button>
+            <button class="sb-btn sb-btn-sub" id="sb-grammar-modals-m"       onclick="openModalsSection('overview')">     <span aria-hidden="true" class="sb-icon">⚡</span> Modals</button>
+            <button class="sb-btn sb-btn-sub" id="sb-grammar-pronouns-m"     onclick="openPronounsSection('overview')">   <span aria-hidden="true" class="sb-icon">👤</span> Pronouns</button>
+            <button class="sb-btn sb-btn-sub" id="sb-grammar-passive-m"      onclick="openPassiveSection('overview')">    <span aria-hidden="true" class="sb-icon">🔄</span> Active / Passive</button>
+            <button class="sb-btn sb-btn-sub" id="sb-grammar-conditionals-m" onclick="openConditionalsSection('overview')"><span aria-hidden="true" class="sb-icon">🔀</span> Conditionals</button>
+            <button class="sb-btn sb-btn-sub" id="sb-grammar-relative-m"     onclick="openRelativeSection('overview')">   <span aria-hidden="true" class="sb-icon">🔗</span> Relative Clauses</button>
+            <button class="sb-btn sb-btn-sub" id="sb-grammar-noun-m"         onclick="openNounSection('overview')">       <span aria-hidden="true" class="sb-icon">💬</span> Noun Clauses</button>
+            <button class="sb-btn sb-btn-sub" id="sb-grammar-conj-m"         onclick="openConjSection('overview')">       <span aria-hidden="true" class="sb-icon">🌿</span> Adverbial Clauses</button>
+            <button class="sb-btn sb-btn-sub" id="sb-grammar-gerund-m"       onclick="openGerundSection('overview')">     <span aria-hidden="true" class="sb-icon">📝</span> Gerunds &amp; Infinitives</button>
+            <button class="sb-btn sb-btn-sub" id="sb-grammar-adjadv-m"       onclick="openAdjAdvSection('overview')">     <span aria-hidden="true" class="sb-icon">🔵</span> Adjectives &amp; Adverbs</button>
+            <button class="sb-btn sb-btn-sub" id="sb-grammar-tagquant-m"     onclick="openTagQuantSection('overview')">   <span aria-hidden="true" class="sb-icon">❓</span> Tag Questions &amp; Quantifiers</button>
         </div>
 
         <div class="sb-sec" style="margin-top:4px;">Alıştırmalar</div>
-        <button class="sb-btn"        id="sb-typing" title="Yazarak Cevap" onclick="showExerciseNav('typing')">  <span class="sb-icon">✍️</span> Yazarak Cevap</button>
-        <button class="sb-btn"        id="sb-context" title="Bağlam Cümlesi" onclick="showExerciseNav('context')"> <span class="sb-icon">📝</span> Bağlam Cümlesi</button>
-        <button class="sb-btn"        id="sb-sm2" title="SM-2 Tekrar" onclick="showExerciseNav('sm2')">     <span class="sb-icon">🧠</span> SM-2 Tekrar <span class="sb-badge-pill" id="sb-sm2-badge" style="display:none"></span></button>
+        <button class="sb-btn"        id="sb-typing" title="Yazarak Cevap" onclick="showExerciseNav('typing')">  <span aria-hidden="true" class="sb-icon">✍️</span> Yazarak Cevap</button>
+        <button class="sb-btn"        id="sb-context" title="Bağlam Cümlesi" onclick="showExerciseNav('context')"> <span aria-hidden="true" class="sb-icon">📝</span> Bağlam Cümlesi</button>
+        <button class="sb-btn"        id="sb-sm2" title="SM-2 Tekrar" onclick="showExerciseNav('sm2')">     <span aria-hidden="true" class="sb-icon">🧠</span> SM-2 Tekrar <span class="sb-badge-pill" id="sb-sm2-badge" style="display:none"></span></button>
     </nav>
 
     <!-- ── SECONDARY NAV ── -->
     <div class="sb-secondary">
         <div class="sb-secondary-divider"></div>
         <nav class="sb-nav sb-nav-secondary">
-            <button class="sb-btn sb-btn-sec" id="sb-kids" title="Kids English" onclick="KW.open()">        <span class="sb-icon">🌍</span> Kids English</button>
-            <button class="sb-btn sb-btn-sec" id="sb-games" title="Oyunlar" onclick="showGamesPage()">  <span class="sb-icon">🎮</span> Oyunlar</button>
-            <button class="sb-btn sb-btn-sec" id="sb-stats" title="İstatistik" onclick="showStatsPage()">  <span class="sb-icon">📊</span> İstatistik</button>
-            <button class="sb-btn sb-btn-sec" id="sb-arsiv" title="Soru Bankası" onclick="showAIArsiv()">    <span class="sb-icon">🗃️</span> Soru Bankası <span class="sb-badge-pill" id="arsiv-badge" style="display:none"></span></button>
+            <button class="sb-btn sb-btn-sec" id="sb-kids" title="Kids English" onclick="KW.open()">        <span aria-hidden="true" class="sb-icon">🌍</span> Kids English</button>
+            <button class="sb-btn sb-btn-sec" id="sb-games" title="Oyunlar" onclick="showGamesPage()">  <span aria-hidden="true" class="sb-icon">🎮</span> Oyunlar</button>
+            <button class="sb-btn sb-btn-sec" id="sb-stats" title="İstatistik" onclick="showStatsPage()">  <span aria-hidden="true" class="sb-icon">📊</span> İstatistik</button>
+            <button class="sb-btn sb-btn-sec" id="sb-arsiv" title="Soru Bankası" onclick="showAIArsiv()">    <span aria-hidden="true" class="sb-icon">🗃️</span> Soru Bankası <span class="sb-badge-pill" id="arsiv-badge" style="display:none"></span></button>
         </nav>
         <div class="sb-admin-bar">
             <button class="sb-btn sb-btn-sec" id="sb-profil" title="Profil" onclick="navTo('profil-page'); showProfilPage(); setTimeout(()=>window.AuthModule&&window.AuthModule.updateProfilWidgets(),100)" style="margin-bottom:4px;">
-                <span class="sb-icon">👤</span> Profil
+                <span aria-hidden="true" class="sb-icon">👤</span> Profil
             </button>
             <button class="sb-btn sb-btn-admin" id="sb-admin" title="Yönetim" onclick="navTo('admin-page')" style="display:none;">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0;opacity:.6">
@@ -232,7 +233,7 @@
         </div>
 
         <!-- ══ GÜNÜN GÖREVİ CTA — hero dışında, beyaz kart ══ -->
-        <div class="dash-today-card" id="dash-today-card">
+        <div class="dash-today-card dash-today-primary" id="dash-today-card">
             <div class="dash-today-top">
                 <div class="dash-today-left">
                     <span class="dash-today-eyebrow">📅 Günün Görevi</span>
@@ -289,58 +290,58 @@
                 </div>
             </div>
             <div class="dash-quick-grid">
-                <button class="dash-qa dash-qa-1" onclick="startStudy()">
-                    <span class="dash-qa-icon">📖</span>
+                <button class="dash-qa dash-qa-primary-card" onclick="startStudy()">
+                    <span aria-hidden="true" class="dash-qa-icon">📖</span>
                     <span class="dash-qa-title">Kelime Öğren</span>
-                    <span class="dash-qa-desc">Flip kart</span>
+                    <span class="dash-qa-desc">Flip kart ile başla →</span>
                 </button>
                 <button class="dash-qa dash-qa-2" onclick="startQuiz()">
-                    <span class="dash-qa-icon">🎯</span>
+                    <span aria-hidden="true" class="dash-qa-icon">🎯</span>
                     <span class="dash-qa-title">Vocab Test</span>
                     <span class="dash-qa-desc">Çoktan seçmeli</span>
                 </button>
                 <button class="dash-qa dash-qa-3" onclick="startAIQuizMode()">
-                    <span class="dash-qa-icon">🤖</span>
+                    <span aria-hidden="true" class="dash-qa-icon">🤖</span>
                     <span class="dash-qa-title">AI Test</span>
                     <span class="dash-qa-desc">YDT formatı</span>
                 </button>
                 <button class="dash-qa dash-qa-4" onclick="showParagrafListesi()">
-                    <span class="dash-qa-icon">📄</span>
+                    <span aria-hidden="true" class="dash-qa-icon">📄</span>
                     <span class="dash-qa-title">Paragraf</span>
                     <span class="dash-qa-desc">C1/C2 metinler</span>
                 </button>
                 <button class="dash-qa dash-qa-5" onclick="openSpeakingSection('overview')">
-                    <span class="dash-qa-icon">🗣️</span>
+                    <span aria-hidden="true" class="dash-qa-icon">🗣️</span>
                     <span class="dash-qa-title">Speaking</span>
                     <span class="dash-qa-desc">Konuşma pratiği</span>
                 </button>
                 <button class="dash-qa dash-qa-6" onclick="sbToggleGrammarMain()">
-                    <span class="dash-qa-icon">📐</span>
+                    <span aria-hidden="true" class="dash-qa-icon">📐</span>
                     <span class="dash-qa-title">Grammar</span>
                     <span class="dash-qa-desc">11 modül</span>
                 </button>
                 <button class="dash-qa dash-qa-7" onclick="showExercisePage()">
-                    <span class="dash-qa-icon">✍️</span>
+                    <span aria-hidden="true" class="dash-qa-icon">✍️</span>
                     <span class="dash-qa-title">Alıştırmalar</span>
                     <span class="dash-qa-desc">Yazarak · SM-2</span>
                 </button>
                 <button class="dash-qa dash-qa-8" onclick="showGamesPage()">
-                    <span class="dash-qa-icon">🎮</span>
+                    <span aria-hidden="true" class="dash-qa-icon">🎮</span>
                     <span class="dash-qa-title">Oyunlar</span>
                     <span class="dash-qa-desc">Eğlenerek öğren</span>
                 </button>
                 <button class="dash-qa dash-qa-9" onclick="showAIArsiv()">
-                    <span class="dash-qa-icon">🗃️</span>
+                    <span aria-hidden="true" class="dash-qa-icon">🗃️</span>
                     <span class="dash-qa-title">Soru Bankası</span>
                     <span class="dash-qa-desc">AI soruları</span>
                 </button>
                 <button class="dash-qa dash-qa-10" onclick="KW.open()">
-                    <span class="dash-qa-icon">🌍</span>
+                    <span aria-hidden="true" class="dash-qa-icon">🌍</span>
                     <span class="dash-qa-title">Kids English</span>
                     <span class="dash-qa-desc">Küçükler için</span>
                 </button>
-            </div>
-        </div>
+            </div><!-- /dash-quick-grid -->
+        </div><!-- /dash-section -->
 
         <!-- ══ SORU İSTATİSTİKLERİ BAR ══ -->
         <div class="dash-section">
@@ -459,12 +460,12 @@
                 <div class="idx-section">
                     <div class="idx-section-title">🔗 Faydalı Kaynaklar</div>
                     <div class="idx-links">
-                        <a class="idx-link" href="https://www.osym.gov.tr" target="_blank"><span class="idx-link-icon">🏛️</span><div class="idx-link-body"><div class="idx-link-name">ÖSYM Resmi Site</div><div class="idx-link-desc">Sınav takvimi ve başvuru</div></div><span class="idx-link-arr">↗</span></a>
-                        <a class="idx-link" href="https://www.merriam-webster.com" target="_blank"><span class="idx-link-icon">📘</span><div class="idx-link-body"><div class="idx-link-name">Merriam-Webster</div><div class="idx-link-desc">İngilizce sözlük &amp; thesaurus</div></div><span class="idx-link-arr">↗</span></a>
-                        <a class="idx-link" href="https://www.vocabulary.com" target="_blank"><span class="idx-link-icon">🧠</span><div class="idx-link-body"><div class="idx-link-name">Vocabulary.com</div><div class="idx-link-desc">Adaptif kelime öğrenme</div></div><span class="idx-link-arr">↗</span></a>
-                        <a class="idx-link" href="https://www.deepl.com/translator" target="_blank"><span class="idx-link-icon">🌐</span><div class="idx-link-body"><div class="idx-link-name">DeepL Çeviri</div><div class="idx-link-desc">Bağlamsal çeviri</div></div><span class="idx-link-arr">↗</span></a>
-                        <a class="idx-link" href="https://youglish.com" target="_blank"><span class="idx-link-icon">🎬</span><div class="idx-link-body"><div class="idx-link-name">YouGlish</div><div class="idx-link-desc">Kelimeleri YouTube'da dinle</div></div><span class="idx-link-arr">↗</span></a>
-                        <a class="idx-link" href="https://quizlet.com" target="_blank"><span class="idx-link-icon">🃏</span><div class="idx-link-body"><div class="idx-link-name">Quizlet</div><div class="idx-link-desc">Hazır kart setleri</div></div><span class="idx-link-arr">↗</span></a>
+                        <a class="idx-link" href="https://www.osym.gov.tr" target="_blank"><span aria-hidden="true" class="idx-link-icon">🏛️</span><div class="idx-link-body"><div class="idx-link-name">ÖSYM Resmi Site</div><div class="idx-link-desc">Sınav takvimi ve başvuru</div></div><span class="idx-link-arr">↗</span></a>
+                        <a class="idx-link" href="https://www.merriam-webster.com" target="_blank"><span aria-hidden="true" class="idx-link-icon">📘</span><div class="idx-link-body"><div class="idx-link-name">Merriam-Webster</div><div class="idx-link-desc">İngilizce sözlük &amp; thesaurus</div></div><span class="idx-link-arr">↗</span></a>
+                        <a class="idx-link" href="https://www.vocabulary.com" target="_blank"><span aria-hidden="true" class="idx-link-icon">🧠</span><div class="idx-link-body"><div class="idx-link-name">Vocabulary.com</div><div class="idx-link-desc">Adaptif kelime öğrenme</div></div><span class="idx-link-arr">↗</span></a>
+                        <a class="idx-link" href="https://www.deepl.com/translator" target="_blank"><span aria-hidden="true" class="idx-link-icon">🌐</span><div class="idx-link-body"><div class="idx-link-name">DeepL Çeviri</div><div class="idx-link-desc">Bağlamsal çeviri</div></div><span class="idx-link-arr">↗</span></a>
+                        <a class="idx-link" href="https://youglish.com" target="_blank"><span aria-hidden="true" class="idx-link-icon">🎬</span><div class="idx-link-body"><div class="idx-link-name">YouGlish</div><div class="idx-link-desc">Kelimeleri YouTube'da dinle</div></div><span class="idx-link-arr">↗</span></a>
+                        <a class="idx-link" href="https://quizlet.com" target="_blank"><span aria-hidden="true" class="idx-link-icon">🃏</span><div class="idx-link-body"><div class="idx-link-name">Quizlet</div><div class="idx-link-desc">Hazır kart setleri</div></div><span class="idx-link-arr">↗</span></a>
                     </div>
                 </div>
             </div>
@@ -512,12 +513,12 @@
         <!-- ══ TAB SWITCH ══ -->
         <div class="rh2-tabbar">
             <button class="rh2-tab rh2-tab-active" id="rh-tab-ai" onclick="openReadingHub('ai')">
-                <span class="rh2-tab-icon">🤖</span>
+                <span aria-hidden="true" class="rh2-tab-icon">🤖</span>
                 <span>Günlük AI</span>
                 <span class="rh2-tab-pill" id="ai-daily-date-badge"></span>
             </button>
             <button class="rh2-tab" id="rh-tab-saved" onclick="openReadingHub('saved')">
-                <span class="rh2-tab-icon">📚</span>
+                <span aria-hidden="true" class="rh2-tab-icon">📚</span>
                 <span>Yüklü Pasajlar</span>
                 <span class="rh2-tab-pill rh2-tab-pill-green" id="reading-hub-saved-count"></span>
             </button>
@@ -1042,7 +1043,7 @@
             <div class="adm-topbar">
                 <button class="adm-back" onclick="navTo('index-page')">←</button>
                 <div class="adm-topbar-brand">
-                    <span class="adm-topbar-icon">⚙️</span>
+                    <span aria-hidden="true" class="adm-topbar-icon">⚙️</span>
                     <div>
                         <div class="adm-topbar-title">Yönetim Paneli</div>
                         <div class="adm-topbar-sub"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="7605021705171a171836111b171f1a5815191b">[email&#160;protected]</a></div>
@@ -1060,22 +1061,22 @@
                 <!-- SOL SIDEBAR -->
                 <nav class="adm-sidebar">
                     <button class="adm-tab active" data-tab="api" onclick="admSwitchTab('api')">
-                        <span class="adm-tab-icon">🔑</span><span>API Anahtarları</span>
+                        <span aria-hidden="true" class="adm-tab-icon">🔑</span><span>API Anahtarları</span>
                     </button>
                     <button class="adm-tab" data-tab="words" onclick="admSwitchTab('words')">
-                        <span class="adm-tab-icon">📚</span><span>Kelime Listeleri</span>
+                        <span aria-hidden="true" class="adm-tab-icon">📚</span><span>Kelime Listeleri</span>
                     </button>
                     <button class="adm-tab" data-tab="paragraf" onclick="admSwitchTab('paragraf')">
-                        <span class="adm-tab-icon">📄</span><span>Paragraflar</span>
+                        <span aria-hidden="true" class="adm-tab-icon">📄</span><span>Paragraflar</span>
                     </button>
                     <button class="adm-tab" data-tab="ai" onclick="admSwitchTab('ai')">
-                        <span class="adm-tab-icon">🤖</span><span>AI Üretici</span>
+                        <span aria-hidden="true" class="adm-tab-icon">🤖</span><span>AI Üretici</span>
                     </button>
                     <button class="adm-tab" data-tab="bank" onclick="admSwitchTab('bank')">
-                        <span class="adm-tab-icon">🗃️</span><span>Soru Bankası</span>
+                        <span aria-hidden="true" class="adm-tab-icon">🗃️</span><span>Soru Bankası</span>
                     </button>
                     <button class="adm-tab" data-tab="system" onclick="admSwitchTab('system')">
-                        <span class="adm-tab-icon">☁️</span><span>Sistem & Yedek</span>
+                        <span aria-hidden="true" class="adm-tab-icon">☁️</span><span>Sistem & Yedek</span>
                     </button>
                 </nav>
 
@@ -1089,13 +1090,13 @@
                             <div class="adm-panel-sub">Kota dolduğunda sistem otomatik sıradaki servise geçer.</div>
                         </div>
                         <div class="adm-cascade">
-                            <div class="adm-cascade-item" id="co-item-groq"><span class="adm-cascade-num">1</span><span>⚡</span><span class="adm-cascade-name">Groq</span><span class="adm-cascade-dot" id="co-dot-groq">—</span></div>
+                            <div class="adm-cascade-item" id="co-item-gemini"><span class="adm-cascade-num">1</span><span>✨</span><span class="adm-cascade-name">Gemini</span><span class="adm-cascade-dot" id="co-dot-gemini">—</span></div>
                             <span class="adm-cascade-arrow">›</span>
-                            <div class="adm-cascade-item" id="co-item-openrouter"><span class="adm-cascade-num">2</span><span>🌐</span><span class="adm-cascade-name">OpenRouter</span><span class="adm-cascade-dot" id="co-dot-openrouter">—</span></div>
+                            <div class="adm-cascade-item" id="co-item-groq"><span class="adm-cascade-num">2</span><span>⚡</span><span class="adm-cascade-name">Groq</span><span class="adm-cascade-dot" id="co-dot-groq">—</span></div>
                             <span class="adm-cascade-arrow">›</span>
-                            <div class="adm-cascade-item" id="co-item-mistral"><span class="adm-cascade-num">3</span><span>🌪️</span><span class="adm-cascade-name">Mistral</span><span class="adm-cascade-dot" id="co-dot-mistral">—</span></div>
+                            <div class="adm-cascade-item" id="co-item-openrouter"><span class="adm-cascade-num">3</span><span>🌐</span><span class="adm-cascade-name">OpenRouter</span><span class="adm-cascade-dot" id="co-dot-openrouter">—</span></div>
                             <span class="adm-cascade-arrow">›</span>
-                            <div class="adm-cascade-item" id="co-item-gemini"><span class="adm-cascade-num">4</span><span>✨</span><span class="adm-cascade-name">Gemini</span><span class="adm-cascade-dot" id="co-dot-gemini">—</span></div>
+                            <div class="adm-cascade-item" id="co-item-mistral"><span class="adm-cascade-num">4</span><span>🌪️</span><span class="adm-cascade-name">Mistral</span><span class="adm-cascade-dot" id="co-dot-mistral">—</span></div>
                         </div>
                         <div class="adm-keys-grid">
                             <div class="adm-key-card">
@@ -1347,7 +1348,7 @@
             </div>
             <div class="tw-header-right">
                 <div class="tw-score-pill">
-                    <span class="tw-score-icon">⚡</span>
+                    <span aria-hidden="true" class="tw-score-icon">⚡</span>
                     <span id="tw-score">0</span>
                     <span class="tw-score-unit">puan</span>
                 </div>
@@ -1364,7 +1365,7 @@
         </div>
         <main class="tw-main">
             <div class="tw-motivation" id="tw-motivation">
-                <span class="tw-mot-emoji" id="tw-mot-emoji">💪</span>
+                <span aria-hidden="true" class="tw-mot-emoji" id="tw-mot-emoji">💪</span>
                 <span id="tw-mot-text">Hazır mısın? Hadi başlayalım!</span>
             </div>
             <div class="tw-card" id="tw-card">
@@ -1480,22 +1481,22 @@
                     <div class="sr-rate-question">Ne kadar kolaydı?</div>
                     <div class="sr-rate-grid">
                         <button class="sr-rate-btn sr-fail" onclick="rateSM2(0)">
-                            <span class="sr-rate-emoji">😰</span>
+                            <span aria-hidden="true" class="sr-rate-emoji">😰</span>
                             <span class="sr-rate-title">Bilmedim</span>
                             <span class="sr-rate-sub">Tekrar göster</span>
                         </button>
                         <button class="sr-rate-btn sr-hard" onclick="rateSM2(2)">
-                            <span class="sr-rate-emoji">😅</span>
+                            <span aria-hidden="true" class="sr-rate-emoji">😅</span>
                             <span class="sr-rate-title">Zor</span>
                             <span class="sr-rate-sub">Yakında tekrar</span>
                         </button>
                         <button class="sr-rate-btn sr-good" onclick="rateSM2(4)">
-                            <span class="sr-rate-emoji">🙂</span>
+                            <span aria-hidden="true" class="sr-rate-emoji">🙂</span>
                             <span class="sr-rate-title">İyi</span>
                             <span class="sr-rate-sub">Birkaç gün</span>
                         </button>
                         <button class="sr-rate-btn sr-easy" onclick="rateSM2(5)">
-                            <span class="sr-rate-emoji">😎</span>
+                            <span aria-hidden="true" class="sr-rate-emoji">😎</span>
                             <span class="sr-rate-title">Kolay</span>
                             <span class="sr-rate-sub">Uzun süre</span>
                         </button>
@@ -1524,7 +1525,7 @@
                 <span class="cx-prog-text" id="ctx-progress">1 / 0</span>
             </div>
             <div class="cx-score-pill">
-                <span class="cx-score-icon">⚡</span>
+                <span aria-hidden="true" class="cx-score-icon">⚡</span>
                 <span id="ctx-score">0</span>
                 <span class="cx-score-unit">puan</span>
             </div>
@@ -1605,8 +1606,8 @@
             <div class="poku-topbar-meta">
                 <div class="poku-topbar-title" id="p-oku-baslik">Başlık</div>
                 <div class="poku-topbar-hints">
-                    <span class="poku-hint-chip">🔴 Kelimeye hover → anlam</span>
-                    <span class="poku-hint-chip">🔍 Cümleye tıkla → Grammar X-Ray</span>
+                    <span aria-hidden="true" class="poku-hint-chip">🔴 Kelimeye hover → anlam</span>
+                    <span aria-hidden="true" class="poku-hint-chip">🔍 Cümleye tıkla → Grammar X-Ray</span>
                     <button id="translate-mode-btn" onclick="toggleTranslateMode()" class="poku-translate-btn">
                         🌐 Çeviri: Kapalı
                     </button>
@@ -1717,7 +1718,7 @@
                 </div>
                 <!-- İpucu -->
                 <div class="poku-tip">
-                    <span class="poku-tip-icon">💡</span>
+                    <span aria-hidden="true" class="poku-tip-icon">💡</span>
                     <span><strong>Kırmızı kelimelere</strong> fareyle gelin veya dokunun — anlam ve telaffuz görürsünüz.</span>
                 </div>
 
@@ -2289,9 +2290,9 @@
                 <div class="login-title">YDT Master Pro</div>
                 <div class="login-sub">Devam etmek için Google hesabınla giriş yap.</div>
                 <div class="login-features">
-                    <div class="login-feat-row"><span class="login-feat-icon">☁️</span><div class="login-feat-text"><strong>Bulut Senkronizasyon</strong>Her cihazda aynı ilerleme</div></div>
-                    <div class="login-feat-row"><span class="login-feat-icon">📊</span><div class="login-feat-text"><strong>Kişisel İstatistikler</strong>Gelişimini takip et</div></div>
-                    <div class="login-feat-row"><span class="login-feat-icon">🔒</span><div class="login-feat-text"><strong>Güvenli & Özel</strong>Sadece sen erişebilirsin</div></div>
+                    <div class="login-feat-row"><span aria-hidden="true" class="login-feat-icon">☁️</span><div class="login-feat-text"><strong>Bulut Senkronizasyon</strong>Her cihazda aynı ilerleme</div></div>
+                    <div class="login-feat-row"><span aria-hidden="true" class="login-feat-icon">📊</span><div class="login-feat-text"><strong>Kişisel İstatistikler</strong>Gelişimini takip et</div></div>
+                    <div class="login-feat-row"><span aria-hidden="true" class="login-feat-icon">🔒</span><div class="login-feat-text"><strong>Güvenli & Özel</strong>Sadece sen erişebilirsin</div></div>
                 </div>
                 <button class="btn-google" id="btn-google-signin">
                     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -2356,6 +2357,8 @@
             _hideLoginOverlay();
             _updateProfilUI(user);
             await _loadUserData(user.uid);
+            if (typeof obCheckAndShow === 'function') obCheckAndShow();
+            setTimeout(initDashToday, 200);
             if (!authTimerInterval) {
                 authTimerInterval = setInterval(() => {
                     if (typeof stats !== 'undefined') {
@@ -2415,7 +2418,9 @@
 <script src="adjadv.js"></script>
 <script src="tagquant.js"></script>
 <script src="speaking.js"></script>
+<script src="rss_paragraf.js"></script>
 <script src="kids.js"></script>
+<script src="onboarding.js"></script>
 
     <!-- AI YDT ARŞİV SAYFASI -->
     <div id="ai-arsiv-page" class="hidden arsiv-full-page">
@@ -2544,11 +2549,19 @@ function initDashToday() {
         ctaLabel.textContent   = 'Tekrara Başla';
         window._dashCTAFn      = () => (typeof startSM2Review === 'function') && startSM2Review();
     } else if (totalW === 0) {
-        titleEl.innerHTML      = 'İlk kelime listeni <strong>oluştur</strong>';
-        metaEl.textContent     = 'Yönetim panelinden kelime ekleyerek başla';
-        iconEl.textContent     = '✨';
-        ctaLabel.textContent   = 'Kelime Ekle';
-        window._dashCTAFn      = () => (typeof navTo === 'function') && navTo('admin-page');
+        titleEl.innerHTML      = 'YDT Starter Pack\'i <strong>yükle</strong>';
+        metaEl.textContent     = '500 hazır YDT kelimesiyle hemen başla';
+        iconEl.textContent     = '🚀';
+        ctaLabel.textContent   = 'Starter Pack Yükle';
+        window._dashCTAFn      = () => {
+            if (typeof YDT_STARTER_PACK !== 'undefined') {
+                Object.keys(YDT_STARTER_PACK).forEach(k => {
+                    if (!allData[k]) allData[k] = YDT_STARTER_PACK[k];
+                });
+                if (typeof _saveData === 'function') _saveData();
+                initDashToday();
+            }
+        };
     } else {
         const listName         = allKeys[0] || '';
         const count            = allData[listName] ? allData[listName].length : totalW;
@@ -2565,7 +2578,9 @@ function dashTodayCTA() {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-    setTimeout(initDashToday, 600);
+    // Auth sonrası initDashToday auth callback'ten çağrılır.
+    // Guest mod için fallback: 1500ms (onboarding 900ms'de biter)
+    setTimeout(initDashToday, 1500);
 });
 
 /* ── Sidebar Collapse Toggle ── */

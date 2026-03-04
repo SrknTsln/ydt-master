@@ -1,5 +1,5 @@
 :root{
-    --red:#e63946;--red-soft:#fdf1f2;--ink:#1a1a2e;--ink2:#555566;--ink3:#767687;
+    --red:#e63946;--red-soft:#fdf1f2;--ink:#1a1a2e;--ink2:#555566;--ink3:#606070;
     --border:#ebebf0;--bg:#f7f7fb;--white:#ffffff;--green:#22c55e;--green-s:#f0fdf4;
 
     /* ── Semantic color tokens ── */
@@ -3622,14 +3622,13 @@ select:focus,input:focus,textarea:focus{border-color:var(--color-focus);}
 /* ── Top Bar ── */
 .poku-topbar {
     display: flex; align-items: center; gap: 12px;
-    padding: 10px 20px;
+    padding: 10px 20px 10px;
     background: white;
     border-bottom: 1.5px solid #eaeaf0;
     box-shadow: 0 2px 10px rgba(0,0,0,.05);
     flex-shrink: 0;
-    width: 100%;
-    box-sizing: border-box;
     z-index: var(--z-sticky);
+    min-height: 0;
 }
 .poku-back-btn {
     width: 34px; height: 34px; border-radius: 9px;
@@ -3646,21 +3645,19 @@ select:focus,input:focus,textarea:focus{border-color:var(--color-focus);}
     line-height: 1.2;
 }
 .poku-topbar-hints {
-    display: flex; flex-wrap: nowrap; gap: 6px; align-items: center;
+    display: flex; flex-wrap: wrap; gap: 5px; align-items: center;
     margin-top: 4px;
-    overflow: visible;
 }
 .poku-hint-chip {
     font-size: .6rem; font-weight: 700; color: #7090b0;
     background: #f0f4fa; border-radius: 5px; padding: 2px 7px;
-    white-space: nowrap; flex-shrink: 0;
+    white-space: nowrap;
 }
 .poku-translate-btn {
     font-size: .6rem; font-weight: 700; color: #6b7280;
     background: white; border: 1.5px solid #dde0e8;
-    border-radius: 20px; padding: 3px 10px; cursor: pointer;
+    border-radius: 20px; padding: 2px 9px; cursor: pointer;
     font-family: inherit; transition: all .15s;
-    white-space: nowrap; flex-shrink: 0;
 }
 .poku-translate-btn:hover { border-color: #10b981; color: #059669; }
 @media (max-width: 699px) {
@@ -3669,31 +3666,24 @@ select:focus,input:focus,textarea:focus{border-color:var(--color-focus);}
     .poku-hint-chip { display: none; }
 }
 
-/* ── Body: sadece flex container, scroll yapmaz ── */
+/* ── Body: poku-body tüm içeriği scroll eder ── */
 .poku-body {
     flex: 1;
-    min-height: 0;
-    display: flex;
-    align-items: stretch;
-    overflow: hidden;
-}
-
-/* ── Ana içerik (sol) — SADECE bu scroll eder ── */
-.poku-main {
-    flex: 1;
-    min-width: 0;
-    min-height: 0;
-    padding: 20px 20px 60px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
-    box-sizing: border-box;
+    display: flex;
+    align-items: flex-start;
 }
 
-/* Metin kartı */
+/* ── Ana içerik (sol) ── */
+.poku-main {
+    flex: 1; min-width: 0;
+    padding: 20px 20px 60px;
+    display: flex; flex-direction: column; gap: 14px;
+}
+
+/* Metin kartı - overflow:visible olmalı ki grammar panel görünsün */
 .poku-metin-card {
     background: white;
     border-radius: 18px;
@@ -3713,25 +3703,20 @@ select:focus,input:focus,textarea:focus{border-color:var(--color-focus);}
 /* YDT section */
 .poku-ydt-section { margin-top: 0; }
 
-/* ── Sidebar (sağ) — kendi scroll'u, body yüksekliğine kilitli ── */
+/* ── Sidebar (sağ) — sticky, poku-body scroll'una bağlı ── */
 .poku-sidebar {
-    width: 272px;
-    flex-shrink: 0;
-    min-height: 0;
+    width: 272px; flex-shrink: 0;
     padding: 20px 16px 40px 0;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    display: flex; flex-direction: column; gap: 10px;
+    position: sticky; top: 0; align-self: flex-start;
+    max-height: calc(100vh - 80px);
     overflow-y: auto;
-    overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
 }
-
-/* Mobil */
 @media (max-width: 1000px) {
-    .poku-body    { flex-direction: column; overflow-y: auto; overflow-x: hidden; }
-    .poku-main    { flex: none; overflow: visible; min-height: auto; padding: 14px 12px 24px; }
-    .poku-sidebar { width: 100%; overflow: visible; min-height: auto; padding: 0 12px 24px; }
+    .poku-body    { flex-direction: column; }
+    .poku-main    { padding: 14px 12px 40px; }
+    .poku-sidebar { width: 100%; position: static; max-height: none; padding: 0 12px 24px; }
 }
 
 /* ── Sidebar Card ── */
@@ -5934,10 +5919,10 @@ body:has(#kids-page:not(.hidden)) .kw-world-bg { opacity: 1; }
 }
 /* index-container padding:0 olduğundan yatay margin ekle */
 .index-container .dash-today-card {
-    margin: 0 14px 0;
+    margin: 16px 14px 0;
 }
 @media(min-width:700px) {
-    .index-container .dash-today-card { margin: 0 20px 0; }
+    .index-container .dash-today-card { margin: 20px 20px 0; }
 }
 .dash-today-card:hover {
     box-shadow: 0 6px 24px rgba(230,57,70,.12);
@@ -6083,7 +6068,7 @@ body:has(#kids-page:not(.hidden)) .kw-world-bg { opacity: 1; }
 /* ── Quick Actions Grid ── */
 .dash-quick-grid {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 8px;
     margin-bottom: 8px;
 }
@@ -6167,7 +6152,7 @@ body:has(#kids-page:not(.hidden)) .kw-world-bg { opacity: 1; }
     .dash-kpi-lbl { font-size: .52rem; }
 
     .dash-quick-grid {
-        grid-template-columns: repeat(5, 1fr);
+        grid-template-columns: repeat(3, 1fr);
         gap: 6px;
     }
     .dash-qa { padding: 10px 4px 8px; min-height: 72px; border-radius: 14px; }
@@ -6199,7 +6184,6 @@ body:has(#kids-page:not(.hidden)) .kw-world-bg { opacity: 1; }
     .dash-kpi-lbl { font-size: .62rem; }
 
     .dash-section { padding: 20px 32px 8px; }
-    .dash-quick-grid { grid-template-columns: repeat(5, 1fr); gap: 10px; }
     .dash-qa { min-height: 96px; padding: 16px 8px 14px; border-radius: 18px; }
     .dash-qa-icon  { font-size: 1.8rem; }
     .dash-qa-title { font-size: .68rem; }
@@ -6462,4 +6446,100 @@ body:has(#kids-page:not(.hidden)) .kw-world-bg { opacity: 1; }
 }
 #exercise-page select:focus {
     border-color: #a5b4fc;
+}
+
+/* ══ Sayfa geçiş fade animasyonu ══ */
+@keyframes pageFadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0);   }
+}
+.page-fade-in {
+    animation: pageFadeIn 150ms ease-out forwards;
+}
+
+/* ══ 1 Primary + 9 Grid yapısı ══════════════════════════════ */
+
+/* Günün Görevi — full-width primary */
+.dash-today-primary {
+    background: #ffffff;
+    color: var(--ink);
+    border: 1.5px solid var(--border);
+}
+.dash-today-primary .dash-today-eyebrow { color: var(--ink3); }
+.dash-today-primary .dash-today-title   { color: var(--ink); }
+.dash-today-primary .dash-today-meta    { color: var(--ink2); }
+.dash-today-primary .dash-today-goal-label { color: var(--ink2); }
+.dash-today-primary .dash-today-goal-nums  { color: var(--color-primary); }
+.dash-today-primary .dash-today-goal-track { background: var(--color-primary-soft); }
+.dash-today-primary .dash-today-goal-fill  { background: var(--color-primary); }
+.dash-today-primary .dash-today-cta {
+    background: var(--color-primary);
+    color: #fff;
+}
+.dash-today-primary .dash-today-cta:hover { background: #c1121f; }
+
+
+
+
+
+@media (max-width: 699px) {
+    
+    
+    
+    
+}
+@media (min-width: 700px) {
+    
+}
+
+/* ══ 05 — 1 Primary + 9 Grid ══════════════════════ */
+
+/* İlk buton: tam satır genişliği, yatay layout */
+.dash-qa.dash-qa-primary-card {
+    grid-column: 1 / -1;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    text-align: left !important;
+    gap: 18px !important;
+    padding: 20px 24px !important;
+    min-height: 68px !important;
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
+    border-color: transparent !important;
+    box-shadow: 0 4px 16px rgba(79,70,229,.3);
+}
+.dash-qa.dash-qa-primary-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(79,70,229,.4) !important;
+}
+.dash-qa.dash-qa-primary-card .dash-qa-icon {
+    font-size: 2.2rem !important;
+    flex-shrink: 0;
+}
+.dash-qa.dash-qa-primary-card .dash-qa-title {
+    font-size: .95rem !important;
+    color: #fff !important;
+    line-height: 1.2;
+}
+.dash-qa.dash-qa-primary-card .dash-qa-desc {
+    font-size: .72rem !important;
+    color: rgba(255,255,255,.8) !important;
+    display: block !important;
+    margin-top: 2px;
+}
+
+@media (max-width: 699px) {
+    .dash-qa.dash-qa-primary-card {
+        padding: 16px 18px !important;
+        gap: 14px !important;
+    }
+    .dash-qa.dash-qa-primary-card .dash-qa-icon  { font-size: 1.8rem !important; }
+    .dash-qa.dash-qa-primary-card .dash-qa-title { font-size: .82rem !important; }
+    .dash-qa.dash-qa-primary-card .dash-qa-desc  { font-size: .68rem !important; display: block !important; }
+}
+@media (min-width: 700px) {
+    .dash-quick-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .dash-qa.dash-qa-primary-card { padding: 22px 28px !important; }
+    .dash-qa.dash-qa-primary-card .dash-qa-icon  { font-size: 2.4rem !important; }
+    .dash-qa.dash-qa-primary-card .dash-qa-title { font-size: 1.05rem !important; }
 }

@@ -37,6 +37,7 @@ function showPage(id) {
         if (c.id !== id) {
             c.classList.add('hidden');
             c.style.display = 'none';
+            c.classList.remove('page-fade-in');
         }
     });
 
@@ -56,6 +57,12 @@ function showPage(id) {
     } else {
         target.style.display = '';
     }
+
+    // Fade-in animasyonu
+    requestAnimationFrame(() => {
+        target.classList.remove('page-fade-in');
+        requestAnimationFrame(() => target.classList.add('page-fade-in'));
+    });
 
     setNavActive(id);
 }
@@ -8638,7 +8645,7 @@ document.addEventListener('DOMContentLoaded', () => {
         profBtnSb.id = 'sb-profil';
         profBtnSb.onclick = showProfilPage;
         const profile = JSON.parse(localStorage.getItem('ydt_profile') || '{}');
-        profBtnSb.innerHTML = `<span class="sb-icon">${profile.avatar || '👤'}</span> Profilim`;
+        profBtnSb.innerHTML = `<span aria-hidden="true" class="sb-icon">${profile.avatar || '👤'}</span> Profilim`;
         sbBottom.insertBefore(profBtnSb, sbBottom.firstChild);
     }
 
@@ -8866,7 +8873,7 @@ document.addEventListener('DOMContentLoaded', () => {
         profBtnMob.id = 'di-profil';
         profBtnMob.onclick = () => { mobCloseDrawer(); showProfilPage(); };
         const profileMob = JSON.parse(localStorage.getItem('ydt_profile') || '{}');
-        profBtnMob.innerHTML = `<span class="mob-d-icon">${profileMob.avatar || '👤'}</span> Profilim`;
+        profBtnMob.innerHTML = `<span aria-hidden="true" class="mob-d-icon">${profileMob.avatar || '👤'}</span> Profilim`;
         mobNav.appendChild(secHesap);
         mobNav.appendChild(profBtnMob);
     }
@@ -9409,6 +9416,39 @@ function showAIToast(msg, type = 'info', duration) {
 // Provider tanımları — sırayla denenir
 const AI_PROVIDERS = [
     {
+        id: 'gemini', name: 'Gemini', icon: '✨',
+        lsKey: 'ydt_gemini_api_key',
+        note: 'Free: 1.500 istek/gün · Gemini 1.5 Flash',
+        keyHint: 'AIza...',
+        keyLink: 'https://aistudio.google.com/app/apikey',
+        async call(prompt) {
+            const key = localStorage.getItem(this.lsKey);
+            if (!key) throw new Error('no_key');
+
+            // gemini-2.0-flash önce, olmazsa 1.5-flash
+            let resp, data;
+            for (const model of ['gemini-2.0-flash', 'gemini-1.5-flash']) {
+                resp = await fetch(
+                    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
+                    { method:'POST', headers:{'Content-Type':'application/json'},
+                      body: JSON.stringify({ contents:[{parts:[{text: prompt + '\n\nReturn ONLY valid JSON. No markdown fences.'}]}] }) }
+                );
+                data = await resp.json();
+                // 404 = bu model yok, diğerini dene
+                if (data.error?.code === 404 || data.error?.status === 'NOT_FOUND') continue;
+                break; // ya başarılı ya da quota/auth hatası — döngüyü kır
+            }
+
+            // Hata varsa fırlat — cascade yakalasın
+            if (data.error) throw new Error(data.error.message || data.error.status || 'Gemini error');
+
+            const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            const match = raw.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
+            if (!match) throw new Error('Gemini: geçerli JSON bulunamadı → ' + raw.slice(0,60));
+            return JSON.parse(match[0]);
+        }
+    },
+    {
         id: 'groq', name: 'Groq (Llama)', icon: '⚡',
         lsKey: 'ydt_groq_api_key',
         note: 'Free: 14.400 istek/gün · Llama 3.3 70B · Çok Hızlı',
@@ -9494,45 +9534,6 @@ const AI_PROVIDERS = [
             const match = raw.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
             if (!match) throw new Error('Mistral JSON parse hatası: ' + raw.slice(0,80));
             return JSON.parse(match[0]);
-        }
-    },
-    {
-        id: 'gemini', name: 'Gemini', icon: '✨',
-        lsKey: 'ydt_gemini_api_key',
-        note: 'Free: günde 20 istek (yedek) · Gemini Flash',
-        keyHint: 'AIza...',
-        keyLink: 'https://aistudio.google.com/app/apikey',
-        async call(prompt) {
-            const key = localStorage.getItem(this.lsKey);
-            if (!key) throw new Error('no_key');
-            // Kotası en yüksekten en düşüğe sıralı — 429 gelince sonrakine geç
-            const models = [
-                'gemini-2.0-flash-lite',
-                'gemini-1.5-flash-8b',
-                'gemini-1.5-flash',
-                'gemini-2.0-flash'
-            ];
-            let lastErr;
-            for (const model of models) {
-                try {
-                    const resp = await fetch(
-                        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
-                        { method:'POST', headers:{'Content-Type':'application/json'},
-                          body: JSON.stringify({ contents:[{parts:[{text: prompt + '\n\nReturn ONLY valid JSON. No markdown fences.'}]}] }) }
-                    );
-                    const data = await resp.json();
-                    if (data.error?.code === 404 || data.error?.status === 'NOT_FOUND') continue;
-                    if (data.error?.code === 429 || data.error?.status === 'RESOURCE_EXHAUSTED') {
-                        lastErr = new Error(data.error.message || 'Kota doldu'); continue;
-                    }
-                    if (data.error) throw new Error(data.error.message || data.error.status || 'Gemini error');
-                    const raw   = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-                    const match = raw.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
-                    if (!match) throw new Error('Gemini: JSON bulunamadı → ' + raw.slice(0,60));
-                    return JSON.parse(match[0]);
-                } catch(e) { lastErr = e; }
-            }
-            throw lastErr || new Error('Gemini: tüm modeller başarısız');
         }
     }
 ];
@@ -12206,3 +12207,28 @@ function _showAppToast(msg) {
     }
     window.setNavActive = _patchedSetNavActive;
 })();
+
+// ══════════════════════════════════════════════
+// ⌨️  ESCAPE KEY — drawer & modal kapat
+// ══════════════════════════════════════════════
+document.addEventListener('keydown', function(e) {
+    if (e.key !== 'Escape') return;
+
+    // 1. Mobil drawer
+    const drawer = document.getElementById('mob-drawer');
+    if (drawer && drawer.classList.contains('open')) {
+        mobCloseDrawer();
+        return;
+    }
+
+    // 2. Dinamik overlay modal'lar (import, paragraf-import, login vb.)
+    const overlayIds = ['import-modal-overlay', 'paragraf-import-overlay', 'login-overlay'];
+    for (const id of overlayIds) {
+        const el = document.getElementById(id);
+        if (el) { el.remove(); return; }
+    }
+
+    // 3. Herhangi bir fixed overlay (z-index yüksek)
+    const anyOverlay = document.querySelector('[id$="-overlay"]:not(#mob-overlay)');
+    if (anyOverlay) { anyOverlay.remove(); return; }
+});

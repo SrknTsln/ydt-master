@@ -40,8 +40,10 @@ function _parseXML(xmlStr) {
                 const node = el.querySelector(tag);
                 return node ? (node.textContent || '').replace(/<[^>]+>/g, '').trim() : '';
             };
-            return { title: g('title'), description: g('description'), link: g('link'), pubDate: g('pubDate') };
-        }).filter(i => i.title && i.description.length > 60);
+            const desc = g('description');
+            const cont = g('content') || g('content:encoded') || '';
+            return { title: g('title'), description: desc, content: cont, link: g('link'), pubDate: g('pubDate') };
+        }).filter(i => i.title && (i.description + i.content).length > 200);
     } catch(_) { return []; }
 }
 
@@ -50,9 +52,10 @@ function _parseRSS2JSON(data) {
     return data.items.map(i => ({
         title:       (i.title       || '').replace(/<[^>]+>/g, '').trim(),
         description: (i.description || i.content || '').replace(/<[^>]+>/g, '').trim(),
+        content:     (i.content     || '').replace(/<[^>]+>/g, '').trim(),
         link:        i.link || '',
         pubDate:     i.pubDate || ''
-    })).filter(i => i.title && i.description.length > 60);
+    })).filter(i => i.title && (i.description + i.content).length > 200);
 }
 
 /* ── Tek kaynaktan paralel proxy ile çek (4 sn timeout) ─────── */
@@ -95,7 +98,11 @@ async function _fetchAllRSS(count) {
         if (articles.length >= count) break;
         if (r.status !== 'fulfilled' || !r.value) continue;
         const { source, items } = r.value;
-        const pick = items[seed % items.length] || items[0];
+        // En uzun description'lı item'ı seç — 4 cümle ihtimalini artırır
+        const sorted = [...items].sort((a, b) =>
+            (b.description + (b.content||'')).length - (a.description + (a.content||'')).length
+        );
+        const pick = sorted[seed % Math.min(sorted.length, 3)] || sorted[0];
         if (pick) articles.push({ ...pick, sourceName: source.name, sourceIcon: source.icon });
     }
     return articles;
@@ -103,13 +110,31 @@ async function _fetchAllRSS(count) {
 
 /* ── Ham metni temizle ──────────────────────────────────────── */
 function _cleanText(article) {
-    let t = (article.description || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-    if (t.length < 100) t = article.title + '. ' + t;
-    if (t.length > 700) t = t.slice(0, 700).replace(/\s\S+$/, '') + '…';
+    // description + content birleştir — daha uzun metin için
+    const raw = [article.description, article.content]
+        .filter(Boolean)
+        .join(' ')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    let t = raw;
+    // Çok kısaysa başlığı öne ekle
+    if (t.length < 120) t = article.title + '. ' + t;
+
+    // Cümleleri say — 4'e ulaşana kadar kırpma
+    const sentences = t.match(/[^.!?]+[.!?]+/g) || [];
+    if (sentences.length >= 4) {
+        // 4+ cümle var, gerekirse 1200 char'a kadar izin ver
+        if (t.length > 1200) t = t.slice(0, 1200).replace(/\s\S+$/, '') + '…';
+    } else {
+        // 4 cümle yok, 700 char sınırını koru
+        if (t.length > 700) t = t.slice(0, 700).replace(/\s\S+$/, '') + '…';
+    }
     return t;
 }
 
-/* ── Min 4 cümle kontrolü ───────────────────────────────────── */
+/* ── Min N cümle kontrolü ───────────────────────────────────── */
 function _hasMinSentences(text, min = 4) {
     const sentences = (text || '').match(/[^.!?]+[.!?]+/g) || [];
     return sentences.length >= min;
@@ -131,9 +156,8 @@ Rules:
 - levelNote: max 8 Turkish words
 - vocabulary: 8-10 hardest words FROM the text with accurate Turkish translations`;
     try {
-        if (typeof getAIResponse === 'function') {
-            const raw = await getAIResponse(prompt, { maxTokens: 500, json: true });
-            return JSON.parse((raw || '').replace(/```json|```/g, '').trim());
+        if (typeof aiCall === 'function') {
+            return await aiCall(prompt);
         }
     } catch(_) {}
     return _vocabFallback(text);
@@ -176,7 +200,7 @@ async function _syncRSSToFirebase(passages) {
     try {
         const uid = window._currentUser?.uid;
         if (!uid || !window.db) return;
-        const { ref, set, get } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js');
+        const { ref, set, get } = await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js');
 
         // rssArsiv: yeni + eski birleştir (max 300)
         let existing = [];
@@ -210,7 +234,7 @@ async function _loadRSSFromFirebase() {
     try {
         const uid = window._currentUser?.uid;
         if (!uid || !window.db) return;
-        const { ref, get } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js');
+        const { ref, get } = await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js');
 
         // rssArsiv
         const snapRSS = await get(ref(window.db, `ydt_users/${uid}/rssArsiv`));
@@ -255,15 +279,19 @@ function _saveToLS(passages) {
    ANA FONKSİYON — motor.js generateAIDailyParagraflar override
    ══════════════════════════════════════════════════════════════ */
 async function generateAIDailyParagraflar(force) {
-    const todayKey = _rssToday();
-    const cacheKey = `ydt_rss_cache_${todayKey}`;
-    const listEl   = document.getElementById('ai-daily-paragraf-list');
-    const badgeEl  = document.getElementById('ai-daily-date-badge');
+    const todayKey   = _rssToday();
+    const cacheKey   = `ydt_rss_cache_${todayKey}`;
+    const listEl     = document.getElementById('ai-daily-paragraf-list');
+    const badgeEl    = document.getElementById('ai-daily-date-badge');
+    const refreshBtn = document.getElementById('ai-daily-refresh-btn');
 
     if (badgeEl) {
         const [y, m, d] = todayKey.split('-');
         badgeEl.textContent = `${d}.${m}.${y}`;
     }
+
+    // Force modunda eski cache'i sil
+    if (force) localStorage.removeItem(cacheKey);
 
     // Cache varsa hemen göster
     if (!force) {
@@ -271,20 +299,35 @@ async function generateAIDailyParagraflar(force) {
         if (cached) {
             try {
                 const p = JSON.parse(cached);
-                if (p && p.length >= 1) { renderAIDailyParagraflar(p, listEl); return; }
+                if (p && p.length >= 1) {
+                    if (listEl && listEl.style.display === 'none') listEl.style.display = 'grid';
+                    renderAIDailyParagraflar(p, listEl);
+                    return;
+                }
             } catch(_) {}
         }
     }
 
     if (!listEl) return;
-    if (listEl.style.display === 'none') listEl.style.display = 'grid';
+    listEl.style.display = 'grid';
+
+    // Yenile butonu — loading state
+    if (refreshBtn) {
+        refreshBtn.disabled = true;
+        refreshBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 13 13" fill="none" style="animation:spin .7s linear infinite;display:inline-block"><path d="M11.5 2A6 6 0 1 0 12 6.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M8.5 2H11.5V5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg> Yükleniyor\u2026`;
+    }
+    const _resetBtn = () => {
+        if (!refreshBtn) return;
+        refreshBtn.disabled = false;
+        refreshBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M11.5 2A6 6 0 1 0 12 6.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M8.5 2H11.5V5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg> Yenile`;
+    };
 
     // Loading UI
     listEl.innerHTML = `
       <div style="grid-column:1/-1;text-align:center;padding:28px 16px;">
-        <div style="font-size:2rem;margin-bottom:8px;">📰</div>
-        <div style="font-weight:800;color:var(--ink);font-size:.9rem;margin-bottom:4px;">6 güncel haber yükleniyor…</div>
-        <div style="font-size:.75rem;color:var(--ink3);margin-bottom:10px;">RSS kaynakları paralel taranıyor</div>
+        <div style="font-size:2rem;margin-bottom:8px;">\uD83D\uDCF0</div>
+        <div style="font-weight:800;color:var(--ink);font-size:.9rem;margin-bottom:4px;">6 g\xFCncel haber y\xFCkleniyor\u2026</div>
+        <div style="font-size:.75rem;color:var(--ink3);margin-bottom:10px;">RSS kaynaklar\u0131 paralel taraniyor</div>
         <div style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap;">
           ${RSS_SOURCES.map(s => `<span style="background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:3px 9px;font-size:.65rem;font-weight:700;">${s.icon} ${s.name}</span>`).join('')}
         </div>
@@ -293,28 +336,33 @@ async function generateAIDailyParagraflar(force) {
     let passages = [];
 
     try {
-        // RSS çek (paralel, hard 5 sn)
+        // RSS çek (paralel, hard 8 sn)
         const articles = await Promise.race([
             _fetchAllRSS(6),
-            new Promise(res => setTimeout(() => res([]), 5000))
+            new Promise(res => setTimeout(() => res([]), 8000))
         ]);
 
         if (articles && articles.length > 0) {
             listEl.innerHTML = `
               <div style="grid-column:1/-1;text-align:center;padding:20px 16px;">
-                <div style="font-size:1.4rem;margin-bottom:6px;">🤖</div>
-                <div style="font-weight:800;color:var(--ink);font-size:.85rem;">AI kelime analizi yapılıyor…</div>
-                <div style="font-size:.72rem;color:var(--ink3);margin-top:4px;">${articles.length} makale bulundu, işleniyor</div>
+                <div style="font-size:1.4rem;margin-bottom:6px;">\uD83E\uDD16</div>
+                <div style="font-weight:800;color:var(--ink);font-size:.85rem;">Kelime analizi yap\u0131l\u0131yor\u2026</div>
+                <div style="font-size:.72rem;color:var(--ink3);margin-top:4px;">${articles.length} makale bulundu, i\u015Fleniyor</div>
               </div>`;
 
-            const raw = await Promise.race([
-                Promise.all(articles.map(_toPassage)),
-                new Promise(res => setTimeout(() => res([]), 10000))
+            // allSettled: tek hata tüm diziyi öldürmez
+            const results = await Promise.race([
+                Promise.allSettled(articles.map(_toPassage)),
+                new Promise(res => setTimeout(() => res([]), 12000))
             ]);
-            passages = (raw || []).filter(p => p && p.text && _hasMinSentences(p.text, 4));
+
+            passages = (Array.isArray(results) ? results : [])
+                .filter(r => r && r.status === 'fulfilled' && r.value && r.value.text)
+                .map(r => r.value)
+                .filter(p => _hasMinSentences(p.text, 4));
         }
     } catch(err) {
-        console.warn('[rss_paragraf] fetch hatası:', err.message);
+        console.warn('[rss_paragraf] fetch hatas\u0131:', err.message);
     }
 
     // Eksik slotları statik ile tamamla (6'ya çıkar)
@@ -326,11 +374,11 @@ async function generateAIDailyParagraflar(force) {
     }
     if (!passages.length) passages = staticPool;
 
-    // Kaydet
+    // Kaydet ve render
     _saveToLS(passages);
-    _syncRSSToFirebase(passages); // async, render'ı bekletmez
-
+    _syncRSSToFirebase(passages);
     renderAIDailyParagraflar(passages, listEl);
+    _resetBtn();
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -408,7 +456,7 @@ async function _syncParagraflarToFirebase() {
     try {
         const uid = window._currentUser?.uid;
         if (!uid || !window.db) return;
-        const { ref, set } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js');
+        const { ref, set } = await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js');
         if (typeof paragraflar !== 'undefined' && paragraflar.length > 0) {
             await set(ref(window.db, `ydt_users/${uid}/paragraflar`), paragraflar);
         }
