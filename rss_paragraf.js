@@ -1,35 +1,88 @@
 // ════════════════════════════════════════════════════════════════
-//  rss_paragraf.js  —  YDT Master  v3.0
+//  rss_paragraf.js  —  YDT Master  v4.7
 //
-//  • Her çekimde 6 paragraf (RSS + gerekirse statik tamamlama)
-//  • CORS proxy'ler paralel denenir, 4 sn timeout
-//  • AI ile kelime + seviye analizi
-//  • localStorage günlük cache
-//  • Firebase Realtime DB tam sync:
-//      ydt_users/{uid}/rssArsiv       ← tüm çekilen pasajlar (max 300)
-//      ydt_users/{uid}/paragraflar    ← arşive eklenenler
-//      ydt_users/{uid}/paragrafSorular ← mevcut sistem zaten yazıyor
+//  ┌─────────────────────────────────────────────────────────────┐
+//  │  RSS ÇEKİM SIRASI (Adım adım)                               │
+//  │                                                             │
+//  │  1. KAYNAK GRUPLARI (paralel, öncelik sırası)               │
+//  │     Bilim (5 kaynak) → Teknoloji (5) → Oyun (6)            │
+//  │     Her grup için Promise.allSettled ile eşzamanlı çekilir  │
+//  │                                                             │
+//  │  2. HER KAYNAK İÇİN PROXY SIRASI (_fetchOneSource)          │
+//  │     a) Ücretsiz proxy'ler PARALEL denenir (Promise.any):    │
+//  │        · allorigins.win                                     │
+//  │        · corsproxy.io                                       │
+//  │        · codetabs.com                                       │
+//  │        → İlk başarılı yanıt kullanılır (6 sn timeout)       │
+//  │     b) Ücretsiz proxy'ler başarısız olursa FALLBACK:        │
+//  │        · rss2json API (API key ile, 8 sn timeout)           │
+//  │     c) Tümü başarısız → null döner, kaynak atlanır          │
+//  │                                                             │
+//  │  3. SLOT DAĞILIMI (toplam 20 makale hedefi)                 │
+//  │     Bilim: 12 slot · Teknoloji: 5 slot · Oyun: 3 slot      │
+//  │     Eksik kalırsa diğer kategoriler tamamlar                │
+//  │                                                             │
+//  │  4. FİLTRELEME                                              │
+//  │     · İngilizce kontrol (_isEnglish: en az 4 yaygın kelime) │
+//  │     · Min 4 cümle filtresi (_hasMinSentences)               │
+//  │     · AI analizi: kelime listesi + CEFR seviyesi            │
+//  │                                                             │
+//  │  5. KAYDETME                                                │
+//  │     · localStorage cache (3 saatlik slot bazlı)             │
+//  │     · localStorage rssArsiv (max 300, uid bazlı)            │
+//  │     · Firebase Realtime DB:                                 │
+//  │         ydt_users/{uid}/rssArsiv      (tüm çekilen, max 300)│
+//  │         ydt_users/{uid}/paragraflar   (arşive eklenenler)   │
+//  │         ydt_users/{uid}/paragrafSorular (mevcut sistem)     │
+//  │                                                             │
+//  │  6. EKSİK SLOT → statik fallback pasajlar ile tamamlanır    │
+//  └─────────────────────────────────────────────────────────────┘
 // ════════════════════════════════════════════════════════════════
 
 /* ── RSS Kaynakları ─────────────────────────────────────────── */
-const RSS_SOURCES = [
-    { name: 'BBC Science',     url: 'https://feeds.bbci.co.uk/news/science_and_environment/rss.xml', icon: '🌿' },
-    { name: 'The Guardian',    url: 'https://www.theguardian.com/science/rss',                       icon: '🧪' },
-    { name: 'NASA News',       url: 'https://www.nasa.gov/rss/dyn/breaking_news.rss',                icon: '🚀' },
-    { name: 'NPR Science',     url: 'https://feeds.npr.org/1007/rss.xml',                            icon: '📡' },
-    { name: 'Sci. American',   url: 'https://rss.sciam.com/ScientificAmerican-Global',               icon: '🔬' },
-    { name: 'MIT Tech Review', url: 'https://www.technologyreview.com/stories.rss',                  icon: '🤖' }
+// Kaynaklar kategoriye göre ayrılmış — çekim önceliği: Bilim → Teknoloji → Oyun
+const RSS_SOURCES_SCIENCE = [
+    { name: 'BBC Science',     url: 'https://feeds.bbci.co.uk/news/science_and_environment/rss.xml', icon: '🌿', cat: 'science' },
+    { name: 'The Guardian',    url: 'https://www.theguardian.com/science/rss',                       icon: '🧪', cat: 'science' },
+    { name: 'NASA News',       url: 'https://www.nasa.gov/rss/dyn/breaking_news.rss',                icon: '🚀', cat: 'science' },
+    { name: 'NPR Science',     url: 'https://feeds.npr.org/1007/rss.xml',                            icon: '📡', cat: 'science' },
+    { name: 'Sci. American',   url: 'https://rss.sciam.com/ScientificAmerican-Global',               icon: '🔬', cat: 'science' },
 ];
+const RSS_SOURCES_TECH = [
+    { name: 'MIT Tech Review', url: 'https://www.technologyreview.com/stories.rss',                  icon: '🤖', cat: 'tech' },
+    { name: 'Ars Technica',    url: 'https://feeds.arstechnica.com/arstechnica/index',               icon: '💻', cat: 'tech' },
+    { name: 'Wired',           url: 'https://www.wired.com/feed/rss',                                icon: '⚡', cat: 'tech' },
+    { name: 'TechCrunch',      url: 'https://techcrunch.com/feed/',                                  icon: '🛠️', cat: 'tech' },
+    { name: 'The Verge',       url: 'https://www.theverge.com/rss/index.xml',                        icon: '📱', cat: 'tech' },
+];
+const RSS_SOURCES_GAMING = [
+    { name: 'IGN',             url: 'https://feeds.ign.com/ign/all',                                 icon: '🎮', cat: 'gaming' },
+    { name: 'Eurogamer',       url: 'https://www.eurogamer.net/?format=rss',                         icon: '🕹️', cat: 'gaming' },
+    { name: 'PC Gamer',        url: 'https://www.pcgamer.com/rss/',                                  icon: '🖥️', cat: 'gaming' },
+    { name: 'Kotaku',          url: 'https://kotaku.com/rss',                                        icon: '👾', cat: 'gaming' },
+    { name: 'Rock Paper Shotgun', url: 'https://www.rockpapershotgun.com/feed',                      icon: '🔫', cat: 'gaming' },
+    { name: 'Polygon',         url: 'https://www.polygon.com/rss/index.xml',                         icon: '🎲', cat: 'gaming' },
+];
+// Tüm kaynaklar düz liste (loading UI için)
+const RSS_SOURCES = [...RSS_SOURCES_SCIENCE, ...RSS_SOURCES_TECH, ...RSS_SOURCES_GAMING];
 
 /* ── CORS Proxy'leri ────────────────────────────────────────── */
+const RSS_API_KEY = 'vsl1eq3auurlhgourjr8rznm6q7l8zxy0pkhwnxo';
 const RSS_PROXIES = [
+    u => `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(u)}&api_key=vsl1eq3auurlhgourjr8rznm6q7l8zxy0pkhwnxo&count=10`,
     u => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,
-    u => `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(u)}`,
-    u => `https://corsproxy.io/?${encodeURIComponent(u)}`
+    u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+    u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`
 ];
 
 /* ── Yardımcılar ────────────────────────────────────────────── */
 function _rssToday() { return new Date().toISOString().slice(0, 10); }
+// Her 3 saatte bir farklı cache slot → içerik taze kalır
+function _rssCacheSlot() {
+    const now  = new Date();
+    const slot = Math.floor(now.getHours() / 3);
+    return `${_rssToday()}_s${slot}`;
+}
 
 function _parseXML(xmlStr) {
     try {
@@ -58,54 +111,130 @@ function _parseRSS2JSON(data) {
     })).filter(i => i.title && (i.description + i.content).length > 200);
 }
 
-/* ── Tek kaynaktan paralel proxy ile çek (4 sn timeout) ─────── */
+/* ── Tek kaynaktan sıralı proxy ile çek ─────────────────────── */
 async function _fetchOneSource(source) {
-    const controller = new AbortController();
-    const timer      = setTimeout(() => controller.abort(), 4000);
-    const tries = RSS_PROXIES.map(async makeProxy => {
+    // 1. ÖNCELİK: Ücretsiz proxy'ler paralel — rss2json kotasını korur
+    const freeProxies = [
+        u => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,
+        u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+        u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`
+    ];
+    const freeTries = freeProxies.map(async makeProxy => {
         try {
-            const res  = await fetch(makeProxy(source.url), { signal: controller.signal });
+            const res = await fetch(makeProxy(source.url), { signal: AbortSignal.timeout(6000) });
             if (!res.ok) return null;
             const data = await res.json();
-            if (data.items) {
-                const items = _parseRSS2JSON(data);
-                if (items.length) return { source, items };
-            }
-            const xml = data.contents || (typeof data === 'string' ? data : null);
-            if (xml) {
+            const xml  = data.contents || (typeof data === 'string' ? data : null);
+            if (xml && xml.includes('<item')) {
                 const items = _parseXML(xml);
-                if (items.length) return { source, items };
+                if (items.length) {
+                    console.log(`[RSS ✅] ${source.name} → free proxy (${items.length} item)`);
+                    return { source, items };
+                }
             }
-        } catch(_) {}
+        } catch(e) {}
         return null;
     });
     try {
-        const winner = await Promise.any(tries);
-        clearTimeout(timer);
-        return winner;
-    } catch(_) {
-        clearTimeout(timer);
-        return null;
+        const winner = await Promise.any(freeTries);
+        if (winner) return winner;
+    } catch(_) {}
+
+    // 2. FALLBACK: Ücretsiz proxy'ler başarısız → rss2json API key kullan
+    try {
+        const url = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(source.url)}&api_key=${RSS_API_KEY}&count=10`;
+        const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+        if (res.ok) {
+            const data = await res.json();
+            if (data.status === 'ok' && data.items?.length) {
+                const items = _parseRSS2JSON(data);
+                if (items.length) {
+                    console.log(`[RSS ✅] ${source.name} → rss2json fallback (${items.length} item)`);
+                    return { source, items };
+                }
+            }
+            if (data.status === 'error') {
+                console.warn(`[RSS ⚠️] ${source.name} rss2json: ${data.message}`);
+            }
+        }
+    } catch(e) {
+        console.warn(`[RSS ⚠️] ${source.name} rss2json timeout`);
     }
+
+    console.warn(`[RSS ❌] ${source.name} — tüm proxy'ler başarısız`);
+    return null;
+}
+
+/* ── İngilizce metin kontrolü ───────────────────────────────── */
+const _EN_COMMON = ['the','and','that','this','with','have','from','they','been','were',
+                    'which','their','will','when','more','also','about','said','after','into'];
+function _isEnglish(text) {
+    if (!text || text.length < 50) return false;
+    const lower = text.toLowerCase();
+    const hits  = _EN_COMMON.filter(w => lower.includes(' ' + w + ' '));
+    return hits.length >= 4; // En az 4 İngilizce yaygın kelime
 }
 
 /* ── Tüm kaynaklardan paralel çek → count kadar makale ─────── */
 async function _fetchAllRSS(count) {
-    const results  = await Promise.allSettled(RSS_SOURCES.map(_fetchOneSource));
-    const articles = [];
-    const seed     = _rssToday().split('-').reduce((a, b) => a + parseInt(b), 0);
-    for (const r of results) {
-        if (articles.length >= count) break;
-        if (r.status !== 'fulfilled' || !r.value) continue;
-        const { source, items } = r.value;
-        // En uzun description'lı item'ı seç — 4 cümle ihtimalini artırır
-        const sorted = [...items].sort((a, b) =>
-            (b.description + (b.content||'')).length - (a.description + (a.content||'')).length
-        );
-        const pick = sorted[seed % Math.min(sorted.length, 3)] || sorted[0];
-        if (pick) articles.push({ ...pick, sourceName: source.name, sourceIcon: source.icon });
+    // Kategori sırası: Bilim → Teknoloji → Oyun
+    // Her kategoriden paralel çek, önce bilim doldur, yer kalırsa diğerlerinden ekle
+    const SCIENCE_SLOTS = 12; // 20'nin %60'ı bilim
+    const TECH_SLOTS    = 5;  // %25 teknoloji
+    const GAMING_SLOTS  = 3;  // %15 oyun (kalan)
+
+    function _pickFromResults(results, maxPerSource) {
+        const articles = [];
+        for (const r of results) {
+            if (r.status !== 'fulfilled' || !r.value) continue;
+            const { source, items } = r.value;
+            const sorted = [...items]
+                .filter(i => _isEnglish(i.description + ' ' + (i.content||'')))
+                .sort((a, b) =>
+                    (b.description + (b.content||'')).length - (a.description + (a.content||'')).length
+                );
+            sorted.slice(0, maxPerSource).forEach(pick => {
+                if (pick) articles.push({ ...pick, sourceName: source.name, sourceIcon: source.icon, _cat: source.cat });
+            });
+        }
+        // Kategori içinde karıştır
+        for (let i = articles.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [articles[i], articles[j]] = [articles[j], articles[i]];
+        }
+        return articles;
     }
-    return articles;
+
+    // Tüm kategorileri paralel çek
+    const [sciRes, techRes, gameRes] = await Promise.all([
+        Promise.allSettled(RSS_SOURCES_SCIENCE.map(_fetchOneSource)),
+        Promise.allSettled(RSS_SOURCES_TECH.map(_fetchOneSource)),
+        Promise.allSettled(RSS_SOURCES_GAMING.map(_fetchOneSource)),
+    ]);
+
+    const sciArticles  = _pickFromResults(sciRes,  2);
+    const techArticles = _pickFromResults(techRes, 2);
+    const gameArticles = _pickFromResults(gameRes, 2);
+
+    // Önce bilim slotlarını doldur, yer kalırsa teknoloji, sonra oyun
+    let articles = [
+        ...sciArticles.slice(0, SCIENCE_SLOTS),
+        ...techArticles.slice(0, TECH_SLOTS),
+        ...gameArticles.slice(0, GAMING_SLOTS),
+    ];
+
+    // Bilim yetmediyse teknoloji/oyundan tamamla
+    if (articles.length < count) {
+        const extra = [
+            ...sciArticles.slice(SCIENCE_SLOTS),
+            ...techArticles.slice(TECH_SLOTS),
+            ...gameArticles.slice(GAMING_SLOTS),
+        ];
+        articles = [...articles, ...extra].slice(0, count);
+    }
+
+    console.log(`[RSS] Toplam: ${articles.length} makale — Bilim: ${articles.filter(a=>a._cat==='science').length} · Teknoloji: ${articles.filter(a=>a._cat==='tech').length} · Oyun: ${articles.filter(a=>a._cat==='gaming').length}`);
+    return articles.slice(0, count);
 }
 
 /* ── Ham metni temizle ──────────────────────────────────────── */
@@ -213,9 +342,10 @@ async function _syncRSSToFirebase(passages) {
         if (merged.length > 300) merged.length = 300;
         await set(ref(window.db, `ydt_users/${uid}/rssArsiv`), merged);
 
-        // paragraflar (yüklü pasajlar)
+        // paragraflar (yüklü pasajlar) — arşive eklenenler dahil
         if (typeof paragraflar !== 'undefined' && paragraflar.length > 0) {
             await set(ref(window.db, `ydt_users/${uid}/paragraflar`), paragraflar);
+            console.log(`[rss_paragraf] ✅ Firebase: ${paragraflar.length} yüklü pasaj yazıldı`);
         }
 
         // paragrafSorular (güvence)
@@ -267,7 +397,7 @@ async function _loadRSSFromFirebase() {
 /* ── localStorage'a yaz ─────────────────────────────────────── */
 function _saveToLS(passages) {
     const uid      = window._currentUser?.uid || 'guest';
-    localStorage.setItem(`ydt_rss_cache_${_rssToday()}`, JSON.stringify(passages));
+    localStorage.setItem(`ydt_rss_cache_${_rssCacheSlot()}`, JSON.stringify(passages));
     let arsiv = [];
     try { arsiv = JSON.parse(localStorage.getItem(`ydt_${uid}_rss_arsiv`) || '[]'); } catch(_) {}
     passages.forEach(p => { if (!arsiv.some(a => a.title === p.title)) arsiv.unshift({ ...p, savedAt: Date.now() }); });
@@ -280,7 +410,7 @@ function _saveToLS(passages) {
    ══════════════════════════════════════════════════════════════ */
 async function generateAIDailyParagraflar(force) {
     const todayKey   = _rssToday();
-    const cacheKey   = `ydt_rss_cache_${todayKey}`;
+    const cacheKey   = `ydt_rss_cache_${_rssCacheSlot()}`;
     const listEl     = document.getElementById('ai-daily-paragraf-list');
     const badgeEl    = document.getElementById('ai-daily-date-badge');
     const refreshBtn = document.getElementById('ai-daily-refresh-btn');
@@ -325,9 +455,9 @@ async function generateAIDailyParagraflar(force) {
     // Loading UI
     listEl.innerHTML = `
       <div style="grid-column:1/-1;text-align:center;padding:28px 16px;">
-        <div style="font-size:2rem;margin-bottom:8px;">\uD83D\uDCF0</div>
-        <div style="font-weight:800;color:var(--ink);font-size:.9rem;margin-bottom:4px;">6 g\xFCncel haber y\xFCkleniyor\u2026</div>
-        <div style="font-size:.75rem;color:var(--ink3);margin-bottom:10px;">RSS kaynaklar\u0131 paralel taraniyor</div>
+        <div style="font-size:2rem;margin-bottom:8px;">📰</div>
+        <div style="font-weight:800;color:var(--ink);font-size:.9rem;margin-bottom:4px;">Günlük 25 haber yükleniyor\u2026</div>
+        <div style="font-size:.75rem;color:var(--ink3);margin-bottom:10px;">Bilim · Teknoloji · Oyun kaynakları taranıyor</div>
         <div style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap;">
           ${RSS_SOURCES.map(s => `<span style="background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:3px 9px;font-size:.65rem;font-weight:700;">${s.icon} ${s.name}</span>`).join('')}
         </div>
@@ -336,43 +466,44 @@ async function generateAIDailyParagraflar(force) {
     let passages = [];
 
     try {
-        // RSS çek (paralel, hard 8 sn)
+        // RSS çek — 20 makale için 28 aday (4 cümle filtresi elemeye neden olabilir)
         const articles = await Promise.race([
-            _fetchAllRSS(6),
-            new Promise(res => setTimeout(() => res([]), 8000))
+            _fetchAllRSS(32),  // 25 pasaj için daha fazla aday
+            new Promise(res => setTimeout(() => res([]), 10000))
         ]);
 
         if (articles && articles.length > 0) {
             listEl.innerHTML = `
               <div style="grid-column:1/-1;text-align:center;padding:20px 16px;">
-                <div style="font-size:1.4rem;margin-bottom:6px;">\uD83E\uDD16</div>
-                <div style="font-weight:800;color:var(--ink);font-size:.85rem;">Kelime analizi yap\u0131l\u0131yor\u2026</div>
-                <div style="font-size:.72rem;color:var(--ink3);margin-top:4px;">${articles.length} makale bulundu, i\u015Fleniyor</div>
+                <div style="font-size:1.4rem;margin-bottom:6px;">🤖</div>
+                <div style="font-weight:800;color:var(--ink);font-size:.85rem;">Kelime analizi yapılıyor\u2026</div>
+                <div style="font-size:.72rem;color:var(--ink3);margin-top:4px;">${articles.length} makale bulundu, işleniyor</div>
               </div>`;
 
             // allSettled: tek hata tüm diziyi öldürmez
             const results = await Promise.race([
                 Promise.allSettled(articles.map(_toPassage)),
-                new Promise(res => setTimeout(() => res([]), 12000))
+                new Promise(res => setTimeout(() => res([]), 20000))
             ]);
 
             passages = (Array.isArray(results) ? results : [])
                 .filter(r => r && r.status === 'fulfilled' && r.value && r.value.text)
                 .map(r => r.value)
-                .filter(p => _hasMinSentences(p.text, 4));
+                .filter(p => _hasMinSentences(p.text, 4))
+                .slice(0, 25);  // Günlük max 25
         }
     } catch(err) {
-        console.warn('[rss_paragraf] fetch hatas\u0131:', err.message);
+        console.warn('[rss_paragraf] fetch hatası:', err.message);
     }
 
-    // Eksik slotları statik ile tamamla (6'ya çıkar)
+    // Eksik slotları statik ile tamamla (20'ye çıkar)
     const staticPool = _getStaticPassages();
     let si = 0;
-    while (passages.length < 6 && si < staticPool.length) {
+    while (passages.length < 20 && si < staticPool.length) {
         const fill = staticPool[si++];
         if (!passages.some(p => p.title === fill.title)) passages.push(fill);
     }
-    if (!passages.length) passages = staticPool;
+    if (!passages.length) passages = staticPool.slice(0, 20);
 
     // Kaydet ve render
     _saveToLS(passages);
@@ -559,4 +690,4 @@ window.RSS_SOURCES                 = RSS_SOURCES;
 window._syncRSSToFirebase          = _syncRSSToFirebase;
 window._loadRSSFromFirebase        = _loadRSSFromFirebase;
 
-console.log('[rss_paragraf.js v3] ✅ 6 paragraf + min 4 cümle + admin arşiv + Firebase sync aktif');
+console.log('[rss_paragraf.js v4.7] ✅ 16 kaynak · Bilim→Teknoloji→Oyun önceliği · free proxy önce · rss2json fallback · max 25/gün');

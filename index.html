@@ -87,7 +87,7 @@
         <button class="mob-drawer-btn"        id="di-ai-ydt"   onclick="mobRun(startAIQuizMode)">            <span aria-hidden="true" class="mob-d-icon">🤖</span> AI Vocabulary Test</button>
         <button class="mob-drawer-btn"        id="di-study"    onclick="mobRun(startStudyFromNav)">          <span aria-hidden="true" class="mob-d-icon">📖</span> Kelime Öğren</button>
         <button class="mob-drawer-btn"        id="di-quiz"     onclick="mobRun(startQuizFromNav)">           <span aria-hidden="true" class="mob-d-icon">🎯</span> Vocabulary Test</button>
-        <button class="mob-drawer-btn"        id="di-paragraf" onclick="mobRun(showParagrafListesi)">        <span aria-hidden="true" class="mob-d-icon">📄</span> Paragraf Okuma</button>
+        <button class="mob-drawer-btn"        id="di-paragraf" onclick="mobRun(showParagrafListesi)">        <span aria-hidden="true" class="mob-d-icon">📰</span> AI Reading</button>
         <button class="mob-drawer-btn"        id="di-speaking" onclick="mobRun(()=>openSpeakingSection('overview'))"><span aria-hidden="true" class="mob-d-icon">🗣️</span> Speaking</button>
 
         <!-- Grammar — Speaking altında, Alıştırmalar üstünde -->
@@ -178,9 +178,9 @@
         <div class="sb-sec">Ana Menü</div>
         <button class="sb-btn active" id="sb-home" title="Ana Sayfa" onclick="navTo('index-page')">             <span aria-hidden="true" class="sb-icon">🏠</span> Ana Sayfa</button>
         <button class="sb-btn"        id="sb-ai-ydt" title="AI Vocab Test" onclick="startAIQuizMode()">               <span aria-hidden="true" class="sb-icon">🤖</span> AI Vocabulary Test</button>
+        <button class="sb-btn"        id="sb-paragraf" title="AI Reading" onclick="showParagrafListesi()">           <span aria-hidden="true" class="sb-icon">📰</span> AI Reading</button>
         <button class="sb-btn"        id="sb-study" title="Kelime Öğren" onclick="startStudyFromNav()">             <span aria-hidden="true" class="sb-icon">📖</span> Kelime Öğren</button>
         <button class="sb-btn"        id="sb-quiz" title="Vocabulary Test" onclick="startQuizFromNav()">              <span aria-hidden="true" class="sb-icon">🎯</span> Vocabulary Test</button>
-        <button class="sb-btn"        id="sb-paragraf" title="Paragraf Okuma" onclick="showParagrafListesi()">           <span aria-hidden="true" class="sb-icon">📄</span> Paragraf Okuma</button>
         <button class="sb-btn"        id="sb-speaking" title="Speaking" onclick="openSpeakingSection('overview')"> <span aria-hidden="true" class="sb-icon">🗣️</span> Speaking</button>
 
         <!-- Grammar — daraltılabilir grup (Ana Menü altında) -->
@@ -683,7 +683,7 @@
 
                 <!-- Paragraf Okuma -->
                 <div class="sp-section">
-                    <h2 class="sp-section-title">📄 Paragraf Okuma
+                    <h2 class="sp-section-title">📰 AI Reading
                         <button onclick="showParagrafListesi()" style="font-size:.68rem;font-weight:700;padding:3px 10px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);color:var(--ink3);cursor:pointer;font-family:inherit;">Pasajlara Git →</button>
                     </h2>
                     <div class="sp-para-kpi-row">
@@ -705,7 +705,7 @@
                         </div>
                     </div>
                     <div class="sp-para-paket-list" id="sp-para-paket-list"></div>
-                    <button class="sp-para-goto-btn" onclick="showParagrafListesi()">📖 Paragraf Okumaya Git</button>
+                    <button class="sp-para-goto-btn" onclick="showParagrafListesi()">📰 AI Reading'e Git</button>
                 </div>
 
             </div>
@@ -757,10 +757,18 @@
         </div><!-- /sp-body -->
     </div>
 
-    <div id="study-page" class="container hidden">
+    <div id="study-page" class="container hidden" style="position:relative;">
         <!-- Üst bar -->
         <div class="study-topbar">
             <button class="back-btn-inline" onclick="exitModule()">←</button>
+            <!-- Liste seçici pill -->
+            <button class="sg-trigger" id="sg-trigger" onclick="_sgToggleDropdown()" title="Liste değiştir">
+                <span class="sg-trigger-icon">📚</span>
+                <span class="sg-trigger-label" id="sg-trigger-label">Genel Kelimeler</span>
+                <svg class="sg-trigger-caret" id="sg-trigger-caret" width="10" height="10" viewBox="0 0 10 10" fill="none">
+                    <path d="M2 3.5l3 3 3-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
             <div class="study-progress-wrap">
                 <div class="study-progress-track">
                     <div class="study-progress-fill" id="study-prog-fill"></div>
@@ -768,6 +776,11 @@
                 <span class="study-progress-label" id="study-progress-label">1 / 10</span>
             </div>
             <button class="study-speak-btn" onclick="speakWord(document.getElementById('study-eng').innerText)" title="Sesli dinle">🔊</button>
+        </div>
+
+        <!-- ── Dropdown Menü ── -->
+        <div id="sg-panel" class="sg-dropdown" style="display:none;">
+            <div class="sg-dropdown-inner" id="sg-chips"></div>
         </div>
 
         <!-- Mini stat chips -->
@@ -2275,6 +2288,9 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
         if (window.aiArsiv) {
             localStorage.setItem('ydt_ai_arsiv', JSON.stringify(window.aiArsiv));
         }
+        if (window.aiGramerArsiv) {
+            localStorage.setItem('ydt_gramer_arsiv', JSON.stringify(window.aiGramerArsiv));
+        }
         saveToFirebase();
     };
 
@@ -2293,6 +2309,9 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
                 }
                 if (window.aiArsiv && window.aiArsiv.length) {
                     await set(ref(db, `ydt_users/${uid}/aiArsiv`), window.aiArsiv);
+                }
+                if (window.aiGramerArsiv && window.aiGramerArsiv.length) {
+                    await set(ref(db, `ydt_users/${uid}/aiGramerArsiv`), window.aiGramerArsiv);
                 }
                 setSyncStatus('ok');
             } catch (e) {
@@ -2329,6 +2348,10 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
                             window.aiArsiv = remote.aiArsiv;
                             localStorage.setItem('ydt_ai_arsiv', JSON.stringify(remote.aiArsiv));
                         }
+                        if (remote.aiGramerArsiv) {
+                            window.aiGramerArsiv = remote.aiGramerArsiv;
+                            localStorage.setItem('ydt_gramer_arsiv', JSON.stringify(remote.aiGramerArsiv));
+                        }
                     }
                 } catch(e2) { console.warn('user-scoped okuma hatası', e2); }
             }
@@ -2348,6 +2371,10 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
                     if (remote.aiArsiv) {
                         window.aiArsiv = remote.aiArsiv;
                         localStorage.setItem('ydt_ai_arsiv', JSON.stringify(remote.aiArsiv));
+                    }
+                    if (remote.aiGramerArsiv) {
+                        window.aiGramerArsiv = remote.aiGramerArsiv;
+                        localStorage.setItem('ydt_gramer_arsiv', JSON.stringify(remote.aiGramerArsiv));
                     }
                     // Eski veriyi yeni sisteme taşı
                     if (uid && Object.keys(fbData).length) {
@@ -2512,6 +2539,9 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
                 const data = snap.data();
                 if (data.allData) { window.allData = data.allData; localStorage.setItem(`ydt_${uid}_all_data`, JSON.stringify(window.allData)); }
                 if (data.stats)   { window.stats = { ...data.stats }; if (isNaN(stats.totalMinutes)) stats.totalMinutes = 0; localStorage.setItem(`ydt_${uid}_stats`, JSON.stringify(window.stats)); }
+                if (data.aiArsiv) { window.aiArsiv = data.aiArsiv; localStorage.setItem('ydt_ai_arsiv', JSON.stringify(data.aiArsiv)); }
+                if (data.aiGramerArsiv) { window.aiGramerArsiv = data.aiGramerArsiv; localStorage.setItem('ydt_gramer_arsiv', JSON.stringify(data.aiGramerArsiv)); }
+                if (data.paragrafSorular) { window.paragrafSorular = data.paragrafSorular; localStorage.setItem('ydt_paragraf_sorular', JSON.stringify(data.paragrafSorular)); }
                 // API keylerini Firestore'dan localStorage'a yükle
                 ['ydt_gemini_api_key','ydt_groq_api_key','ydt_openrouter_api_key','ydt_mistral_api_key'].forEach(k => {
                     if (data[k]) localStorage.setItem(k, data[k]);
@@ -2546,8 +2576,11 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
                 if (v) apiKeyData[k] = v;
             });
             await setDoc(doc(fsdb, 'users', uid), {
-                stats:     typeof window.stats   !== 'undefined' ? stats   : {},
-                allData:   typeof window.allData !== 'undefined' ? allData : {},
+                stats:          typeof window.stats          !== 'undefined' ? stats          : {},
+                allData:        typeof window.allData        !== 'undefined' ? allData        : {},
+                aiArsiv:        window.aiArsiv               || [],
+                aiGramerArsiv:  window.aiGramerArsiv         || [],
+                paragrafSorular: window.paragrafSorular      || {},
                 updatedAt: new Date().toISOString(),
                 ...apiKeyData
             }, { merge: true });

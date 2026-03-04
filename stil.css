@@ -1055,6 +1055,107 @@ select:focus,input:focus,textarea:focus{border-color:var(--color-focus);}
 .study-speak-btn{border:none;background:var(--bg);border-radius:10px;padding:7px 10px;font-size:.95rem;cursor:pointer;flex-shrink:0;transition:background .12s;}
 .study-speak-btn:hover{background:var(--color-primary-soft);}
 
+/* ── Kelime Grubu Dropdown ── */
+
+/* Topbar'daki trigger pill */
+.sg-trigger {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 5px 10px 5px 8px;
+    border-radius: 99px;
+    border: 1.5px solid var(--border, #e5e5ea);
+    background: var(--bg, #f5f5f8);
+    font-family: inherit; font-size: .74rem; font-weight: 700;
+    color: var(--ink2, #555); cursor: pointer;
+    transition: all .18s; white-space: nowrap;
+    flex-shrink: 0; max-width: 160px;
+}
+.sg-trigger:hover {
+    border-color: #e63946; color: #e63946; background: #fff5f5;
+}
+.sg-trigger.open {
+    border-color: #e63946; color: #e63946;
+    background: #fff5f5;
+    box-shadow: 0 0 0 3px rgba(230,57,70,.1);
+}
+.sg-trigger-icon { font-size: .85rem; flex-shrink: 0; }
+.sg-trigger-label {
+    flex: 1; min-width: 0;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.sg-trigger-caret {
+    flex-shrink: 0; color: currentColor; opacity: .6;
+    transition: transform .2s;
+}
+.sg-trigger.open .sg-trigger-caret { transform: rotate(180deg); }
+
+/* Dropdown kutu */
+.sg-dropdown {
+    position: absolute;
+    top: 52px; left: 0; right: 0;
+    z-index: 200;
+    padding: 0 0 4px;
+}
+.sg-dropdown-inner {
+    background: var(--white, #fff);
+    border: 1.5px solid var(--border, #ebebf0);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,.12), 0 2px 8px rgba(0,0,0,.06);
+    padding: 6px;
+    display: flex; flex-direction: column; gap: 2px;
+    max-height: 260px; overflow-y: auto;
+}
+
+/* Her satır */
+.sg-chip {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: none; background: transparent;
+    font-family: inherit; font-size: .82rem; font-weight: 600;
+    color: var(--ink2, #444); cursor: pointer;
+    transition: background .12s; text-align: left; width: 100%;
+}
+.sg-chip:hover { background: var(--bg, #f5f5f8); color: var(--ink, #1a1a2e); }
+.sg-chip.sg-active {
+    background: #fff1f2;
+    color: #e63946; font-weight: 800;
+}
+.sg-chip.sg-random { border-bottom: 1px solid var(--border, #f0f0f5); margin-bottom: 2px; padding-bottom: 12px; }
+.sg-chip.sg-random.sg-active { background: #f5f3ff; color: #7c3aed; }
+
+/* Sağ taraf: kelime sayısı badge */
+.sg-chip-count {
+    margin-left: auto; flex-shrink: 0;
+    background: var(--bg, #f0f0f5);
+    border-radius: 99px;
+    padding: 2px 8px; font-size: .65rem; font-weight: 800;
+    color: var(--ink3, #999);
+}
+.sg-chip.sg-active .sg-chip-count {
+    background: rgba(230,57,70,.12); color: #e63946;
+}
+.sg-chip.sg-random.sg-active .sg-chip-count {
+    background: rgba(124,58,237,.12); color: #7c3aed;
+}
+
+/* Başla butonu yok */
+.sg-start-btn { display: none !important; }
+
+/* Overlay — dışarı tıklayınca kapat */
+.sg-overlay {
+    position: fixed; inset: 0; z-index: 199;
+}
+
+/* Dark mode */
+[data-theme="dark"] .sg-trigger { background: #1e1e35; border-color: #2e2e50; color: #bbb; }
+[data-theme="dark"] .sg-trigger:hover, [data-theme="dark"] .sg-trigger.open { background: #2a0f14; border-color: #e63946; color: #e63946; }
+[data-theme="dark"] .sg-dropdown-inner { background: #16162a; border-color: #252540; box-shadow: 0 8px 32px rgba(0,0,0,.4); }
+[data-theme="dark"] .sg-chip { color: #aaa; }
+[data-theme="dark"] .sg-chip:hover { background: #1e1e35; color: #fff; }
+[data-theme="dark"] .sg-chip.sg-active { background: #2a0f14; color: #e63946; }
+[data-theme="dark"] .sg-chip.sg-random.sg-active { background: #1e1535; color: #a78bfa; }
+[data-theme="dark"] .sg-chip-count { background: #252540; color: #666; }
+
 .study-chips{display:flex;gap:8px;margin-bottom:12px;}
 .study-chip{flex:1;text-align:center;padding:6px 8px;border-radius:9px;font-size:.72rem;font-weight:700;}
 .study-chip-known{background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;}
