@@ -6870,3 +6870,47 @@ body:has(#kids-page:not(.hidden)) .kw-world-bg { opacity: 1; }
     margin-top: 8px; padding: 10px 20px;
     font-size: var(--text-xs); width: auto !important;
 }
+
+/* ════════════════════════════════════════════════════════
+   MOBİL YÜZEN TEMA FAB
+   Sadece mobilde görünür, bottom-nav üstünde sağ alt köşe
+   ════════════════════════════════════════════════════════ */
+.mob-theme-fab {
+    display: none; /* desktop'ta gizli — sidebar toggle kullanılıyor */
+}
+
+@media (max-width: 699px) {
+    .mob-theme-fab {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        right: 16px;
+        bottom: calc(var(--bnav-h, 60px) + 12px);
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        border: 1.5px solid var(--border);
+        background: var(--white);
+        box-shadow: 0 4px 16px rgba(0,0,0,.14), 0 1px 4px rgba(0,0,0,.08);
+        font-size: 1.1rem;
+        cursor: pointer;
+        z-index: var(--z-floating);
+        transition: transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .mob-theme-fab:active {
+        transform: scale(.88);
+        box-shadow: 0 2px 8px rgba(0,0,0,.12);
+    }
+    /* safe area için iPhone X+ */
+    .mob-theme-fab {
+        bottom: calc(var(--bnav-h, 60px) + 12px + env(safe-area-inset-bottom, 0px));
+    }
+}
+
+[data-theme="dark"] .mob-theme-fab,
+[data-theme="light"] .mob-theme-fab {
+    background: var(--white);
+    border-color: var(--border);
+}

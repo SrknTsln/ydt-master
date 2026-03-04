@@ -12557,8 +12557,9 @@ function _syncThemeUI() {
     const sbIcon  = document.getElementById('sb-theme-icon');
     const sbLabel = document.getElementById('sb-theme-label');
 
-    if (icon)    icon.textContent    = isDark ? '☀️' : '🌙';
-    if (sbIcon)  sbIcon.textContent  = isDark ? '☀️' : '🌙';
+    const emoji = isDark ? '☀️' : '🌙';
+    if (icon)    icon.textContent    = emoji;
+    if (sbIcon)  sbIcon.textContent  = emoji;
     if (sbLabel) sbLabel.textContent = isDark ? 'Aydınlık Mod' : 'Karanlık Mod';
 }
 

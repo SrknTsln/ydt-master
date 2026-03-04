@@ -15,6 +15,18 @@
     <link rel="stylesheet" href="onboarding.css">
     <link rel="stylesheet" href="kids.css">
     <link rel="stylesheet" href="games.css">
+    <!-- ── Tema flash önleyici: DOM boyandıktan önce data-theme set edilir ── -->
+    <script>
+    (function(){
+        var saved = localStorage.getItem('ydtTheme');
+        var sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        // Kayıtlı tercih varsa uygula, yoksa sistem tercihine göre explicit set et
+        var theme = saved || (sysDark ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+        // İlk kez açılıyorsa localStorage'a da yaz
+        if (!saved) localStorage.setItem('ydtTheme', theme);
+    })();
+    </script>
 </head>
 <body>
 
@@ -40,18 +52,10 @@
             <em style="font-size:.65rem;font-weight:600;color:var(--ink3);font-style:normal;">by Serkan Hoca</em>
         </span>
     </div>
-    <div style="display:flex;align-items:center;gap:8px;">
-        <button id="theme-toggle" onclick="toggleTheme()" aria-label="Tema değiştir" title="Aydınlık / Karanlık mod"
-            style="width:36px;height:36px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);
-                   cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;
-                   transition:all .2s;flex-shrink:0;">
-            <span id="theme-icon">🌙</span>
-        </button>
-        <div class="mob-sync">
+    <div class="mob-sync">
             <div id="sync-dot-mob" style="width:7px;height:7px;border-radius:50%;background:var(--c-sync-idle);flex-shrink:0"></div>
             <span id="sync-lbl-mob">Yerel</span>
         </div>
-    </div>
 </header>
 
 <div class="mob-drawer-overlay" id="mob-overlay" onclick="mobCloseDrawer()"></div>
@@ -2160,6 +2164,12 @@
     </div>
 
 </div>
+
+<!-- ── Mobil yüzen tema toggle FAB ── -->
+<button id="mob-theme-fab" onclick="toggleTheme()" aria-label="Tema değiştir"
+    class="mob-theme-fab">
+    <span id="theme-icon">🌙</span>
+</button>
 
 <!-- ── Global fonksiyonlar: onclick="" attribute'larından erişilebilir ── -->
 <script>
