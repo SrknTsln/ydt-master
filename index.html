@@ -15,6 +15,8 @@
     <link rel="stylesheet" href="onboarding.css">
     <link rel="stylesheet" href="kids.css">
     <link rel="stylesheet" href="games.css">
+    <!-- Puter.js — API key gerektirmeyen ücretsiz AI (GPT-4o, Claude, Gemini 500+ model) -->
+    <script src="https://js.puter.com/v2/"></script>
     <!-- ── Tema flash önleyici: DOM boyandıktan önce data-theme set edilir ── -->
     <script>
     (function(){
@@ -85,9 +87,9 @@
         <div class="mob-drawer-sec">Ana Menü</div>
         <button class="mob-drawer-btn active" id="di-home"     onclick="mobGoTo('index-page')">              <span aria-hidden="true" class="mob-d-icon">🏠</span> Ana Sayfa</button>
         <button class="mob-drawer-btn"        id="di-ai-ydt"   onclick="mobRun(startAIQuizMode)">            <span aria-hidden="true" class="mob-d-icon">🤖</span> AI Vocabulary Test</button>
+        <button class="mob-drawer-btn"        id="di-paragraf" onclick="mobRun(showParagrafListesi)">         <span aria-hidden="true" class="mob-d-icon">📖</span> AI Reading</button>
         <button class="mob-drawer-btn"        id="di-study"    onclick="mobRun(startStudyFromNav)">          <span aria-hidden="true" class="mob-d-icon">📖</span> Kelime Öğren</button>
         <button class="mob-drawer-btn"        id="di-quiz"     onclick="mobRun(startQuizFromNav)">           <span aria-hidden="true" class="mob-d-icon">🎯</span> Vocabulary Test</button>
-        <button class="mob-drawer-btn"        id="di-paragraf" onclick="mobRun(showParagrafListesi)">        <span aria-hidden="true" class="mob-d-icon">📰</span> AI Reading</button>
         <button class="mob-drawer-btn"        id="di-speaking" onclick="mobRun(()=>openSpeakingSection('overview'))"><span aria-hidden="true" class="mob-d-icon">🗣️</span> Speaking</button>
 
         <!-- Grammar — Speaking altında, Alıştırmalar üstünde -->
@@ -178,7 +180,7 @@
         <div class="sb-sec">Ana Menü</div>
         <button class="sb-btn active" id="sb-home" title="Ana Sayfa" onclick="navTo('index-page')">             <span aria-hidden="true" class="sb-icon">🏠</span> Ana Sayfa</button>
         <button class="sb-btn"        id="sb-ai-ydt" title="AI Vocab Test" onclick="startAIQuizMode()">               <span aria-hidden="true" class="sb-icon">🤖</span> AI Vocabulary Test</button>
-        <button class="sb-btn"        id="sb-paragraf" title="AI Reading" onclick="showParagrafListesi()">           <span aria-hidden="true" class="sb-icon">📰</span> AI Reading</button>
+        <button class="sb-btn"        id="sb-paragraf" title="AI Reading" onclick="showParagrafListesi()">              <span aria-hidden="true" class="sb-icon">📖</span> AI Reading</button>
         <button class="sb-btn"        id="sb-study" title="Kelime Öğren" onclick="startStudyFromNav()">             <span aria-hidden="true" class="sb-icon">📖</span> Kelime Öğren</button>
         <button class="sb-btn"        id="sb-quiz" title="Vocabulary Test" onclick="startQuizFromNav()">              <span aria-hidden="true" class="sb-icon">🎯</span> Vocabulary Test</button>
         <button class="sb-btn"        id="sb-speaking" title="Speaking" onclick="openSpeakingSection('overview')"> <span aria-hidden="true" class="sb-icon">🗣️</span> Speaking</button>
@@ -541,6 +543,10 @@
                 <span>Yüklü Pasajlar</span>
                 <span class="rh2-tab-pill rh2-tab-pill-green" id="reading-hub-saved-count"></span>
             </button>
+            <button class="rh2-tab" id="rh-tab-generate" onclick="openReadingHub('generate')">
+                <span aria-hidden="true" class="rh2-tab-icon">✨</span>
+                <span>AI Üret</span>
+            </button>
             <!-- Sağ: yenile -->
             <div style="flex:1;"></div>
             <button id="ai-daily-refresh-btn" onclick="generateAIDailyParagraflar(true)" class="rh2-refresh-btn" style="display:none;">
@@ -562,6 +568,40 @@
 
         <!-- ══ PANEL: Yüklü ══ -->
         <div id="paragraf-listesi-kutu" class="rh2-grid" style="display:none;"></div>
+
+        <!-- ══ PANEL: AI ÜRET ══ -->
+        <div id="ai-generate-panel" style="display:none; padding:0 0 32px;">
+
+            <!-- Konu seçici kart -->
+            <div class="aig-panel-card">
+                <div class="aig-panel-title">✨ AI ile Özgün Paragraf Oluştur</div>
+                <div class="aig-panel-sub">Bilim, teknoloji, oyun veya kendi konunu seç — AI C1/C2 seviyesinde paragraf üretir</div>
+
+                <div class="aig-topics-grid" id="aig-topics-grid">
+                    <!-- JS ile doldurulacak -->
+                </div>
+
+                <div class="aig-custom-row">
+                    <input type="text" id="aig-custom-topic" class="aig-custom-input"
+                        placeholder="Veya kendi konunu yaz... (ör: robotics, black holes, indie games)"
+                        maxlength="80">
+                </div>
+
+                <div style="display:flex;gap:10px;margin-top:14px;">
+                    <button class="aig-gen-btn" id="aig-gen-btn" onclick="aiGenerateParagraf()">
+                        <span id="aig-gen-btn-label">✨ Paragraf Oluştur</span>
+                    </button>
+                    <button class="aig-gen-btn aig-gen-btn-ghost" onclick="aiGenerateParagraf(true)" title="Rastgele konu seç ve üret">
+                        🎲 Rastgele
+                    </button>
+                </div>
+            </div>
+
+            <!-- Üretilen paragraf önizleme -->
+            <div id="aig-preview" style="display:none; padding:0 16px;">
+            </div>
+
+        </div>
 
     </div>
 
@@ -683,7 +723,7 @@
 
                 <!-- Paragraf Okuma -->
                 <div class="sp-section">
-                    <h2 class="sp-section-title">📰 AI Reading
+                    <h2 class="sp-section-title">📄 Paragraf Okuma
                         <button onclick="showParagrafListesi()" style="font-size:.68rem;font-weight:700;padding:3px 10px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);color:var(--ink3);cursor:pointer;font-family:inherit;">Pasajlara Git →</button>
                     </h2>
                     <div class="sp-para-kpi-row">
@@ -705,7 +745,7 @@
                         </div>
                     </div>
                     <div class="sp-para-paket-list" id="sp-para-paket-list"></div>
-                    <button class="sp-para-goto-btn" onclick="showParagrafListesi()">📰 AI Reading'e Git</button>
+                    <button class="sp-para-goto-btn" onclick="showParagrafListesi()">📖 Paragraf Okumaya Git</button>
                 </div>
 
             </div>
@@ -757,18 +797,15 @@
         </div><!-- /sp-body -->
     </div>
 
-    <div id="study-page" class="container hidden" style="position:relative;">
+    <div id="study-page" class="container hidden">
         <!-- Üst bar -->
         <div class="study-topbar">
             <button class="back-btn-inline" onclick="exitModule()">←</button>
-            <!-- Liste seçici pill -->
-            <button class="sg-trigger" id="sg-trigger" onclick="_sgToggleDropdown()" title="Liste değiştir">
-                <span class="sg-trigger-icon">📚</span>
-                <span class="sg-trigger-label" id="sg-trigger-label">Genel Kelimeler</span>
-                <svg class="sg-trigger-caret" id="sg-trigger-caret" width="10" height="10" viewBox="0 0 10 10" fill="none">
-                    <path d="M2 3.5l3 3 3-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </button>
+            <!-- Liste seçici + Kendi Listelerim -->
+            <div class="study-list-picker">
+                <select id="study-list-switcher" class="study-list-switcher" onchange="switchStudyList(this.value)" title="Liste değiştir"></select>
+                <button class="study-mylist-btn" onclick="goToMyWords()" title="Kişisel listelerini yönet">✏️</button>
+            </div>
             <div class="study-progress-wrap">
                 <div class="study-progress-track">
                     <div class="study-progress-fill" id="study-prog-fill"></div>
@@ -776,11 +813,6 @@
                 <span class="study-progress-label" id="study-progress-label">1 / 10</span>
             </div>
             <button class="study-speak-btn" onclick="speakWord(document.getElementById('study-eng').innerText)" title="Sesli dinle">🔊</button>
-        </div>
-
-        <!-- ── Dropdown Menü ── -->
-        <div id="sg-panel" class="sg-dropdown" style="display:none;">
-            <div class="sg-dropdown-inner" id="sg-chips"></div>
         </div>
 
         <!-- Mini stat chips -->
@@ -2169,6 +2201,80 @@
             <span id="profil-goal"></span>
             <div id="profil-avatar"></div>
         </div>
+
+        <!-- ══ KİŞİSEL KELİME YÖNETİCİSİ ══ -->
+        <div class="ukm-section" id="ukm-section">
+            <div class="ukm-header">
+                <div class="ukm-header-icon">✏️</div>
+                <div class="ukm-header-text">
+                    <div class="ukm-header-title">Kişisel Kelime Listeleri</div>
+                    <div class="ukm-header-sub">Günlük 1 liste · Liste başına 20 kelime</div>
+                </div>
+                <div class="ukm-header-quota" id="ukm-quota-badge">0 / 1 liste</div>
+            </div>
+
+            <div class="ukm-tabs">
+                <button class="ukm-tab active" onclick="ukmTab('lists')" id="ukm-tab-lists">📋 Listelerim</button>
+                <button class="ukm-tab" onclick="ukmTab('add')"   id="ukm-tab-add">➕ Kelime Ekle</button>
+            </div>
+
+            <!-- TAB: LİSTELERİM -->
+            <div class="ukm-panel active" id="ukm-panel-lists">
+                <div class="ukm-quota-warn" id="ukm-quota-warn">
+                    ⚠️ Günlük liste limitine ulaştınız (1/1). Yeni liste için yarın tekrar gelin.
+                </div>
+                <div class="ukm-new-list">
+                    <input type="text" id="ukm-new-name" class="ukm-input" placeholder="Yeni liste adı..." maxlength="40">
+                    <button class="ukm-btn ukm-btn-primary" onclick="ukmCreateList()" id="ukm-create-btn">Oluştur</button>
+                </div>
+                <div id="ukm-lists-container">
+                    <div class="ukm-empty">Henüz kişisel listeniz yok.<br>Yukarıdan yeni bir liste oluşturun.</div>
+                </div>
+            </div>
+
+            <!-- TAB: KELİME EKLE -->
+            <div class="ukm-panel" id="ukm-panel-add">
+                <div class="ukm-list-row">
+                    <select id="ukm-target-list" class="ukm-select" onchange="ukmLoadWordList()">
+                        <option value="">— Liste seçin —</option>
+                    </select>
+                    <span id="ukm-word-count-badge" style="font-size:.7rem;font-weight:700;color:var(--ink3);white-space:nowrap;">0 / 20</span>
+                </div>
+
+                <div class="ukm-word-form">
+                    <div class="ukm-word-form-title">
+                        <span>🔤 Kelime Ekle</span>
+                        <span style="margin-left:auto;font-size:.65rem;color:var(--ink3);font-weight:600;">Dictionary API + AI Türkçe</span>
+                    </div>
+                    <div class="ukm-word-row">
+                        <input type="text" id="ukm-eng" class="ukm-input" placeholder="İngilizce kelime..." style="flex:1.2" oninput="ukmClearPreview()">
+                        <input type="text" id="ukm-tr"  class="ukm-input" placeholder="Türkçe anlam (opsiyonel)" style="flex:1">
+                    </div>
+                    <div class="ukm-word-row">
+                        <button class="ukm-btn ukm-btn-primary" onclick="ukmFetchAI()" id="ukm-ai-btn" style="flex:1">🔍 Sözlükten Getir</button>
+                        <button class="ukm-btn ukm-btn-ghost"   onclick="ukmAddManual()" id="ukm-manual-btn" style="flex:1">+ Manuel Ekle</button>
+                    </div>
+                    <div class="ukm-ai-loading" id="ukm-ai-loading">Sözlükten bilgiler çekiliyor…</div>
+                </div>
+
+                <!-- AI preview -->
+                <div class="ukm-preview-card" id="ukm-preview-card">
+                    <div class="ukm-preview-eng" id="ukm-preview-eng">—</div>
+                    <div class="ukm-preview-tr"  id="ukm-preview-tr">—</div>
+                    <div class="ukm-preview-meta" id="ukm-preview-meta"></div>
+                    <div class="ukm-preview-actions">
+                        <button class="ukm-btn ukm-btn-primary" onclick="ukmConfirmAdd()" style="flex:1">✅ Listeye Ekle</button>
+                        <button class="ukm-btn ukm-btn-ghost"   onclick="ukmClearPreview()" style="flex:0.6">İptal</button>
+                    </div>
+                </div>
+
+                <!-- Mevcut kelimeler -->
+                <div style="font-size:.7rem;font-weight:800;color:var(--ink3);text-transform:uppercase;letter-spacing:.8px;margin:8px 0 6px;">Listedeki Kelimeler</div>
+                <div class="ukm-word-list" id="ukm-word-list">
+                    <div class="ukm-empty">Liste seçin veya kelime ekleyin.</div>
+                </div>
+            </div>
+        </div>
     </div>
 
         <!-- KIDS ENGLISH PAGE -->
@@ -2288,9 +2394,6 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
         if (window.aiArsiv) {
             localStorage.setItem('ydt_ai_arsiv', JSON.stringify(window.aiArsiv));
         }
-        if (window.aiGramerArsiv) {
-            localStorage.setItem('ydt_gramer_arsiv', JSON.stringify(window.aiGramerArsiv));
-        }
         saveToFirebase();
     };
 
@@ -2309,9 +2412,6 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
                 }
                 if (window.aiArsiv && window.aiArsiv.length) {
                     await set(ref(db, `ydt_users/${uid}/aiArsiv`), window.aiArsiv);
-                }
-                if (window.aiGramerArsiv && window.aiGramerArsiv.length) {
-                    await set(ref(db, `ydt_users/${uid}/aiGramerArsiv`), window.aiGramerArsiv);
                 }
                 setSyncStatus('ok');
             } catch (e) {
@@ -2348,10 +2448,6 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
                             window.aiArsiv = remote.aiArsiv;
                             localStorage.setItem('ydt_ai_arsiv', JSON.stringify(remote.aiArsiv));
                         }
-                        if (remote.aiGramerArsiv) {
-                            window.aiGramerArsiv = remote.aiGramerArsiv;
-                            localStorage.setItem('ydt_gramer_arsiv', JSON.stringify(remote.aiGramerArsiv));
-                        }
                     }
                 } catch(e2) { console.warn('user-scoped okuma hatası', e2); }
             }
@@ -2371,10 +2467,6 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
                     if (remote.aiArsiv) {
                         window.aiArsiv = remote.aiArsiv;
                         localStorage.setItem('ydt_ai_arsiv', JSON.stringify(remote.aiArsiv));
-                    }
-                    if (remote.aiGramerArsiv) {
-                        window.aiGramerArsiv = remote.aiGramerArsiv;
-                        localStorage.setItem('ydt_gramer_arsiv', JSON.stringify(remote.aiGramerArsiv));
                     }
                     // Eski veriyi yeni sisteme taşı
                     if (uid && Object.keys(fbData).length) {
@@ -2539,9 +2631,6 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
                 const data = snap.data();
                 if (data.allData) { window.allData = data.allData; localStorage.setItem(`ydt_${uid}_all_data`, JSON.stringify(window.allData)); }
                 if (data.stats)   { window.stats = { ...data.stats }; if (isNaN(stats.totalMinutes)) stats.totalMinutes = 0; localStorage.setItem(`ydt_${uid}_stats`, JSON.stringify(window.stats)); }
-                if (data.aiArsiv) { window.aiArsiv = data.aiArsiv; localStorage.setItem('ydt_ai_arsiv', JSON.stringify(data.aiArsiv)); }
-                if (data.aiGramerArsiv) { window.aiGramerArsiv = data.aiGramerArsiv; localStorage.setItem('ydt_gramer_arsiv', JSON.stringify(data.aiGramerArsiv)); }
-                if (data.paragrafSorular) { window.paragrafSorular = data.paragrafSorular; localStorage.setItem('ydt_paragraf_sorular', JSON.stringify(data.paragrafSorular)); }
                 // API keylerini Firestore'dan localStorage'a yükle
                 ['ydt_gemini_api_key','ydt_groq_api_key','ydt_openrouter_api_key','ydt_mistral_api_key'].forEach(k => {
                     if (data[k]) localStorage.setItem(k, data[k]);
@@ -2576,11 +2665,8 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
                 if (v) apiKeyData[k] = v;
             });
             await setDoc(doc(fsdb, 'users', uid), {
-                stats:          typeof window.stats          !== 'undefined' ? stats          : {},
-                allData:        typeof window.allData        !== 'undefined' ? allData        : {},
-                aiArsiv:        window.aiArsiv               || [],
-                aiGramerArsiv:  window.aiGramerArsiv         || [],
-                paragrafSorular: window.paragrafSorular      || {},
+                stats:     typeof window.stats   !== 'undefined' ? stats   : {},
+                allData:   typeof window.allData !== 'undefined' ? allData : {},
                 updatedAt: new Date().toISOString(),
                 ...apiKeyData
             }, { merge: true });

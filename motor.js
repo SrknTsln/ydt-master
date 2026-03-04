@@ -4,9 +4,6 @@
 
 // --- GENEL DEĞİŞKENLER ---
 let currentActiveList = "", studyIndex = 0, currentWord, score = 0, canAnswer = true, moduleStartTime = null;
-// Kelime grubu seçici
-let studyGroupMode = 'list'; // 'list' | 'random' | listName
-let studyGroupPool = [];     // Aktif kelime havuzu (çok listeden birleşik olabilir)
 
 // ══════════════════════════════════════════════
 // FIREBASE SYNC (ES Module — index.html içinde
@@ -45,9 +42,6 @@ function showPage(id) {
     });
 
     if (!target) return;
-
-    // study-page açılınca grup seçici paneli init et
-    if (id === 'study-page') { setTimeout(() => { try { if (typeof _initSgPanel === 'function' && typeof allData !== 'undefined') _initSgPanel(); } catch(e) {} }, 50); }
 
     target.classList.remove('hidden');
 
@@ -1374,192 +1368,72 @@ let studyKnownSet = new Set(); // "Biliyorum" işaretlenen indeksler
 let studyFlipped  = false;
 let studyQueuePos = 0;
 
-/* ════════════════════════════════════════════════
-   KELIME GRUBU SEÇİCİ — sg- prefix
-   ════════════════════════════════════════════════ */
-
-function _buildSgPanel(showStartBtn) {
-    const panel   = document.getElementById('sg-panel');
-    const chips   = document.getElementById('sg-chips');
-    const trigger = document.getElementById('sg-trigger');
-    if (!chips) return;
-
-    const lists = Object.keys(allData || {});
-    if (!lists.length) { if (trigger) trigger.style.display = 'none'; return; }
-    if (trigger) trigger.style.display = '';
-
-    const totalAll = lists.reduce((s, k) => s + (allData[k] || []).length, 0);
-
-    // Trigger label güncelle
-    const lbl = document.getElementById('sg-trigger-label');
-    if (lbl) {
-        lbl.textContent = studyGroupMode === 'random'
-            ? '🎲 Rastgele Tüm'
-            : (studyGroupMode !== 'list' ? studyGroupMode : (document.getElementById('list-selector')?.value || lists[0]));
+function startStudy() {
+    currentActiveList = document.getElementById('list-selector').value;
+    if (!allData[currentActiveList] || !allData[currentActiveList].length) {
+        _showAppToast('Liste boş veya seçili değil!'); return;
     }
-
-    let html = '';
-
-    // Rastgele satır
-    const isRandom = studyGroupMode === 'random';
-    html += `<button class="sg-chip sg-random ${isRandom ? 'sg-active' : ''}"
-        onclick="_sgSelectAndStart('random')">
-        🎲 Rastgele Tüm
-        <span class="sg-chip-count">${totalAll}</span>
-    </button>`;
-
-    // Her liste
-    lists.forEach((name, idx) => {
-        const count    = (allData[name] || []).length;
-        const isActive = studyGroupMode === name;
-        html += `<button class="sg-chip ${isActive ? 'sg-active' : ''}"
-            data-sgname="${idx}"
-            onclick="_sgSelectAndStart(null, this)">
-            ${name}
-            <span class="sg-chip-count">${count}</span>
-        </button>`;
-    });
-
-    chips.innerHTML = html;
-}
-
-// Dropdown aç/kapat
-window._sgToggleDropdown = function() {
-    const panel   = document.getElementById('sg-panel');
-    const trigger = document.getElementById('sg-trigger');
-    if (!panel) return;
-    const isOpen = panel.style.display !== 'none';
-    if (isOpen) {
-        _sgCloseDropdown();
-    } else {
-        panel.style.display = '';
-        if (trigger) trigger.classList.add('open');
-        // Overlay — dışarı tıklayınca kapat
-        const ov = document.createElement('div');
-        ov.className = 'sg-overlay';
-        ov.id = 'sg-overlay';
-        ov.onclick = _sgCloseDropdown;
-        document.getElementById('study-page').appendChild(ov);
-        _buildSgPanel();
-    }
-};
-window._sgCloseDropdown = function() {
-    const panel   = document.getElementById('sg-panel');
-    const trigger = document.getElementById('sg-trigger');
-    const ov      = document.getElementById('sg-overlay');
-    if (panel)   panel.style.display = 'none';
-    if (trigger) trigger.classList.remove('open');
-    if (ov)      ov.remove();
-};
-
-// Panel açıldığında güncelle
-function _initSgPanel() {
-    const selVal = document.getElementById('list-selector')?.value;
-    if (selVal && allData[selVal]) studyGroupMode = selVal;
-    const panel = document.getElementById('sg-panel');
-    if (panel) panel.style.display = 'none'; // Dropdown kapalı başlar
-    _buildSgPanel(); // Trigger label güncelle
-}
-window._buildSgPanel  = _buildSgPanel;
-window._initSgPanel   = _initSgPanel;
-window.studyGroupMode = studyGroupMode;  // chip onclick için global erişim
-
-// Liste chip tıklaması — liste adını data-attribute yerine allData key listesinden al
-window._sgSelectRandom = function() {
-    studyGroupMode = 'random';
-    window.studyGroupMode = 'random';
-    _buildSgPanel();
-};
-
-window._sgSelectList = function(btn) {
-    const idx = parseInt(btn.getAttribute('data-sgname'), 10);
-    const lists = Object.keys(allData || {});
-    if (!isNaN(idx) && lists[idx]) {
-        studyGroupMode = lists[idx];
-        window.studyGroupMode = studyGroupMode;
-    }
-    _buildSgPanel();
-};
-
-// Dropdown: seç, kapat, başlat
-window._sgSelectAndStart = function(mode, btn) {
-    if (mode === 'random') {
-        studyGroupMode = 'random';
-        window.studyGroupMode = 'random';
-    } else if (btn) {
-        const idx = parseInt(btn.getAttribute('data-sgname'), 10);
-        const lists = Object.keys(allData || {});
-        if (!isNaN(idx) && lists[idx]) {
-            studyGroupMode = lists[idx];
-            window.studyGroupMode = studyGroupMode;
-        }
-    }
-    _sgCloseDropdown();
-    startStudy();
-};
-
-function startStudy(groupMode) {
-    // groupMode: undefined → mevcut mod kullan, string → o modu zorla
-    if (groupMode !== undefined) { studyGroupMode = groupMode; window.studyGroupMode = groupMode; }
-
-    const lists = Object.keys(allData || {});
-    if (!lists.length) { _showAppToast('Önce kelime listesi yükleyin!'); return; }
-
-    if (studyGroupMode === 'random') {
-        // Tüm listeleri birleştir, her kelimeye kaynak liste bilgisi ekle
-        studyGroupPool = [];
-        lists.forEach(listName => {
-            (allData[listName] || []).forEach((w, i) => {
-                studyGroupPool.push({ ...w, _srcList: listName, _srcIdx: i });
-            });
-        });
-        // Karıştır
-        for (let i = studyGroupPool.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [studyGroupPool[i], studyGroupPool[j]] = [studyGroupPool[j], studyGroupPool[i]];
-        }
-        if (!studyGroupPool.length) { _showAppToast('Hiç kelime yok!'); return; }
-        currentActiveList = '🎲 Tüm Listeler';
-    } else {
-        // Belirli bir liste
-        const targetList = (studyGroupMode !== 'list' && allData[studyGroupMode])
-            ? studyGroupMode
-            : (document.getElementById('list-selector')?.value || lists[0]);
-        currentActiveList = targetList;
-        if (!allData[currentActiveList] || !allData[currentActiveList].length) {
-            _showAppToast('Liste boş veya seçili değil!'); return;
-        }
-        studyGroupPool = allData[currentActiveList].map((w, i) => ({ ...w, _srcList: currentActiveList, _srcIdx: i }));
-    }
-
     studyKnownSet.clear();
     studyAgainIdx = [];
-    studyQueue    = studyGroupPool.map((_, i) => i);
+    studyQueue    = allData[currentActiveList].map((_, i) => i);
     studyQueuePos = 0;
     studyIndex    = 0;
     startModule();
-    _buildSgPanel(false);  // Panel güncelle — Başla butonu gizli (zaten çalışıyor)
     showPage('study-page');
+    _populateStudySwitcher();
     renderStudyCard();
 }
 
 function startStudyFromNav() {
-    currentActiveList = document.getElementById('list-selector')?.value || Object.keys(allData || {})[0] || '';
+    currentActiveList = document.getElementById('list-selector').value;
     if (!currentActiveList || !allData[currentActiveList] || !allData[currentActiveList].length) {
         navTo('index-page'); return;
     }
-    studyGroupMode = currentActiveList; window.studyGroupMode = currentActiveList; // seçili listeyi mod olarak set et
     startStudy();
 }
 
+// Study page topbar'daki liste switcher'ı doldur
+function _populateStudySwitcher() {
+    const sel = document.getElementById('study-list-switcher');
+    if (!sel) return;
+    const prev = sel.value;
+    sel.innerHTML = '';
+    Object.keys(allData).forEach(name => {
+        const opt = new Option(name, name);
+        if (name.startsWith('📌 ')) opt.style.fontWeight = '800';
+        sel.add(opt);
+    });
+    sel.value = currentActiveList || (Object.keys(allData)[0] || '');
+}
+
+// Liste switcher'dan yeni liste seç — kartı sıfırla
+function switchStudyList(name) {
+    if (!name || !allData[name] || !allData[name].length) {
+        _showAppToast('Bu liste boş!'); 
+        const sel = document.getElementById('study-list-switcher');
+        if (sel) sel.value = currentActiveList;
+        return;
+    }
+    currentActiveList = name;
+    // Ana selector'ı da güncelle
+    const mainSel = document.getElementById('list-selector');
+    if (mainSel) mainSel.value = name;
+    // Çalışmayı sıfırla
+    studyKnownSet.clear();
+    studyAgainIdx = [];
+    studyQueue    = allData[name].map((_, i) => i);
+    studyQueuePos = 0;
+    studyIndex    = 0;
+    renderStudyCard();
+    showAIToast(`📚 ${name}`, 'info', 1500);
+}
+
 function renderStudyCard() {
-    // Pool: rastgele modda studyGroupPool, liste modunda allData[currentActiveList]
-    const pool  = studyGroupPool.length ? studyGroupPool : (allData[currentActiveList] || []);
+    const list  = allData[currentActiveList];
     const total = studyQueue.length;
     const pos   = studyQueuePos;
     studyIndex  = studyQueue[pos];
-    const w     = pool[studyIndex];
-    if (!w) { exitModule(); return; }
+    const w     = list[studyIndex];
 
     // İlerleme
     const pct = total > 0 ? Math.round((pos / total) * 100) : 0;
@@ -1575,9 +1449,7 @@ function renderStudyCard() {
 
     // ── HERO ──
     document.getElementById('study-eng').innerText      = w.eng;
-    // Liste etiketi: rastgele modda kaynak listeyi göster
-    const _wSrc = w._srcList || currentActiveList;
-    document.getElementById('study-list-tag').innerText = _wSrc;
+    document.getElementById('study-list-tag').innerText = currentActiveList;
     document.getElementById('study-pos-tag').innerHTML  = pos_tag.html;
 
     // Seviye tahmini
@@ -1853,16 +1725,11 @@ function resetFlip() {
 function nextStudy() { /* artık flip yok, ilerle */ }
 
 function studyMarkKnown() {
-    const idx = studyQueue[studyQueuePos];
-    studyKnownSet.add(idx);
-    // SM-2 hafif puan — pool'dan kaynak bul
-    const pool = studyGroupPool.length ? studyGroupPool : (allData[currentActiveList] || []);
-    const pw   = pool[idx];
-    const w    = pw ? (allData[pw._srcList || currentActiveList]?.[pw._srcIdx ?? idx] || pw) : null;
-    if (w) {
-        w.correctStreak = (w.correctStreak || 0) + 1;
-        w.errorCount    = Math.max(0, (w.errorCount || 0) - 1);
-    }
+    studyKnownSet.add(studyQueue[studyQueuePos]);
+    // SM-2 hafif puan
+    const w = allData[currentActiveList][studyQueue[studyQueuePos]];
+    w.correctStreak = (w.correctStreak || 0) + 1;
+    w.errorCount    = Math.max(0, (w.errorCount || 0) - 1);
     studyAdvance();
 }
 
@@ -1870,11 +1737,10 @@ function studyMarkAgain() {
     const idx = studyQueue[studyQueuePos];
     studyKnownSet.delete(idx);
     if (!studyAgainIdx.includes(idx)) studyAgainIdx.push(idx);
-    // hafif ceza — pool'dan kaynak bul, orijinal allData'ya yaz
-    const pool = studyGroupPool.length ? studyGroupPool : (allData[currentActiveList] || []);
-    const pw   = pool[idx];
-    const w    = pw ? (allData[pw._srcList || currentActiveList]?.[pw._srcIdx ?? idx] || pw) : null;
-    if (w) { w.errorCount = (w.errorCount || 0) + 1; w.correctStreak = 0; }
+    // hafif ceza
+    const w = allData[currentActiveList][idx];
+    w.errorCount    = (w.errorCount || 0) + 1;
+    w.correctStreak = 0;
     studyAdvance();
 }
 
@@ -1948,9 +1814,7 @@ function showStudyDone() {
 function restartStudy() {
     studyKnownSet.clear();
     studyAgainIdx = [];
-    // Pool: rastgele modda studyGroupPool, liste modunda allData
-    const pool = studyGroupPool.length ? studyGroupPool : (allData[currentActiveList] || []);
-    studyQueue    = pool.map((_, i) => i);
+    studyQueue    = allData[currentActiveList].map((_, i) => i);
     studyQueuePos = 0;
     showPage('study-page');
     renderStudyCard();
@@ -1993,8 +1857,6 @@ function importData(e) {
 }
 
 function updateSelectors() {
-    // Kelime grubu paneli güncelle (study-page açıksa)
-    if (document.getElementById('sg-chips')) _buildSgPanel();
     // Her zaman güncel user-scoped allData'yı oku
     if (typeof getUserKey === 'function') {
         const raw = localStorage.getItem(getUserKey('all_data'));
@@ -3574,7 +3436,7 @@ function startAIQuizMode() {
     }
 
     // API key kontrolü
-    const hasKey = AI_PROVIDERS.some(p => localStorage.getItem(p.lsKey));
+    const hasKey = true; // Puter.js her zaman mevcut
     const keySection = document.getElementById('ai-key-section');
     if (keySection) keySection.style.display = hasKey ? 'none' : 'block';
 
@@ -3610,7 +3472,7 @@ function aiqBeginTest() {
     if (!_aiqSelectedList || !allData[_aiqSelectedList]) {
         alert('Lütfen bir kelime grubu seçin!'); return;
     }
-    const hasKey = AI_PROVIDERS.some(p => localStorage.getItem(p.lsKey));
+    const hasKey = true; // Puter.js her zaman mevcut
     if (!hasKey) {
         const keySection = document.getElementById('ai-key-section');
         if (keySection) { keySection.style.display = 'block'; keySection.scrollIntoView({behavior:'smooth'}); }
@@ -8944,6 +8806,11 @@ function mobRun(fn) {
 // 👤 PROFİL SAYFASI
 // ══════════════════════════════════════════════
 function showProfilPage() {
+    // UKM listelerini yenile
+    if (typeof ukmRefresh === 'function') {
+        ukmRefresh();
+        if (typeof ukmRefreshAddTab === 'function') ukmRefreshAddTab();
+    }
     // İstatistikleri yenile
     let total = 0, learned = 0;
     Object.values(allData).forEach(list => {
@@ -9443,19 +9310,7 @@ function _populateParagrafListesi(page) {
     if (!kutu) return;
     if (page !== undefined) _savedPage = page;
 
-    // Yeni→Eski sırala: savedAt'e göre descending
-    // savedAt yoksa (eski pasajlar) index'lerini terse çevir: sonradan yüklenmiş gibi davranır
-    const _withIdx = paragraflar.map((p, i) => ({ p, i }));
-    const sortedParagraflar = _withIdx
-        .sort((a, b) => {
-            const ta = a.p.savedAt || 0;
-            const tb = b.p.savedAt || 0;
-            if (ta !== tb) return tb - ta;           // savedAt varsa yeniden eskiye
-            return b.i - a.i;                        // savedAt yoksa sonraki index öne gelir
-        })
-        .map(x => x.p);
-
-    const total      = sortedParagraflar.length;
+    const total      = paragraflar.length;
     const totalPages = Math.ceil(total / RH2_PAGE_SIZE) || 1;
     if (_savedPage >= totalPages) _savedPage = totalPages - 1;
     if (_savedPage < 0) _savedPage = 0;
@@ -9473,9 +9328,9 @@ function _populateParagrafListesi(page) {
         const endIdx   = Math.min(startIdx + RH2_PAGE_SIZE, total);
         let html = '';
 
-        // Kartlar — sıralanmış diziden al
+        // Kartlar
         for (let i = startIdx; i < endIdx; i++) {
-            html += _buildPasajKartHTML(sortedParagraflar[i], paragraflar.indexOf(sortedParagraflar[i]));
+            html += _buildPasajKartHTML(paragraflar[i], i);
         }
 
         // Sayfalama kontrolü
@@ -9517,32 +9372,29 @@ function showParagrafListesi() {
 }
 
 function openReadingHub(type) {
-    const aiList    = document.getElementById('ai-daily-paragraf-list');
-    const savedList = document.getElementById('paragraf-listesi-kutu');
-    const refreshBtn = document.getElementById('ai-daily-refresh-btn');
-    const tabAI     = document.getElementById('rh-tab-ai');
-    const tabSaved  = document.getElementById('rh-tab-saved');
+    const aiList      = document.getElementById('ai-daily-paragraf-list');
+    const savedList   = document.getElementById('paragraf-listesi-kutu');
+    const generatePnl = document.getElementById('ai-generate-panel');
+    const refreshBtn  = document.getElementById('ai-daily-refresh-btn');
+    const tabAI       = document.getElementById('rh-tab-ai');
+    const tabSaved    = document.getElementById('rh-tab-saved');
+    const tabGen      = document.getElementById('rh-tab-generate');
 
-    // Tab aktif durumu — hem eski (rh-tab-active) hem yeni (rh2-tab-active) sınıfları destekle
-    if (tabAI) {
-        tabAI.classList.toggle('rh-tab-active',  type === 'ai');
-        tabAI.classList.toggle('rh2-tab-active', type === 'ai');
-    }
-    if (tabSaved) {
-        tabSaved.classList.toggle('rh-tab-active',  type === 'saved');
-        tabSaved.classList.toggle('rh2-tab-active', type === 'saved');
-    }
+    // Tab aktif durumu
+    [tabAI, tabSaved, tabGen].forEach(el => { if (el) { el.classList.remove('rh-tab-active', 'rh2-tab-active'); } });
+    if (type === 'ai'       && tabAI)   { tabAI.classList.add('rh-tab-active', 'rh2-tab-active'); }
+    if (type === 'saved'    && tabSaved){ tabSaved.classList.add('rh-tab-active', 'rh2-tab-active'); }
+    if (type === 'generate' && tabGen)  { tabGen.classList.add('rh-tab-active', 'rh2-tab-active'); }
 
-    if (type === 'ai') {
-        if (refreshBtn) refreshBtn.style.display = 'flex';
-        if (aiList)    { aiList.style.display    = 'grid'; }
-        if (savedList) { savedList.style.display = 'none'; }
-        generateAIDailyParagraflar(false);
-    } else {
-        if (refreshBtn) refreshBtn.style.display = 'none';
-        if (aiList)    { aiList.style.display    = 'none'; }
-        if (savedList) { savedList.style.display = 'grid'; _populateParagrafListesi(); }
-    }
+    // Panel görünürlüğü
+    if (aiList)      aiList.style.display      = (type === 'ai')       ? 'grid' : 'none';
+    if (savedList)   savedList.style.display   = (type === 'saved')    ? 'grid' : 'none';
+    if (generatePnl) generatePnl.style.display = (type === 'generate') ? 'block' : 'none';
+    if (refreshBtn)  refreshBtn.style.display  = (type === 'ai')       ? 'flex' : 'none';
+
+    if (type === 'ai')       { generateAIDailyParagraflar(false); }
+    else if (type === 'saved')    { _populateParagrafListesi(); }
+    else if (type === 'generate') { _aigInitTopics(); }
 }
 
 function closeReadingHub() {
@@ -9818,6 +9670,29 @@ function showAIToast(msg, type = 'info', duration) {
 // Provider tanımları — sırayla denenir
 const AI_PROVIDERS = [
     {
+        id: 'puter', name: 'Puter.js (GPT-4o)', icon: '🆓',
+        lsKey: 'ydt_puter_enabled',  // her zaman true sayılır
+        note: 'Ücretsiz · API key gerektirmez · GPT-4o',
+        keyHint: null,
+        keyLink: null,
+        async call(prompt) {
+            if (typeof puter === 'undefined' || !puter?.ai?.chat) throw new Error('puter_not_loaded');
+            const resp = await puter.ai.chat(
+                [{ role: 'system', content: 'You must respond with valid JSON only. No markdown, no explanation.' },
+                 { role: 'user',   content: prompt }],
+                { model: 'gpt-4o-mini' }
+            );
+            // response.message.content: string (GPT) veya array (Claude)
+            const content = resp?.message?.content;
+            const raw = Array.isArray(content) ? (content[0]?.text || '') :
+                        (typeof content === 'string' ? content :
+                        (typeof resp === 'string' ? resp : ''));
+            const match = raw.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
+            if (!match) throw new Error('Puter: JSON bulunamadı → ' + raw.slice(0, 60));
+            return JSON.parse(match[0]);
+        }
+    },
+    {
         id: 'gemini', name: 'Gemini', icon: '✨',
         lsKey: 'ydt_gemini_api_key',
         note: 'Free: 1.500 istek/gün · Gemini 1.5 Flash',
@@ -9827,19 +9702,18 @@ const AI_PROVIDERS = [
             const key = localStorage.getItem(this.lsKey);
             if (!key) throw new Error('no_key');
 
-            // Güncel model listesi: 2.0-flash → 2.0-flash-lite → 1.5-flash → 1.5-flash-8b
+            // gemini-2.0-flash önce, olmazsa 1.5-flash
             let resp, data;
-            for (const model of ['gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-1.5-flash', 'gemini-1.5-flash-8b']) {
+            for (const model of ['gemini-2.0-flash', 'gemini-1.5-flash']) {
                 resp = await fetch(
                     `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
                     { method:'POST', headers:{'Content-Type':'application/json'},
                       body: JSON.stringify({ contents:[{parts:[{text: prompt + '\n\nReturn ONLY valid JSON. No markdown fences.'}]}] }) }
                 );
                 data = await resp.json();
-                // 404 veya NOT_FOUND = model desteklenmiyor, sıradakini dene
-                if (data.error?.code === 404 || data.error?.status === 'NOT_FOUND' ||
-                    data.error?.message?.includes('not found') || data.error?.message?.includes('not supported')) continue;
-                break; // başarılı ya da quota/auth hatası — döngüyü kır
+                // 404 = bu model yok, diğerini dene
+                if (data.error?.code === 404 || data.error?.status === 'NOT_FOUND') continue;
+                break; // ya başarılı ya da quota/auth hatası — döngüyü kır
             }
 
             // Hata varsa fırlat — cascade yakalasın
@@ -9943,16 +9817,18 @@ const AI_PROVIDERS = [
 
 // Ana cascade çağrısı — tüm provider'ları sırayla dener
 async function aiCall(prompt) {
-    const available = AI_PROVIDERS.filter(p => localStorage.getItem(p.lsKey));
+    // Puter.js her zaman kullanılabilir (key gerektirmez), diğerleri key varsa eklenir
+    const puter_provider = AI_PROVIDERS.find(p => p.id === 'puter');
+    const keyed = AI_PROVIDERS.filter(p => p.id !== 'puter' && localStorage.getItem(p.lsKey));
+    const available = (puter_provider ? [puter_provider] : []).concat(keyed);
 
     if (!available.length) {
-        alert('AI özelliği için en az bir API anahtarı gerekli.\nYönetim paneli → 🔑 AI API Anahtarları bölümüne gidin.');
+        alert('AI özelliği şu an kullanılamıyor.\nYönetim paneli → 🔑 AI API Anahtarları bölümüne gidin.');
         throw new Error('no_api_key');
     }
 
     if (available.length === 1) {
-        console.info('[AI Cascade] ⚠ Sadece 1 servis aktif:', available[0].name,
-            '— Groq/OpenRouter gibi ek servisler eklenirse Gemini kotası dolduğunda otomatik geçiş yapılır.');
+        console.info('[AI Cascade] ⚠ Sadece 1 servis aktif:', available[0].name);
     }
 
     let lastErr = null;
@@ -10755,6 +10631,7 @@ function importSoruPaketi(paketId, btn) {
     window.aiArsiv.sort((a,b) => b.id - a.id);
     if (window._saveData) window._saveData();
     else localStorage.setItem('ydt_ai_arsiv', JSON.stringify(window.aiArsiv));
+    localStorage.setItem('ydt_gramer_arsiv', JSON.stringify(window.aiGramerArsiv || []));
     if (window.updateArsivBadge) window.updateArsivBadge();
     btn.textContent = '✅ Yüklendi!'; btn.style.background='#dcfce7'; btn.style.color='#16a34a';
     setTimeout(() => { const ov=document.getElementById('import-modal-overlay'); if(ov) ov.remove(); if(typeof showAIArsiv==='function') showAIArsiv(); }, 900);
@@ -12029,7 +11906,7 @@ function importParagrafPaketi(paketId, btn) {
     pk.pasajlar.forEach(p => {
         const key = `p_${(p.baslik||'').replace(/[^a-zA-Z0-9ğüşıöçĞÜŞİÖÇ\s]/g,'').trim().slice(0,40)}_${(p.metin||'').length}`;
         const already = paragraflar.findIndex(x => `p_${(x.baslik||'').replace(/[^a-zA-Z0-9ğüşıöçĞÜŞİÖÇ\s]/g,'').trim().slice(0,40)}_${(x.metin||'').length}` === key);
-        const entry = { baslik:p.baslik, metin:p.metin, kelimeler:p.kelimeler||{}, savedAt: already===-1 ? Date.now() : (paragraflar[already].savedAt || Date.now()) };
+        const entry = { baslik:p.baslik, metin:p.metin, kelimeler:p.kelimeler||{} };
         if (already===-1) paragraflar.push(entry); else paragraflar[already]=entry;
         window.paragrafSorular[key] = { baslik:p.baslik, savedAt:new Date().toISOString(), questions:p.questions };
     });
@@ -12146,16 +12023,9 @@ Include 8-10 key vocabulary words per passage with their Turkish translations. K
     try {
         let passages = null;
 
-        // Try using the app's AI cascade
-        if (typeof getAIResponse === 'function') {
-            const raw = await getAIResponse(prompt, { maxTokens: 2000, json: true });
-            const cleaned = (raw || '').replace(/```json|```/g, '').trim();
-            const parsed = JSON.parse(cleaned);
-            passages = parsed.passages;
-        } else {
-            // Fallback: use fetch directly if Claude API available (from anthropic_api_in_artifacts context)
-            throw new Error('no_ai');
-        }
+        // Use app's cascade AI system (Puter → Gemini → Groq → ...)
+        const result = await aiCall(prompt);
+        passages = result.passages || (Array.isArray(result) ? result : null);
 
         if (!passages || !passages.length) throw new Error('empty');
 
@@ -12278,29 +12148,15 @@ function _saveAIPasaj(index) {
     }
 
     // paragraflar listesine de ekle (Yüklü Pasajlar tab'ında görünsün)
-    // Yeni kaydedilenler listenin BAŞINA eklenir → yeni→eski sırası
-    const tempP = { baslik: p.title, metin: p.text, kelimeler: p.vocabulary || {}, _aiSaved: true, savedAt: Date.now() };
+    const tempP = { baslik: p.title, metin: p.text, kelimeler: p.vocabulary || {}, _aiSaved: true };
     const exists = paragraflar.findIndex(x => x.baslik === p.title);
-    if (exists < 0) paragraflar.unshift(tempP); // unshift: başa ekle
+    if (exists < 0) paragraflar.push(tempP);
 
     // LocalStorage'a da yaz (kalıcı)
     const allParagraflar = JSON.parse(localStorage.getItem('ydt_paragraflar') || '[]');
     if (!allParagraflar.find(x => x.baslik === p.title)) {
-        allParagraflar.unshift(tempP); // unshift: başa ekle → yeni→eski sırası
+        allParagraflar.push(tempP);
         localStorage.setItem('ydt_paragraflar', JSON.stringify(allParagraflar));
-    }
-
-    // Firebase Realtime DB'ye kaydet
-    if (typeof _syncParagraflarToFirebase === 'function') {
-        _syncParagraflarToFirebase();
-    } else if (window._currentUser?.uid && window.db) {
-        (async () => {
-            try {
-                const { ref, set } = await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js');
-                const uid = window._currentUser.uid;
-                await set(ref(window.db, `ydt_users/${uid}/paragraflar`), paragraflar);
-            } catch(e) { console.warn('[_saveAIPasaj] Firebase yazma hatası:', e.message); }
-        })();
     }
 
     if (btn) {
@@ -12562,7 +12418,7 @@ function autoLoadParagrafPaketleri() {
             const already = paragraflar.findIndex(x =>
                 `p_${(x.baslik||'').replace(/[^a-zA-Z0-9ğüşıöçĞÜŞİÖÇ\s]/g,'').trim().slice(0,40)}_${(x.metin||'').length}` === key
             );
-            const entry = { baslik: p.baslik, metin: p.metin, kelimeler: p.kelimeler || {}, savedAt: already === -1 ? Date.now() : (paragraflar[already].savedAt || Date.now()) };
+            const entry = { baslik: p.baslik, metin: p.metin, kelimeler: p.kelimeler || {} };
             if (already === -1) paragraflar.push(entry);
             else paragraflar[already] = entry;
             window.paragrafSorular[key] = {
@@ -12817,3 +12673,628 @@ document.addEventListener('ydtDataReady', () => {
     setLoading('idx-grammar-progress', false);
     setLoading('idx-sm2-plan',    false);
 });
+
+// ═══════════════════════════════════════════════════════════════
+// KİŞİSEL KELİME YÖNETİCİSİ (UKM)
+// Günlük 1 liste, liste başına 20 kelime limiti
+// AI ile otomatik kelime bilgisi doldurma
+// ═══════════════════════════════════════════════════════════════
+
+const UKM_MAX_LISTS_PER_DAY = 1;
+const UKM_MAX_WORDS_PER_LIST = 20;
+const UKM_LISTS_KEY = () => getUserKey ? getUserKey('ukm_lists') : 'ydt_ukm_lists';
+const UKM_QUOTA_KEY = () => getUserKey ? getUserKey('ukm_quota') : 'ydt_ukm_quota';
+
+// Bugünün tarihi (YYYY-MM-DD)
+function _ukmToday() {
+    return new Date().toISOString().slice(0, 10);
+}
+
+// Kota: { date, listsCreated }
+function _ukmGetQuota() {
+    try {
+        const raw = localStorage.getItem(UKM_QUOTA_KEY());
+        if (raw) {
+            const q = JSON.parse(raw);
+            if (q.date === _ukmToday()) return q;
+        }
+    } catch(e) {}
+    return { date: _ukmToday(), listsCreated: 0 };
+}
+
+function _ukmSaveQuota(q) {
+    localStorage.setItem(UKM_QUOTA_KEY(), JSON.stringify(q));
+}
+
+// Tüm kişisel listeleri getir: { listName: [words...] }
+function _ukmGetLists() {
+    try {
+        const raw = localStorage.getItem(UKM_LISTS_KEY());
+        return raw ? JSON.parse(raw) : {};
+    } catch(e) { return {}; }
+}
+
+function _ukmSaveLists(lists) {
+    localStorage.setItem(UKM_LISTS_KEY(), JSON.stringify(lists));
+    // allData'ya da senkronize et — Kelime Öğren görebilsin
+    _ukmSyncToAllData(lists);
+}
+
+// allData'ya kişisel listeleri "📌 " prefix'i ile yaz
+function _ukmSyncToAllData(lists) {
+    // Önce eski UKM listelerini temizle
+    Object.keys(allData).forEach(k => {
+        if (k.startsWith('📌 ')) delete allData[k];
+    });
+    // Yenilerini ekle
+    Object.entries(lists).forEach(([name, words]) => {
+        if (words.length > 0) allData['📌 ' + name] = words;
+    });
+    if (window._saveData) window._saveData();
+    if (typeof updateSelectors === 'function') updateSelectors();
+}
+
+// ── NAVİGASYON ──────────────────────────────────
+function goToMyWords() {
+    navTo('profil-page');
+    if (typeof showProfilPage === 'function') showProfilPage();
+    setTimeout(() => {
+        const el = document.getElementById('ukm-section');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 200);
+    ukmRefresh();
+}
+
+// ── TAB GEÇİŞİ ──────────────────────────────────
+function ukmTab(tab) {
+    ['lists', 'add'].forEach(t => {
+        document.getElementById('ukm-tab-' + t)?.classList.toggle('active', t === tab);
+        document.getElementById('ukm-panel-' + t)?.classList.toggle('active', t === tab);
+    });
+    if (tab === 'add') ukmRefreshAddTab();
+}
+
+// ── SAYFAYI YENİLE ───────────────────────────────
+function ukmRefresh() {
+    const quota = _ukmGetQuota();
+    const lists = _ukmGetLists();
+    const listCount = Object.keys(lists).length;
+    const atLimit = quota.listsCreated >= UKM_MAX_LISTS_PER_DAY;
+
+    // Kota badge
+    const badge = document.getElementById('ukm-quota-badge');
+    if (badge) {
+        badge.textContent = `${quota.listsCreated} / ${UKM_MAX_LISTS_PER_DAY} liste`;
+        badge.classList.toggle('full', atLimit);
+    }
+
+    // Kota uyarısı
+    const warn = document.getElementById('ukm-quota-warn');
+    if (warn) warn.classList.toggle('show', atLimit);
+
+    // Oluştur butonu
+    const createBtn = document.getElementById('ukm-create-btn');
+    if (createBtn) createBtn.disabled = atLimit;
+
+    // Liste container
+    _ukmRenderLists(lists);
+}
+
+function _ukmRenderLists(lists) {
+    const container = document.getElementById('ukm-lists-container');
+    if (!container) return;
+
+    const keys = Object.keys(lists);
+    if (keys.length === 0) {
+        container.innerHTML = '<div class="ukm-empty">Henüz kişisel listeniz yok.<br>Yukarıdan yeni bir liste oluşturun.</div>';
+        return;
+    }
+
+    container.innerHTML = keys.map(name => {
+        const words = lists[name];
+        const pct = Math.round((words.length / UKM_MAX_WORDS_PER_LIST) * 100);
+        return `
+        <div class="ukm-list-item" style="
+            display:flex;align-items:center;gap:10px;
+            padding:10px 12px;border-radius:12px;
+            border:1.5px solid var(--border);
+            margin-bottom:8px;background:var(--white);
+            cursor:pointer;transition:all .15s;
+        " onclick="ukmSelectList('${name.replace(/'/g,"\\'")}')">
+            <span style="font-size:1.1rem">📌</span>
+            <div style="flex:1;min-width:0;">
+                <div style="font-size:.8rem;font-weight:800;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</div>
+                <div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
+                    <div style="flex:1;height:4px;background:var(--border);border-radius:4px;overflow:hidden;">
+                        <div style="width:${pct}%;height:100%;background:var(--color-primary);border-radius:4px;transition:width .3s;"></div>
+                    </div>
+                    <span style="font-size:.65rem;font-weight:700;color:var(--ink3);white-space:nowrap;">${words.length}/${UKM_MAX_WORDS_PER_LIST}</span>
+                </div>
+            </div>
+            <button onclick="event.stopPropagation();ukmDeleteList('${name.replace(/'/g,"\\'")}');"
+                style="width:28px;height:28px;border-radius:8px;border:1.5px solid var(--border);
+                       background:transparent;cursor:pointer;color:var(--ink3);font-size:.85rem;
+                       flex-shrink:0;transition:all .15s;"
+                title="Listeyi sil">🗑</button>
+        </div>`;
+    }).join('');
+}
+
+// ── YENİ LİSTE OLUŞTUR ──────────────────────────
+function ukmCreateList() {
+    const nameEl = document.getElementById('ukm-new-name');
+    const name = (nameEl?.value || '').trim();
+    if (!name) { _showAppToast('Liste adı boş olamaz!'); return; }
+
+    const quota = _ukmGetQuota();
+    if (quota.listsCreated >= UKM_MAX_LISTS_PER_DAY) {
+        showAIToast('Günlük liste limitine ulaştınız (1/gün).', 'warn'); return;
+    }
+
+    const lists = _ukmGetLists();
+    if (lists[name]) { _showAppToast('Bu isimde liste zaten var!'); return; }
+
+    lists[name] = [];
+    _ukmSaveLists(lists);
+
+    quota.listsCreated++;
+    _ukmSaveQuota(quota);
+
+    nameEl.value = '';
+    ukmRefresh();
+    // Kelime ekleme tabına geç ve bu listeyi seç
+    ukmTab('add');
+    setTimeout(() => {
+        const sel = document.getElementById('ukm-target-list');
+        if (sel) { sel.value = name; ukmLoadWordList(); }
+    }, 100);
+    _showAppToast(`✅ "${name}" listesi oluşturuldu!`);
+}
+
+// ── LİSTE SİL ───────────────────────────────────
+function ukmDeleteList(name) {
+    if (!confirm(`"${name}" listesi silinsin mi?`)) return;
+    const lists = _ukmGetLists();
+    delete lists[name];
+    _ukmSaveLists(lists);
+    ukmRefresh();
+    _showAppToast(`🗑 "${name}" silindi.`);
+}
+
+// ── LİSTEYİ SEÇ (listeler tabından) ─────────────
+function ukmSelectList(name) {
+    ukmTab('add');
+    setTimeout(() => {
+        const sel = document.getElementById('ukm-target-list');
+        if (sel) { sel.value = name; ukmLoadWordList(); }
+    }, 80);
+}
+
+// ── ADD TAB YENİLE ───────────────────────────────
+function ukmRefreshAddTab() {
+    const lists = _ukmGetLists();
+    const sel = document.getElementById('ukm-target-list');
+    if (!sel) return;
+    const prev = sel.value;
+    sel.innerHTML = '<option value="">— Liste seçin —</option>';
+    Object.keys(lists).forEach(n => sel.add(new Option(n, n)));
+    if (prev && lists[prev]) sel.value = prev;
+    ukmLoadWordList();
+}
+
+// ── SEÇİLİ LİSTENİN KELİMELERİNİ GÖSTER ─────────
+function ukmLoadWordList() {
+    const sel = document.getElementById('ukm-target-list');
+    const name = sel?.value;
+    const lists = _ukmGetLists();
+    const words = name && lists[name] ? lists[name] : [];
+
+    // Sayaç badge
+    const badge = document.getElementById('ukm-word-count-badge');
+    if (badge) {
+        const full = words.length >= UKM_MAX_WORDS_PER_LIST;
+        badge.textContent = `${words.length} / ${UKM_MAX_WORDS_PER_LIST}`;
+        badge.style.color = full ? '#dc2626' : 'var(--ink3)';
+    }
+
+    // Form disable/enable
+    const atWordLimit = words.length >= UKM_MAX_WORDS_PER_LIST;
+    ['ukm-ai-btn', 'ukm-manual-btn'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.disabled = atWordLimit || !name;
+    });
+
+    // Kelime listesi
+    const listEl = document.getElementById('ukm-word-list');
+    if (!listEl) return;
+    if (words.length === 0) {
+        listEl.innerHTML = '<div class="ukm-empty">Bu listede henüz kelime yok.</div>';
+        return;
+    }
+    listEl.innerHTML = words.map((w, i) => `
+        <div class="ukm-word-item">
+            <span class="ukm-word-item-eng">${w.eng}</span>
+            <span class="ukm-word-item-tr">${w.tr || '—'}</span>
+            <button class="ukm-word-del" onclick="ukmDeleteWord(${i})" title="Sil">✕</button>
+        </div>`).join('');
+}
+
+// ── KELİME SİL ───────────────────────────────────
+function ukmDeleteWord(idx) {
+    const sel = document.getElementById('ukm-target-list');
+    const name = sel?.value;
+    if (!name) return;
+    const lists = _ukmGetLists();
+    if (!lists[name]) return;
+    lists[name].splice(idx, 1);
+    _ukmSaveLists(lists);
+    ukmLoadWordList();
+}
+
+// ── AI İLE DOLDUR ────────────────────────────────
+let _ukmPendingWord = null;
+
+// ── FREE DICTIONARY API: api.dictionaryapi.dev (API key yok, limit yok) ──────────────
+async function _ukmFetchDictionary(word) {
+    const url = `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word.toLowerCase())}`;
+    const resp = await fetch(url);
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    if (!Array.isArray(data) || !data[0]) return null;
+    const entry   = data[0];
+    const meaning = entry.meanings?.[0];
+    const def     = meaning?.definitions?.[0];
+    const phonObj = entry.phonetics?.find(p => p.text) || {};
+    const audioObj= entry.phonetics?.find(p => p.audio && p.audio.includes('us')) ||
+                    entry.phonetics?.find(p => p.audio) || {};
+    return {
+        phonetic : phonObj.text  || entry.phonetic || '',
+        audio    : audioObj.audio ? (audioObj.audio.startsWith('//') ? 'https:' + audioObj.audio : audioObj.audio) : '',
+        pos      : meaning?.partOfSpeech || 'n',
+        definition: def?.definition || '',
+        example  : def?.example || '',
+        synonyms : meaning?.synonyms?.slice(0, 4) || []
+    };
+}
+
+// ── DATAMUSE API: api.datamuse.com (API key yok, 100k/gün) ───────────────────────────
+async function _ukmFetchDatamuse(word) {
+    const url = `https://api.datamuse.com/words?sp=${encodeURIComponent(word)}&md=spfd&max=1&qe=sp`;
+    const resp = await fetch(url);
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    if (!data[0]) return null;
+    const tags = data[0].tags || [];
+    const syllableTag = tags.find(t => t.startsWith('sc:'));
+    return {
+        syllables: syllableTag ? parseInt(syllableTag.replace('sc:', '')) : null,
+        freq     : data[0].score || 0
+    };
+}
+
+function _ukmEstimateCEFR(freq) {
+    if (freq >= 50000) return 'A1';
+    if (freq >= 20000) return 'A2';
+    if (freq >= 8000)  return 'B1';
+    if (freq >= 3000)  return 'B2';
+    if (freq >= 800)   return 'C1';
+    return 'C2';
+}
+
+let _ukmPendingAudio = '';
+
+async function ukmFetchAI() {
+    const eng = (document.getElementById('ukm-eng')?.value || '').trim();
+    if (!eng) { _showAppToast('İngilizce kelimeyi girin!'); return; }
+    const sel = document.getElementById('ukm-target-list');
+    if (!sel?.value) { _showAppToast('Önce bir liste seçin!'); return; }
+
+    const loadEl    = document.getElementById('ukm-ai-loading');
+    const previewEl = document.getElementById('ukm-preview-card');
+    if (loadEl) loadEl.classList.add('show');
+    if (previewEl) previewEl.classList.remove('show');
+    document.getElementById('ukm-ai-btn').disabled = true;
+
+    try {
+        // 1) Free Dictionary API + Datamuse — API key gerekmez
+        const [dictRes, damuRes] = await Promise.allSettled([
+            _ukmFetchDictionary(eng),
+            _ukmFetchDatamuse(eng)
+        ]);
+        const dict = dictRes.status === 'fulfilled' ? dictRes.value : null;
+        const damu = damuRes.status === 'fulfilled'  ? damuRes.value  : null;
+
+        const phonetic  = dict?.phonetic  || '';
+        const audio     = dict?.audio     || '';
+        const pos       = dict?.pos       || 'n';
+        const engDef    = dict?.definition|| '';
+        const example   = dict?.example   || '';
+        const syllables = damu?.syllables || null;
+        const level     = damu ? _ukmEstimateCEFR(damu.freq) : 'B1';
+
+        // 2) Türkçe anlam — kullanıcı girdiyse kullan, yoksa AI'ya sor
+        let tr = (document.getElementById('ukm-tr')?.value || '').trim();
+        let mnemonic = '';
+        if (!tr) {
+            const hasKey = typeof puter !== 'undefined' || (typeof AI_PROVIDERS !== 'undefined' && AI_PROVIDERS.some(p => localStorage.getItem(p.lsKey)));
+            if (hasKey) {
+                const ctx = engDef ? `Definition: "${engDef}"` : '';
+                const prompt = `${ctx}\nIngilizce "${eng}" kelimesinin Türkçe karşılığını VE Türk öğrenciler için kısa bellek ipucu yaz.\nSADECE JSON: {"tr":"...","mnemonic":"..."}`;
+                try { const r = await aiCall(prompt); tr = r.tr || '—'; mnemonic = r.mnemonic || ''; }
+                catch(e) { tr = '—'; }
+            } else { tr = '—'; }
+        }
+
+        _ukmPendingWord = { eng, tr, pos, level, phonetic, audio, mnemonic, story: example, syllables, engDef, errorCount: 0, correctStreak: 0, sm2_ef: 2.5, sm2_interval: 0, sm2_next: null };
+        _ukmPendingAudio = audio;
+
+        document.getElementById('ukm-preview-eng').textContent = eng;
+        document.getElementById('ukm-preview-tr').textContent  = tr;
+        document.getElementById('ukm-preview-meta').innerHTML  =
+            (phonetic  ? `🔊 <em>${phonetic}</em>` : '') +
+            (syllables ? ` · ${syllables} hece`  : '') +
+            ` · ${pos.toUpperCase()} · ${level}` +
+            (engDef   ? `<br><span style="color:var(--ink2)">📖 ${engDef}</span>` : '') +
+            (mnemonic ? `<br>🧠 ${mnemonic}` : '') +
+            (example  ? `<br><span style="color:var(--ink3)">💬 ${example}</span>` : '');
+
+        if (previewEl) previewEl.classList.add('show');
+    } catch(e) {
+        showAIToast('Kelime bulunamadı: ' + (e.message || ''), 'error');
+    }
+    if (loadEl) loadEl.classList.remove('show');
+    document.getElementById('ukm-ai-btn').disabled = false;
+}
+// ── MANUEL EKLE ─────────────────────────────────
+function ukmAddManual() {
+    const eng = (document.getElementById('ukm-eng')?.value || '').trim();
+    const tr  = (document.getElementById('ukm-tr')?.value  || '').trim();
+    if (!eng) { _showAppToast('İngilizce kelimeyi girin!'); return; }
+
+    _ukmPendingWord = {
+        eng, tr: tr || '—', pos: 'n', level: 'B1',
+        phonetic: '', mnemonic: '', story: '',
+        errorCount: 0, correctStreak: 0,
+        sm2_ef: 2.5, sm2_interval: 0, sm2_next: null
+    };
+
+    document.getElementById('ukm-preview-eng').textContent = eng;
+    document.getElementById('ukm-preview-tr').textContent  = tr || '—';
+    document.getElementById('ukm-preview-meta').innerHTML  = '<em style="color:var(--ink3)">AI bilgisi olmadan eklendi</em>';
+    document.getElementById('ukm-preview-card')?.classList.add('show');
+}
+
+// ── ÖNEP: LİSTEYE EKLE ──────────────────────────
+function ukmConfirmAdd() {
+    if (!_ukmPendingWord) return;
+    const sel = document.getElementById('ukm-target-list');
+    const name = sel?.value;
+    if (!name) { _showAppToast('Önce bir liste seçin!'); return; }
+
+    const lists = _ukmGetLists();
+    if (!lists[name]) { _showAppToast('Liste bulunamadı!'); return; }
+    if (lists[name].length >= UKM_MAX_WORDS_PER_LIST) {
+        showAIToast(`Liste dolu (max ${UKM_MAX_WORDS_PER_LIST} kelime)!`, 'warn'); return;
+    }
+
+    // Aynı kelime zaten var mı?
+    if (lists[name].some(w => w.eng.toLowerCase() === _ukmPendingWord.eng.toLowerCase())) {
+        showAIToast('Bu kelime listede zaten var!', 'warn'); return;
+    }
+
+    lists[name].push(_ukmPendingWord);
+    _ukmSaveLists(lists);
+    _ukmPendingWord = null;
+
+    // Form ve preview temizle
+    document.getElementById('ukm-eng').value = '';
+    document.getElementById('ukm-tr').value  = '';
+    document.getElementById('ukm-preview-card')?.classList.remove('show');
+
+    ukmLoadWordList();
+    ukmRefresh();
+    _showAppToast(`✅ "${lists[name].at(-1).eng}" eklendi!`);
+}
+
+function ukmClearPreview() {
+    _ukmPendingWord = null;
+    document.getElementById('ukm-preview-card')?.classList.remove('show');
+}
+
+// ── SAYFA AÇILIŞINDA UKM LİSTELERİNİ SENKRONIZE ET ──
+document.addEventListener('ydtDataReady', () => {
+    const lists = _ukmGetLists();
+    if (Object.keys(lists).length > 0) _ukmSyncToAllData(lists);
+    if (document.getElementById('ukm-section')) ukmRefresh();
+});
+
+// ═══════════════════════════════════════════════════════════════
+// AI PARAGRAF ÜRETİCİ — Kullanıcı isteğiyle tek paragraf üretir
+// ═══════════════════════════════════════════════════════════════
+
+const AIG_TOPICS = [
+    { icon: '🔬', label: 'Biology',      query: 'biology and genetics' },
+    { icon: '🤖', label: 'AI & Tech',    query: 'artificial intelligence and robotics' },
+    { icon: '🎮', label: 'Gaming',        query: 'video game design and psychology' },
+    { icon: '🌌', label: 'Space',         query: 'space exploration and astrophysics' },
+    { icon: '🧠', label: 'Neuroscience', query: 'neuroscience and human cognition' },
+    { icon: '⚡', label: 'Energy',        query: 'renewable energy and climate tech' },
+    { icon: '🏛️', label: 'History',       query: 'ancient civilizations and archaeology' },
+    { icon: '💊', label: 'Medicine',      query: 'medical breakthroughs and biotech' },
+    { icon: '🌊', label: 'Ocean',         query: 'ocean science and marine biology' },
+    { icon: '🎭', label: 'Psychology',    query: 'psychology and behavioral science' },
+    { icon: '🔭', label: 'Physics',       query: 'quantum physics and particle science' },
+    { icon: '🕹️', label: 'Indie Games',   query: 'indie game development and storytelling' },
+];
+
+let _aigSelectedTopic = null;
+let _aigGeneratedPassage = null;
+
+function _aigInitTopics() {
+    const grid = document.getElementById('aig-topics-grid');
+    if (!grid || grid.children.length > 0) return;
+    grid.innerHTML = AIG_TOPICS.map((t, i) =>
+        `<button class="aig-topic-chip" data-idx="${i}" onclick="aigSelectTopic(${i})">
+            <span class="aig-tc-icon">${t.icon}</span>${t.label}
+        </button>`
+    ).join('');
+}
+
+function aigSelectTopic(idx) {
+    _aigSelectedTopic = idx;
+    document.querySelectorAll('.aig-topic-chip').forEach((el, i) =>
+        el.classList.toggle('active', i === idx));
+    // Custom inputu temizle
+    const inp = document.getElementById('aig-custom-topic');
+    if (inp) inp.value = '';
+}
+
+async function aiGenerateParagraf(random = false) {
+    const btn = document.getElementById('aig-gen-btn');
+    const lblEl = document.getElementById('aig-gen-btn-label');
+    const previewEl = document.getElementById('aig-preview');
+
+    // Konu belirle
+    let topic = '';
+    if (random) {
+        const t = AIG_TOPICS[Math.floor(Math.random() * AIG_TOPICS.length)];
+        topic = t.query;
+        // Chip seç
+        const idx = AIG_TOPICS.indexOf(t);
+        aigSelectTopic(idx);
+    } else {
+        const customInp = (document.getElementById('aig-custom-topic')?.value || '').trim();
+        if (customInp) {
+            topic = customInp;
+            // Chip seçimini kaldır
+            document.querySelectorAll('.aig-topic-chip').forEach(el => el.classList.remove('active'));
+            _aigSelectedTopic = null;
+        } else if (_aigSelectedTopic !== null) {
+            topic = AIG_TOPICS[_aigSelectedTopic].query;
+        } else {
+            showAIToast('Lütfen bir konu seçin veya yazın!', 'warn'); return;
+        }
+    }
+
+    // Loading state
+    btn.disabled = true;
+    lblEl.innerHTML = '<span class="aig-btn-spinner"></span> Üretiliyor…';
+    previewEl.style.display = 'none';
+
+    const prompt = `You are an expert English language teacher. Create ONE original C1/C2 level reading passage about: "${topic}".
+
+Requirements:
+- Exactly 6-8 sentences, 130-170 words
+- Sophisticated academic vocabulary
+- Engaging and informative
+- Clear topic sentence
+- Include 8-12 key vocabulary words from the text
+
+Respond ONLY with valid JSON:
+{
+  "title": "Concise descriptive title (max 7 words)",
+  "text": "The full passage text here...",
+  "vocabulary": {
+    "word1": "Türkçe karşılık",
+    "word2": "Türkçe karşılık"
+  }
+}`;
+
+    try {
+        const result = await aiCall(prompt);
+
+        if (!result.title || !result.text) throw new Error('Geçersiz yanıt');
+
+        _aigGeneratedPassage = {
+            title: result.title,
+            text: result.text,
+            vocabulary: result.vocabulary || {},
+            topic
+        };
+
+        _aigRenderPreview(_aigGeneratedPassage);
+        previewEl.style.display = 'block';
+        // Smooth scroll
+        setTimeout(() => previewEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
+
+    } catch(e) {
+        showAIToast('Paragraf üretilemedi: ' + (e.message || ''), 'error');
+    }
+
+    btn.disabled = false;
+    lblEl.textContent = '✨ Paragraf Oluştur';
+}
+
+function _aigRenderPreview(p) {
+    const previewEl = document.getElementById('aig-preview');
+    if (!previewEl) return;
+
+    const vocab = Object.entries(p.vocabulary || {});
+    const wordCount = p.text.trim().split(/\s+/).length;
+    const sentences = p.text.match(/[^.!?]+[.!?]+/g) || [];
+    const readMin   = Math.ceil(wordCount / 180);
+
+    // Kelime highlight — c1-word span ile (mevcut CSS kullanılıyor)
+    let highlightedText = p.text;
+    vocab.forEach(([eng, tr]) => {
+        const regex = new RegExp(`\\b(${eng.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})\\b`, 'gi');
+        highlightedText = highlightedText.replace(regex,
+            `<span class="c1-word" data-tr="${tr}" style="cursor:pointer;">$1</span>`);
+    });
+
+    // Cümleleri tıklanabilir yap (Grammar X-Ray uyumlu)
+    let sentIdx = 0;
+    const sentHighlight = highlightedText.replace(/([^.!?]+[.!?]+)/g, (match) => {
+        const idx = sentIdx++;
+        return `<span class="p-sentence" data-idx="${idx}" style="cursor:pointer;" title="Grammar X-Ray">${match}</span> `;
+    });
+
+    const vocPills = vocab.map(([eng, tr]) =>
+        `<span class="aig-vocab-pill" data-tr="${tr}" title="${tr}">${eng}</span>`
+    ).join('');
+
+    previewEl.innerHTML = `
+    <div class="aig-result-card">
+        <div class="aig-result-hero">
+            <div class="aig-result-badge">✨ AI Üretim · C1/C2</div>
+            <div class="aig-result-title">${p.title}</div>
+            <div class="aig-result-meta">⏱ ${readMin} dk · ${wordCount} kelime · ${sentences.length} cümle · ${vocab.length} voc</div>
+        </div>
+        <div class="aig-result-body">
+            <div class="aig-result-text">${sentHighlight}</div>
+            ${vocab.length > 0 ? `
+            <div class="aig-vocab-section">
+                <div class="aig-vocab-title">📖 Kelimeler — hover ile Türkçe</div>
+                <div class="aig-vocab-grid">${vocPills}</div>
+            </div>` : ''}
+        </div>
+        <div class="aig-result-actions">
+            <button class="aig-action-btn primary" onclick="aigOpenReading()">📖 Okumaya Başla</button>
+            <button class="aig-action-btn" onclick="aigSavePassage()">💾 Arşive Kaydet</button>
+            <button class="aig-action-btn" onclick="aiGenerateParagraf(true)">🎲 Yeniden Üret</button>
+        </div>
+    </div>`;
+}
+
+// Üretilen pasajı okuma moduna aç
+function aigOpenReading() {
+    if (!_aigGeneratedPassage) return;
+    const p = _aigGeneratedPassage;
+    const tempP = { baslik: p.title, metin: p.text, kelimeler: p.vocabulary };
+    const exists = paragraflar.findIndex(x => x.baslik === p.title);
+    let idx;
+    if (exists >= 0) { idx = exists; }
+    else { paragraflar.push(tempP); idx = paragraflar.length - 1; }
+    showParagrafOku(idx);
+}
+
+// Arşive kaydet
+function aigSavePassage() {
+    if (!_aigGeneratedPassage) return;
+    const saved = saveAIPasajToArsiv(_aigGeneratedPassage);
+    if (saved) {
+        showAIToast('✅ Arşive kaydedildi!', 'info', 2000);
+    } else {
+        showAIToast('Bu pasaj zaten arşivde.', 'warn', 2000);
+    }
+}
