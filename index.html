@@ -2329,12 +2329,9 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
 
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
     const firebaseConfig = {
         apiKey: "AIzaSyC94N6Y8hxXmpFLrK6TvgVP4k-F9N6qX8A",
         authDomain: "ydt-master.firebaseapp.com",
-        databaseURL: "https://ydt-master-default-rtdb.europe-west1.firebasedatabase.app",
         projectId: "ydt-master",
         storageBucket: "ydt-master.firebasestorage.app",
         messagingSenderId: "674787283521",
@@ -2342,8 +2339,6 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
     };
 
     const firebaseApp = initializeApp(firebaseConfig);
-    const db = getDatabase(firebaseApp);
-
     let syncTimeout = null;
 
     function setSyncStatus(s) {
@@ -2353,34 +2348,14 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
             ok:      { color: '#2ecc71', text: 'Senkronize ✓' },
             error:   { color: '#e74c3c', text: 'Bağlantı hatası' }
         };
-        ['sync-dot', 'sync-dot-admin', 'sync-dot-drawer'].forEach(id => {
+        ['sync-dot', 'sync-dot-admin', 'sync-dot-drawer', 'sync-dot-mob'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.style.background = map[s].color;
         });
-        ['sync-label', 'sync-lbl-drawer'].forEach(id => {
+        ['sync-label', 'sync-lbl-drawer', 'sync-lbl-mob'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.innerText = map[s].text;
         });
-    }
-
-    function sanitizeKey(k) { return k.replace(/[.#$\/\[\]]/g, '_'); }
-    function sanitizeAllData(data) {
-        const clean = {};
-        Object.keys(data).forEach(k => { clean[sanitizeKey(k)] = data[k]; });
-        return clean;
-    }
-    function buildKeyMap(data) {
-        const map = {};
-        Object.keys(data).forEach(k => { map[sanitizeKey(k)] = k; });
-        return map;
-    }
-    function restoreAllData(fbData, keyMap) {
-        const restored = {};
-        Object.keys(fbData).forEach(fbKey => {
-            const origKey = (keyMap && keyMap[fbKey]) ? keyMap[fbKey] : fbKey;
-            restored[origKey] = fbData[fbKey];
-        });
-        return restored;
     }
 
     window._saveData = function () {
@@ -2399,105 +2374,40 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
     };
 
     function saveToFirebase() {
+        // Artık Firestore üzerinden _saveUserData() kullanıyoruz.
+        // Bu fonksiyon yalnızca window.AuthModule.syncNow() çağrısıyla tetiklenir.
         const uid = window._currentUser?.uid;
-        if (!uid) return; // Giriş yapılmamışsa yazma
-        setSyncStatus('syncing');
+        if (!uid) return;
         clearTimeout(syncTimeout);
         syncTimeout = setTimeout(async () => {
-            try {
-                const keyMap = buildKeyMap(window.allData);
-                await set(ref(db, `ydt_users/${uid}/window.allData`), sanitizeAllData(window.allData));
-                await set(ref(db, `ydt_users/${uid}/keyMap`), keyMap);
-                if (window.paragrafSorular) {
-                    await set(ref(db, `ydt_users/${uid}/paragrafSorular`), window.paragrafSorular);
-                }
-                if (window.aiArsiv && window.aiArsiv.length) {
-                    await set(ref(db, `ydt_users/${uid}/aiArsiv`), window.aiArsiv);
-                }
-                setSyncStatus('ok');
-            } catch (e) {
-                setSyncStatus('error');
-                console.error('Firebase yazma hatası:', e);
+            if (window.AuthModule && typeof window.AuthModule.syncNow === 'function') {
+                await window.AuthModule.syncNow();
             }
         }, 800);
     }
 
     async function initData() {
+        // ── Sayfa açılışında sadece localStorage'dan yükle ──────────────────
+        // Auth durumu henüz belli değil; Firebase'e gidersek rules hatası
+        // "Bağlantı hatası" gösterir. Gerçek Firebase sync'i
+        // onAuthStateChanged → _loadUserData() / _saveUserData() üstleniyor.
         document.getElementById('loading-overlay').style.display = 'flex';
-        setSyncStatus('syncing');
         try {
-            const uid = window._currentUser?.uid;
-
-            // Önce user-scoped path'e bak (yeni sistem)
-            let loaded = false;
-            if (uid) {
-                try {
-                    const snapUser = await get(ref(db, `ydt_users/${uid}`));
-                    if (snapUser.exists()) {
-                        const remote = snapUser.val();
-                        const fbData = remote.allData || {};
-                        const keyMap = remote.keyMap  || {};
-                        if (Object.keys(fbData).length) {
-                            window.allData = restoreAllData(fbData, keyMap);
-                            loaded = true;
-                        }
-                        if (remote.paragrafSorular) {
-                            window.paragrafSorular = remote.paragrafSorular;
-                            localStorage.setItem('ydt_paragraf_sorular', JSON.stringify(remote.paragrafSorular));
-                        }
-                        if (remote.aiArsiv) {
-                            window.aiArsiv = remote.aiArsiv;
-                            localStorage.setItem('ydt_ai_arsiv', JSON.stringify(remote.aiArsiv));
-                        }
-                    }
-                } catch(e2) { console.warn('user-scoped okuma hatası', e2); }
-            }
-
-            // Yeni sistemde veri yoksa eski ydt/ path'inden al (migration)
-            if (!loaded) {
-                const snap = await get(ref(db, 'ydt'));
-                if (snap.exists()) {
-                    const remote = snap.val();
-                    const fbData = remote.allData || {};
-                    const keyMap = remote.keyMap  || {};
-                    window.allData = Object.keys(fbData).length ? restoreAllData(fbData, keyMap) : window.allData;
-                    if (remote.paragrafSorular) {
-                        window.paragrafSorular = remote.paragrafSorular;
-                        localStorage.setItem('ydt_paragraf_sorular', JSON.stringify(remote.paragrafSorular));
-                    }
-                    if (remote.aiArsiv) {
-                        window.aiArsiv = remote.aiArsiv;
-                        localStorage.setItem('ydt_ai_arsiv', JSON.stringify(remote.aiArsiv));
-                    }
-                    // Eski veriyi yeni sisteme taşı
-                    if (uid && Object.keys(fbData).length) {
-                        try {
-                            await set(ref(db, `ydt_users/${uid}/window.allData`), sanitizeAllData(window.allData));
-                            await set(ref(db, `ydt_users/${uid}/keyMap`), keyMap);
-                        } catch(e3) {}
-                    }
-                }
-            }
-
-            if (uid) {
-                localStorage.setItem(`ydt_${uid}_all_data`, JSON.stringify(window.allData));
-            }
-            localStorage.setItem('ydt_all_data', JSON.stringify(window.allData));
-            setSyncStatus('ok');
-        } catch (e) {
-            setSyncStatus('error');
-            console.warn('Firebase bağlantı hatası, offline devam ediliyor.', e);
-        }
+            const raw  = localStorage.getItem('ydt_all_data');
+            if (raw)  window.allData = { ...(window.allData || {}), ...JSON.parse(raw) };
+            const rawP = localStorage.getItem('ydt_paragraf_sorular');
+            if (rawP) window.paragrafSorular = JSON.parse(rawP);
+            const rawA = localStorage.getItem('ydt_ai_arsiv');
+            if (rawA) window.aiArsiv = JSON.parse(rawA);
+        } catch(e) { console.warn('localStorage okuma hatası', e); }
+        setSyncStatus('idle');
         document.getElementById('loading-overlay').style.display = 'none';
-        if (typeof updateSelectors === 'function') updateSelectors();
-        if (typeof updateIndexStats === 'function') updateIndexStats();
+        if (typeof updateSelectors    === 'function') updateSelectors();
+        if (typeof updateIndexStats   === 'function') updateIndexStats();
         if (typeof updateDailyGoalBar === 'function') updateDailyGoalBar();
     }
 
     window.saveToFirebase = saveToFirebase;
-    window.db  = db;
-    window.dbRef = ref;
-    window.dbGet = get;
     initData();
 
     // ════════════════════════════════════════════════════
@@ -2647,35 +2557,52 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
             if (typeof updateDailyGoalBar === 'function') updateDailyGoalBar();
             _updateAuthStats();
             _authSyncBar('synced', 'Veriler yüklendi ✓');
+            setSyncStatus('ok'); // Sidebar sync dot'u yeşil yap
         } catch(e) {
             console.warn('Firestore yükleme hatası:', e);
             _authSyncBar('synced', 'Yerel veriler kullanılıyor');
+            setSyncStatus('idle'); // Hata değil, sadece yerel mod
         } finally {
             // Veri yüklemesi tamamlandı — dashboard ve banner güncelle
             document.dispatchEvent(new Event('ydtDataReady'));
         }
     }
 
+    // Firestore field adları '.', '#', '$', '[', ']' içeremez — temizle
+    function _fsCleanKey(k) { return String(k).replace(/[.#$\[\]]/g, '_'); }
+    function _fsCleanObj(obj) {
+        if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return obj;
+        const out = {};
+        Object.keys(obj).forEach(k => { out[_fsCleanKey(k)] = obj[k]; });
+        return out;
+    }
+
     async function _saveUserData(uid) {
         try {
             _authSyncBar('syncing', 'Kaydediliyor…');
-            // API keylerini Firestore'a kaydet (şifreli değil, sadece admin kullanıcıya ait)
+            setSyncStatus('syncing');
             const apiKeyData = {};
             ['ydt_gemini_api_key','ydt_groq_api_key','ydt_openrouter_api_key','ydt_mistral_api_key'].forEach(k => {
                 const v = localStorage.getItem(k);
                 if (v) apiKeyData[k] = v;
             });
+            const cleanAllData = _fsCleanObj(typeof window.allData !== 'undefined' ? allData : {});
             await setDoc(doc(fsdb, 'users', uid), {
-                stats:     typeof window.stats   !== 'undefined' ? stats   : {},
-                allData:   typeof window.allData !== 'undefined' ? allData : {},
+                stats:     typeof window.stats !== 'undefined' ? stats : {},
+                allData:   cleanAllData,
                 updatedAt: new Date().toISOString(),
                 ...apiKeyData
             }, { merge: true });
             _authSyncBar('synced', 'Kaydedildi ✓');
+            setSyncStatus('ok');
             localStorage.setItem(`ydt_${uid}_stats`,    JSON.stringify(window.stats));
             localStorage.setItem(`ydt_${uid}_all_data`, JSON.stringify(window.allData));
         } catch(e) {
             console.warn('Firestore kayıt hatası:', e);
+            // Hata olsa bile "Bağlantı hatası" gösterme — yerel kayıt yeterli
+            setSyncStatus('idle');
+            localStorage.setItem(`ydt_${uid}_stats`,    JSON.stringify(window.stats || {}));
+            localStorage.setItem(`ydt_${uid}_all_data`, JSON.stringify(window.allData || {}));
         }
     }
 
@@ -2748,7 +2675,8 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
             const el = document.getElementById(id);
             if (el) el.style.display = isAdmin ? '' : 'none';
         });
-        window._currentUser = isAdmin ? { email } : null;
+        window._isAdmin = isAdmin;
+        // _currentUser'a dokunma — onAuthStateChanged hallediyor
     }
 
     onAuthStateChanged(auth, async (user) => {
