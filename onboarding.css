@@ -1,0 +1,446 @@
+/* ═══════════════════════════════════════════════════════════
+   onboarding.css  —  YDT Master Pro  Karşılama & Seviye Testi
+   Prefix: ob-
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Overlay ── */
+#onboarding-overlay {
+    position: fixed; inset: 0; z-index: 9999;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(10, 10, 20, 0.65);
+    backdrop-filter: blur(20px) saturate(1.5);
+    -webkit-backdrop-filter: blur(20px) saturate(1.5);
+    padding: 16px;
+    transition: opacity .4s ease;
+}
+#onboarding-overlay.ob-fade-out {
+    opacity: 0; pointer-events: none;
+}
+
+/* ── Card ── */
+.ob-card {
+    background: var(--white, #fff);
+    border-radius: 28px;
+    width: min(520px, 100%);
+    max-height: 92vh;
+    overflow-y: auto;
+    box-shadow: 0 32px 80px rgba(0,0,0,.28), 0 0 0 1px rgba(255,255,255,.06);
+    animation: obCardIn .45s cubic-bezier(.34,1.4,.64,1);
+    scrollbar-width: none;
+}
+.ob-card::-webkit-scrollbar { display: none; }
+
+@keyframes obCardIn {
+    from { opacity:0; transform: translateY(32px) scale(.93); }
+    to   { opacity:1; transform: none; }
+}
+
+/* ── Step geçiş animasyonu ── */
+.ob-step { animation: obStepIn .32s cubic-bezier(.4,0,.2,1); }
+@keyframes obStepIn {
+    from { opacity:0; transform: translateX(24px); }
+    to   { opacity:1; transform: none; }
+}
+
+/* ── Header ── */
+.ob-header {
+    padding: 32px 32px 24px;
+    text-align: center;
+    border-bottom: 1.5px solid var(--border, #ebebf0);
+}
+.ob-logo {
+    width: 64px; height: 64px; border-radius: 18px;
+    background: linear-gradient(135deg, #e63946, #c1121f);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2rem; margin: 0 auto 16px;
+    box-shadow: 0 8px 24px rgba(230,57,70,.3);
+}
+.ob-title {
+    font-size: 1.5rem; font-weight: 900;
+    color: var(--ink, #1a1a2e); margin-bottom: 6px;
+    letter-spacing: -.3px; line-height: 1.2;
+}
+.ob-sub {
+    font-size: .88rem; color: var(--ink3, #888);
+    line-height: 1.55; font-weight: 500;
+}
+
+/* ── Progress dots ── */
+.ob-dots {
+    display: flex; align-items: center; justify-content: center;
+    gap: 6px; padding: 16px 0 0;
+}
+.ob-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--border, #e0e0e8);
+    transition: all .25s;
+}
+.ob-dot.active {
+    width: 20px; border-radius: 4px;
+    background: #e63946;
+}
+.ob-dot.done { background: #22c55e; }
+
+/* ── Body ── */
+.ob-body { padding: 24px 28px 28px; }
+
+/* ── Yaş Kartları ── */
+.ob-age-grid {
+    display: grid; grid-template-columns: 1fr;
+    gap: 12px; margin-bottom: 20px;
+}
+.ob-age-card {
+    display: flex; align-items: center; gap: 16px;
+    padding: 18px 20px; border-radius: 18px;
+    border: 2px solid var(--border, #ebebf0);
+    cursor: pointer; transition: all .2s;
+    background: var(--bg, #f8f8fc);
+    user-select: none;
+}
+.ob-age-card:hover {
+    border-color: var(--color-primary, #e63946);
+    background: #fff5f5;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(230,57,70,.1);
+}
+.ob-age-card.selected {
+    border-color: var(--color-primary, #e63946);
+    background: linear-gradient(135deg, #fff5f5, #fff);
+    box-shadow: 0 4px 16px rgba(230,57,70,.15);
+}
+.ob-age-card.selected .ob-age-check { opacity: 1; transform: scale(1); }
+
+.ob-age-emoji {
+    font-size: 2.4rem; flex-shrink: 0;
+    width: 56px; height: 56px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 14px; background: var(--white, #fff);
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+}
+.ob-age-info { flex: 1; min-width: 0; }
+.ob-age-range {
+    font-size: 1rem; font-weight: 900;
+    color: var(--ink, #1a1a2e); margin-bottom: 3px;
+}
+.ob-age-desc {
+    font-size: .78rem; color: var(--ink3, #888);
+    font-weight: 500; line-height: 1.4;
+}
+.ob-age-tags {
+    display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px;
+}
+.ob-age-tag {
+    font-size: .62rem; font-weight: 700; padding: 2px 8px;
+    border-radius: 99px; background: var(--border, #ebebf0);
+    color: var(--ink3, #888);
+}
+.ob-age-check {
+    font-size: 1.4rem; flex-shrink: 0;
+    opacity: 0; transform: scale(.6);
+    transition: all .2s cubic-bezier(.34,1.56,.64,1);
+}
+
+/* ── Seviye Testi ── */
+.ob-quiz-progress-wrap {
+    margin-bottom: 20px;
+}
+.ob-quiz-progress-top {
+    display: flex; justify-content: space-between;
+    align-items: center; margin-bottom: 6px;
+}
+.ob-quiz-progress-lbl {
+    font-size: .72rem; font-weight: 800;
+    text-transform: uppercase; letter-spacing: .06em;
+    color: var(--ink3, #888);
+}
+.ob-quiz-progress-num {
+    font-size: .8rem; font-weight: 900; color: var(--ink, #1a1a2e);
+}
+.ob-quiz-progress-track {
+    height: 7px; background: var(--border, #ebebf0);
+    border-radius: 99px; overflow: hidden;
+}
+.ob-quiz-progress-fill {
+    height: 100%; background: linear-gradient(90deg, #e63946, #f472b6);
+    border-radius: 99px;
+    transition: width .4s cubic-bezier(.4,0,.2,1);
+}
+
+.ob-quiz-level-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--bg, #f4f4f8); border-radius: 99px;
+    padding: 4px 12px; font-size: .7rem;
+    font-weight: 800; color: var(--ink3, #888);
+    margin-bottom: 14px; border: 1.5px solid var(--border, #e8e8f0);
+}
+
+.ob-quiz-question {
+    font-size: 1rem; font-weight: 800;
+    color: var(--ink, #1a1a2e); margin-bottom: 18px;
+    line-height: 1.5;
+}
+.ob-quiz-question em {
+    font-style: normal;
+    border-bottom: 2.5px solid #e63946;
+    color: #e63946;
+}
+
+.ob-quiz-options {
+    display: flex; flex-direction: column; gap: 9px;
+    margin-bottom: 8px;
+}
+.ob-quiz-opt {
+    display: flex; align-items: center; gap: 12px;
+    padding: 13px 16px; border-radius: 14px;
+    border: 2px solid var(--border, #ebebf0);
+    cursor: pointer; transition: all .18s;
+    background: var(--bg, #f8f8fc);
+    font-family: inherit; font-size: .88rem;
+    font-weight: 600; color: var(--ink, #1a1a2e);
+    text-align: left; width: 100%;
+}
+.ob-quiz-opt:hover:not(:disabled) {
+    border-color: #93c5fd;
+    background: #eff6ff;
+}
+.ob-quiz-opt.ob-opt-correct {
+    border-color: #22c55e; background: #f0fdf4; color: #15803d;
+    font-weight: 700;
+}
+.ob-quiz-opt.ob-opt-wrong {
+    border-color: #f87171; background: #fef2f2; color: #dc2626;
+    font-weight: 700;
+}
+.ob-quiz-opt:disabled { cursor: default; }
+.ob-quiz-opt-letter {
+    width: 26px; height: 26px; border-radius: 8px;
+    background: var(--white, #fff); border: 1.5px solid var(--border, #e0e0e8);
+    display: flex; align-items: center; justify-content: center;
+    font-size: .72rem; font-weight: 900; flex-shrink: 0;
+    transition: all .18s; color: var(--ink3, #888);
+}
+.ob-quiz-opt.ob-opt-correct .ob-quiz-opt-letter {
+    background: #22c55e; border-color: #22c55e; color: #fff;
+}
+.ob-quiz-opt.ob-opt-wrong .ob-quiz-opt-letter {
+    background: #f87171; border-color: #f87171; color: #fff;
+}
+
+.ob-quiz-feedback {
+    min-height: 24px; font-size: .8rem;
+    font-weight: 700; padding: 4px 0;
+    transition: opacity .2s;
+}
+.ob-quiz-feedback.correct { color: #16a34a; }
+.ob-quiz-feedback.wrong   { color: #dc2626; }
+
+/* ── Sonuç Ekranı ── */
+.ob-result-hero {
+    text-align: center; padding: 8px 0 20px;
+}
+.ob-result-badge {
+    display: inline-flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    width: 96px; height: 96px; border-radius: 24px;
+    margin: 0 auto 16px;
+    box-shadow: 0 8px 28px rgba(0,0,0,.12);
+    font-size: 2.2rem; font-weight: 900; color: #fff;
+    line-height: 1;
+}
+.ob-result-level-name {
+    font-size: .6rem; font-weight: 800;
+    letter-spacing: .08em; opacity: .85; margin-top: 2px;
+}
+.ob-result-title {
+    font-size: 1.3rem; font-weight: 900;
+    color: var(--ink, #1a1a2e); margin-bottom: 8px;
+}
+.ob-result-desc {
+    font-size: .85rem; color: var(--ink3, #888);
+    line-height: 1.6; max-width: 360px; margin: 0 auto;
+}
+.ob-result-stats {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 10px; margin: 20px 0;
+}
+.ob-result-stat {
+    background: var(--bg, #f4f4f8); border-radius: 14px;
+    padding: 14px 8px; text-align: center;
+    border: 1.5px solid var(--border, #ebebf0);
+}
+.ob-result-stat-val {
+    font-size: 1.4rem; font-weight: 900;
+    color: var(--ink, #1a1a2e); line-height: 1;
+    margin-bottom: 4px;
+}
+.ob-result-stat-lbl {
+    font-size: .62rem; font-weight: 700;
+    color: var(--ink3, #888); text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.ob-recommend-box {
+    background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+    border: 1.5px solid #bae6fd; border-radius: 16px;
+    padding: 16px 18px; margin-bottom: 18px;
+    display: flex; align-items: flex-start; gap: 12px;
+    text-align: left;
+}
+.ob-recommend-icon { font-size: 1.5rem; flex-shrink: 0; }
+.ob-recommend-text { flex: 1; }
+.ob-recommend-title {
+    font-size: .82rem; font-weight: 800;
+    color: #0369a1; margin-bottom: 3px;
+}
+.ob-recommend-desc {
+    font-size: .75rem; color: #0c4a6e;
+    font-weight: 500; line-height: 1.5;
+}
+
+/* ── Footer Butonlar ── */
+.ob-footer {
+    display: flex; flex-direction: column;
+    gap: 9px; padding: 0 28px 28px;
+}
+.ob-btn-primary {
+    width: 100%; padding: 14px;
+    background: linear-gradient(135deg, #e63946, #c1121f);
+    color: #fff; border: none; border-radius: 15px;
+    font-family: inherit; font-size: .95rem; font-weight: 800;
+    cursor: pointer; transition: all .2s;
+    box-shadow: 0 4px 16px rgba(230,57,70,.25);
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.ob-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(230,57,70,.35);
+}
+.ob-btn-primary:active { transform: scale(.97); }
+.ob-btn-primary:disabled {
+    opacity: .45; cursor: not-allowed;
+    transform: none; box-shadow: none;
+}
+
+.ob-btn-secondary {
+    width: 100%; padding: 12px;
+    background: transparent; border: 1.5px solid var(--border, #e0e0e8);
+    border-radius: 15px; font-family: inherit;
+    font-size: .85rem; font-weight: 700;
+    color: var(--ink3, #888); cursor: pointer;
+    transition: all .2s;
+}
+.ob-btn-secondary:hover {
+    background: var(--bg, #f4f4f8);
+    color: var(--ink2, #555);
+}
+
+.ob-skip-link {
+    text-align: center; padding-bottom: 4px;
+}
+.ob-skip-btn {
+    background: none; border: none; cursor: pointer;
+    font-size: .75rem; color: var(--ink3, #aaa);
+    font-family: inherit; font-weight: 600;
+    text-decoration: underline; text-underline-offset: 2px;
+    transition: color .15s;
+}
+.ob-skip-btn:hover { color: var(--ink2, #666); }
+
+/* ── Profil sayfasında "Yeniden Başlat" butonu ── */
+.ob-restart-btn {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 16px; border-radius: 12px;
+    border: 1.5px solid var(--border, #e0e0e8);
+    background: var(--bg, #f4f4f8);
+    font-family: inherit; font-size: .8rem;
+    font-weight: 700; color: var(--ink3, #666);
+    cursor: pointer; transition: all .15s;
+    width: 100%; margin-top: 10px;
+}
+.ob-restart-btn:hover { border-color: #e63946; color: #e63946; background: #fff5f5; }
+
+/* ── Sidebar Kids modu (4-8 yaş) ── */
+/* sb-stats ve sb-arsiv hariç: tüm yaş gruplarında görünür kalır */
+.sb-kids-mode .sb-sec,
+.sb-kids-mode #sb-quiz,
+.sb-kids-mode #sb-ai-ydt,
+.sb-kids-mode #sb-paragraf,
+.sb-kids-mode #sb-speaking,
+.sb-kids-mode #sb-grammar-toggle-main,
+.sb-kids-mode #sb-grammar-list-main,
+.sb-kids-mode #sb-typing,
+.sb-kids-mode #sb-context,
+.sb-kids-mode #sb-sm2,
+.sb-kids-mode .sb-secondary-divider {
+    display: none !important;
+}
+/* İstatistik ve Soru Bankası: tüm yaş gruplarında görünür */
+.sb-kids-mode #sb-stats,
+.sb-kids-mode #sb-arsiv {
+    display: flex !important;
+}
+.sb-kids-mode .sb-nav-secondary {
+    border-top: none;
+}
+
+/* Mobil drawer kids modu */
+.mob-kids-mode .mob-drawer-sec,
+.mob-kids-mode #di-quiz,
+.mob-kids-mode #di-ai-ydt,
+.mob-kids-mode #di-paragraf,
+.mob-kids-mode #di-speaking,
+.mob-kids-mode #di-grammar-toggle-main,
+.mob-kids-mode #di-grammar-list-main,
+.mob-kids-mode #di-typing,
+.mob-kids-mode #di-context,
+.mob-kids-mode #di-sm2,
+.mob-kids-mode .mob-drawer-secondary-divider {
+    display: none !important;
+}
+/* Drawer'da İstatistik ve Soru Bankası her zaman görünür */
+.mob-kids-mode #di-stats,
+.mob-kids-mode #di-arsiv {
+    display: flex !important;
+}
+
+/* Bottomnav kids modu — İstatistik (bn-stats) görünür kalır */
+.bn-kids-mode #bn-quiz,
+.bn-kids-mode #bn-exercise {
+    display: none !important;
+}
+.bn-kids-mode #bn-stats {
+    display: flex !important;
+}
+
+/* ── Seviye rozeti renkleri ── */
+.ob-badge-a1 { background: linear-gradient(135deg, #64748b, #475569); }
+.ob-badge-a2 { background: linear-gradient(135deg, #0ea5e9, #0284c7); }
+.ob-badge-b1 { background: linear-gradient(135deg, #22c55e, #16a34a); }
+.ob-badge-b2 { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.ob-badge-c1 { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+.ob-badge-c2 { background: linear-gradient(135deg, #e63946, #9f1239); }
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+    .ob-card { border-radius: 22px; }
+    .ob-header { padding: 24px 20px 18px; }
+    .ob-body   { padding: 18px 18px 20px; }
+    .ob-footer { padding: 0 18px 22px; }
+    .ob-title  { font-size: 1.25rem; }
+    .ob-age-emoji { width: 48px; height: 48px; font-size: 2rem; border-radius: 12px; }
+    .ob-age-range { font-size: .92rem; }
+    .ob-quiz-question { font-size: .92rem; }
+    .ob-quiz-opt { font-size: .82rem; padding: 11px 14px; }
+    .ob-result-stats { grid-template-columns: repeat(3,1fr); gap: 7px; }
+}
+
+@media (prefers-color-scheme: dark) {
+    .ob-card { background: #1a1a2e; }
+    .ob-age-card { background: #13131f; border-color: #2a2a3e; }
+    .ob-age-card:hover { background: #1e0f0f; }
+    .ob-age-card.selected { background: linear-gradient(135deg, #2a0a0e, #1a1a2e); }
+    .ob-quiz-opt { background: #13131f; border-color: #2a2a3e; color: #e0e0f0; }
+    .ob-quiz-opt:hover:not(:disabled) { background: #0f1f35; border-color: #3b82f6; }
+    .ob-result-stat { background: #13131f; border-color: #2a2a3e; }
+    .ob-recommend-box { background: #0c1f2e; border-color: #1e3a4a; }
+}
