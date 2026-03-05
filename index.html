@@ -801,11 +801,6 @@
         <!-- Üst bar -->
         <div class="study-topbar">
             <button class="back-btn-inline" onclick="exitModule()">←</button>
-            <!-- Liste seçici + Kendi Listelerim -->
-            <div class="study-list-picker">
-                <select id="study-list-switcher" class="study-list-switcher" onchange="switchStudyList(this.value)" title="Liste değiştir"></select>
-                <button class="study-mylist-btn" onclick="goToMyWords()" title="Kişisel listelerini yönet">✏️</button>
-            </div>
             <div class="study-progress-wrap">
                 <div class="study-progress-track">
                     <div class="study-progress-fill" id="study-prog-fill"></div>
@@ -813,6 +808,12 @@
                 <span class="study-progress-label" id="study-progress-label">1 / 10</span>
             </div>
             <button class="study-speak-btn" onclick="speakWord(document.getElementById('study-eng').innerText)" title="Sesli dinle">🔊</button>
+        </div>
+
+        <!-- Liste adı + değiştir — progress altında ortalı -->
+        <div class="study-list-namerow">
+            <select id="study-list-switcher" class="study-list-switcher" onchange="switchStudyList(this.value)" title="Liste değiştir"></select>
+            <button class="study-mylist-btn" onclick="goToMyWords()" title="Kişisel listelerini yönet">✏️</button>
         </div>
 
         <!-- Mini stat chips -->

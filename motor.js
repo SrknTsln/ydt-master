@@ -1649,13 +1649,7 @@ Respond ONLY with valid JSON, no extra text:
 {"sentences":[{"en":"...","tr":"..."},{"en":"...","tr":"..."}]}`;
 
     try {
-        let result = null;
-        if (typeof getAIResponse === 'function') {
-            const raw     = await getAIResponse(prompt, { maxTokens: 400, json: true });
-            const cleaned = (raw || '').replace(/```json|```/g,'').trim();
-            result = JSON.parse(cleaned);
-        } else throw new Error('no_ai');
-
+        const result = await aiCall(prompt);
         const sentences = result.sentences || [];
         if (!sentences.length) throw new Error('empty');
 
@@ -1673,7 +1667,7 @@ Respond ONLY with valid JSON, no extra text:
         }).join('');
 
     } catch(e) {
-        listEl.innerHTML = '<div style="font-size:.75rem;color:#ef4444;padding:4px 0;">❌ Cümle üretilemedi. AI anahtarını kontrol et.</div>';
+        listEl.innerHTML = '<div style="font-size:.75rem;color:#ef4444;padding:4px 0;">❌ Cümle üretilemedi.</div>';
     }
 
     btn.classList.remove('wc-ai-loading');
@@ -12075,9 +12069,32 @@ function saveAIPasajToArsiv(passage) {
     const exists = arsiv.findIndex(x => x.title === passage.title);
     if (exists >= 0) return false; // zaten var
     arsiv.unshift({ ...passage, savedAt: Date.now() });
-    // Max 100 pasaj sakla
     if (arsiv.length > 100) arsiv.length = 100;
     localStorage.setItem('ydt_ai_pasaj_arsiv', JSON.stringify(arsiv));
+
+    // paragraflar[] dizisine ekle + localStorage'a yaz
+    const newEntry = {
+        baslik   : passage.title,
+        metin    : passage.text,
+        kelimeler: passage.vocabulary || {}
+    };
+    if (typeof paragraflar !== 'undefined') {
+        const alreadyIn = paragraflar.findIndex(p => p.baslik === passage.title);
+        if (alreadyIn < 0) {
+            paragraflar.push(newEntry);
+        }
+    }
+    // paragraflar'ı doğrudan localStorage'a yaz (motorun okuduğu key)
+    try {
+        localStorage.setItem('ydt_paragraflar', JSON.stringify(paragraflar));
+    } catch(e) {}
+
+    // UI'yı güncelle — Yüklü Pasajlar sayacı ve listesi
+    const cnt = document.getElementById('reading-hub-saved-count');
+    if (cnt) cnt.textContent = paragraflar.length > 0 ? `${paragraflar.length} pasaj` : '';
+    const rh2stat = document.getElementById('rh2-stat-passages');
+    if (rh2stat) rh2stat.textContent = paragraflar.length || '—';
+
     return true;
 }
 function isAIPasajArşivde(title) {
@@ -12376,14 +12393,8 @@ async function _fetchWordTranslation(word) {
     // Use AI if available
     _translationCache[key] = '⏳';
     try {
-        if (typeof getAIResponse === 'function') {
-            const tr = await getAIResponse(`Translate the English word "${word}" to Turkish. Reply with ONLY the Turkish translation(s), maximum 3 words, no explanation.`, { maxTokens: 20 });
-            _translationCache[key] = tr.trim();
-        } else {
-            // Simple dictionary fallback (common words)
-            const simple = {'the':'(belirli artikel)','and':'ve','or':'veya','but':'ama','for':'için','with':'ile','from':'dan/den','this':'bu','that':'şu/o','have':'sahip olmak','been':'olmak(geçmiş)','which':'hangi','were':'idi','are':'olmak','was':'idi','they':'onlar','their':'onların','more':'daha fazla','than':'dan daha','into':'içine','also':'ayrıca','such':'böyle','some':'bazı','when':'ne zaman','about':'hakkında','what':'ne','how':'nasıl','over':'üzerinde','can':'yapabilmek','has':'sahip olmak','use':'kullanmak','each':'her','new':'yeni','most':'en çok','make':'yapmak','like':'gibi/sevmek'};
-            _translationCache[key] = simple[key] || '—';
-        }
+        const result = await aiCall(`Translate "${word}" to Turkish. Reply ONLY with JSON: {"tr":"Turkish meaning (max 3 words)"}`);
+        _translationCache[key] = (result.tr || '—').trim();
         // Update tooltip if still showing
         if (_translateTooltip && _translateTooltip.style.opacity === '1') {
             const tipContent = _translateTooltip.innerHTML;
@@ -13138,6 +13149,25 @@ function _aigInitTopics() {
             <span class="aig-tc-icon">${t.icon}</span>${t.label}
         </button>`
     ).join('');
+    // Kota bilgisini panel başına ekle (admin hariç)
+    if (!_isAdminUser()) {
+        const quota = _aigGetQuota();
+        const remaining = AIG_DAILY_LIMIT - quota.count;
+        const subEl = document.querySelector('.aig-panel-sub');
+        if (subEl && !document.getElementById('aig-panel-quota')) {
+            const quotaSpan = document.createElement('div');
+            quotaSpan.id = 'aig-panel-quota';
+            quotaSpan.style.cssText = 'margin-top:6px;font-size:.7rem;font-weight:800;';
+            quotaSpan.innerHTML = remaining > 0
+                ? `<span style="color:var(--c-green)">✅ Bugün ${remaining}/${AIG_DAILY_LIMIT} hakkın var</span>`
+                : `<span style="color:#dc2626">⛔ Günlük limit doldu — yarın tekrar gel</span>`;
+            subEl.after(quotaSpan);
+        }
+        if (remaining <= 0) {
+            const btn = document.getElementById('aig-gen-btn');
+            if (btn) btn.disabled = true;
+        }
+    }
 }
 
 function aigSelectTopic(idx) {
@@ -13149,10 +13179,36 @@ function aigSelectTopic(idx) {
     if (inp) inp.value = '';
 }
 
+// ── Paragraf üretim kotası ──────────────────────
+const AIG_QUOTA_KEY = () => getUserKey ? getUserKey('aig_quota') : 'ydt_aig_quota';
+const AIG_DAILY_LIMIT = 5;
+
+function _aigGetQuota() {
+    try {
+        const raw = localStorage.getItem(AIG_QUOTA_KEY());
+        if (raw) { const q = JSON.parse(raw); if (q.date === _ukmToday()) return q; }
+    } catch(e) {}
+    return { date: _ukmToday(), count: 0 };
+}
+function _aigSaveQuota(q) { localStorage.setItem(AIG_QUOTA_KEY(), JSON.stringify(q)); }
+function _isAdminUser() {
+    const email = window._currentUser?.email || '';
+    return email === ADMIN_EMAIL;
+}
+
 async function aiGenerateParagraf(random = false) {
     const btn = document.getElementById('aig-gen-btn');
     const lblEl = document.getElementById('aig-gen-btn-label');
     const previewEl = document.getElementById('aig-preview');
+
+    // ── Kota kontrolü (admin hariç 5/gün) ──
+    if (!_isAdminUser()) {
+        const quota = _aigGetQuota();
+        if (quota.count >= AIG_DAILY_LIMIT) {
+            showAIToast(`Günlük ${AIG_DAILY_LIMIT} paragraf limitine ulaştınız. Yarın tekrar deneyin.`, 'warn');
+            return;
+        }
+    }
 
     // Konu belirle
     let topic = '';
@@ -13212,9 +13268,17 @@ Respond ONLY with valid JSON:
             topic
         };
 
+        // Kota artır (admin hariç)
+        if (!_isAdminUser()) {
+            const quota = _aigGetQuota();
+            quota.count++;
+            _aigSaveQuota(quota);
+            // Badge güncelle
+            _aigUpdateQuotaBadge();
+        }
+
         _aigRenderPreview(_aigGeneratedPassage);
         previewEl.style.display = 'block';
-        // Smooth scroll
         setTimeout(() => previewEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
 
     } catch(e) {
@@ -13242,16 +13306,34 @@ function _aigRenderPreview(p) {
             `<span class="c1-word" data-tr="${tr}" style="cursor:pointer;">$1</span>`);
     });
 
-    // Cümleleri tıklanabilir yap (Grammar X-Ray uyumlu)
+    // Cümleleri paragrafSentences[] global'e yaz — analyzeGrammarXRay okuyabilsin
+    const rawSentences = p.text.match(/[^.!?]+[.!?]+/g) || [];
+    paragrafSentences = rawSentences.map(s => s.trim());
+
+    // Cümleleri tıklanabilir yap (Grammar X-Ray çağırıyor)
     let sentIdx = 0;
     const sentHighlight = highlightedText.replace(/([^.!?]+[.!?]+)/g, (match) => {
         const idx = sentIdx++;
-        return `<span class="p-sentence" data-idx="${idx}" style="cursor:pointer;" title="Grammar X-Ray">${match}</span> `;
+        return `<span class="p-sentence" data-idx="${idx}" onclick="aigPreviewGrammarXRay(${idx})" style="cursor:pointer;" title="Tıkla: Grammar X-Ray">` + match + `</span> `;
     });
 
     const vocPills = vocab.map(([eng, tr]) =>
         `<span class="aig-vocab-pill" data-tr="${tr}" title="${tr}">${eng}</span>`
     ).join('');
+
+    const vocCheckboxes = vocab.map(([eng, tr]) =>
+        `<label class="aig-wl-chip"><input type="checkbox" class="aig-wl-check" value="${eng}" data-tr="${tr}" checked><span class="aig-wl-eng">${eng}</span><span class="aig-wl-tr">${tr}</span></label>`
+    ).join('');
+
+    const isAdmin = _isAdminUser();
+    const quota   = _aigGetQuota();
+    const remaining = AIG_DAILY_LIMIT - quota.count;
+    const quotaHTML = !isAdmin ? `<div class="aig-quota-info">${remaining > 0 ? `<span style="color:var(--c-green)">✅ Bugün ${remaining} paragraf hakkın kaldı</span>` : `<span style="color:#dc2626">⚠️ Günlük limit doldu (${AIG_DAILY_LIMIT}/${AIG_DAILY_LIMIT})</span>`}</div>` : '';
+
+    const ukmLists = Object.keys(_ukmGetLists());
+    const listOptions = ukmLists.length
+        ? ukmLists.map(n => `<option value="${n}">${n}</option>`).join('')
+        : `<option value="">— Önce Profil'den liste oluşturun —</option>`;
 
     previewEl.innerHTML = `
     <div class="aig-result-card">
@@ -13263,16 +13345,36 @@ function _aigRenderPreview(p) {
         <div class="aig-result-body">
             <div class="aig-result-text">${sentHighlight}</div>
             ${vocab.length > 0 ? `
-            <div class="aig-vocab-section">
-                <div class="aig-vocab-title">📖 Kelimeler — hover ile Türkçe</div>
-                <div class="aig-vocab-grid">${vocPills}</div>
+            <div class="aig-wordlist-section">
+                <div class="aig-vocab-title" style="margin-bottom:10px;">📌 Kelime Listene Ekle</div>
+                <div class="aig-wl-chips">${vocCheckboxes}</div>
+                <div class="aig-wl-actions">
+                    <select id="aig-wl-target" class="aig-wl-select"><option value="">— Liste seçin —</option>${listOptions}</select>
+                    <button class="aig-action-btn primary" onclick="aigAddWordsToList()" style="flex:0 0 auto;padding:9px 14px;">➕ Seçilenleri Ekle</button>
+                </div>
+                <div id="aig-wl-result" style="font-size:.72rem;font-weight:700;color:var(--c-green);margin-top:6px;display:none;"></div>
             </div>` : ''}
+
+            <!-- ── Grammar X-Ray Panel (inline, aynı sayfada) ── -->
+            <div id="aig-grammar-panel" style="display:none; margin-top:16px; padding-top:16px; border-top:1.5px solid var(--border);">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                    <div class="aig-vocab-title" style="margin:0;">⚙️ Grammar X-Ray</div>
+                    <button onclick="document.getElementById('aig-grammar-panel').style.display='none'"
+                        style="border:none;background:none;cursor:pointer;font-size:.8rem;color:var(--ink3);font-family:inherit;font-weight:700;">✕ Kapat</button>
+                </div>
+                <div id="aig-grammar-content">
+                    <div style="font-size:.78rem;color:var(--ink3);text-align:center;padding:16px;">
+                        Bir cümleye tıkla → Grammar X-Ray analizi
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="aig-result-actions">
             <button class="aig-action-btn primary" onclick="aigOpenReading()">📖 Okumaya Başla</button>
-            <button class="aig-action-btn" onclick="aigSavePassage()">💾 Arşive Kaydet</button>
+            <button class="aig-action-btn" onclick="aigSavePassage()" id="aig-save-btn">💾 Arşive Kaydet</button>
             <button class="aig-action-btn" onclick="aiGenerateParagraf(true)">🎲 Yeniden Üret</button>
         </div>
+        ${quotaHTML}
     </div>`;
 }
 
@@ -13292,9 +13394,142 @@ function aigOpenReading() {
 function aigSavePassage() {
     if (!_aigGeneratedPassage) return;
     const saved = saveAIPasajToArsiv(_aigGeneratedPassage);
+    const btn = document.getElementById('aig-save-btn');
     if (saved) {
-        showAIToast('✅ Arşive kaydedildi!', 'info', 2000);
+        showAIToast('✅ Yüklü Pasajlara kaydedildi!', 'info', 2500);
+        if (btn) { btn.textContent = '✅ Kaydedildi'; btn.disabled = true; }
     } else {
         showAIToast('Bu pasaj zaten arşivde.', 'warn', 2000);
+        if (btn) { btn.textContent = '✅ Zaten Kayıtlı'; btn.disabled = true; }
+    }
+}
+
+// ── Paragraftan kelime listesine ekle ────────────────────────
+function aigAddWordsToList() {
+    const targetSel = document.getElementById('aig-wl-target');
+    const listName  = targetSel?.value;
+    if (!listName) { showAIToast('Önce bir liste seçin!', 'warn'); return; }
+
+    const checks = document.querySelectorAll('.aig-wl-check:checked');
+    if (!checks.length) { showAIToast('Eklenecek kelime seçmediniz!', 'warn'); return; }
+
+    const lists = _ukmGetLists();
+    if (!lists[listName]) { showAIToast('Liste bulunamadı!', 'warn'); return; }
+
+    let added = 0, skipped = 0;
+    checks.forEach(cb => {
+        const eng = cb.value;
+        const tr  = cb.dataset.tr || '—';
+        if (lists[listName].length >= UKM_MAX_WORDS_PER_LIST) { skipped++; return; }
+        if (lists[listName].some(w => w.eng.toLowerCase() === eng.toLowerCase())) { skipped++; return; }
+        lists[listName].push({
+            eng, tr, pos: 'n', level: 'C1',
+            phonetic: '', mnemonic: '', story: '',
+            errorCount: 0, correctStreak: 0,
+            sm2_ef: 2.5, sm2_interval: 0, sm2_next: null
+        });
+        added++;
+    });
+
+    _ukmSaveLists(lists);
+
+    const resultEl = document.getElementById('aig-wl-result');
+    if (resultEl) {
+        resultEl.style.display = 'block';
+        resultEl.textContent = added > 0
+            ? `✅ ${added} kelime "${listName}" listesine eklendi!${skipped > 0 ? ` (${skipped} zaten vardı/limit)` : ''}`
+            : `⚠️ Hiç kelime eklenemedi — limit dolu veya zaten mevcut.`;
+        resultEl.style.color = added > 0 ? 'var(--c-green)' : '#dc2626';
+    }
+    if (added > 0) showAIToast(`✅ ${added} kelime eklendi!`, 'info', 2000);
+}
+
+// ── Kota badge güncelle ──────────────────────────────────────
+function _aigUpdateQuotaBadge() {
+    if (_isAdminUser()) return;
+    const quota = _aigGetQuota();
+    const remaining = AIG_DAILY_LIMIT - quota.count;
+    const el = document.getElementById('aig-quota-info');
+    if (!el) return;
+    el.innerHTML = remaining > 0
+        ? `<span style="color:var(--c-green)">✅ Bugün ${remaining} paragraf hakkın kaldı</span>`
+        : `<span style="color:#dc2626">⚠️ Günlük limit doldu (${AIG_DAILY_LIMIT}/${AIG_DAILY_LIMIT})</span>`;
+}
+
+// Kota badge helper
+
+// ── AI Preview — Inline Grammar X-Ray ──────────────────────
+async function aigPreviewGrammarXRay(sentenceIdx) {
+    const sentence = paragrafSentences[sentenceIdx];
+    if (!sentence || sentence.trim().length < 6) return;
+
+    // Aktif cümleyi vurgula
+    document.querySelectorAll('#aig-preview .p-sentence.psa').forEach(s => s.classList.remove('psa'));
+    const activeSpan = document.querySelector(`#aig-preview .p-sentence[data-idx="${sentenceIdx}"]`);
+    if (activeSpan) activeSpan.classList.add('psa');
+
+    const panel   = document.getElementById('aig-grammar-panel');
+    const content = document.getElementById('aig-grammar-content');
+    if (!panel || !content) return;
+
+    panel.style.display = 'block';
+    content.innerHTML = '<div class="p-grammar-loading"><span style="font-size:1.5rem;animation:spin 1s linear infinite;display:inline-block">⚙️</span><span>Analiz ediliyor...</span></div>';
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    try {
+        const r = await geminiCall(`
+Sen bir İngilizce dilbilgisi uzmanısın. Aşağıdaki cümleyi dilbilgisel olarak analiz et.
+
+Cümle: "${sentence.trim()}"
+
+SADECE şu JSON formatını döndür:
+{
+  "tense": "Zaman ve yapı adı (Türkçe ve İngilizce)",
+  "voice": "active" | "passive",
+  "clause_count": sayı,
+  "clauses": [
+    {"type": "main clause" | "subordinate clause" | "relative clause" | "conditional clause", "text": "cümle parçası", "color": "hex renk kodu"}
+  ],
+  "conjunctions": [{"word": "kelime", "role": "Türkçe açıklama"}],
+  "relative_clauses": ["varsa relative clause metinleri"],
+  "formula": "Cümle yapısı formülü (örn: S + have + been + V3 + by + O)",
+  "tr_translation": "Cümlenin Türkçe çevirisi",
+  "tip": "YDT sınavı için 1 cümlelik not"
+}`);
+
+        const voiceIcon = r.voice === 'passive' ? '🔄 Passive' : '✅ Active';
+        const clauseColors = ['#3b82f6','#8b5cf6','#f59e0b','#10b981','#ef4444'];
+
+        content.innerHTML = `
+            <div class="gx-sentence-box">"${sentence.trim()}"</div>
+            <div class="gx-tr">${r.tr_translation || ''}</div>
+            <div class="gx-grid">
+                <div class="gx-chip"><span class="gx-chip-label">⏰ Zaman</span><span class="gx-chip-val">${r.tense}</span></div>
+                <div class="gx-chip"><span class="gx-chip-label">🔄 Voice</span><span class="gx-chip-val">${voiceIcon}</span></div>
+                <div class="gx-chip" style="grid-column:1/-1;"><span class="gx-chip-label">🧮 Formül</span><span class="gx-chip-val" style="font-family:monospace;font-size:.82rem;">${r.formula || '—'}</span></div>
+            </div>
+            ${(r.clauses||[]).length ? `
+            <div class="gx-section-title">📐 Clause Yapısı</div>
+            <div class="gx-clauses">
+                ${r.clauses.map((cl, i) => `
+                    <div class="gx-clause" style="border-left-color:${cl.color || clauseColors[i%5]};">
+                        <span class="gx-clause-type" style="color:${cl.color || clauseColors[i%5]};">${cl.type}</span>
+                        <span class="gx-clause-text">"${cl.text}"</span>
+                    </div>`).join('')}
+            </div>` : ''}
+            ${(r.conjunctions||[]).length ? `
+            <div class="gx-section-title">🔗 Bağlaçlar</div>
+            <div class="gx-tags">
+                ${r.conjunctions.map(c => `<span class="gx-tag gx-tag-conj"><strong>${c.word}</strong> — ${c.role}</span>`).join('')}
+            </div>` : ''}
+            ${(r.relative_clauses||[]).length ? `
+            <div class="gx-section-title">🔀 Relative Clause</div>
+            <div class="gx-tags">
+                ${r.relative_clauses.map(rc => `<span class="gx-tag gx-tag-rel">${rc}</span>`).join('')}
+            </div>` : ''}
+            ${r.tip ? `<div class="gx-tip">💡 YDT Notu: ${r.tip}</div>` : ''}
+        `;
+    } catch(e) {
+        content.innerHTML = `<div style="color:var(--red);font-size:.84rem;padding:10px;">⚠ Analiz başarısız: ${e.message}</div>`;
     }
 }

@@ -7398,3 +7398,96 @@ body:has(#kids-page:not(.hidden)) .kw-world-bg { opacity: 1; }
 [data-theme="dark"] .aig-panel-card { background: #1a1a2e; }
 [data-theme="dark"] .aig-result-card { background: #1a1a2e; }
 [data-theme="dark"] .aig-result-body { background: #1a1a2e; }
+
+/* ══ STUDY PAGE — Liste adı satırı (progress altı, ortalı) ═══ */
+.study-list-namerow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin: 6px 0 10px;
+    padding: 0 4px;
+}
+.study-list-namerow .study-list-switcher {
+    max-width: 220px;
+    text-align: center;
+    font-size: .8rem;
+    font-weight: 800;
+    border-radius: 20px;
+    padding: 6px 14px;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    color: var(--ink);
+    cursor: pointer;
+    font-family: inherit;
+    outline: none;
+    transition: border-color .18s;
+}
+.study-list-namerow .study-list-switcher:focus { border-color: var(--color-primary); }
+.study-list-namerow .study-mylist-btn {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    background: var(--white);
+    font-size: .8rem;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .18s; flex-shrink: 0;
+}
+.study-list-namerow .study-mylist-btn:hover {
+    border-color: var(--color-primary);
+    background: var(--color-primary-soft);
+}
+/* .study-list-picker artık kullanılmıyor — topbar'dan kaldırıldı */
+.study-list-picker { display: none; }
+
+/* ══ Kelime Listene Ekle — Paragraf altı ════════════════════ */
+.aig-wordlist-section {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1.5px solid var(--border);
+}
+.aig-wl-chips {
+    display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px;
+}
+.aig-wl-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 5px 10px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    cursor: pointer;
+    transition: all .15s;
+    user-select: none;
+}
+.aig-wl-chip:has(input:checked) {
+    border-color: var(--color-primary);
+    background: var(--color-primary-soft);
+}
+.aig-wl-chip input { display: none; }
+.aig-wl-eng { font-size: .72rem; font-weight: 800; color: var(--color-primary); }
+.aig-wl-tr  { font-size: .65rem; font-weight: 600; color: var(--ink3); }
+.aig-wl-chip:has(input:checked) .aig-wl-eng { color: var(--color-primary); }
+
+.aig-wl-actions {
+    display: flex; gap: 8px; align-items: center;
+}
+.aig-wl-select {
+    flex: 1;
+    padding: 9px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 11px;
+    font-size: .75rem; font-weight: 700;
+    font-family: inherit;
+    background: var(--bg); color: var(--ink);
+    cursor: pointer; outline: none;
+}
+.aig-wl-select:focus { border-color: var(--color-primary); }
+
+/* Kota info */
+.aig-quota-info {
+    padding: 8px 16px 10px;
+    font-size: .72rem; font-weight: 700;
+    border-top: 1px solid var(--border);
+    text-align: center;
+}
