@@ -1,0 +1,567 @@
+// ── AI cascade + providers — motor.js'den ayrıştırıldı
+// Bağımlılıklar: motor.js (global state: allData, stats, paragraflar)
+
+// 🤖 AI CASCADE SİSTEMİ
+// Sıra: Gemini → Groq → OpenRouter → Mistral
+// Kota/rate-limit hatası → otomatik sonraki provider
+// ══════════════════════════════════════════════════════
+
+function isQuotaError(msg) {
+    const m = (msg || '').toLowerCase();
+    return m.includes('quota') || m.includes('429') || m.includes('rate') ||
+           m.includes('resource_exhausted') || m.includes('too many') ||
+           m.includes('limit exceeded') || m.includes('overloaded');
+}
+
+// Ekranda küçük durum tostu göster
+function showAIToast(msg, type = 'info', duration) {
+    let t = document.getElementById('ai-cascade-toast');
+    if (t) t.remove();
+    t = document.createElement('div');
+    t.id = 'ai-cascade-toast';
+    t.className = `ai-cascade-toast ai-toast-${type}`;
+    t.innerHTML = msg;
+    document.body.appendChild(t);
+    requestAnimationFrame(() => t.classList.add('show'));
+    clearTimeout(window._toastTimer);
+    const ms = duration || (type === 'warn' ? 5000 : type === 'error' ? 7000 : 2400);
+    window._toastTimer = setTimeout(() => {
+        t.classList.remove('show');
+        setTimeout(() => t && t.remove(), 350);
+    }, ms);
+}
+
+// Provider tanımları — sırayla denenir
+const AI_PROVIDERS = [
+    {
+        id: 'puter', name: 'Puter.js (GPT-4o)', icon: '🆓',
+        lsKey: 'ydt_puter_enabled',  // her zaman true sayılır
+        note: 'Ücretsiz · API key gerektirmez · GPT-4o',
+        keyHint: null,
+        keyLink: null,
+        async call(prompt) {
+            if (typeof puter === 'undefined' || !puter?.ai?.chat) throw new Error('puter_not_loaded');
+            const resp = await puter.ai.chat(
+                [{ role: 'system', content: 'You must respond with valid JSON only. No markdown, no explanation.' },
+                 { role: 'user',   content: prompt }],
+                { model: 'gpt-4o-mini' }
+            );
+            // response.message.content: string (GPT) veya array (Claude)
+            const content = resp?.message?.content;
+            const raw = Array.isArray(content) ? (content[0]?.text || '') :
+                        (typeof content === 'string' ? content :
+                        (typeof resp === 'string' ? resp : ''));
+            const match = raw.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
+            if (!match) throw new Error('Puter: JSON bulunamadı → ' + raw.slice(0, 60));
+            return JSON.parse(match[0]);
+        }
+    },
+    {
+        id: 'gemini', name: 'Gemini', icon: '✨',
+        lsKey: 'ydt_gemini_api_key',
+        note: 'Free: 1.500 istek/gün · Gemini 1.5 Flash',
+        keyHint: 'AIza...',
+        keyLink: 'https://aistudio.google.com/app/apikey',
+        async call(prompt) {
+            const key = localStorage.getItem(this.lsKey);
+            if (!key) throw new Error('no_key');
+
+            // gemini-2.0-flash önce, olmazsa 1.5-flash
+            let resp, data;
+            for (const model of ['gemini-2.0-flash', 'gemini-1.5-flash']) {
+                resp = await fetch(
+                    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
+                    { method:'POST', headers:{'Content-Type':'application/json'},
+                      body: JSON.stringify({ contents:[{parts:[{text: prompt + '\n\nReturn ONLY valid JSON. No markdown fences.'}]}] }) }
+                );
+                data = await resp.json();
+                // 404 = bu model yok, diğerini dene
+                if (data.error?.code === 404 || data.error?.status === 'NOT_FOUND') continue;
+                break; // ya başarılı ya da quota/auth hatası — döngüyü kır
+            }
+
+            // Hata varsa fırlat — cascade yakalasın
+            if (data.error) throw new Error(data.error.message || data.error.status || 'Gemini error');
+
+            const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            const match = raw.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
+            if (!match) throw new Error('Gemini: geçerli JSON bulunamadı → ' + raw.slice(0,60));
+            return JSON.parse(match[0]);
+        }
+    },
+    {
+        id: 'groq', name: 'Groq (Llama)', icon: '⚡',
+        lsKey: 'ydt_groq_api_key',
+        note: 'Free: 14.400 istek/gün · Llama 3.3 70B · Çok Hızlı',
+        keyHint: 'gsk_...',
+        keyLink: 'https://console.groq.com/keys',
+        async call(prompt) {
+            const key = localStorage.getItem(this.lsKey);
+            if (!key) throw new Error('no_key');
+            const r = await fetch('https://api.groq.com/openai/v1/chat/completions',
+                { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${key}`},
+                  body: JSON.stringify({ model:'llama-3.3-70b-versatile', temperature:0.3,
+                    messages:[{role:'system',content:'You must respond with valid JSON only. No markdown, no explanation, just the JSON object or array.'},
+                               {role:'user',content:prompt}] }) }
+            );
+            const d = await r.json();
+            if (d.error) throw new Error(d.error.message || JSON.stringify(d.error));
+            let raw = d.choices?.[0]?.message?.content || '';
+            const match = raw.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
+            if (!match) throw new Error('Groq JSON parse hatası: ' + raw.slice(0,80));
+            return JSON.parse(match[0]);
+        }
+    },
+    {
+        id: 'openrouter', name: 'OpenRouter', icon: '🌐',
+        lsKey: 'ydt_openrouter_api_key',
+        note: 'Free: Llama 3.3 8B · Kredi kartı gerektirmez',
+        keyHint: 'sk-or-...',
+        keyLink: 'https://openrouter.ai/keys',
+        async call(prompt) {
+            const key = localStorage.getItem(this.lsKey);
+            if (!key) throw new Error('no_key');
+            // Güncel free modeller — sırayla dene
+            const models = [
+                'meta-llama/llama-3.3-8b-instruct:free',
+                'meta-llama/llama-3.1-70b-instruct:free',
+                'mistralai/mistral-7b-instruct:free',
+                'google/gemma-3-4b-it:free'
+            ];
+            let lastErr = null;
+            for (const model of models) {
+                try {
+                    const r = await fetch('https://openrouter.ai/api/v1/chat/completions',
+                        { method:'POST',
+                          headers:{'Content-Type':'application/json','Authorization':`Bearer ${key}`,
+                                   'HTTP-Referer':'https://ydt-master.web.app','X-Title':'YDT Master'},
+                          body: JSON.stringify({ model, temperature:0.3,
+                            messages:[{role:'system',content:'You must respond with valid JSON only. No markdown, no explanation.'},
+                                       {role:'user',content:prompt}] }) }
+                    );
+                    const d = await r.json();
+                    // Model bulunamadıysa sonraki modeli dene
+                    if (d.error?.code === 404 || (d.error?.message || '').includes('not found') || (d.error?.message || '').includes('No endpoints')) {
+                        lastErr = new Error(d.error.message); continue;
+                    }
+                    if (d.error) throw new Error(d.error.message || JSON.stringify(d.error));
+                    let raw = d.choices?.[0]?.message?.content || '';
+                    const match = raw.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
+                    if (!match) throw new Error('OpenRouter JSON parse hatası: ' + raw.slice(0,80));
+                    return JSON.parse(match[0]);
+                } catch(e) { lastErr = e; }
+            }
+            throw lastErr || new Error('OpenRouter: tüm modeller başarısız');
+        }
+    },
+    {
+        id: 'mistral', name: 'Mistral AI', icon: '🌪️',
+        lsKey: 'ydt_mistral_api_key',
+        note: 'Free: 1 milyar token/ay · Mistral Small',
+        keyHint: '...',
+        keyLink: 'https://console.mistral.ai/api-keys',
+        async call(prompt) {
+            const key = localStorage.getItem(this.lsKey);
+            if (!key) throw new Error('no_key');
+            const r = await fetch('https://api.mistral.ai/v1/chat/completions',
+                { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${key}`},
+                  body: JSON.stringify({ model:'mistral-small-latest', temperature:0.3,
+                    messages:[{role:'system',content:'You must respond with valid JSON only. No markdown, no explanation.'},
+                               {role:'user',content:prompt}] }) }
+            );
+            const d = await r.json();
+            if (d.error) throw new Error(d.error.message || JSON.stringify(d.error));
+            let raw = d.choices?.[0]?.message?.content || '';
+            const match = raw.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
+            if (!match) throw new Error('Mistral JSON parse hatası: ' + raw.slice(0,80));
+            return JSON.parse(match[0]);
+        }
+    }
+];
+
+// Ana cascade çağrısı — tüm provider'ları sırayla dener
+async function aiCall(prompt) {
+    // Puter.js her zaman kullanılabilir (key gerektirmez), diğerleri key varsa eklenir
+    const puter_provider = AI_PROVIDERS.find(p => p.id === 'puter');
+    const keyed = AI_PROVIDERS.filter(p => p.id !== 'puter' && localStorage.getItem(p.lsKey));
+    const available = (puter_provider ? [puter_provider] : []).concat(keyed);
+
+    if (!available.length) {
+        alert('AI özelliği şu an kullanılamıyor.\nYönetim paneli → 🔑 AI API Anahtarları bölümüne gidin.');
+        throw new Error('no_api_key');
+    }
+
+    if (available.length === 1) {
+        console.info('[AI Cascade] ⚠ Sadece 1 servis aktif:', available[0].name);
+    }
+
+    let lastErr = null;
+    for (let i = 0; i < available.length; i++) {
+        const p = available[i];
+        const isLast = i === available.length - 1;
+
+        if (i === 0) showAIToast(`${p.icon} ${p.name} ile bağlanılıyor...`, 'info');
+
+        try {
+            console.log(`[AI Cascade] ${i+1}/${available.length} deneniyor: ${p.name}`);
+            const result = await p.call(prompt);
+            console.log(`[AI Cascade] ✅ Başarılı: ${p.name}`);
+            if (i > 0) {
+                showAIToast(`✅ ${p.icon} ${p.name} ile başarılı!`, 'ok');
+            } else {
+                const t = document.getElementById('ai-cascade-toast');
+                if (t) { t.classList.remove('show'); setTimeout(() => t.remove(), 350); }
+            }
+            return result;
+
+        } catch (err) {
+            lastErr = err;
+            const isQuota = isQuotaError(err.message);
+            console.warn(`[AI Cascade] ❌ ${p.name} ${isQuota ? 'KOTA DOLDU' : 'HATA'}: ${err.message}`);
+
+            if (!isLast) {
+                const next = available[i + 1];
+                const reason = isQuota ? 'kotası doldu ⛔' : 'hata verdi ❌';
+                showAIToast(
+                    `${p.icon} ${p.name} ${reason} — ${next.icon} ${next.name} deneniyor...`,
+                    'warn'
+                );
+                await new Promise(r => setTimeout(r, 1000));
+            } else {
+                const tip = available.length === 1
+                    ? ' (Yönetim→🔑 bölümünden ek servis ekleyin)'
+                    : '';
+                showAIToast(`❌ Hata: ${err.message.slice(0, 70)}${tip}`, 'error');
+            }
+        }
+    }
+    throw lastErr || new Error('all_failed');
+}
+
+// Eski çağrılar geminiCall kullanıyorsa yönlendir
+async function geminiCall(prompt) { return aiCall(prompt); }
+
+// Zorluk Seviyesi Algılama
+async function detectDifficulty(text) {
+    const badge = document.getElementById('p-difficulty-badge');
+    badge.innerHTML = '<span class="diff-badge diff-loading">⏳ Analiz...</span>';
+    try {
+        const result = await geminiCall(`
+Aşağıdaki İngilizce paragrafın zorluk seviyesini analiz et. Kelime yoğunluğunu, cümle uzunluğunu ve soyutluk düzeyini göz önünde bulundur.
+
+Paragraf:
+""" ${text.slice(0, 1200)} """
+SADECE şu JSON'u döndür:
+{
+  "level": "B1" | "B2" | "C1" | "C2" | "YDT Easy" | "YDT Brutal",
+  "score": 0-100 arası sayı,
+  "color": "green" | "blue" | "orange" | "red" | "purple",
+  "reasons": ["3 kısa Türkçe neden", "...", "..."]
+}`);
+
+        const colorMap = { green:'#16a34a', blue:'#1d4ed8', orange:'#ea580c', red:'#dc2626', purple:'#7c3aed' };
+        const c = colorMap[result.color] || '#555';
+        badge.innerHTML = `
+            <div class="diff-badge" style="background:${c}10; border-color:${c}; color:${c};" title="${(result.reasons||[]).join(' · ')}">
+                ${result.level} <span class="diff-score">${result.score}/100</span>
+            </div>`;
+    } catch(e) {
+        badge.innerHTML = e.message === 'no_api_key'
+            ? '<span class="diff-badge diff-na">— Seviye</span>'
+            : '<span class="diff-badge diff-na">⚠ Analiz başarısız</span>';
+    }
+}
+
+// YDT Soru Üretici
+async function generateYDTQuestions() {
+    const p = paragraflar[currentParagrafIndex];
+    if (!p) return;
+
+    const btn   = document.getElementById('p-ydt-gen-btn');
+    const panel = document.getElementById('p-ydt-panel');
+    const qDiv  = document.getElementById('p-ydt-questions');
+
+    btn.disabled  = true;
+    btn.innerHTML = '⏳ Sorular üretiliyor...';
+    panel.style.display = 'block';
+    qDiv.innerHTML = '<div class="p-ydt-loading"><div class="p-ydt-spin">⚙️</div><div>AI soruları hazırlıyor...</div></div>';
+
+    try {
+        const result = await geminiCall(`
+Sen uzman bir YDT İngilizce öğretmenisin. Aşağıdaki paragraftan tam ÖSYM YDT standartlarında 5 farklı soru türü üret.
+
+Paragraf:
+""" ${p.metin} """
+SADECE şu JSON formatını döndür:
+{
+  "questions": [
+    {
+      "type": "Ana Fikir",
+      "icon": "💡",
+      "question": "İngilizce soru cümlesi",
+      "options": ["A) ...", "B) ...", "C) ...", "D) ...", "E) ..."],
+      "answer": "A",
+      "explanation": "Türkçe açıklama — neden bu şık doğru, diğerleri neden yanlış"
+    },
+    {
+      "type": "Çıkarım",
+      "icon": "🔎",
+      "question": "...",
+      "options": ["A) ...", "B) ...", "C) ...", "D) ...", "E) ..."],
+      "answer": "C",
+      "explanation": "..."
+    },
+    {
+      "type": "Referans (This/That/They)",
+      "icon": "👉",
+      "question": "...",
+      "options": ["A) ...", "B) ...", "C) ...", "D) ...", "E) ..."],
+      "answer": "B",
+      "explanation": "..."
+    },
+    {
+      "type": "Kelime Anlamı",
+      "icon": "📖",
+      "question": "...",
+      "options": ["A) ...", "B) ...", "C) ...", "D) ...", "E) ..."],
+      "answer": "D",
+      "explanation": "..."
+    },
+    {
+      "type": "Paragraf Tamamlama",
+      "icon": "✍️",
+      "question": "...",
+      "options": ["A) ...", "B) ...", "C) ...", "D) ...", "E) ..."],
+      "answer": "E",
+      "explanation": "..."
+    }
+  ]
+}`);
+
+        const questions = result.questions || [];
+
+        // ── Soruları kaydet ──────────────────────────
+        const key = paragrafKey(p);
+        window.paragrafSorular[key] = {
+            baslik:    p.baslik,
+            savedAt:   new Date().toISOString(),
+            questions: questions
+        };
+        window._saveData && window._saveData();
+        // Kaydedilmiş bölümünü güncelle
+        loadSavedQuestions(currentParagrafIndex);
+        // ─────────────────────────────────────────────
+
+        window._ydtSlideIdx['n'] = 0;
+        qDiv.innerHTML = renderYDTQuestions(questions, 'n');
+
+    } catch(e) {
+        qDiv.innerHTML = `<div style="color:var(--red);font-size:.85rem;padding:12px;">⚠ Hata: ${e.message}<br><small>API anahtarınızı ve bağlantınızı kontrol edin.</small></div>`;
+    }
+
+    btn.disabled  = false;
+    btn.innerHTML = '🔄 Yeni Sorular Üret (AI)';
+}
+
+function checkYDTAnswer(btn, prefix, qi, selected, correct) {
+    const optsDiv = document.getElementById(`ydt-opts-${prefix}-${qi}`);
+    const expDiv  = document.getElementById(`ydt-exp-${prefix}-${qi}`);
+    if (!optsDiv || optsDiv.dataset.answered) return;
+    optsDiv.dataset.answered = '1';
+
+    Array.from(optsDiv.querySelectorAll('.p-ydt-opt')).forEach(b => {
+        b.disabled = true;
+        const letter = b.textContent.trim()[0];
+        if (letter === correct) b.classList.add('ydt-correct');
+        else if (b === btn && selected !== correct) b.classList.add('ydt-wrong');
+    });
+    if (expDiv) expDiv.style.display = 'block';
+    if (selected === correct) {
+        stats.correctAnswers++; stats.totalAnswers++;
+        incrementDailyCount();
+        recordDailyPerf(true);
+    } else {
+        stats.totalAnswers++;
+        recordDailyPerf(false);
+    }
+    window._saveData && window._saveData();
+}
+
+// Grammar X-Ray
+async function analyzeGrammarXRay(sentenceIdx) {
+    const sentence = paragrafSentences[sentenceIdx];
+    if (!sentence || sentence.trim().length < 6) return;
+
+    // Aktif cümleyi vurgula
+    document.querySelectorAll('.p-sentence.psa').forEach(s => s.classList.remove('psa'));
+    const activeSpan = document.querySelector(`.p-sentence[data-idx="${sentenceIdx}"]`);
+    if (activeSpan) activeSpan.classList.add('psa');
+
+    const panel   = document.getElementById('p-grammar-panel');
+    const content = document.getElementById('p-grammar-content');
+    panel.style.display = 'block';
+    content.innerHTML = '<div class="p-grammar-loading"><span style="font-size:1.5rem;animation:spin 1s linear infinite;display:inline-block">⚙️</span><span>Analiz ediliyor...</span></div>';
+    // poku-body scroll ediyor — panel'i görünür hale getir
+    const _scroller = document.querySelector('.poku-body');
+    if (_scroller) {
+        setTimeout(() => {
+            const pr = panel.getBoundingClientRect();
+            const sr = _scroller.getBoundingClientRect();
+            if (pr.bottom > sr.bottom - 20) {
+                _scroller.scrollBy({ top: pr.bottom - sr.bottom + 60, behavior: 'smooth' });
+            }
+        }, 80);
+    } else {
+        panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    try {
+        const r = await geminiCall(`
+Sen bir İngilizce dilbilgisi uzmanısın. Aşağıdaki cümleyi dilbilgisel olarak analiz et.
+
+Cümle: "${sentence.trim()}"
+
+SADECE şu JSON formatını döndür:
+{
+  "tense": "Zaman ve yapı adı (Türkçe ve İngilizce)",
+  "voice": "active" | "passive",
+  "clause_count": sayı,
+  "clauses": [
+    {"type": "main clause" | "subordinate clause" | "relative clause" | "conditional clause", "text": "cümle parçası", "color": "hex renk kodu"}
+  ],
+  "conjunctions": [{"word": "kelime", "role": "Türkçe açıklama"}],
+  "relative_clauses": ["varsa relative clause metinleri"],
+  "formula": "Cümle yapısı formülü (örn: S + have + been + V3 + by + O)",
+  "tr_translation": "Cümlenin Türkçe çevirisi",
+  "tip": "YDT sınavı için 1 cümlelik not"
+}`);
+
+        const voiceIcon = r.voice === 'passive' ? '🔄 Passive' : '✅ Active';
+        const clauseColors = ['#3b82f6','#8b5cf6','#f59e0b','#10b981','#ef4444'];
+
+        content.innerHTML = `
+            <div class="gx-sentence-box">"${sentence.trim()}"</div>
+            <div class="gx-tr">${r.tr_translation || ''}</div>
+
+            <div class="gx-grid">
+                <div class="gx-chip"><span class="gx-chip-label">⏰ Zaman</span><span class="gx-chip-val">${r.tense}</span></div>
+                <div class="gx-chip"><span class="gx-chip-label">🔄 Voice</span><span class="gx-chip-val">${voiceIcon}</span></div>
+                <div class="gx-chip" style="grid-column:1/-1;"><span class="gx-chip-label">🧮 Formül</span><span class="gx-chip-val" style="font-family:monospace;font-size:.82rem;">${r.formula || '—'}</span></div>
+            </div>
+
+            ${(r.clauses||[]).length ? `
+            <div class="gx-section-title">📐 Clause Yapısı</div>
+            <div class="gx-clauses">
+                ${r.clauses.map((cl, i) => `
+                    <div class="gx-clause" style="border-left-color:${cl.color || clauseColors[i%5]};">
+                        <span class="gx-clause-type" style="color:${cl.color || clauseColors[i%5]};">${cl.type}</span>
+                        <span class="gx-clause-text">"${cl.text}"</span>
+                    </div>`).join('')}
+            </div>` : ''}
+
+            ${(r.conjunctions||[]).length ? `
+            <div class="gx-section-title">🔗 Bağlaçlar</div>
+            <div class="gx-tags">
+                ${r.conjunctions.map(c => `<span class="gx-tag gx-tag-conj"><strong>${c.word}</strong> — ${c.role}</span>`).join('')}
+            </div>` : ''}
+
+            ${(r.relative_clauses||[]).length ? `
+            <div class="gx-section-title">🔀 Relative Clause</div>
+            <div class="gx-tags">
+                ${r.relative_clauses.map(rc => `<span class="gx-tag gx-tag-rel">${rc}</span>`).join('')}
+            </div>` : ''}
+
+            ${r.tip ? `<div class="gx-tip">💡 YDT Notu: ${r.tip}</div>` : ''}
+        `;
+    } catch(e) {
+        content.innerHTML = `<div style="color:var(--red);font-size:.84rem;padding:10px;">⚠ Analiz başarısız: ${e.message}</div>`;
+    }
+}
+
+function showParagrafOku(index) {
+    currentParagrafIndex = index;
+    const p = paragraflar[index];
+
+    // Cümlelere böl (Grammar X-Ray için)
+    paragrafSentences = p.metin
+        .replace(/([.?!])\s+/g, '$1|||')
+        .split('|||')
+        .map(s => s.trim())
+        .filter(s => s.length > 3);
+
+    // Her cümleye c1-word renklendirme + tıklanabilir span ekle
+    const islenmisMetin = paragrafSentences.map((sent, si) => {
+        let s = sent;
+        for (let [ing, tr] of Object.entries(p.kelimeler || {})) {
+            const regex = new RegExp(`\\b(${ing.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})\\b`, 'gi');
+            s = s.replace(regex, `<span class="c1-word" data-tr="${tr}">$1</span>`);
+        }
+        return `<span class="p-sentence" data-idx="${si}" onclick="analyzeGrammarXRay(${si})" title="Tıkla: Grammar X-Ray">${s}</span> `;
+    }).join('');
+
+    document.getElementById('p-oku-baslik').innerText = stripNumPrefix(p.baslik);
+    document.getElementById('p-oku-metin').innerHTML  = islenmisMetin;
+
+    // Panelleri sıfırla
+    document.getElementById('p-grammar-panel').style.display = 'none';
+    document.getElementById('p-ydt-panel').style.display     = 'none';
+    document.getElementById('p-ydt-questions').innerHTML     = '';
+    const genBtn = document.getElementById('p-ydt-gen-btn');
+    if (genBtn) { genBtn.disabled = false; genBtn.innerHTML = '🎯 Bu paragraftan YDT sorusu üret'; }
+
+    showPage('paragraf-oku-page');
+
+    // Kaydedilmiş soruları yükle
+    loadSavedQuestions(index);
+
+    // ── Sidebar: Paragraf İstatistikleri ──
+    const words = (p.metin || '').trim().split(/\s+/).filter(w => w.length > 0);
+    const sentCount = paragrafSentences.length;
+    const vocCount  = Object.keys(p.kelimeler || {}).length;
+    const readMin   = Math.ceil(words.length / 180); // ~180 kelime/dk
+    const el = (id, v) => { const e = document.getElementById(id); if(e) e.textContent = v; };
+    el('ps-word-count', words.length);
+    el('ps-sent-count', sentCount);
+    el('ps-voc-count',  vocCount);
+    el('ps-read-time',  readMin + ' dk');
+
+    // ── Sidebar: Genel İstatistikler ──
+    const allWords  = Object.values(allData).flat();
+    const totalW    = allWords.length;
+    const learnedW  = allWords.filter(w => (w.correctStreak||0) >= 3).length;
+    const accuracy  = stats.totalAnswers ? Math.round(stats.correctAnswers / stats.totalAnswers * 100) : 0;
+    const streak    = parseInt(localStorage.getItem('ydt_streak') || '0');
+    el('ps-total-words', totalW);
+    el('ps-learned',     learnedW);
+    el('ps-accuracy',    accuracy + '%');
+    el('ps-streak',      streak);
+
+    // ── Sidebar: Mini Sözlük ──
+    window._currentParagrafKelimeler = p.kelimeler || {};
+
+    // Mobil touch bubble için c1-word
+    let activeBubble = null;
+    document.querySelectorAll('#p-oku-metin .c1-word').forEach(span => {
+        span.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (activeBubble) { activeBubble.remove(); activeBubble = null; }
+            const rect   = span.getBoundingClientRect();
+            const bubble = document.createElement('div');
+            bubble.className   = 'word-touch-bubble';
+            bubble.textContent = span.dataset.tr;
+            bubble.style.cssText = `position:fixed; left:${Math.min(rect.left + rect.width/2, window.innerWidth-120)}px; top:${Math.max(rect.top-44,60)}px; transform:translateX(-50%);`;
+            document.body.appendChild(bubble);
+            activeBubble = bubble;
+            setTimeout(() => { if (activeBubble===bubble){bubble.remove();activeBubble=null;} }, 2200);
+        }, { passive:false });
+    });
+
+    // Zorluk algıla
+    detectDifficulty(p.metin);
+
+    // Scroll progress bar başlat
+    setTimeout(() => {
+        if (typeof _initPokuScrollProgress === 'function') _initPokuScrollProgress();
+    }, 100);
+}
+// ══════════════════════════════════════════════
