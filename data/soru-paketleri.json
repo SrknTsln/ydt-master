@@ -1,0 +1,1376 @@
+[
+  {
+    "id": "els_lys_2010_vocab",
+    "baslik": "ELS 2010/2011 – LYS Vocabulary",
+    "aciklama": "25 soru · Kelime bilgisi",
+    "etiket": "LYS",
+    "sorular": [
+      {
+        "no": 1,
+        "word": "cost",
+        "wordTr": "mal olmak",
+        "question": "These books didn't ........ me very much because I bought them from the second-hand bookshop opposite our office.",
+        "options": {
+          "A": "spend",
+          "B": "afford",
+          "C": "pay",
+          "D": "cost",
+          "E": "decrease"
+        },
+        "correct": "D",
+        "explanation": "<b>cost</b>=mal olmak. <b>spend</b>=harcamak, <b>afford</b>=gücü yetmek, <b>pay</b>=ödemek"
+      },
+      {
+        "no": 2,
+        "word": "fascinating",
+        "wordTr": "büyüleyici",
+        "question": "Toni finds the ideas of Carl Jung ........, and so she has bought and read every one of his books.",
+        "options": {
+          "A": "arrogant",
+          "B": "voluntary",
+          "C": "fascinating",
+          "D": "faithful",
+          "E": "vague"
+        },
+        "correct": "C",
+        "explanation": "<b>fascinating</b>=büyüleyici. <b>arrogant</b>=kibirli, <b>vague</b>=belirsiz"
+      },
+      {
+        "no": 3,
+        "word": "violence",
+        "wordTr": "şiddet",
+        "question": "Even though Mohandas K. Gandhi didn't believe in using ........ to solve political problems, he never received a Nobel Peace Prize.",
+        "options": {
+          "A": "suspicion",
+          "B": "reflection",
+          "C": "cancellation",
+          "D": "assistance",
+          "E": "violence"
+        },
+        "correct": "E",
+        "explanation": "<b>violence</b>=şiddet. <b>suspicion</b>=şüphe, <b>assistance</b>=yardım"
+      },
+      {
+        "no": 4,
+        "word": "sculpture",
+        "wordTr": "heykel",
+        "question": "The ancient Greek ........ of the goddess Aphrodite from the island of Milos is one of the most famous statues in the world.",
+        "options": {
+          "A": "structure",
+          "B": "sculpture",
+          "C": "temple",
+          "D": "worship",
+          "E": "excavation"
+        },
+        "correct": "B",
+        "explanation": "<b>sculpture</b>=heykel. <b>structure</b>=yapı, <b>temple</b>=tapınak"
+      },
+      {
+        "no": 5,
+        "word": "hunting",
+        "wordTr": "avlamak",
+        "question": "Percival was ........ for a tiger with his gun when it jumped out from a bush and bit him in the throat.",
+        "options": {
+          "A": "murdering",
+          "B": "shaking",
+          "C": "hunting",
+          "D": "following",
+          "E": "hiding"
+        },
+        "correct": "C",
+        "explanation": "<b>hunt</b>=avlamak. <b>murdering</b>=cinayet, <b>following</b>=takip"
+      },
+      {
+        "no": 6,
+        "word": "flat",
+        "wordTr": "daire",
+        "question": "Dursun has bought a very small ........ in the city centre. It is on the fifth floor and only has one main room, a kitchen, and a bathroom.",
+        "options": {
+          "A": "building",
+          "B": "flat",
+          "C": "house",
+          "D": "circle",
+          "E": "environment"
+        },
+        "correct": "B",
+        "explanation": "<b>flat</b>=daire (BrE). <b>building</b>=bina, <b>house</b>=ev"
+      },
+      {
+        "no": 7,
+        "word": "expecting",
+        "wordTr": "beklemek",
+        "question": "Ophelia was only ........ about 20 people to come to the party, but actually 250 turned up for it.",
+        "options": {
+          "A": "considering",
+          "B": "expecting",
+          "C": "defending",
+          "D": "respecting",
+          "E": "connecting"
+        },
+        "correct": "B",
+        "explanation": "<b>expect</b>=beklemek, ummak"
+      },
+      {
+        "no": 8,
+        "word": "available",
+        "wordTr": "müsait",
+        "question": "Dr. Collier isn't ........ today because she is on vacation. Maybe I can help you.",
+        "options": {
+          "A": "interesting",
+          "B": "relevant",
+          "C": "respected",
+          "D": "available",
+          "E": "aware"
+        },
+        "correct": "D",
+        "explanation": "<b>available</b>=müsait, ulaşılabilir"
+      },
+      {
+        "no": 9,
+        "word": "contemporary",
+        "wordTr": "günümüz / çağdaş",
+        "question": "........ Turkey is quite different to the country of 30 years ago, because now most people here live in cities.",
+        "options": {
+          "A": "Beneficial",
+          "B": "Accurate",
+          "C": "Contemporary",
+          "D": "Fabricated",
+          "E": "Overdue"
+        },
+        "correct": "C",
+        "explanation": "<b>contemporary</b>=günümüz, çağdaş"
+      },
+      {
+        "no": 10,
+        "word": "arrange",
+        "wordTr": "düzenlemek",
+        "question": "I'm going to ........ the furniture in this room differently after I have bought a new computer desk.",
+        "options": {
+          "A": "arrange",
+          "B": "relax",
+          "C": "figure",
+          "D": "direct",
+          "E": "assist"
+        },
+        "correct": "A",
+        "explanation": "<b>arrange</b>=düzenlemek, yerleştirmek"
+      },
+      {
+        "no": 11,
+        "word": "involved",
+        "wordTr": "kapsamak",
+        "question": "The search for the missing trekker ........ mountain rescue teams on foot, special sniffer dogs, and helicopters.",
+        "options": {
+          "A": "claimed",
+          "B": "involved",
+          "C": "decided",
+          "D": "succeeded",
+          "E": "allowed"
+        },
+        "correct": "B",
+        "explanation": "<b>involve</b>=kapsamak, içermek"
+      },
+      {
+        "no": 12,
+        "word": "amusing",
+        "wordTr": "eğlenceli",
+        "question": "Larry thought that David's jokes were very ........ . He was laughing about them for a long time afterwards.",
+        "options": {
+          "A": "enthusiastic",
+          "B": "acceptable",
+          "C": "enormous",
+          "D": "willing",
+          "E": "amusing"
+        },
+        "correct": "E",
+        "explanation": "<b>amusing</b>=eğlendirici, komik"
+      },
+      {
+        "no": 13,
+        "word": "remarkably",
+        "wordTr": "şaşırtıcı biçimde",
+        "question": "Even though Charles Lightoller fell into the icy Atlantic Ocean when the Titanic sank, he ........ survived.",
+        "options": {
+          "A": "slightly",
+          "B": "promptly",
+          "C": "especially",
+          "D": "immediately",
+          "E": "remarkably"
+        },
+        "correct": "E",
+        "explanation": "<b>remarkably</b>=şaşırtıcı biçimde"
+      },
+      {
+        "no": 14,
+        "word": "attractive",
+        "wordTr": "cazip",
+        "question": "Three companies offered Nicole a job. She thought that the last offer was the most ........, so she accepted that one.",
+        "options": {
+          "A": "current",
+          "B": "wealthy",
+          "C": "tedious",
+          "D": "attractive",
+          "E": "obvious"
+        },
+        "correct": "D",
+        "explanation": "<b>attractive</b>=cazip, çekici. <b>tedious</b>=sıkıcı"
+      },
+      {
+        "no": 15,
+        "word": "invention",
+        "wordTr": "icat",
+        "question": "Before the ........ of machine guns and effective shell-firing guns, horses had an important role in warfare.",
+        "options": {
+          "A": "invention",
+          "B": "consumption",
+          "C": "prediction",
+          "D": "foundation",
+          "E": "action"
+        },
+        "correct": "A",
+        "explanation": "<b>invention</b>=icat, buluş"
+      },
+      {
+        "no": 16,
+        "word": "moment",
+        "wordTr": "şu an",
+        "question": "At the ........, I'm not doing anything. Do you want some help doing the washing up?",
+        "options": {
+          "A": "occasion",
+          "B": "constant",
+          "C": "moment",
+          "D": "basis",
+          "E": "situation"
+        },
+        "correct": "C",
+        "explanation": "<b>at the moment</b>=şu an (sabit ifade)"
+      },
+      {
+        "no": 17,
+        "word": "significant",
+        "wordTr": "önemli",
+        "question": "Hikmet got ........ number of questions correct in the test, and so took a mark of 93%.",
+        "options": {
+          "A": "precious",
+          "B": "uneasy",
+          "C": "significant",
+          "D": "slight",
+          "E": "conscious"
+        },
+        "correct": "C",
+        "explanation": "<b>significant</b>=önemli, kayda değer"
+      },
+      {
+        "no": 18,
+        "word": "appreciated",
+        "wordTr": "takdir etmek",
+        "question": "Rhiannon ........ your gift to her of a new tennis racket, and will use it in her next game.",
+        "options": {
+          "A": "appreciated",
+          "B": "pleased",
+          "C": "performed",
+          "D": "presented",
+          "E": "excited"
+        },
+        "correct": "A",
+        "explanation": "<b>appreciate</b>=takdir etmek, değerini bilmek"
+      },
+      {
+        "no": 19,
+        "word": "influence",
+        "wordTr": "etki",
+        "question": "Both Gabriel García Márquez and Umberto Eco reflect the ........ of the author Jorge Luis Borges in their writings.",
+        "options": {
+          "A": "relation",
+          "B": "influence",
+          "C": "movement",
+          "D": "illustration",
+          "E": "mention"
+        },
+        "correct": "B",
+        "explanation": "<b>influence</b>=etki, tesir"
+      },
+      {
+        "no": 20,
+        "word": "fresh",
+        "wordTr": "taze",
+        "question": "I've just bought some peaches from the market. They are very ........ and they taste delicious.",
+        "options": {
+          "A": "thirsty",
+          "B": "average",
+          "C": "comfortable",
+          "D": "fresh",
+          "E": "gentle"
+        },
+        "correct": "D",
+        "explanation": "<b>fresh</b>=taze, yeni"
+      },
+      {
+        "no": 21,
+        "word": "agree",
+        "wordTr": "katılmak",
+        "question": "Marco believes that Michel Platini was the greatest ever French football player, but I don't ........ .",
+        "options": {
+          "A": "accept",
+          "B": "think",
+          "C": "discover",
+          "D": "comprehend",
+          "E": "agree"
+        },
+        "correct": "E",
+        "explanation": "<b>agree</b>=katılmak. <b>accept</b>=kabul etmek"
+      },
+      {
+        "no": 22,
+        "word": "naturally",
+        "wordTr": "doğal olarak",
+        "question": "The actor John Rhys-Davies is ........ tall, but Peter Jackson chose him to play a dwarf in The Lord of the Rings.",
+        "options": {
+          "A": "naturally",
+          "B": "constantly",
+          "C": "merely",
+          "D": "eagerly",
+          "E": "partly"
+        },
+        "correct": "A",
+        "explanation": "<b>naturally</b>=doğal olarak, doğuştan"
+      },
+      {
+        "no": 23,
+        "word": "manage",
+        "wordTr": "başarmak",
+        "question": "Did you ........ to finish your essay on Mesopotamian mythology last weekend?",
+        "options": {
+          "A": "affect",
+          "B": "manage",
+          "C": "convert",
+          "D": "survive",
+          "E": "require"
+        },
+        "correct": "B",
+        "explanation": "<b>manage to</b>=başarmak, üstesinden gelmek"
+      },
+      {
+        "no": 24,
+        "word": "supporting",
+        "wordTr": "desteklemek",
+        "question": "Warren is ........ Hayden for class president, but I don't like him, so I hope that Françoise wins.",
+        "options": {
+          "A": "supporting",
+          "B": "waiting",
+          "C": "comparing",
+          "D": "adoring",
+          "E": "finding"
+        },
+        "correct": "A",
+        "explanation": "<b>support</b>=desteklemek"
+      },
+      {
+        "no": 25,
+        "word": "seriously",
+        "wordTr": "ciddiyetle",
+        "question": "Malcolm is ........ thinking about quitting university and getting a job instead, because his family is having some financial problems.",
+        "options": {
+          "A": "equally",
+          "B": "hardly",
+          "C": "widely",
+          "D": "seriously",
+          "E": "efficiently"
+        },
+        "correct": "D",
+        "explanation": "<b>seriously</b>=ciddi biçimde"
+      }
+    ]
+  },
+  {
+    "id": "els_lys_2010_testvocab",
+    "baslik": "ELS 2010/2011 – Test Your Vocabulary",
+    "aciklama": "40 soru · Kelime bilgisi",
+    "etiket": "LYS",
+    "sorular": [
+      {
+        "no": 1,
+        "word": "entirely",
+        "wordTr": "tamamen",
+        "question": "Our main customers are no longer ...... satisfied with our products, and so they are beginning to look elsewhere for higher quality merchandise.",
+        "options": {
+          "A": "virtually",
+          "B": "entirely",
+          "C": "originally",
+          "D": "gradually",
+          "E": "terminally"
+        },
+        "correct": "B",
+        "explanation": "<b>entirely</b>=tamamen. <b>virtually</b>=neredeyse, <b>gradually</b>=yavaş yavaş"
+      },
+      {
+        "no": 2,
+        "word": "barren",
+        "wordTr": "çorak",
+        "question": "Central Tibet consists mostly of a ...... landscape on which little or nothing grows, so people are dependent on their animals for sustenance.",
+        "options": {
+          "A": "productive",
+          "B": "relevant",
+          "C": "barren",
+          "D": "rootless",
+          "E": "fertile"
+        },
+        "correct": "C",
+        "explanation": "<b>barren</b>=çorak. <b>fertile</b>=bereketli"
+      },
+      {
+        "no": 3,
+        "word": "willingly",
+        "wordTr": "isteyerek",
+        "question": "As he had nothing to hide, he ...... answered the police's questions.",
+        "options": {
+          "A": "willingly",
+          "B": "radically",
+          "C": "adversely",
+          "D": "dominantly",
+          "E": "awkwardly"
+        },
+        "correct": "A",
+        "explanation": "<b>willingly</b>=isteyerek, gönüllü olarak"
+      },
+      {
+        "no": 4,
+        "word": "processed",
+        "wordTr": "işlenmek",
+        "question": "As there are dozens of applications currently being ......, it is unlikely that you will hear from us earlier than two weeks from now.",
+        "options": {
+          "A": "dignified",
+          "B": "suspected",
+          "C": "processed",
+          "D": "applied",
+          "E": "complied"
+        },
+        "correct": "C",
+        "explanation": "<b>process</b>=işlemek, değerlendirmek"
+      },
+      {
+        "no": 5,
+        "word": "escape",
+        "wordTr": "kaçmak",
+        "question": "There was no way for the robbers to ...... since their hideout was surrounded by the police on all sides.",
+        "options": {
+          "A": "display",
+          "B": "parade",
+          "C": "surrender",
+          "D": "escape",
+          "E": "deprive"
+        },
+        "correct": "D",
+        "explanation": "<b>escape</b>=kaçmak. <b>surrender</b>=teslim olmak"
+      },
+      {
+        "no": 6,
+        "word": "yawning",
+        "wordTr": "esnemek",
+        "question": "I don't know if my students were bored or just sleepy, but they were ...... all through my lecture.",
+        "options": {
+          "A": "applauding",
+          "B": "yawning",
+          "C": "fainting",
+          "D": "skipping",
+          "E": "rehearsing"
+        },
+        "correct": "B",
+        "explanation": "<b>yawn</b>=esneme"
+      },
+      {
+        "no": 7,
+        "word": "rude",
+        "wordTr": "kaba",
+        "question": "Although the Japanese have a reputation for politeness, foreign residents in the country are often surprised at how ...... they can be in daily life.",
+        "options": {
+          "A": "exact",
+          "B": "complete",
+          "C": "rude",
+          "D": "suspended",
+          "E": "affluent"
+        },
+        "correct": "C",
+        "explanation": "<b>rude</b>=kaba, terbiyesiz. <b>affluent</b>=varlıklı"
+      },
+      {
+        "no": 8,
+        "word": "moan",
+        "wordTr": "sızlanmak",
+        "question": "Some people are such complainers; they just ...... about everything without ever attempting to change anything.",
+        "options": {
+          "A": "sneeze",
+          "B": "depress",
+          "C": "cheer",
+          "D": "faint",
+          "E": "moan"
+        },
+        "correct": "E",
+        "explanation": "<b>moan</b>=sızlanmak, yakınmak"
+      },
+      {
+        "no": 9,
+        "word": "describe",
+        "wordTr": "tarif etmek",
+        "question": "The victim said that she was unable to ...... her attacker because his face had been completely covered.",
+        "options": {
+          "A": "distort",
+          "B": "annoy",
+          "C": "describe",
+          "D": "balance",
+          "E": "settle"
+        },
+        "correct": "C",
+        "explanation": "<b>describe</b>=tarif etmek"
+      },
+      {
+        "no": 10,
+        "word": "hasty",
+        "wordTr": "aceleci",
+        "question": "You should consider this matter carefully and not make a/an ...... decision.",
+        "options": {
+          "A": "sluggish",
+          "B": "hasty",
+          "C": "cautious",
+          "D": "virtual",
+          "E": "lengthy"
+        },
+        "correct": "B",
+        "explanation": "<b>hasty</b>=aceleci. <b>cautious</b>=ihtiyatlı"
+      },
+      {
+        "no": 11,
+        "word": "initially",
+        "wordTr": "başlangıçta",
+        "question": "Murat was ...... disappointed with London, but as he began to make friends, he began to enjoy himself more and more.",
+        "options": {
+          "A": "strictly",
+          "B": "eventually",
+          "C": "decently",
+          "D": "ultimately",
+          "E": "initially"
+        },
+        "correct": "E",
+        "explanation": "<b>initially</b>=başlangıçta. <b>eventually</b>=sonunda"
+      },
+      {
+        "no": 12,
+        "word": "tight",
+        "wordTr": "dar / sıkı",
+        "question": "Either I am getting fat or this shirt has shrunk in the wash, since it is now far too ...... .",
+        "options": {
+          "A": "tight",
+          "B": "strict",
+          "C": "vertical",
+          "D": "loose",
+          "E": "broad"
+        },
+        "correct": "A",
+        "explanation": "<b>tight</b>=dar, sıkı. <b>loose</b>=bol"
+      },
+      {
+        "no": 13,
+        "word": "objectively",
+        "wordTr": "tarafsız biçimde",
+        "question": "Reporters are sometimes blamed for not writing articles ...... .",
+        "options": {
+          "A": "subsequently",
+          "B": "intentionally",
+          "C": "distantly",
+          "D": "objectively",
+          "E": "nearly"
+        },
+        "correct": "D",
+        "explanation": "<b>objectively</b>=tarafsız, nesnel biçimde"
+      },
+      {
+        "no": 14,
+        "word": "irritating",
+        "wordTr": "sinir bozucu",
+        "question": "It is very ...... to be constantly interrupted by an arrogant show-off who wants to be the centre of attention.",
+        "options": {
+          "A": "constructive",
+          "B": "irritating",
+          "C": "smooth",
+          "D": "dynamic",
+          "E": "satisfying"
+        },
+        "correct": "B",
+        "explanation": "<b>irritating</b>=sinir bozucu"
+      },
+      {
+        "no": 15,
+        "word": "irrelevant",
+        "wordTr": "alakasız",
+        "question": "Your third paragraph is completely ......; it has nothing to do with the rest of your essay.",
+        "options": {
+          "A": "emergent",
+          "B": "irrelevant",
+          "C": "discourteous",
+          "D": "applicable",
+          "E": "doubtless"
+        },
+        "correct": "B",
+        "explanation": "<b>irrelevant</b>=alakasız"
+      },
+      {
+        "no": 16,
+        "word": "impression",
+        "wordTr": "izlenim",
+        "question": "Somehow I got the ...... that you were angry with me.",
+        "options": {
+          "A": "impression",
+          "B": "occupation",
+          "C": "permanence",
+          "D": "involvement",
+          "E": "interference"
+        },
+        "correct": "A",
+        "explanation": "<b>impression</b>=izlenim, his"
+      },
+      {
+        "no": 17,
+        "word": "domestic",
+        "wordTr": "yerel / ulusal",
+        "question": "Although the volume of ...... trade has been on the rise in recent years, international trade has fallen off sharply within the same period.",
+        "options": {
+          "A": "sensitive",
+          "B": "economical",
+          "C": "domestic",
+          "D": "fanciful",
+          "E": "amiable"
+        },
+        "correct": "C",
+        "explanation": "<b>domestic</b>=yerel, ulusal"
+      },
+      {
+        "no": 18,
+        "word": "fading",
+        "wordTr": "sönmek",
+        "question": "It was dusk and the light was ......, but the neighbourhood kids kept playing football until they could not see anything at all.",
+        "options": {
+          "A": "eradicating",
+          "B": "deflating",
+          "C": "exhausting",
+          "D": "failing",
+          "E": "fading"
+        },
+        "correct": "D",
+        "explanation": "<b>fail</b>(ışık için)=sönmek, azalmak"
+      },
+      {
+        "no": 19,
+        "word": "accommodate",
+        "wordTr": "barındırmak",
+        "question": "There were not enough hotel rooms in the town to ...... all the delegates who had arrived for the conference.",
+        "options": {
+          "A": "overlook",
+          "B": "surround",
+          "C": "inhabit",
+          "D": "construct",
+          "E": "accommodate"
+        },
+        "correct": "E",
+        "explanation": "<b>accommodate</b>=barındırmak, yer vermek"
+      },
+      {
+        "no": 20,
+        "word": "conversation",
+        "wordTr": "sohbet",
+        "question": "Let's go somewhere else; It is too noisy in here to have a decent ...... .",
+        "options": {
+          "A": "coordination",
+          "B": "maintenance",
+          "C": "interference",
+          "D": "conversation",
+          "E": "intelligence"
+        },
+        "correct": "D",
+        "explanation": "<b>conversation</b>=sohbet"
+      },
+      {
+        "no": 21,
+        "word": "annually",
+        "wordTr": "her yıl",
+        "question": "In India, Republic Day is celebrated ...... on January 26 in New Delhi and the capitals of the states.",
+        "options": {
+          "A": "seasonably",
+          "B": "densely",
+          "C": "annually",
+          "D": "suddenly",
+          "E": "eternally"
+        },
+        "correct": "C",
+        "explanation": "<b>annually</b>=yıllık, her yıl"
+      },
+      {
+        "no": 22,
+        "word": "obscurity",
+        "wordTr": "bilinmezlik",
+        "question": "Some groups, like the Beatles or the Rolling Stones, remain popular for decades, whereas others have only one hit before fading into ...... .",
+        "options": {
+          "A": "obscurity",
+          "B": "faintness",
+          "C": "renown",
+          "D": "cloudiness",
+          "E": "distinction"
+        },
+        "correct": "A",
+        "explanation": "<b>obscurity</b>=bilinmezlik. <b>renown</b>=şöhret"
+      },
+      {
+        "no": 23,
+        "word": "limp",
+        "wordTr": "aksayarak yürümek",
+        "question": "Since one of his legs was much longer than the other, he walked with a ...... for the rest of his life.",
+        "options": {
+          "A": "bruise",
+          "B": "limp",
+          "C": "scar",
+          "D": "bandage",
+          "E": "fracture"
+        },
+        "correct": "B",
+        "explanation": "<b>limp</b>=aksama"
+      },
+      {
+        "no": 24,
+        "word": "precise",
+        "wordTr": "net / kesin",
+        "question": "His instructions were so ...... that each of us knew exactly what to do.",
+        "options": {
+          "A": "remote",
+          "B": "fuzzy",
+          "C": "vague",
+          "D": "scarce",
+          "E": "precise"
+        },
+        "correct": "E",
+        "explanation": "<b>precise</b>=net, kesin. <b>vague</b>=belirsiz"
+      },
+      {
+        "no": 25,
+        "word": "drills",
+        "wordTr": "tatbikat",
+        "question": "In schools, fire ...... are required on a regular basis so that all the students and the staff know how to escape in case of fire.",
+        "options": {
+          "A": "flames",
+          "B": "fuels",
+          "C": "drills",
+          "D": "samples",
+          "E": "exits"
+        },
+        "correct": "C",
+        "explanation": "<b>drill</b>=tatbikat"
+      },
+      {
+        "no": 26,
+        "word": "contribute",
+        "wordTr": "katkıda bulunmak",
+        "question": "Rather than giving to beggars on the street, it is more helpful to ...... to charities that assist the poor and homeless.",
+        "options": {
+          "A": "contribute",
+          "B": "consider",
+          "C": "elect",
+          "D": "prejudge",
+          "E": "abstain"
+        },
+        "correct": "A",
+        "explanation": "<b>contribute</b>=katkıda bulunmak, bağışlamak"
+      },
+      {
+        "no": 27,
+        "word": "audition",
+        "wordTr": "seçme sınavı",
+        "question": "Alice impressed everyone so much in her ...... that she was chosen to play the leading role.",
+        "options": {
+          "A": "destination",
+          "B": "anticipation",
+          "C": "reputation",
+          "D": "circulation",
+          "E": "audition"
+        },
+        "correct": "E",
+        "explanation": "<b>audition</b>=seçme sınavı"
+      },
+      {
+        "no": 28,
+        "word": "uncertain",
+        "wordTr": "belirsiz",
+        "question": "No one has ever tried a scheme like this before, so the outcome is ...... .",
+        "options": {
+          "A": "uncertain",
+          "B": "willful",
+          "C": "prejudiced",
+          "D": "accidental",
+          "E": "hopeless"
+        },
+        "correct": "A",
+        "explanation": "<b>uncertain</b>=belirsiz"
+      },
+      {
+        "no": 29,
+        "word": "allowance",
+        "wordTr": "harçlık",
+        "question": "When Megan came home with a bad report from school, her father was so angry that he reduced her ...... to half.",
+        "options": {
+          "A": "restriction",
+          "B": "perception",
+          "C": "tolerance",
+          "D": "allowance",
+          "E": "accommodation"
+        },
+        "correct": "D",
+        "explanation": "<b>allowance</b>=harçlık, ödenek"
+      },
+      {
+        "no": 30,
+        "word": "significant",
+        "wordTr": "önemli",
+        "question": "There have been ...... changes to the Turkish constitution over the past several years.",
+        "options": {
+          "A": "superfluous",
+          "B": "significant",
+          "C": "eternal",
+          "D": "transparent",
+          "E": "stagnant"
+        },
+        "correct": "B",
+        "explanation": "<b>significant</b>=önemli, kayda değer"
+      },
+      {
+        "no": 31,
+        "word": "slightly",
+        "wordTr": "biraz",
+        "question": "Since we are only ...... acquainted, I would not call her a close friend.",
+        "options": {
+          "A": "abruptly",
+          "B": "voluntarily",
+          "C": "gradually",
+          "D": "slightly",
+          "E": "alternately"
+        },
+        "correct": "D",
+        "explanation": "<b>slightly</b>=biraz, az miktarda"
+      },
+      {
+        "no": 32,
+        "word": "Reputedly",
+        "wordTr": "iddiaya göre",
+        "question": "......, the first known design for a robot was produced around 1495 by Leonardo da Vinci.",
+        "options": {
+          "A": "Automatically",
+          "B": "Mechanically",
+          "C": "Consistently",
+          "D": "Reputedly",
+          "E": "Ideally"
+        },
+        "correct": "D",
+        "explanation": "<b>reputedly</b>=söylendiğine göre"
+      },
+      {
+        "no": 33,
+        "word": "mediocre",
+        "wordTr": "vasat",
+        "question": "Colin was disappointed in his ...... results, especially since he had been expected to come out at the top of his class.",
+        "options": {
+          "A": "excellent",
+          "B": "outstanding",
+          "C": "awesome",
+          "D": "exceptional",
+          "E": "mediocre"
+        },
+        "correct": "E",
+        "explanation": "<b>mediocre</b>=vasat, sıradan"
+      },
+      {
+        "no": 34,
+        "word": "endure",
+        "wordTr": "dayanmak",
+        "question": "Few people can ...... working 18 hours a day six days a week, as Jane does.",
+        "options": {
+          "A": "sacrifice",
+          "B": "endure",
+          "C": "repair",
+          "D": "hinder",
+          "E": "surrender"
+        },
+        "correct": "B",
+        "explanation": "<b>endure</b>=dayanmak, katlanmak"
+      },
+      {
+        "no": 35,
+        "word": "manufactured",
+        "wordTr": "üretilmek",
+        "question": "Automobiles have been ...... in Detroit, USA, ever since Henry Ford set up the first assembly line there.",
+        "options": {
+          "A": "manufactured",
+          "B": "calculated",
+          "C": "fastened",
+          "D": "computed",
+          "E": "fabricated"
+        },
+        "correct": "A",
+        "explanation": "<b>manufacture</b>=üretmek, imal etmek"
+      },
+      {
+        "no": 36,
+        "word": "suspense",
+        "wordTr": "gerilim",
+        "question": "The book will keep you in ...... until the final page; you will really want to keep turning the pages to find out what is going to happen next.",
+        "options": {
+          "A": "assumption",
+          "B": "coherence",
+          "C": "suspense",
+          "D": "variety",
+          "E": "conceit"
+        },
+        "correct": "C",
+        "explanation": "<b>suspense</b>=gerilim, merak"
+      },
+      {
+        "no": 37,
+        "word": "gratitude",
+        "wordTr": "minnettarlık",
+        "question": "In ...... for his 50 years of service to the company, Ben was given a clock upon his retirement.",
+        "options": {
+          "A": "gratitude",
+          "B": "response",
+          "C": "decision",
+          "D": "dispute",
+          "E": "present"
+        },
+        "correct": "A",
+        "explanation": "<b>in gratitude for</b>=...için şükran olarak"
+      },
+      {
+        "no": 38,
+        "word": "moderate",
+        "wordTr": "ılımlı",
+        "question": "As people get older it is still important to take ...... exercise, but overdoing it can be as bad as not getting any exercise at all.",
+        "options": {
+          "A": "descriptive",
+          "B": "exceeding",
+          "C": "understandable",
+          "D": "obsessive",
+          "E": "moderate"
+        },
+        "correct": "E",
+        "explanation": "<b>moderate</b>=ılımlı, ölçülü"
+      },
+      {
+        "no": 39,
+        "word": "distinguished",
+        "wordTr": "seçkin",
+        "question": "Patrick O'Brian's stories of the early 19th-century British navy are ...... by his fascinating set of characters.",
+        "options": {
+          "A": "sealed",
+          "B": "discouraged",
+          "C": "distinguished",
+          "D": "dispatched",
+          "E": "likened"
+        },
+        "correct": "C",
+        "explanation": "<b>distinguished</b>=seçkin, öne çıkan"
+      },
+      {
+        "no": 40,
+        "word": "tightened",
+        "wordTr": "sıkıştırılmak",
+        "question": "The wheel flew off the car, because the bolts hadn't been ...... properly.",
+        "options": {
+          "A": "softened",
+          "B": "lightened",
+          "C": "squeezed",
+          "D": "tightened",
+          "E": "linked"
+        },
+        "correct": "D",
+        "explanation": "<b>tighten</b>=sıkıştırmak"
+      }
+    ]
+  },
+  {
+    "id": "els_lys_2010_vocab2",
+    "baslik": "ELS 2010/2011 – LYS Vocabulary II",
+    "aciklama": "25 soru · Kelime bilgisi",
+    "etiket": "LYS",
+    "sorular": [
+      {
+        "no": 1,
+        "word": "articles",
+        "wordTr": "ürünler",
+        "question": "The clothes shop over there is closing down today, so it only has a few ...... left for sale.",
+        "options": {
+          "A": "points",
+          "B": "articles",
+          "C": "accounts",
+          "D": "gains",
+          "E": "abilities"
+        },
+        "correct": "B",
+        "explanation": "<b>articles</b>=ürünler, eşyalar"
+      },
+      {
+        "no": 2,
+        "word": "immediately",
+        "wordTr": "hemen",
+        "question": "As soon as Natalie saw the police at her doorstep, she ...... thought that something had happened to her son.",
+        "options": {
+          "A": "previously",
+          "B": "relatively",
+          "C": "entirely",
+          "D": "finally",
+          "E": "immediately"
+        },
+        "correct": "E",
+        "explanation": "<b>immediately</b>=hemen, derhal"
+      },
+      {
+        "no": 3,
+        "word": "accept",
+        "wordTr": "kabul etmek",
+        "question": "They didn't ...... Theodore's credit card at the hotel, so he had to pay for his room in cash.",
+        "options": {
+          "A": "accept",
+          "B": "borrow",
+          "C": "invest",
+          "D": "spend",
+          "E": "announce"
+        },
+        "correct": "A",
+        "explanation": "<b>accept</b>=kabul etmek"
+      },
+      {
+        "no": 4,
+        "word": "distance",
+        "wordTr": "mesafe",
+        "question": "The ...... between the United States and Russia over the Bering Strait is only 40 kilometres.",
+        "options": {
+          "A": "scale",
+          "B": "region",
+          "C": "height",
+          "D": "distance",
+          "E": "location"
+        },
+        "correct": "D",
+        "explanation": "<b>distance</b>=mesafe"
+      },
+      {
+        "no": 5,
+        "word": "reliable",
+        "wordTr": "güvenilir",
+        "question": "The metro is more ...... than the bus, because the bus is often late, but the metro rarely is.",
+        "options": {
+          "A": "reliable",
+          "B": "casual",
+          "C": "actual",
+          "D": "proper",
+          "E": "sincere"
+        },
+        "correct": "A",
+        "explanation": "<b>reliable</b>=güvenilir"
+      },
+      {
+        "no": 6,
+        "word": "surface",
+        "wordTr": "yüzey",
+        "question": "The Black Sea's ...... temperature changes throughout the year, but the temperature in its depths is constant.",
+        "options": {
+          "A": "slope",
+          "B": "summit",
+          "C": "surface",
+          "D": "status",
+          "E": "service"
+        },
+        "correct": "C",
+        "explanation": "<b>surface</b>=yüzey"
+      },
+      {
+        "no": 7,
+        "word": "includes",
+        "wordTr": "içermek",
+        "question": "My copy of the novel Les Misérables also ...... some essays by the author on history, politics, and religion.",
+        "options": {
+          "A": "consists",
+          "B": "adds",
+          "C": "varies",
+          "D": "includes",
+          "E": "struggles"
+        },
+        "correct": "D",
+        "explanation": "<b>include</b>=içermek, kapsamak"
+      },
+      {
+        "no": 8,
+        "word": "deserved",
+        "wordTr": "hak etmek",
+        "question": "Emin ...... a better reward than 50 kuruş for returning a purse that had 450 TL in it.",
+        "options": {
+          "A": "disappointed",
+          "B": "deserved",
+          "C": "attended",
+          "D": "followed",
+          "E": "compared"
+        },
+        "correct": "B",
+        "explanation": "<b>deserve</b>=hak etmek"
+      },
+      {
+        "no": 9,
+        "word": "hurt",
+        "wordTr": "yaralanmak",
+        "question": "Christopher ...... his leg when he fell down the stairs in a department store.",
+        "options": {
+          "A": "rejected",
+          "B": "destroyed",
+          "C": "hurt",
+          "D": "wound",
+          "E": "dropped"
+        },
+        "correct": "C",
+        "explanation": "<b>hurt</b>=yaralanmak, incitmek"
+      },
+      {
+        "no": 10,
+        "word": "audience",
+        "wordTr": "seyirci kitlesi",
+        "question": "We thought that the performance of A Doll's House was really bad, but the rest of the ...... enjoyed it very much.",
+        "options": {
+          "A": "criticism",
+          "B": "opinion",
+          "C": "neighbour",
+          "D": "support",
+          "E": "audience"
+        },
+        "correct": "E",
+        "explanation": "<b>audience</b>=seyirci kitlesi"
+      },
+      {
+        "no": 11,
+        "word": "offered",
+        "wordTr": "teklif etmek",
+        "question": "Tatienne has ...... me 70 euros for my mobile phone, but I don't plan to sell it.",
+        "options": {
+          "A": "received",
+          "B": "afforded",
+          "C": "exchanged",
+          "D": "wasted",
+          "E": "offered"
+        },
+        "correct": "E",
+        "explanation": "<b>offer</b>=teklif etmek"
+      },
+      {
+        "no": 12,
+        "word": "confident",
+        "wordTr": "kendinden emin",
+        "question": "Demet knows the match will be hard, but she is ...... that her team will win.",
+        "options": {
+          "A": "doubtful",
+          "B": "confident",
+          "C": "predictable",
+          "D": "surprised",
+          "E": "enjoyed"
+        },
+        "correct": "B",
+        "explanation": "<b>confident</b>=kendinden emin. <b>doubtful</b>=şüpheli"
+      },
+      {
+        "no": 13,
+        "word": "generations",
+        "wordTr": "nesiller",
+        "question": "Jung Chang's bestseller Wild Swans explores a Chinese family over three different ......—Chang's own grandmother, her mother, and herself.",
+        "options": {
+          "A": "decisions",
+          "B": "effects",
+          "C": "generations",
+          "D": "complications",
+          "E": "connections"
+        },
+        "correct": "C",
+        "explanation": "<b>generations</b>=nesiller, kuşaklar"
+      },
+      {
+        "no": 14,
+        "word": "wealthy",
+        "wordTr": "zengin",
+        "question": "Although Oprah Winfrey was born poor, she is now extremely ......., as she is worth 1.4 billion dollars.",
+        "options": {
+          "A": "wealthy",
+          "B": "costly",
+          "C": "expensive",
+          "D": "infamous",
+          "E": "conceited"
+        },
+        "correct": "A",
+        "explanation": "<b>wealthy</b>=zengin. <b>infamous</b>=kötü şöhretli"
+      },
+      {
+        "no": 15,
+        "word": "suit",
+        "wordTr": "yakışmak",
+        "question": "This furniture won't ...... our living room, so let's look in some other shops for some different models.",
+        "options": {
+          "A": "oppose",
+          "B": "admit",
+          "C": "demand",
+          "D": "interpret",
+          "E": "suit"
+        },
+        "correct": "E",
+        "explanation": "<b>suit</b>=yakışmak, uymak"
+      },
+      {
+        "no": 16,
+        "word": "moving",
+        "wordTr": "dokunaklı",
+        "question": "Alpay found the film Titanic to be very ......., and so he cried at the end of it.",
+        "options": {
+          "A": "dangerous",
+          "B": "classical",
+          "C": "annoying",
+          "D": "moving",
+          "E": "offensive"
+        },
+        "correct": "D",
+        "explanation": "<b>moving</b>=dokunaklı, duygusal"
+      },
+      {
+        "no": 17,
+        "word": "range",
+        "wordTr": "uzanmak",
+        "question": "Sharks ...... in size from the 50-centimetre-long Etmopterus hillianus to the 9-metre-long whale shark.",
+        "options": {
+          "A": "range",
+          "B": "inhabit",
+          "C": "confuse",
+          "D": "rate",
+          "E": "resemble"
+        },
+        "correct": "A",
+        "explanation": "<b>range from...to</b>=...dan ...a kadar uzanmak"
+      },
+      {
+        "no": 18,
+        "word": "impact",
+        "wordTr": "çarpma / etki",
+        "question": "The ...... of a meteor on Earth 65 million years ago created a crater 180 kilometres wide, and probably caused the extinction of the dinosaurs.",
+        "options": {
+          "A": "discovery",
+          "B": "effort",
+          "C": "violence",
+          "D": "collapse",
+          "E": "impact"
+        },
+        "correct": "E",
+        "explanation": "<b>impact</b>=çarpma, etki"
+      },
+      {
+        "no": 19,
+        "word": "treats",
+        "wordTr": "davranmak",
+        "question": "Aydan is more popular than you because she ...... people with more respect than you do.",
+        "options": {
+          "A": "behaves",
+          "B": "treats",
+          "C": "gossips",
+          "D": "deals",
+          "E": "returns"
+        },
+        "correct": "B",
+        "explanation": "<b>treat</b>=davranmak, muamele etmek"
+      },
+      {
+        "no": 20,
+        "word": "emphasis",
+        "wordTr": "vurgu / önem",
+        "question": "We don't do much speaking in our Spanish class because the ...... of the lessons is on reading and grammar.",
+        "options": {
+          "A": "movement",
+          "B": "separation",
+          "C": "condition",
+          "D": "emphasis",
+          "E": "occasion"
+        },
+        "correct": "D",
+        "explanation": "<b>emphasis</b>=vurgu, ağırlık"
+      },
+      {
+        "no": 21,
+        "word": "several",
+        "wordTr": "birkaç",
+        "question": "There are ...... Portuguese-speaking countries in the world—the biggest one is Brazil.",
+        "options": {
+          "A": "available",
+          "B": "average",
+          "C": "spare",
+          "D": "several",
+          "E": "contrary"
+        },
+        "correct": "D",
+        "explanation": "<b>several</b>=birkaç, çeşitli"
+      },
+      {
+        "no": 22,
+        "word": "probably",
+        "wordTr": "muhtemelen",
+        "question": "There are only two matches left and Barcelona is leading by 5 points, so Barcelona will ...... win the league this year.",
+        "options": {
+          "A": "probably",
+          "B": "enormously",
+          "C": "relatively",
+          "D": "briefly",
+          "E": "specially"
+        },
+        "correct": "A",
+        "explanation": "<b>probably</b>=muhtemelen"
+      },
+      {
+        "no": 23,
+        "word": "caused",
+        "wordTr": "neden olmak",
+        "question": "A speeding driver ...... the death of 15 schoolchildren and their teacher in an accident on the motorway.",
+        "options": {
+          "A": "chased",
+          "B": "crashed",
+          "C": "caused",
+          "D": "crushed",
+          "E": "collapsed"
+        },
+        "correct": "C",
+        "explanation": "<b>cause</b>=neden olmak, yol açmak"
+      },
+      {
+        "no": 24,
+        "word": "famous",
+        "wordTr": "ünlü",
+        "question": "Tom Cruise is one of America's most ...... actors, because people recognize him all over the world.",
+        "options": {
+          "A": "traditional",
+          "B": "nearby",
+          "C": "fluent",
+          "D": "efficient",
+          "E": "famous"
+        },
+        "correct": "E",
+        "explanation": "<b>famous</b>=ünlü, tanınmış"
+      },
+      {
+        "no": 25,
+        "word": "forgotten",
+        "wordTr": "unutmak",
+        "question": "Giovanna was very angry with Lance on Tuesday because he had ...... that it was her birthday.",
+        "options": {
+          "A": "prevented",
+          "B": "forgotten",
+          "C": "delayed",
+          "D": "removed",
+          "E": "misled"
+        },
+        "correct": "B",
+        "explanation": "<b>forget</b>=unutmak"
+      }
+    ]
+  }
+]
