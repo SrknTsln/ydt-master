@@ -12017,8 +12017,11 @@ Include 8-10 key vocabulary words per passage with their Turkish translations. K
     try {
         let passages = null;
 
-        // Use app's cascade AI system (Puter → Gemini → Groq → ...)
-        const result = await aiCall(prompt);
+        // Use app's cascade AI system with 12s timeout — prevents infinite loading
+        const result = await Promise.race([
+            aiCall(prompt),
+            new Promise((_, rej) => setTimeout(() => rej(new Error('ai_timeout')), 12000))
+        ]);
         passages = result.passages || (Array.isArray(result) ? result : null);
 
         if (!passages || !passages.length) throw new Error('empty');
@@ -12027,6 +12030,7 @@ Include 8-10 key vocabulary words per passage with their Turkish translations. K
         renderAIDailyParagraflar(passages, listEl);
 
     } catch(err) {
+        console.warn('[generateAIDailyParagraflar] AI başarısız:', err.message, '— statik pasajlar gösteriliyor');
         // Fallback: show curated static passages for today based on day seed
         const fallbackPassages = getStaticDailyPassages(topics);
         renderAIDailyParagraflar(fallbackPassages, listEl);

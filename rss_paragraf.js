@@ -39,6 +39,14 @@
 //  └─────────────────────────────────────────────────────────────┘
 // ════════════════════════════════════════════════════════════════
 
+/* ── Admin kontrolü — dosyanın en başında tanımla (render patch'ten önce) ── */
+const RSS_ADMIN_EMAIL = 'stasalan@gmail.com';
+window._isAdmin = function() {
+    const email = window._currentUser?.email || '';
+    return email === RSS_ADMIN_EMAIL;
+};
+
+
 /* ── RSS Kaynakları ─────────────────────────────────────────── */
 // Kaynaklar kategoriye göre ayrılmış — çekim önceliği: Bilim → Teknoloji → Oyun
 const RSS_SOURCES_SCIENCE = [
@@ -269,50 +277,169 @@ function _hasMinSentences(text, min = 4) {
     return sentences.length >= min;
 }
 
-/* ── AI: kelime + seviye analizi ────────────────────────────── */
+/* ── Stop words ─────────────────────────────────────────────── */
+const _SW = new Set('the a an and or but in on at to of for is are was were be been have has had do does did will would could should may might must can that this these those with from by as it its they their we our you your he she him her his i me my not no so if then than when where which who what how all any each more also about into after before during through because although however therefore thus said says make makes made use used using one two three well even new now just like get got back still most'.split(' '));
+
+/* ── Akıllı CEFR tahmin (kelime uzunluğu + sıklık bazlı) ────── */
+function _guessCEFR(text) {
+    const words  = text.replace(/[^a-zA-Z\s]/g,'').toLowerCase().split(/\s+/).filter(w => w.length > 2);
+    const total  = words.length || 1;
+    const long6  = words.filter(w => w.length >= 6  && !_SW.has(w)).length;
+    const long9  = words.filter(w => w.length >= 9  && !_SW.has(w)).length;
+    const long12 = words.filter(w => w.length >= 12 && !_SW.has(w)).length;
+    const r6 = long6 / total, r9 = long9 / total, r12 = long12 / total;
+    if (r12 > 0.06 || r9 > 0.18) return 'C1';
+    if (r9  > 0.12 || r6 > 0.35) return 'B2';
+    if (r6  > 0.22)               return 'B1';
+    return 'B2';
+}
+
+/* ── Kelime sözlüğü: yaygın İngilizce→Türkçe mini-map ──────── */
+const _TR_MAP = {
+    // Bilim / Akademik
+    'phenomenon':'olgu/fenomen','significant':'önemli','subsequent':'sonraki',
+    'demonstrate':'göstermek','approximately':'yaklaşık olarak','contribute':'katkıda bulunmak',
+    'environment':'çevre','evidence':'kanıt','establish':'kurmak','investigate':'araştırmak',
+    'fundamental':'temel','generate':'üretmek','identify':'tanımlamak','indicate':'göstermek',
+    'maintain':'sürdürmek','obtain':'elde etmek','participate':'katılmak','potential':'potansiyel',
+    'previous':'önceki','primary':'birincil','process':'süreç/işlem','require':'gerektirmek',
+    'research':'araştırma','response':'yanıt','significant':'önemli','structure':'yapı',
+    'suggest':'önermek','therefore':'bu nedenle','traditional':'geleneksel','various':'çeşitli',
+    // Teknoloji
+    'algorithm':'algoritma','artificial':'yapay','autonomous':'özerk','bandwidth':'bant genişliği',
+    'blockchain':'blok zinciri','capability':'kapasite/yetenek','computational':'hesapsal',
+    'cybersecurity':'siber güvenlik','deployment':'dağıtım','efficiency':'verimlilik',
+    'encryption':'şifreleme','infrastructure':'altyapı','integration':'entegrasyon',
+    'interface':'arayüz','optimization':'optimizasyon','prototype':'prototip',
+    'surveillance':'gözetleme','sustainable':'sürdürülebilir','transparency':'şeffaflık',
+    'vulnerability':'güvenlik açığı',
+    // Genel / YDT
+    'acknowledge':'kabul etmek','adequate':'yeterli','adjacent':'komşu/yanında',
+    'advocate':'savunmak/savunucu','ambiguous':'belirsiz','anticipate':'öngörmek',
+    'arbitrary':'keyfi','articulate':'açıkça ifade etmek','assertive':'kendinden emin',
+    'catastrophic':'felaket niteliğinde','coherent':'tutarlı','comprehensive':'kapsamlı',
+    'consequently':'sonuç olarak','controversial':'tartışmalı','convenient':'elverişli',
+    'conventional':'geleneksel','correlation':'korelasyon','credible':'güvenilir',
+    'cumulative':'kümülatif','deficient':'yetersiz','deliberate':'kasıtlı',
+    'diminish':'azalmak','discrepancy':'tutarsızlık','elaborate':'ayrıntılı',
+    'eliminate':'ortadan kaldırmak','emphasize':'vurgulamak','encounter':'karşılaşmak',
+    'enormous':'çok büyük','explicit':'açık/net','facilitate':'kolaylaştırmak',
+    'fluctuate':'dalgalanmak','formidable':'zorlu/güçlü','gradual':'kademeli',
+    'hierarchy':'hiyerarşi','hypothesis':'hipotez','illustrate':'örneklemek',
+    'imminent':'yakın/çok yakında olan','implication':'çıkarım/sonuç','inevitable':'kaçınılmaz',
+    'inherent':'doğasında olan','innovative':'yenilikçi','insufficient':'yetersiz',
+    'intricate':'karmaşık','legislation':'mevzuat','legitimate':'meşru',
+    'magnitude':'büyüklük/boyut','mandatory':'zorunlu','mechanism':'mekanizma',
+    'minimize':'en aza indirmek','monitor':'izlemek','negligible':'ihmal edilebilir',
+    'nevertheless':'bununla birlikte','obscure':'belirsiz/gizlemek','opponent':'rakip/karşı taraf',
+    'perceive':'algılamak','phenomenon':'fenomen','predominantly':'ağırlıklı olarak',
+    'preliminary':'ön/hazırlık aşaması','profound':'derin/köklü','prohibit':'yasaklamak',
+    'promote':'teşvik etmek','proportion':'orantı','pursue':'peşinden gitmek',
+    'radical':'köklü','rational':'mantıklı','recover':'iyileşmek/kurtarmak',
+    'regulate':'düzenlemek','reinforce':'güçlendirmek','reluctant':'isteksiz',
+    'remarkable':'dikkat çekici','resistant':'dirençli','restrict':'kısıtlamak',
+    'retrieve':'geri almak','reveal':'ortaya çıkarmak','scrutiny':'titiz inceleme',
+    'simultaneously':'eş zamanlı olarak','sophisticated':'gelişmiş/karmaşık',
+    'speculate':'spekülasyon yapmak','substantial':'önemli/büyük miktarda',
+    'suppress':'bastırmak','sustainable':'sürdürülebilir','thorough':'kapsamlı/titiz',
+    'transform':'dönüştürmek','transition':'geçiş','tremendous':'muazzam',
+    'ultimately':'sonuç itibarıyla','unprecedented':'emsalsiz','volatile':'değişken'
+};
+
+/* ── Kelime analizi: sözlük + fallback ──────────────────────── */
+function _vocabFallback(text) {
+    const words = text.replace(/[^a-zA-Z\s]/g,'').toLowerCase().split(/\s+/)
+                      .filter(w => w.length >= 6 && !_SW.has(w));
+    const unique = [...new Set(words)];
+    const vocab  = {};
+    // Önce sözlükte olanları al
+    unique.filter(w => _TR_MAP[w]).slice(0, 6).forEach(w => { vocab[w] = _TR_MAP[w]; });
+    // Kalan slotları uzun kelimelerle doldur
+    unique.filter(w => !_TR_MAP[w] && w.length >= 8)
+          .slice(0, 10 - Object.keys(vocab).length)
+          .forEach(w => { vocab[w] = '—'; });
+    const level = _guessCEFR(text);
+    return { level, levelNote: 'Otomatik analiz', vocabulary: vocab };
+}
+
+/* ── Batch AI analizi: tüm makaleler tek prompt ────────────── */
+async function _batchAnalyzeWithAI(articles) {
+    // Her makale için kısa metin özeti hazırla (token tasarrufu)
+    const items = articles.map((a, i) => ({
+        i,
+        title: a._title || a.title || '',
+        snippet: (a._text || a.text || '').slice(0, 300)
+    }));
+
+    const prompt =
+`You are an English teacher analyzing passages for Turkish YDT exam students.
+Analyze ALL ${items.length} passages below and return ONLY a JSON array (no markdown).
+
+${items.map(it => `[${it.i}] Title: "${it.title}"\nText: "${it.snippet}"`).join('\n\n')}
+
+Return ONLY this JSON array (length must equal ${items.length}):
+[{"level":"B2","levelNote":"Kısa Türkçe not","vocabulary":{"word":"Türkçe karşılık"}}, ...]
+
+Rules per item:
+- level: A2/B1/B2/C1/C2
+- levelNote: max 6 Turkish words
+- vocabulary: 6-8 hardest words from the text with Turkish translations`;
+
+    try {
+        if (typeof aiCall !== 'function') throw new Error('aiCall yok');
+        const result = await Promise.race([
+            aiCall(prompt),
+            new Promise((_, rej) => setTimeout(() => rej(new Error('batch_timeout')), 15000))
+        ]);
+        // result should be array
+        if (Array.isArray(result) && result.length === articles.length) return result;
+        // If returned as object with array inside
+        const arr = Array.isArray(result) ? result : (result?.items || result?.data || null);
+        if (Array.isArray(arr) && arr.length > 0) return arr;
+        throw new Error('Beklenmeyen yanıt formatı');
+    } catch(err) {
+        console.warn('[rss_paragraf] Batch AI analizi başarısız:', err.message, '— fallback kullanılıyor');
+        return null; // caller will use fallback
+    }
+}
+
+/* ── AI: tek makale analizi (5 sn timeout ile) ──────────────── */
 async function _analyzeWithAI(text, title) {
     const prompt =
 `You are an expert English teacher for Turkish YDT exam students.
 Analyze this passage and return ONLY valid JSON (no markdown).
 
 Title: "${title}"
-Text: "${text}"
+Text: "${text.slice(0, 400)}"
 
 Return exactly: {"level":"C1","levelNote":"Akademik söz varlığı yoğun","vocabulary":{"english_word":"Türkçe karşılık"}}
 
 Rules:
 - level: A2/B1/B2/C1/C2
-- levelNote: max 8 Turkish words
-- vocabulary: 8-10 hardest words FROM the text with accurate Turkish translations`;
+- levelNote: max 6 Turkish words
+- vocabulary: 6-8 hardest words FROM the text with accurate Turkish translations`;
     try {
         if (typeof aiCall === 'function') {
-            return await aiCall(prompt);
+            return await Promise.race([
+                aiCall(prompt),
+                new Promise((_, rej) => setTimeout(() => rej(new Error('single_timeout')), 7000))
+            ]);
         }
     } catch(_) {}
     return _vocabFallback(text);
 }
 
-const _SW = new Set('the a an and or but in on at to of for is are was were be been have has had do does did will would could should may might must can that this these those with from by as it its they their we our you your he she him her his i me my not no so if then than when where which who what how all any each more also about into after before during through because although however therefore thus'.split(' '));
-
-function _vocabFallback(text) {
-    const words = text.replace(/[^a-zA-Z\s]/g, '').toLowerCase().split(/\s+/)
-                      .filter(w => w.length >= 7 && !_SW.has(w));
-    const vocab = {};
-    [...new Set(words)].slice(0, 10).forEach(w => { vocab[w] = '—'; });
-    return { level: 'B2', levelNote: 'AI bağlantısı gerekli', vocabulary: vocab };
-}
-
-/* ── Makaleyi passage nesnesine dönüştür ────────────────────── */
-async function _toPassage(article) {
-    const text   = _cleanText(article);
-    const aiData = await _analyzeWithAI(text, article.title);
+/* ── Makaleyi passage nesnesine dönüştür (AI olmadan da çalışır) */
+function _toPassageSync(article, aiData) {
+    const text = typeof article._text === 'string' ? article._text : _cleanText(article);
+    const data = aiData || _vocabFallback(text);
     return {
         title:      article.title,
         topic:      article.sourceName,
         text,
-        vocabulary: aiData.vocabulary || {},
-        level:      aiData.level      || 'B2',
-        levelNote:  aiData.levelNote  || '',
+        vocabulary: data.vocabulary || {},
+        level:      data.level      || 'B2',
+        levelNote:  data.levelNote  || '',
         sourceIcon: article.sourceIcon || '📰',
         sourceName: article.sourceName || '',
         link:       article.link       || '',
@@ -320,6 +447,14 @@ async function _toPassage(article) {
         savedAt:    Date.now(),
         _fromRSS:   true
     };
+}
+
+/* ── Makaleyi passage nesnesine dönüştür (eski API uyumu) ───── */
+async function _toPassage(article) {
+    const text   = _cleanText(article);
+    article._text = text; // cache for sync usage
+    const aiData = await _analyzeWithAI(text, article.title);
+    return _toPassageSync(article, aiData);
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -468,7 +603,7 @@ async function generateAIDailyParagraflar(force) {
     try {
         // RSS çek — 20 makale için 28 aday (4 cümle filtresi elemeye neden olabilir)
         const articles = await Promise.race([
-            _fetchAllRSS(32),  // 25 pasaj için daha fazla aday
+            _fetchAllRSS(40),  // 30 pasaj için daha fazla aday
             new Promise(res => setTimeout(() => res([]), 10000))
         ]);
 
@@ -476,34 +611,59 @@ async function generateAIDailyParagraflar(force) {
             listEl.innerHTML = `
               <div style="grid-column:1/-1;text-align:center;padding:20px 16px;">
                 <div style="font-size:1.4rem;margin-bottom:6px;">🤖</div>
-                <div style="font-weight:800;color:var(--ink);font-size:.85rem;">Kelime analizi yapılıyor\u2026</div>
-                <div style="font-size:.72rem;color:var(--ink3);margin-top:4px;">${articles.length} makale bulundu, işleniyor</div>
+                <div style="font-weight:800;color:var(--ink);font-size:.85rem;">Pasajlar hazırlanıyor\u2026</div>
+                <div style="font-size:.72rem;color:var(--ink3);margin-top:4px;">${articles.length} makale bulundu, analiz ediliyor</div>
               </div>`;
 
-            // allSettled: tek hata tüm diziyi öldürmez
-            const results = await Promise.race([
-                Promise.allSettled(articles.map(_toPassage)),
-                new Promise(res => setTimeout(() => res([]), 20000))
-            ]);
+            // 1. Önce tüm metinleri temizle (senkron, hızlı)
+            articles.forEach(a => { a._text = _cleanText(a); });
 
-            passages = (Array.isArray(results) ? results : [])
-                .filter(r => r && r.status === 'fulfilled' && r.value && r.value.text)
-                .map(r => r.value)
-                .filter(p => _hasMinSentences(p.text, 4))
-                .slice(0, 25);  // Günlük max 25
+            // 2. Batch AI analizi dene (tek istek, 15 sn timeout)
+            let batchResults = null;
+            try {
+                batchResults = await _batchAnalyzeWithAI(articles);
+            } catch(_) { batchResults = null; }
+
+            // 3. Batch başarısızsa: sadece ilk 5 makale için bireysel AI, geri kalan fallback
+            if (!batchResults) {
+                const MAX_AI = 5;
+                const aiSlice = articles.slice(0, MAX_AI);
+                const aiResults = await Promise.allSettled(
+                    aiSlice.map(a => Promise.race([
+                        _analyzeWithAI(a._text, a.title),
+                        new Promise(res => setTimeout(() => res(null), 5000))
+                    ]))
+                );
+                batchResults = articles.map((_, i) => {
+                    if (i < MAX_AI) {
+                        const r = aiResults[i];
+                        return (r && r.status === 'fulfilled' && r.value) ? r.value : null;
+                    }
+                    return null;
+                });
+            }
+
+            // 4. Pasajları oluştur (AI verisi varsa kullan, yoksa akıllı fallback)
+            passages = articles
+                .map((a, i) => {
+                    const aiData = (batchResults && batchResults[i]) ? batchResults[i] : null;
+                    return _toPassageSync(a, aiData);
+                })
+                .filter(p => p && p.text && _hasMinSentences(p.text, 4))
+                .slice(0, 30);  // Günlük max 30
         }
     } catch(err) {
         console.warn('[rss_paragraf] fetch hatası:', err.message);
     }
 
-    // Eksik slotları statik ile tamamla (20'ye çıkar)
+    // Eksik slotları statik ile tamamla (30'a çıkar)
     const staticPool = _getStaticPassages();
     let si = 0;
-    while (passages.length < 20 && si < staticPool.length) {
+    while (passages.length < 30 && si < staticPool.length) {
         const fill = staticPool[si++];
         if (!passages.some(p => p.title === fill.title)) passages.push(fill);
     }
-    if (!passages.length) passages = staticPool.slice(0, 20);
+    if (!passages.length) passages = staticPool.slice(0, 30);
 
     // Kaydet ve render
     _saveToLS(passages);
@@ -559,7 +719,13 @@ async function generateAIDailyParagraflar(force) {
                             ${p.link ? `<a href="${p.link}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="rh2-pill" style="background:#f0fdf4;color:#16a34a;text-decoration:none;font-weight:800;">🔗 Kaynak</a>` : ''}
                         </div>
                     </div>
-                    ${window._isAdmin() ? ('<button class="rh2-card-save-btn ' + (saved ? 'saved' : '') + '" id="ai-save-btn-' + i + '" onclick="event.stopPropagation(); _saveAIPasaj(' + i + ')" title="' + (saved ? 'Arşivde' : 'Yüklü Pasajlara Ekle') + '" style="position:absolute;bottom:14px;right:14px;">' + (saved ? '✅ Arşivde' : '📥 Arşive Ekle') + '</button>') : ''}
+                    <button class="rh2-card-save-btn ${saved ? 'saved' : ''}" 
+                            id="ai-save-btn-${i}"
+                            onclick="event.stopPropagation(); _saveAIPasaj(${i})"
+                            title="${saved ? 'Arşivde' : 'Yüklü Pasajlara Ekle'}"
+                            style="position:absolute;bottom:14px;right:14px;z-index:2;">
+                        ${saved ? '✅ Arşivde' : '📥 Arşive Ekle'}
+                    </button>
                 </div>`;
             }).join('');
 
@@ -676,13 +842,7 @@ function _getStaticPassages() {
     ];
 }
 
-/* ── Admin kontrolü ─────────────────────────────────────────── */
-// index.html'deki ADMIN_EMAIL ile aynı
-const RSS_ADMIN_EMAIL = 'stasalan@gmail.com';
-window._isAdmin = function() {
-    const email = window._currentUser?.email || '';
-    return email === RSS_ADMIN_EMAIL;
-};
+/* ── Admin kontrolü yukarıya taşındı ── */
 
 /* ── Global export ──────────────────────────────────────────── */
 window.generateAIDailyParagraflar = generateAIDailyParagraflar;

@@ -269,7 +269,17 @@ function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Ma
 function pick(a,n){return shuffle(a).slice(0,n);}
 function xpL(l){return l*60;}
 function txpL(l){let t=0;for(let i=1;i<l;i++)t+=xpL(i);return t;}
-function save(){localStorage.setItem('ww_p2',JSON.stringify(P));}
+function save(){
+    localStorage.setItem('ww_p2', JSON.stringify(P));
+    // allData'ya da yaz — Firebase sync için (debounced)
+    if (typeof window.allData !== 'undefined') {
+        window.allData.kidsPlayer = JSON.parse(JSON.stringify(P));
+        clearTimeout(window._kwSyncTimer);
+        window._kwSyncTimer = setTimeout(() => {
+            if (typeof window._saveData === 'function') window._saveData();
+        }, 2000); // 2 saniye bekle — sık kaydetmelerde Firebase flood olmasın
+    }
+}
 function $id(id){return document.getElementById(id);}
 
 // ══════════════════════════════════════════════════════
@@ -345,6 +355,16 @@ function open(){
     if(pg) pg.classList.remove('hidden');
     document.querySelectorAll('.sb-btn,.mob-drawer-btn').forEach(e=>e.classList.remove('active'));
     ['sb-kids','di-kids'].forEach(id=>{const e=$id(id);if(e)e.classList.add('active');});
+    // Firebase allData'da kidsPlayer varsa yükle (cihazlar arası sync)
+    if (typeof window.allData !== 'undefined' && window.allData.kidsPlayer) {
+        const remote = window.allData.kidsPlayer;
+        // Sadece XP, seviye ve badge gibi ilerleme alanlarını merge et
+        // (yerel veri daha eskiyse remote ile güncelle)
+        if ((remote.xp || 0) > P.xp) {
+            P = { ...P, ...remote };
+            localStorage.setItem('ww_p2', JSON.stringify(P));
+        }
+    }
     render(P.name?'home':'name');
 }
 
@@ -377,7 +397,16 @@ function _go(v,d){ CW=d||CW; render(v,d); }
 function _replay(){ if(CFn) CFn(); }
 function _name(){
     const v=($id('kw-ni')||{}).value;
-    if(v&&v.trim()){P.name=v.trim();save();render('home');}
+    if(v&&v.trim()){
+        P.name=v.trim();
+        save();
+        // Kids verisini global allData'ya da yaz — Firebase sync için
+        if(typeof window.allData !== 'undefined'){
+            window.allData.kidsPlayer = JSON.parse(JSON.stringify(P));
+            if(typeof window._saveData === 'function') window._saveData();
+        }
+        render('home');
+    }
 }
 
 // ══════════════════════════════════════════════════════
@@ -463,9 +492,10 @@ function vHome(){
         <div style="display:flex;align-items:center;justify-content:space-between;">
             <div style="text-align:left;">
                 <div class="kw-title-grad" style="font-size:1.6rem;margin-bottom:2px;">Merhaba, ${P.name}! 👋</div>
-                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;">
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;align-items:center;">
                     <span class="kw-badge-pill" style="background:linear-gradient(135deg,#7E57C2,#AB47BC);font-size:.75rem;">${rank}</span>
                     <span class="kw-badge-pill" style="background:linear-gradient(135deg,#FF7043,#FF5722);font-size:.75rem;">⭐ ${P.xp} XP</span>
+                    <button onclick="KW._go('name')" style="font-size:.62rem;font-weight:700;color:#5C6BC0;background:#EDE7F6;border:none;border-radius:20px;padding:3px 10px;cursor:pointer;">✏️ İsim Değiştir</button>
                 </div>
             </div>
             <div style="font-size:3.5rem;animation:kwBounce 2s infinite;">🦄</div>

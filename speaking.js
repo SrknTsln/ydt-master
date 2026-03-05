@@ -1225,7 +1225,35 @@ function _spAiChatPage() {
     return _spHero('🤖 AI Konuşma Pratiği', 'AI Konuşma Pratiği', 'Konu seç, yapay zeka ile gerçekçi İngilizce sohbet yap. Hata düzeltmesi için mesajının sonuna (feedback) yaz.', 'ai-chat')
     + `<div style="padding:18px 24px 28px;" id="sp-chat-wrap">
         <div id="sp-topic-pick">
-            <div style="font-size:.8rem;font-weight:700;color:var(--ink2);margin-bottom:12px;">📌 Senaryo seç ve sohbete başla:</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+                <div style="font-size:.8rem;font-weight:700;color:var(--ink2);">📌 Senaryo seç ve sohbete başla:</div>
+                <div id="sp-ai-status" style="display:inline-flex;align-items:center;gap:6px;background:var(--bg);border:1.5px solid var(--border);border-radius:20px;padding:4px 12px;font-size:.68rem;font-weight:700;color:var(--ink3);">
+                    <span style="width:7px;height:7px;border-radius:50%;background:#94a3b8;display:inline-block;" id="sp-ai-dot"></span>
+                    <span id="sp-ai-lbl">AI kontrol ediliyor…</span>
+                </div>
+            </div>
+            <script>
+            (function(){
+                const dot = document.getElementById('sp-ai-dot');
+                const lbl = document.getElementById('sp-ai-lbl');
+                if (!dot || !lbl) return;
+                try {
+                    const hasPuter = typeof puter !== 'undefined' && puter?.ai?.chat;
+                    const providers = window.AI_PROVIDERS || [];
+                    const keyed = providers.filter(p => p.id !== 'puter' && localStorage.getItem(p.lsKey));
+                    if (hasPuter) {
+                        dot.style.background = '#22c55e';
+                        lbl.textContent = '🆓 Puter.js (GPT-4o) hazır';
+                    } else if (keyed.length) {
+                        dot.style.background = '#3b82f6';
+                        lbl.textContent = keyed[0].icon + ' ' + keyed[0].name + ' hazır';
+                    } else {
+                        dot.style.background = '#f59e0b';
+                        lbl.textContent = '⚠ AI key gerekli';
+                    }
+                } catch(e) { lbl.textContent = 'AI durumu bilinmiyor'; }
+            })();
+            </script>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">${topicGrid}</div>
             ${_spBox('💡', 'Nasıl Kullanılır?', [
                 '1. Yukarıdan bir senaryo seç — AI konuşmayı başlatır.',
@@ -1292,23 +1320,125 @@ function spChatSend() {
     _spApiFetch(sys, _spAiHistory);
 }
 
-function _spApiFetch(system, messages) {
-    fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:1000, system, messages })
-    })
-    .then(r => r.json())
-    .then(data => {
-        const reply = (data.content||[]).map(c => c.text||'').join('');
+/* ── Speaking için ham metin döndüren cascade çağrısı ────────
+   aiCall() JSON parse ediyor — konuşma için düz metin lazım.
+   Bu fonksiyon her provider'ı direkt çağırır, JSON parse ETMEZ.
+   ─────────────────────────────────────────────────────────── */
+async function _spCallRaw(systemPrompt, msgHistory) {
+    const timeout = ms => new Promise((_, r) => setTimeout(() => r(new Error('timeout')), ms));
+
+    // ── 1. Puter.js (ücretsiz, key gerektirmez) ──────────────
+    if (typeof puter !== 'undefined' && puter?.ai?.chat) {
+        try {
+            // system role bazı modellerde çalışmıyor — ilk user mesajına ekliyoruz
+            const firstUserContent = systemPrompt + '\n\n'
+                + (msgHistory[0]?.content || 'Start the conversation.');
+            const puterMsgs = [
+                { role: 'user', content: firstUserContent },
+                ...msgHistory.slice(1)
+            ];
+            const resp = await Promise.race([
+                puter.ai.chat(puterMsgs, { model: 'gpt-4o-mini' }),
+                timeout(12000)
+            ]);
+            // Puter yanıt formatları: resp.message.content (string veya array) veya direkt string
+            const content = resp?.message?.content ?? resp?.content ?? resp;
+            const raw = Array.isArray(content) ? (content[0]?.text || '')
+                      : (typeof content === 'string' ? content : '');
+            if (raw.trim()) { console.log('[Speaking] ✅ Puter.js'); return raw.trim(); }
+            throw new Error('Puter boş yanıt döndü');
+        } catch(e) { console.warn('[Speaking] Puter hatası:', e.message); }
+    }
+
+    // ── Keyed provider'lar ────────────────────────────────────
+    const providers = (window.AI_PROVIDERS || []).filter(p => p.id !== 'puter');
+
+    for (const prov of providers) {
+        const key = localStorage.getItem(prov.lsKey);
+        if (!key) continue;
+
+        try {
+            let raw = '';
+
+            // Gemini
+            if (prov.id === 'gemini') {
+                const contents = msgHistory.map(m => ({
+                    role: m.role === 'assistant' ? 'model' : 'user',
+                    parts: [{ text: m.content }]
+                }));
+                // system prompt'u ilk user mesajına ekle
+                if (contents.length && contents[0].role === 'user') {
+                    contents[0].parts[0].text = systemPrompt + '\n\n' + contents[0].parts[0].text;
+                }
+                let resp, data;
+                for (const model of ['gemini-2.0-flash', 'gemini-1.5-flash']) {
+                    resp = await Promise.race([
+                        fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
+                            { method:'POST', headers:{'Content-Type':'application/json'},
+                              body: JSON.stringify({ contents }) }),
+                        timeout(12000)
+                    ]);
+                    data = await resp.json();
+                    if (data.error?.code === 404) continue;
+                    break;
+                }
+                if (data?.error) throw new Error(data.error.message);
+                raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            }
+
+            // OpenAI-uyumlu provider'lar (Groq, OpenRouter, Mistral, vb.)
+            else {
+                const endpoints = {
+                    groq:        { url:'https://api.groq.com/openai/v1/chat/completions',        model:'llama-3.3-70b-versatile' },
+                    openrouter:  { url:'https://openrouter.ai/api/v1/chat/completions',           model:'meta-llama/llama-3.3-8b-instruct:free' },
+                    mistral:     { url:'https://api.mistral.ai/v1/chat/completions',              model:'mistral-small-latest' },
+                    openai:      { url:'https://api.openai.com/v1/chat/completions',              model:'gpt-4o-mini' },
+                    cohere:      { url:'https://api.cohere.ai/v2/chat',                           model:'command-r' },
+                };
+                const ep = endpoints[prov.id];
+                if (!ep) continue;
+
+                const headers = { 'Content-Type':'application/json', 'Authorization':`Bearer ${key}` };
+                if (prov.id === 'openrouter') {
+                    headers['HTTP-Referer'] = 'https://ydt-master.web.app';
+                    headers['X-Title'] = 'YDT Master';
+                }
+                const r = await Promise.race([
+                    fetch(ep.url, { method:'POST', headers,
+                        body: JSON.stringify({ model: ep.model, temperature: 0.7,
+                            messages: [{ role:'system', content: systemPrompt }, ...msgHistory] }) }),
+                    timeout(12000)
+                ]);
+                const d = await r.json();
+                if (d.error) throw new Error(d.error.message || JSON.stringify(d.error));
+                raw = d.choices?.[0]?.message?.content || '';
+            }
+
+            if (raw.trim()) { console.log(`[Speaking] ✅ ${prov.name}`); return raw.trim(); }
+
+        } catch(e) { console.warn(`[Speaking] ${prov.name} hatası:`, e.message); }
+    }
+
+    throw new Error('Tüm AI servisleri başarısız.');
+}
+
+async function _spApiFetch(system, messages) {
+    try {
+        const reply = await _spCallRaw(system, messages);
         _spAiHistory.push({ role:'assistant', content:reply });
         _spAddMsg('a', reply);
         _spShowLoad(false); _spAiLoading = false;
-    })
-    .catch(() => {
-        _spAddMsg('e','Bağlantı hatası. Lütfen tekrar deneyin.');
+    } catch(err) {
+        console.warn('[Speaking AI] Hata:', err.message);
+        const msg = err.message.includes('timeout')
+            ? '⏱ AI yanıt vermedi. Tekrar deneyin.'
+            : err.message.includes('Tüm AI')
+            ? '⚠️ AI servisi başlatılamadı. Sayfayı yenileyip tekrar deneyin.'
+            : '❌ Hata: ' + err.message.slice(0, 80);
+        console.error('[Speaking] Son hata:', err.message);
+        _spAddMsg('e', msg);
         _spShowLoad(false); _spAiLoading = false;
-    });
+    }
 }
 
 function spChatReset() {
