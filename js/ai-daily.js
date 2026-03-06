@@ -116,9 +116,14 @@ let _paketlerReady     = false;
 // ── Kelime import modal ───────────────────────────────────────────
 async function showImportSorularModal() {
     if (!_paketlerReady) {
-        await new Promise(r => { const t = setInterval(() => {
-            if (_paketlerReady) { clearInterval(t); r(); }
-        }, 50); });
+        // Guard: max 5 second wait to avoid infinite polling if fetch failed
+        await new Promise((r, j) => {
+            const deadline = Date.now() + 5000;
+            const t = setInterval(() => {
+                if (_paketlerReady) { clearInterval(t); r(); }
+                else if (Date.now() > deadline) { clearInterval(t); j(new Error('Paket verisi zaman aşımı')); }
+            }, 50);
+        }).catch(e => { console.warn('[ai-daily] _loadPaketler timeout:', e.message); });
     }
     const overlay = document.createElement('div');
     overlay.id = 'import-modal-overlay';
@@ -143,9 +148,14 @@ async function showImportSorularModal() {
 
 async function importSoruPaketi(paketId, btn) {
     if (!_paketlerReady) {
-        await new Promise(r => { const t = setInterval(() => {
-            if (_paketlerReady) { clearInterval(t); r(); }
-        }, 50); });
+        // Guard: max 5 second wait to avoid infinite polling if fetch failed
+        await new Promise((r, j) => {
+            const deadline = Date.now() + 5000;
+            const t = setInterval(() => {
+                if (_paketlerReady) { clearInterval(t); r(); }
+                else if (Date.now() > deadline) { clearInterval(t); j(new Error('Paket verisi zaman aşımı')); }
+            }, 50);
+        }).catch(e => { console.warn('[ai-daily] _loadPaketler timeout:', e.message); });
     }
     const paket = SORU_PAKETLERİ.find(p => p.id === paketId);
     if (!paket) return;
@@ -169,9 +179,14 @@ async function importSoruPaketi(paketId, btn) {
 
 async function showImportParagrafModal() {
     if (!_paketlerReady) {
-        await new Promise(r => { const t = setInterval(() => {
-            if (_paketlerReady) { clearInterval(t); r(); }
-        }, 50); });
+        // Guard: max 5 second wait to avoid infinite polling if fetch failed
+        await new Promise((r, j) => {
+            const deadline = Date.now() + 5000;
+            const t = setInterval(() => {
+                if (_paketlerReady) { clearInterval(t); r(); }
+                else if (Date.now() > deadline) { clearInterval(t); j(new Error('Paket verisi zaman aşımı')); }
+            }, 50);
+        }).catch(e => { console.warn('[ai-daily] _loadPaketler timeout:', e.message); });
     }
     const overlay = document.createElement('div'); overlay.id = 'paragraf-import-overlay'; overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;'; const paketler = PARAGRAF_PAKETLERİ.map(pk => { const yuklu = pk.pasajlar.filter(p => { const k = `p_${(p.baslik||'').replace(/[^a-zA-Z0-9ğüşıöçĞÜŞİÖÇ\s]/g,'').trim().slice(0,40)}_${(p.metin||'').length}`; return window.paragrafSorular && window.paragrafSorular[k];
         }).length;
@@ -196,9 +211,14 @@ async function showImportParagrafModal() {
 
 async function importParagrafPaketi(paketId, btn) {
     if (!_paketlerReady) {
-        await new Promise(r => { const t = setInterval(() => {
-            if (_paketlerReady) { clearInterval(t); r(); }
-        }, 50); });
+        // Guard: max 5 second wait to avoid infinite polling if fetch failed
+        await new Promise((r, j) => {
+            const deadline = Date.now() + 5000;
+            const t = setInterval(() => {
+                if (_paketlerReady) { clearInterval(t); r(); }
+                else if (Date.now() > deadline) { clearInterval(t); j(new Error('Paket verisi zaman aşımı')); }
+            }, 50);
+        }).catch(e => { console.warn('[ai-daily] _loadPaketler timeout:', e.message); });
     }
     const pk = PARAGRAF_PAKETLERİ.find(p => p.id === paketId);
     if (!pk) return;

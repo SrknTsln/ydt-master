@@ -238,7 +238,11 @@ function _qzRenderFill(w, pool) {
     const sentence = w.story || '';
     const re = new RegExp(w.eng, 'i');
     const blanked = sentence.replace(re, '<span class="qz-blank"></span>');
-    document.getElementById('qz-question-area').innerHTML = `<div class="qz-sentence-ctx">${blanked}</div>`;
+    // XSS guard: blanked is derived from w.story which is app-controlled data,
+    // but sanitize just in case of corrupted imports
+    const _safeBlank = blanked.replace(/</g,'&lt;').replace(/>/g,'&gt;')
+        .replace(/&lt;span class=&quot;qz-blank&quot;&gt;&lt;\/span&gt;/g,'<span class="qz-blank"></span>');
+    document.getElementById('qz-question-area').innerHTML = `<div class=qz-sentence-ctx>${_safeBlank}</div>`;
     _qzMakeOptions(w.eng, pool.map(x => x.eng).filter(e => e !== w.eng), 'eng', false);
     _qzRenderInfoPanel(w);
     _qzStartTimer();
@@ -305,7 +309,7 @@ function _qzRenderMissing(w) {
             if (!ok) {
                 grid.querySelectorAll('.qz-opt').forEach(b => {
                     const span = b.querySelector('span:last-child');
-                    if (span && span.textContent.toLowerCase() === hiddenLetters.toUpperCase()) {
+                    if (span && span.textContent.toUpperCase() === hiddenLetters.toUpperCase()) {
                         b.classList.remove('qz-disabled');
                         b.classList.add('qz-correct');
                     }
@@ -378,7 +382,7 @@ function _qzRenderBuild(w) {
         btn.textContent = ch.toUpperCase();
         btn.dataset.char = ch;
         btn.onclick = () => {
-            if (btn.classList.contains('used') || !_qzSession.canAnswer) return;
+            if (btn.classList.contains('used') || !_qzSession || !_qzSession.canAnswer) return;
             btn.classList.add('used');
             built.push(ch);
             updateBuilt();
@@ -572,6 +576,7 @@ function _qzStartTimer() {
     _qzStopTimer();
     _qzTimerLeft = QZ_TIMER_SEC;
     _qzUpdateTimerUI();
+    const _timerWord = currentWord; // capture at timer start to avoid off-by-one
     _qzTimerInterval = setInterval(() => {
         _qzTimerLeft--;
         _qzUpdateTimerUI();
@@ -583,7 +588,7 @@ function _qzStartTimer() {
                 // Tüm butonları disabled yap
                 document.querySelectorAll('.qz-opt:not(.qz-correct):not(.qz-wrong)')
                     .forEach(b => b.classList.add('qz-disabled'));
-                _qzHandleAnswer(false, _qzSession.queue[_qzSession.idx - 1] || currentWord, '⏱️ Süre doldu!');
+                _qzHandleAnswer(false, _timerWord, '⏱️ Süre doldu!');
             }
         }
     }, 1000);

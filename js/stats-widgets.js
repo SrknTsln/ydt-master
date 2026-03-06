@@ -10,6 +10,7 @@ function renderWeakWords() {
     // Tüm kelimeleri topla, errorCount'a göre sırala
     const all = [];
     Object.entries(allData).forEach(([listName, list]) => {
+        if (!Array.isArray(list)) return;
         list.forEach(w => {
             if ((w.errorCount || 0) > 0 || (w.correctStreak || 0) === 0) {
                 all.push({ ...w, listName });
@@ -129,6 +130,7 @@ function renderPOSChart() {
     let total = 0;
 
     Object.values(allData).forEach(list => {
+        if (!Array.isArray(list)) return;
         list.forEach(w => {
             const pos = detectPOS(w.eng, w.tr).label;
             counts[pos] = (counts[pos] || 0) + 1;
@@ -402,6 +404,7 @@ function renderSM2Plan() {
     const listBreakdown = [];
 
     Object.entries(allData).forEach(([listName, list]) => {
+        if (!Array.isArray(list)) return;
         let listToday = 0, listWeek = 0;
         list.forEach(w => {
             if (w.sm2_next) {
@@ -416,7 +419,7 @@ function renderSM2Plan() {
     });
 
     // Tüm kelimelerin SM-2'ye girmemiş olanlar
-    const allWords = Object.values(allData).flat();
+    const allWords = Object.values(allData).filter(Array.isArray).flat();
     const notStarted = allWords.filter(w => !w.sm2_next).length;
 
     if (totalSM2 === 0 && notStarted === 0) {

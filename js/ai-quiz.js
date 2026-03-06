@@ -447,10 +447,11 @@ window.aiGramerArsiv = (function() {
     }, 50); });
     const saved = JSON.parse(localStorage.getItem('ydt_gramer_arsiv') || '[]');
     if (saved.length > 0) { window.aiGramerArsiv = saved; return; }
-    window.aiGramerArsiv = GRAMMAR_SORULARI.map(s => ({
-        question: s.question,
-        options: s.options,
-        correct: s.correct,
+    window.aiGramerArsiv = GRAMMAR_SORULARI.map((s, idx) => ({
+        id:          s.no || (idx + 1),
+        question:    s.question,
+        options:     s.options,  // {A,B,C,D,E} — bank.js uses Object.entries, compatible
+        correct:     s.correct,
         explanation: s.explanation || ''
     }));
 })();

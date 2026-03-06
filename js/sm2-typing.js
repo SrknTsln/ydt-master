@@ -55,8 +55,14 @@ function updateDailyGoalBar() {
     if (txt)  txt.innerText = count + ' / ' + DAILY_GOAL;
 }
 
+let _confettiFiring = false;
 function fireConfetti() {
+    if (_confettiFiring) return; // prevent multiple rapid calls
+    _confettiFiring = true;
+    setTimeout(() => { _confettiFiring = false; }, 4500);
+
     const colors = ['#e63946', '#22c55e', '#f59e0b', '#3b82f6', '#8b5cf6'];
+    const frag = document.createDocumentFragment(); // batch DOM insertions
     for (let i = 0; i < 60; i++) {
         const p            = document.createElement('div');
         p.className        = 'confetti-piece';
@@ -65,9 +71,10 @@ function fireConfetti() {
         p.style.background = colors[Math.floor(Math.random() * colors.length)];
         p.style.animationDuration = (1.5 + Math.random() * 2) + 's';
         p.style.animationDelay   = (Math.random() * 0.5) + 's';
-        document.body.appendChild(p);
+        frag.appendChild(p);
         setTimeout(() => p.remove(), 4000);
     }
+    document.body.appendChild(frag);
 }
 
 // ══════════════════════════════════════════════
@@ -95,7 +102,9 @@ function countSM2Due() {
     Object.values(allData).forEach(list => {
         if (!Array.isArray(list)) return;
         list.forEach(w => {
-            if (!w.sm2_next || w.sm2_next <= now) count++;
+            // Only count words that have been reviewed at least once (have sm2_next set)
+            // Unreviewed words are shown in study mode first, not SM2 review
+            if (w.sm2_next && w.sm2_next <= now) count++;
         });
     });
     return count;

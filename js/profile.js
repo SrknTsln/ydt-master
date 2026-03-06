@@ -12,6 +12,7 @@ function showProfilPage() {
     // İstatistikleri yenile
     let total = 0, learned = 0;
     Object.values(allData).forEach(list => {
+        if (!Array.isArray(list)) return;
         total += list.length;
         list.forEach(w => {
             if ((w.errorCount || 0) <= 0 && (w.correctStreak || 0) >= 2) learned++;
@@ -361,5 +362,6 @@ document.addEventListener('DOMContentLoaded', () => {
 // YENİ: PARAGRAF VE OKUMA MODU İŞLEMLERİ
 // ==========================================
 
-let paragraflar = JSON.parse(localStorage.getItem('ydt_paragraflar')) || [];
+// paragraflar is declared globally in paragraf.js — do not redeclare here
+// window.paragraflar is initialized in paragraf.js
 

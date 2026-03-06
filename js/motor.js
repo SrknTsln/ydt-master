@@ -142,24 +142,38 @@ function navTo(pageId) {
 // ══════════════════════════════════════════════
 function exportData() {
     const blob = new Blob([JSON.stringify({ allData, stats })], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
     a.download = 'ydt_master_yedek.json';
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 100); // prevent memory leak
 }
 
 function importData(e) {
+    const file = e.target.files[0];
+    if (!file) return;
     const reader = new FileReader();
+    reader.onerror = () => _showAppToast('Dosya okunamadı!');
     reader.onload = function (ev) {
-        const imp = JSON.parse(ev.target.result);
-        if (confirm("Tüm veriler yedekle değiştirilecek?")) {
-            allData = imp.allData;
-            stats   = imp.stats;
-            window._saveData && window._saveData();
-            location.reload();
+        try {
+            const imp = JSON.parse(ev.target.result);
+            if (!imp.allData || !imp.stats) {
+                _showAppToast('Geçersiz yedek dosyası! allData veya stats eksik.'); return;
+            }
+            if (confirm("Tüm veriler yedekle değiştirilecek? Bu işlem geri alınamaz.")) {
+                allData = imp.allData;
+                stats   = imp.stats;
+                window._saveData && window._saveData();
+                location.reload();
+            }
+        } catch(err) {
+            _showAppToast('JSON parse hatası: ' + err.message);
         }
     };
-    reader.readAsText(e.target.files[0]);
+    reader.readAsText(file);
 }
 
 function updateSelectors() {
@@ -341,11 +355,14 @@ function updateCascadeStatus() {
 }
 
 function aiGenSaveKey() {
-    const key = document.getElementById('ai-gen-api-key').value.trim();
+    const key = (document.getElementById('ai-gen-api-key')?.value || '').trim();
     if (!key) return;
-    localStorage.setItem('ydt_gemini_api_key', key);
-    document.getElementById('ai-gen-key-status').innerHTML =
-        '<span style="color:#22c55e;font-weight:700;">✓ Kaydedildi</span>';
+    // Save to Gemini provider key (primary provider in cascade)
+    const geminiProvider = typeof AI_PROVIDERS !== 'undefined' ? AI_PROVIDERS.find(p => p.id === 'gemini') : null;
+    const lsKey = geminiProvider ? geminiProvider.lsKey : 'ydt_gemini_api_key';
+    localStorage.setItem(lsKey, key);
+    const statusEl = document.getElementById('ai-gen-key-status');
+    if (statusEl) statusEl.innerHTML = '<span style="color:#22c55e;font-weight:700;">✓ Kaydedildi</span>';
     updateCascadeStatus();
 }
 
@@ -403,17 +420,21 @@ SADECE JSON array döndür, başka hiçbir şey yazma:
 function renderAiGenPreview() {
     const list = document.getElementById('ai-gen-preview-list');
     list.innerHTML = '';
+    // Sanitize AI-generated content before DOM injection
+    function _esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
     aiGenWords.forEach((w, i) => {
-        list.innerHTML += `
-        <div class="ai-gen-word-card" id="aig-card-${i}">
-            <div class="aig-top">
-                <span class="aig-eng">${w.eng}</span>
-                <span class="aig-tr">${w.tr}</span>
-                <button onclick="aiGenRemoveWord(${i})" class="aig-remove">✕</button>
-            </div>
-            <div class="aig-meta">🧠 ${w.mnemonic || '—'}</div>
-            <div class="aig-meta" style="color:var(--ink3);">📖 ${w.story || '—'}</div>
-        </div>`;
+        const card = document.createElement('div');
+        card.className = 'ai-gen-word-card';
+        card.id = `aig-card-${i}`;
+        card.innerHTML = `
+        <div class="aig-top">
+            <span class="aig-eng">${_esc(w.eng)}</span>
+            <span class="aig-tr">${_esc(w.tr)}</span>
+            <button onclick="aiGenRemoveWord(${i})" class="aig-remove">✕</button>
+        </div>
+        <div class="aig-meta">🧠 ${_esc(w.mnemonic) || '—'}</div>
+        <div class="aig-meta" style="color:var(--ink3);">📖 ${_esc(w.story) || '—'}</div>`;
+        list.appendChild(card);
     });
     document.getElementById('ai-gen-preview-count').innerText = `${aiGenWords.length} kelime`;
     document.getElementById('ai-gen-preview').style.display = 'block';

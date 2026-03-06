@@ -244,6 +244,7 @@ async function geminiCall(prompt) { return aiCall(prompt); }
 // Zorluk Seviyesi Algılama
 async function detectDifficulty(text) {
     const badge = document.getElementById('p-difficulty-badge');
+    if (!badge) return;
     badge.innerHTML = '<span class="diff-badge diff-loading">⏳ Analiz...</span>';
     try {
         const result = await geminiCall(`
@@ -281,6 +282,7 @@ async function generateYDTQuestions() {
     const panel = document.getElementById('p-ydt-panel');
     const qDiv  = document.getElementById('p-ydt-questions');
 
+    if (!btn || !panel || !qDiv) { console.warn('generateYDTQuestions: UI elements missing'); return; }
     btn.disabled  = true;
     btn.innerHTML = '⏳ Sorular üretiliyor...';
     panel.style.display = 'block';
@@ -540,21 +542,28 @@ function showParagrafOku(index) {
     window._currentParagrafKelimeler = p.kelimeler || {};
 
     // Mobil touch bubble için c1-word
+    // Use event delegation on container to avoid per-span listener memory leaks
     let activeBubble = null;
-    document.querySelectorAll('#p-oku-metin .c1-word').forEach(span => {
-        span.addEventListener('touchstart', (e) => {
+    const _okuMetin = document.getElementById('p-oku-metin');
+    if (_okuMetin) {
+        // Remove previous listener if any (re-assign via named function trick using dataset)
+        if (_okuMetin._touchHandler) _okuMetin.removeEventListener('touchstart', _okuMetin._touchHandler, { passive: false });
+        _okuMetin._touchHandler = function(e) {
+            const span = e.target.closest('.c1-word');
+            if (!span) return;
             e.preventDefault();
             if (activeBubble) { activeBubble.remove(); activeBubble = null; }
             const rect   = span.getBoundingClientRect();
             const bubble = document.createElement('div');
             bubble.className   = 'word-touch-bubble';
-            bubble.textContent = span.dataset.tr;
+            bubble.textContent = span.dataset.tr || '';
             bubble.style.cssText = `position:fixed; left:${Math.min(rect.left + rect.width/2, window.innerWidth-120)}px; top:${Math.max(rect.top-44,60)}px; transform:translateX(-50%);`;
             document.body.appendChild(bubble);
             activeBubble = bubble;
             setTimeout(() => { if (activeBubble===bubble){bubble.remove();activeBubble=null;} }, 2200);
-        }, { passive:false });
-    });
+        };
+        _okuMetin.addEventListener('touchstart', _okuMetin._touchHandler, { passive: false });
+    }
 
     // Zorluk algıla
     detectDifficulty(p.metin);

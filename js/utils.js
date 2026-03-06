@@ -199,13 +199,39 @@ function buildEmptyState(target, opts = {}) {
     const { icon = '📭', title = 'Henüz veri yok', sub = '', cta = '', onCta = null } = opts;
 
     el.setAttribute('aria-busy', 'false');
-    el.innerHTML = `
-        <div class="empty-state" role="status" aria-label="${title}">
-            <div class="empty-state-icon" aria-hidden="true">${icon}</div>
-            <div class="empty-state-title">${title}</div>
-            ${sub  ? `<div class="empty-state-sub">${sub}</div>` : ''}
-            ${cta  ? `<button class="empty-state-cta btn" onclick="(${onCta && onCta.toString()})()">${cta}</button>` : ''}
-        </div>`;
+    // Use textContent for user-provided strings to prevent XSS
+    const _wrapper = document.createElement('div');
+    _wrapper.className = 'empty-state';
+    _wrapper.setAttribute('role', 'status');
+    _wrapper.setAttribute('aria-label', title);
+
+    const _icon = document.createElement('div');
+    _icon.className = 'empty-state-icon';
+    _icon.setAttribute('aria-hidden', 'true');
+    _icon.innerHTML = icon; // icons are app-controlled emojis/HTML
+
+    const _titleEl = document.createElement('div');
+    _titleEl.className = 'empty-state-title';
+    _titleEl.textContent = title;
+
+    _wrapper.appendChild(_icon);
+    _wrapper.appendChild(_titleEl);
+
+    if (sub) {
+        const _sub = document.createElement('div');
+        _sub.className = 'empty-state-sub';
+        _sub.textContent = sub;
+        _wrapper.appendChild(_sub);
+    }
+    if (cta && onCta) {
+        const _ctaBtn = document.createElement('button');
+        _ctaBtn.className = 'empty-state-cta btn';
+        _ctaBtn.textContent = cta;
+        _ctaBtn.addEventListener('click', onCta);
+        _wrapper.appendChild(_ctaBtn);
+    }
+    el.innerHTML = '';
+    el.appendChild(_wrapper);
 }
 
 /**

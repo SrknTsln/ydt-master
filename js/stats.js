@@ -6,9 +6,10 @@
 function showStatsPage() {
     showPage('stats-page');
     let total = 0, learned = 0, hard = 0, allWords = [];
-    const lists = Object.keys(allData);
+    const lists = Object.keys(allData).filter(k => Array.isArray(allData[k]));
     lists.forEach(listName => {
         const list = allData[listName];
+        if (!Array.isArray(list)) return; // Firestore bazen object döner — güvenli geç
         total += list.length;
         list.forEach(w => {
             if ((w.errorCount || 0) <= 0 && (w.correctStreak || 0) >= 2) learned++;
@@ -29,7 +30,7 @@ function showStatsPage() {
     if (listCountEl) listCountEl.innerText = lists.length;
 
     // Streak
-    const streak = parseInt(localStorage.getItem('ydt_streak') || '0');
+    const streak = parseInt(localStorage.getItem(typeof getUserKey === 'function' ? getUserKey('streak') : 'ydt_streak') || '0');
     document.getElementById('stats-streak-num').innerText = streak;
     const lastDay = localStorage.getItem('ydt_last_day');
     const today   = new Date().toDateString();
@@ -169,7 +170,7 @@ function showStatsPage() {
             listBreakEl.innerHTML = '<div class="sp-hint">Henüz liste yok.</div>';
         } else {
             listBreakEl.innerHTML = lists.slice(0, 10).map(listName => {
-                const ws = allData[listName];
+                const ws = Array.isArray(allData[listName]) ? allData[listName] : [];
                 const tot = ws.length;
                 const ok  = ws.filter(w => (w.correctStreak || 0) >= 2 && (w.errorCount || 0) <= 0).length;
                 const err = ws.filter(w => (w.errorCount || 0) > 2).length;
@@ -194,8 +195,7 @@ function showStatsPage() {
         lists.forEach(n => hmSel.add(new Option(n, n)));
         renderHeatmap();
     }
-
-    showPage('stats-page');
+    // NOTE: showPage called once at the top of showStatsPage (removed duplicate)
 }
 
 // ══════════════════════════════════════════════

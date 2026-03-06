@@ -119,8 +119,6 @@ async function admBankUpload(input, category) {
     }
 
     setStatus('⏳ Dosya okunuyor...', 'info');
-    input.value = '';
-
     try {
         let rawText = '';
         const ext = file.name.split('.').pop().toLowerCase();
@@ -136,16 +134,18 @@ async function admBankUpload(input, category) {
         if (!rawText.trim()) { setStatus('❌ Dosyadan metin okunamadı', 'err'); return; }
 
         const questions = _admParseQuestions(rawText, category);
-        if (!questions.length) { setStatus('⚠️ Soru formatı tanınamadı', 'warn'); return; }
+        if (!questions.length) { setStatus('⚠️ Soru formatı tanınamadı', 'warn'); input.value = ''; return; }
 
         // Bankaya ekle
         _admSaveToBank(questions, category);
         setStatus(`✅ ${questions.length} soru eklendi`, 'ok');
         adminUpdateBankCounts();
+        input.value = ''; // reset after success
 
     } catch(e) {
         setStatus('❌ ' + e.message, 'err');
         console.error('admBankUpload:', e);
+        input.value = ''; // always reset
     }
 }
 

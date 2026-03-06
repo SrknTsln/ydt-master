@@ -223,7 +223,7 @@ function addParagrafFromAdmin() {
     const editIdx  = parseInt(document.getElementById('edit-paragraf-index').value);
 
     if (!title || !text || !wordsRaw) {
-        alert("Lütfen başlık, metin ve kelimeler alanlarının hepsini doldurun.");
+        _showAppToast("Lütfen başlık, metin ve kelimeler alanlarının hepsini doldurun.");
         return;
     }
 
@@ -244,7 +244,7 @@ function addParagrafFromAdmin() {
     localStorage.setItem('ydt_paragraflar', JSON.stringify(paragraflar));
     cancelParagrafEdit();
     renderAdminParagrafListe();
-    alert(editIdx >= 0 ? "Paragraf güncellendi ✓" : "Paragraf eklendi ✓");
+    _showAppToast(editIdx >= 0 ? "Paragraf güncellendi ✓" : "Paragraf eklendi ✓");
 }
 
 function editParagrafInAdmin(index) {

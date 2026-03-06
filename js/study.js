@@ -71,10 +71,13 @@ function switchStudyList(name) {
 
 function renderStudyCard() {
     const list  = allData[currentActiveList];
+    if (!list || !studyQueue.length) { showPage('index-page'); return; }
     const total = studyQueue.length;
     const pos   = studyQueuePos;
+    if (pos >= total) { showStudyDone(); return; } // guard against out-of-bounds
     studyIndex  = studyQueue[pos];
     const w     = list[studyIndex];
+    if (!w) { console.warn('renderStudyCard: word not found at index', studyIndex); return; }
 
     // İlerleme
     const pct = total > 0 ? Math.round((pos / total) * 100) : 0;
