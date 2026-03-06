@@ -1,3 +1,21 @@
+
+// ALIŞTIRMALAR SAYFASI
+// ══════════════════════════════════════════════
+function showExercisePage() {
+    const sel = document.getElementById('exercise-list-selector');
+    if (sel) {
+        sel.innerHTML = '';
+        Object.keys(allData).filter(k => Array.isArray(allData[k]))
+            .forEach(n => sel.add(new Option(n, n)));
+        const mainSel = document.getElementById('list-selector');
+        if (mainSel && mainSel.value) sel.value = mainSel.value;
+    }
+    const due   = typeof countSM2Due === 'function' ? countSM2Due() : 0;
+    const badge = document.getElementById('sm2-due-badge');
+    if (badge) badge.innerText = due > 0 ? due + ' bekliyor' : '';
+    showPage('exercise-page');
+}
+
 // ════════════════════════════════════════════════════════════════════
 // games.js  —  YDT Master Pro  ·  Oyun Merkezi v2.0
 // 10 Oyun: Kelime · Cümle · Seviye odaklı
