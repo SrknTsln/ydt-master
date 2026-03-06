@@ -134,6 +134,10 @@ function navTo(pageId) {
     if (pageId === 'admin-page') { adminCheckAccess(); }
 }
 
+function showExercisePage() {
+    showPage('exercise-page');
+}
+
 // ══════════════════════════════════════════════
 // → js/admin.js (ayrı dosyaya taşındı)
 // → js/stats.js (ayrı dosyaya taşındı)
