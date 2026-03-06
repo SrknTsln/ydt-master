@@ -3,22 +3,25 @@
 
 // ÖĞRENME MODU (FLIP CARD + BİLİYORUM/TEKRAR)
 // ══════════════════════════════════════════════
-let studyQueue    = [];   // Mevcut turda gezilecek kelimeler (indeks listesi)
-let studyAgainIdx = [];   // "Tekrar Et" işaretlenen indeksler
-let studyKnownSet = new Set(); // "Biliyorum" işaretlenen indeksler
-let studyFlipped  = false;
-let studyQueuePos = 0;
+const StudyState = {
+    queue:    [],        // Mevcut turda gezilecek kelimeler (indeks listesi)
+    againIdx: [],        // "Tekrar Et" işaretlenen indeksler
+    knownSet: new Set(), // "Biliyorum" işaretlenen indeksler
+    flipped:  false,
+    queuePos: 0,
+    index:    0          // Aktif kelime indeksi (allData içinde)
+};
 
 function startStudy() {
     currentActiveList = document.getElementById('list-selector').value;
     if (!allData[currentActiveList] || !allData[currentActiveList].length) {
         _showAppToast('Liste boş veya seçili değil!'); return;
     }
-    studyKnownSet.clear();
-    studyAgainIdx = [];
-    studyQueue    = allData[currentActiveList].map((_, i) => i);
-    studyQueuePos = 0;
-    studyIndex    = 0;
+    StudyState.knownSet.clear();
+    StudyState.againIdx = [];
+    StudyState.queue    = allData[currentActiveList].map((_, i) => i);
+    StudyState.queuePos = 0;
+    StudyState.index    = 0;
     startModule();
     showPage('study-page');
     _populateStudySwitcher();
@@ -60,24 +63,24 @@ function switchStudyList(name) {
     const mainSel = document.getElementById('list-selector');
     if (mainSel) mainSel.value = name;
     // Çalışmayı sıfırla
-    studyKnownSet.clear();
-    studyAgainIdx = [];
-    studyQueue    = allData[name].map((_, i) => i);
-    studyQueuePos = 0;
-    studyIndex    = 0;
+    StudyState.knownSet.clear();
+    StudyState.againIdx = [];
+    StudyState.queue    = allData[name].map((_, i) => i);
+    StudyState.queuePos = 0;
+    StudyState.index    = 0;
     renderStudyCard();
     showAIToast(`📚 ${name}`, 'info', 1500);
 }
 
 function renderStudyCard() {
     const list  = allData[currentActiveList];
-    if (!list || !studyQueue.length) { showPage('index-page'); return; }
-    const total = studyQueue.length;
-    const pos   = studyQueuePos;
+    if (!list || !StudyState.queue.length) { showPage('index-page'); return; }
+    const total = StudyState.queue.length;
+    const pos   = StudyState.queuePos;
     if (pos >= total) { showStudyDone(); return; } // guard against out-of-bounds
-    studyIndex  = studyQueue[pos];
-    const w     = list[studyIndex];
-    if (!w) { console.warn('renderStudyCard: word not found at index', studyIndex); return; }
+    StudyState.index  = StudyState.queue[pos];
+    const w     = list[StudyState.index];
+    if (!w) { console.warn('renderStudyCard: word not found at index', StudyState.index); return; }
 
     // İlerleme
     const pct = total > 0 ? Math.round((pos / total) * 100) : 0;
@@ -85,8 +88,8 @@ function renderStudyCard() {
     document.getElementById('study-progress-label').innerText = `${pos + 1} / ${total}`;
 
     // Chip sayaçları
-    document.getElementById('chip-known-count').innerText = studyKnownSet.size;
-    document.getElementById('chip-again-count').innerText = studyAgainIdx.length;
+    document.getElementById('chip-known-count').innerText = StudyState.knownSet.size;
+    document.getElementById('chip-again-count').innerText = StudyState.againIdx.length;
 
     // ── Kelime türü (POS) algıla ──
     const pos_tag = detectPOS(w.eng, w.tr);
@@ -272,7 +275,7 @@ function getSyllables(eng) {
 async function generateStudySentences() {
     const list = allData[currentActiveList];
     if (!list) return;
-    const w = list[studyQueue[studyQueuePos]];
+    const w = list[StudyState.queue[StudyState.queuePos]];
     if (!w) return;
 
     const btn     = document.getElementById('study-gen-btn');
@@ -361,18 +364,18 @@ function resetFlip() {
 }
 
 function studyMarkKnown() {
-    studyKnownSet.add(studyQueue[studyQueuePos]);
+    StudyState.knownSet.add(StudyState.queue[StudyState.queuePos]);
     // SM-2 hafif puan
-    const w = allData[currentActiveList][studyQueue[studyQueuePos]];
+    const w = allData[currentActiveList][StudyState.queue[StudyState.queuePos]];
     w.correctStreak = (w.correctStreak || 0) + 1;
     w.errorCount    = Math.max(0, (w.errorCount || 0) - 1);
     studyAdvance();
 }
 
 function studyMarkAgain() {
-    const idx = studyQueue[studyQueuePos];
-    studyKnownSet.delete(idx);
-    if (!studyAgainIdx.includes(idx)) studyAgainIdx.push(idx);
+    const idx = StudyState.queue[StudyState.queuePos];
+    StudyState.knownSet.delete(idx);
+    if (!StudyState.againIdx.includes(idx)) StudyState.againIdx.push(idx);
     // hafif ceza
     const w = allData[currentActiveList][idx];
     w.errorCount    = (w.errorCount || 0) + 1;
@@ -382,8 +385,8 @@ function studyMarkAgain() {
 
 function studyAdvance() {
     window._saveData && window._saveData();
-    studyQueuePos++;
-    if (studyQueuePos >= studyQueue.length) {
+    StudyState.queuePos++;
+    if (StudyState.queuePos >= StudyState.queue.length) {
         showStudyDone();
     } else {
         renderStudyCard();
@@ -391,8 +394,8 @@ function studyAdvance() {
 }
 
 function prevStudy() {
-    if (studyQueuePos > 0) {
-        studyQueuePos--;
+    if (StudyState.queuePos > 0) {
+        StudyState.queuePos--;
         renderStudyCard();
     }
 }
@@ -403,8 +406,8 @@ function updateStudyCard() { renderStudyCard(); } // geriye dönük uyumluluk
 
 // ── Tamamlama Ekranı ──
 function showStudyDone() {
-    const total  = studyQueue.length;
-    const known  = studyKnownSet.size;
+    const total  = StudyState.queue.length;
+    const known  = StudyState.knownSet.size;
     const pct    = total > 0 ? Math.round((known / total) * 100) : 0;
 
     document.getElementById('sdone-known').innerText = known;
@@ -422,7 +425,7 @@ function showStudyDone() {
         fill.style.background = 'var(--green)';
     } else if (pct >= 70) {
         emoji = '🎉'; title = 'Harika İş!'; sub = `${pct}% başarı oranı`;
-        msg = `${studyAgainIdx.length} kelime daha pratik yapılabilir.`;
+        msg = `${StudyState.againIdx.length} kelime daha pratik yapılabilir.`;
         fill.style.background = '#3b82f6';
     } else if (pct >= 40) {
         emoji = '💪'; title = 'İyi Başlangıç!'; sub = `${pct}% tamamlandı`;
@@ -441,27 +444,27 @@ function showStudyDone() {
 
     // "Sadece Tekrarları" butonu — yoksa gizle
     const againBtn = document.querySelector('button[onclick="restartStudyAgainOnly()"]');
-    if (againBtn) againBtn.style.display = studyAgainIdx.length > 0 ? 'block' : 'none';
+    if (againBtn) againBtn.style.display = StudyState.againIdx.length > 0 ? 'block' : 'none';
 
     if (pct >= 80) fireConfetti();
     showPage('study-done-page');
 }
 
 function restartStudy() {
-    studyKnownSet.clear();
-    studyAgainIdx = [];
-    studyQueue    = allData[currentActiveList].map((_, i) => i);
-    studyQueuePos = 0;
+    StudyState.knownSet.clear();
+    StudyState.againIdx = [];
+    StudyState.queue    = allData[currentActiveList].map((_, i) => i);
+    StudyState.queuePos = 0;
     showPage('study-page');
     renderStudyCard();
 }
 
 function restartStudyAgainOnly() {
-    if (!studyAgainIdx.length) { restartStudy(); return; }
-    studyQueue    = [...studyAgainIdx];
-    studyAgainIdx = [];
-    studyKnownSet.clear();
-    studyQueuePos = 0;
+    if (!StudyState.againIdx.length) { restartStudy(); return; }
+    StudyState.queue    = [...StudyState.againIdx];
+    StudyState.againIdx = [];
+    StudyState.knownSet.clear();
+    StudyState.queuePos = 0;
     showPage('study-page');
     renderStudyCard();
 }

@@ -241,7 +241,10 @@ function addParagrafFromAdmin() {
         paragraflar.push({ baslik: title, metin: text, kelimeler: wordsObj });
     }
 
+    // localStorage + Firebase (shared/content admin sync _saveData içinde halleder)
     localStorage.setItem('ydt_paragraflar', JSON.stringify(paragraflar));
+    window.paragraflar = paragraflar;
+    window._saveData && window._saveData();
     cancelParagrafEdit();
     renderAdminParagrafListe();
     _showAppToast(editIdx >= 0 ? "Paragraf güncellendi ✓" : "Paragraf eklendi ✓");
@@ -265,6 +268,8 @@ function deleteParagrafFromAdmin(index) {
     if (!confirm(`"${paragraflar[index].baslik}" silinsin mi?`)) return;
     paragraflar.splice(index, 1);
     localStorage.setItem('ydt_paragraflar', JSON.stringify(paragraflar));
+    window.paragraflar = paragraflar;
+    window._saveData && window._saveData();
     renderAdminParagrafListe();
 }
 

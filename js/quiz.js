@@ -9,7 +9,7 @@ function startQuiz() {
         _showAppToast('Quiz için en az 4 kelimeli bir liste seçin.'); return;
     }
     startModule();
-    score = 0;
+    // score artık _qzSession.correct üzerinden izleniyor
     showPage('quiz-page');
     _qzInitSession();
     // nextQuestion() artık _qzInitSession içinden çağrılmıyor, burada tek çağrı
@@ -21,6 +21,7 @@ function startQuiz() {
 // ═══════════════════════════════════════════════════════════════
 
 let _qzSession = null;
+let _qzCurrentWord = null; // quiz modülüne özgü, motor.js global'inden bağımsız
 
 function _qzInitSession() {
     const pool = allData[currentActiveList];
@@ -116,7 +117,7 @@ function nextQuestion() {
 
     s.canAnswer = true;
     const w = s.queue[s.idx];
-    currentWord = w;
+    _qzCurrentWord = w;
 
     // Kart animasyonu — reset
     const qArea = document.getElementById('qz-question-area');
@@ -450,7 +451,7 @@ function _qzMakeOptions(correct, wrongPool, key, isTr) {
                     }
                 });
             }
-            _qzHandleAnswer(ok, currentWord, isTr
+            _qzHandleAnswer(ok, _qzCurrentWord, isTr
                 ? `Doğru anlam: ${correct}`
                 : `Doğru kelime: ${correct}`);
         };
@@ -568,19 +569,18 @@ function _qzWordFamily(eng) {
 }
 
 // ── Zamanlayıcı ──
-let _qzTimerInterval = null;
-let _qzTimerLeft     = 15;
-const QZ_TIMER_SEC   = 15;
+const QZ_TIMER_SEC = 15;
+const QuizTimer = { interval: null, left: QZ_TIMER_SEC };
 
 function _qzStartTimer() {
     _qzStopTimer();
-    _qzTimerLeft = QZ_TIMER_SEC;
+    QuizTimer.left = QZ_TIMER_SEC;
     _qzUpdateTimerUI();
-    const _timerWord = currentWord; // capture at timer start to avoid off-by-one
-    _qzTimerInterval = setInterval(() => {
-        _qzTimerLeft--;
+    const _timerWord = _qzCurrentWord; // capture at timer start to avoid off-by-one
+    QuizTimer.interval = setInterval(() => {
+        QuizTimer.left--;
         _qzUpdateTimerUI();
-        if (_qzTimerLeft <= 0) {
+        if (QuizTimer.left <= 0) {
             _qzStopTimer();
             // Süre doldu — yanlış say
             if (_qzSession && _qzSession.canAnswer) {
@@ -595,17 +595,17 @@ function _qzStartTimer() {
 }
 
 function _qzStopTimer() {
-    if (_qzTimerInterval) { clearInterval(_qzTimerInterval); _qzTimerInterval = null; }
+    if (QuizTimer.interval) { clearInterval(QuizTimer.interval); QuizTimer.interval = null; }
 }
 
 function _qzUpdateTimerUI() {
     const fill  = document.getElementById('qz-timer-fill');
     const label = document.getElementById('qz-timer-label');
     if (!fill || !label) return;
-    const pct = (_qzTimerLeft / QZ_TIMER_SEC) * 100;
+    const pct = (QuizTimer.left / QZ_TIMER_SEC) * 100;
     fill.style.width = pct + '%';
-    label.textContent = _qzTimerLeft;
-    if (_qzTimerLeft <= 5) {
+    label.textContent = QuizTimer.left;
+    if (QuizTimer.left <= 5) {
         fill.classList.add('danger');
         label.style.color = '#ef4444';
         label.style.fontWeight = '900';

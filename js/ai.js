@@ -263,8 +263,8 @@ SADECE şu JSON'u döndür:
         const colorMap = { green:'#16a34a', blue:'#1d4ed8', orange:'#ea580c', red:'#dc2626', purple:'#7c3aed' };
         const c = colorMap[result.color] || '#555';
         badge.innerHTML = `
-            <div class="diff-badge" style="background:${c}10; border-color:${c}; color:${c};" title="${(result.reasons||[]).join(' · ')}">
-                ${result.level} <span class="diff-score">${result.score}/100</span>
+            <div class="diff-badge" style="background:${c}10; border-color:${c}; color:${c};" title="${_esc((result.reasons||[]).join(' · '))}">
+                ${_esc(result.level)} <span class="diff-score">${_esc(result.score)}/100</span>
             </div>`;
     } catch(e) {
         badge.innerHTML = e.message === 'no_api_key'
@@ -442,13 +442,13 @@ SADECE şu JSON formatını döndür:
         const clauseColors = ['#3b82f6','#8b5cf6','#f59e0b','#10b981','#ef4444'];
 
         content.innerHTML = `
-            <div class="gx-sentence-box">"${sentence.trim()}"</div>
-            <div class="gx-tr">${r.tr_translation || ''}</div>
+            <div class="gx-sentence-box">"${_esc(sentence.trim())}"</div>
+            <div class="gx-tr">${_esc(r.tr_translation || '')}</div>
 
             <div class="gx-grid">
-                <div class="gx-chip"><span class="gx-chip-label">⏰ Zaman</span><span class="gx-chip-val">${r.tense}</span></div>
-                <div class="gx-chip"><span class="gx-chip-label">🔄 Voice</span><span class="gx-chip-val">${voiceIcon}</span></div>
-                <div class="gx-chip" style="grid-column:1/-1;"><span class="gx-chip-label">🧮 Formül</span><span class="gx-chip-val" style="font-family:monospace;font-size:.82rem;">${r.formula || '—'}</span></div>
+                <div class="gx-chip"><span class="gx-chip-label">⏰ Zaman</span><span class="gx-chip-val">${_esc(r.tense)}</span></div>
+                <div class="gx-chip"><span class="gx-chip-label">🔄 Voice</span><span class="gx-chip-val">${_esc(voiceIcon)}</span></div>
+                <div class="gx-chip" style="grid-column:1/-1;"><span class="gx-chip-label">🧮 Formül</span><span class="gx-chip-val" style="font-family:monospace;font-size:.82rem;">${_esc(r.formula || '—')}</span></div>
             </div>
 
             ${(r.clauses||[]).length ? `
@@ -456,28 +456,126 @@ SADECE şu JSON formatını döndür:
             <div class="gx-clauses">
                 ${r.clauses.map((cl, i) => `
                     <div class="gx-clause" style="border-left-color:${cl.color || clauseColors[i%5]};">
-                        <span class="gx-clause-type" style="color:${cl.color || clauseColors[i%5]};">${cl.type}</span>
-                        <span class="gx-clause-text">"${cl.text}"</span>
+                        <span class="gx-clause-type" style="color:${cl.color || clauseColors[i%5]};">${_esc(cl.type)}</span>
+                        <span class="gx-clause-text">"${_esc(cl.text)}"</span>
                     </div>`).join('')}
             </div>` : ''}
 
             ${(r.conjunctions||[]).length ? `
             <div class="gx-section-title">🔗 Bağlaçlar</div>
             <div class="gx-tags">
-                ${r.conjunctions.map(c => `<span class="gx-tag gx-tag-conj"><strong>${c.word}</strong> — ${c.role}</span>`).join('')}
+                ${r.conjunctions.map(c => `<span class="gx-tag gx-tag-conj"><strong>${_esc(c.word)}</strong> — ${_esc(c.role)}</span>`).join('')}
             </div>` : ''}
 
             ${(r.relative_clauses||[]).length ? `
             <div class="gx-section-title">🔀 Relative Clause</div>
             <div class="gx-tags">
-                ${r.relative_clauses.map(rc => `<span class="gx-tag gx-tag-rel">${rc}</span>`).join('')}
+                ${r.relative_clauses.map(rc => `<span class="gx-tag gx-tag-rel">${_esc(rc)}</span>`).join('')}
             </div>` : ''}
 
-            ${r.tip ? `<div class="gx-tip">💡 YDT Notu: ${r.tip}</div>` : ''}
+            ${r.tip ? `<div class="gx-tip">💡 YDT Notu: ${_esc(r.tip)}</div>` : ''}
         `;
     } catch(e) {
         content.innerHTML = `<div style="color:var(--red);font-size:.84rem;padding:10px;">⚠ Analiz başarısız: ${e.message}</div>`;
     }
+}
+
+// ── C1/C2 Kelime Filtresi ─────────────────────────────────────
+// Oxford 3000 + COCA frekans listesine göre A1-B1 arası yaygın kelimeler.
+// Bu listede OLAN kelimeler highlight EDİLMEZ (çok basit).
+// Bu listede OLMAYAN kelimeler → C1/C2 → kırmızı highlight.
+const _COMMON_WORDS = new Set([
+    'a','an','the','and','or','but','if','in','on','at','to','for','of','with',
+    'is','are','was','were','be','been','being','have','has','had','do','does',
+    'did','will','would','could','should','may','might','shall','can','need',
+    'i','you','he','she','it','we','they','me','him','her','us','them',
+    'my','your','his','its','our','their','mine','yours','ours','theirs',
+    'this','that','these','those','what','which','who','whom','whose','where',
+    'when','why','how','all','each','every','both','few','more','most','other',
+    'some','such','no','not','only','same','so','than','too','very','just',
+    'about','above','after','again','against','along','also','always','among',
+    'another','any','away','back','because','before','between','big','book',
+    'bring','buy','by','call','came','car','child','children','city','come',
+    'coming','country','day','different','down','during','end','even','every',
+    'example','eye','face','fact','family','far','feel','first','follow',
+    'food','form','found','from','get','give','go','going','good','great',
+    'hand','head','help','here','high','him','home','house','into','job',
+    'just','keep','know','large','last','later','learn','leave','left','life',
+    'like','little','live','long','look','made','make','man','many','mean',
+    'men','money','month','mother','move','much','must','name','never','new',
+    'next','night','now','number','off','old','once','open','out','over',
+    'own','part','people','place','play','point','put','read','real','right',
+    'room','said','same','say','school','see','seem','set','she','show',
+    'since','small','something','start','still','stop','story','student',
+    'take','talk','tell','thing','think','three','through','time','today',
+    'together','told','turn','two','under','until','up','use','used','want',
+    'water','way','week','well','went','while','white','whole','wide','word',
+    'work','world','write','year','young','able','around','become','best',
+    'better','body','business','change','close','come','control','course',
+    'cut','early','eat','enough','ever','fall','five','four','free','full',
+    'give','got','group','grow','hard','hear','hold','hope','hour','hundred',
+    'idea','important','inside','interest','kind','late','later','lead',
+    'less','let','light','likely','line','list','look','low','member','mind',
+    'miss','moment','near','need','nothing','notice','often','open','order',
+    'outside','own','paper','past','pay','person','plan','point','power',
+    'present','pretty','problem','produce','program','public','put','question',
+    'reach','reason','receive','remember','result','return','run','second',
+    'serve','short','side','sometimes','sort','sound','speak','stand','stay',
+    'step','study','sure','system','those','thought','true','try','turn',
+    'type','understand','until','usually','view','voice','wait','walk','warm',
+    'watch','whether','without','woman','women','write','wrong','yet',
+    // Sık fiil formları
+    'said','told','asked','wanted','needed','used','called','turned','seemed',
+    'helped','looked','tried','started','became','kept','making','going',
+    'coming','taking','getting','putting','having','doing','saying','giving',
+    'knowing','thinking','feeling','seeing','showing','finding','using',
+    // Bağlaçlar ve zarflar
+    'however','therefore','although','because','since','while','unless',
+    'instead','rather','quite','already','still','yet','soon','often',
+    'never','always','usually','sometimes','perhaps','maybe','probably',
+    'actually','really','clearly','simply','directly','finally','recently',
+    'certainly','especially','generally','quickly','easily','simply',
+    'nearly','almost','exactly','completely','especially','particularly',
+    'including','according','following','during','within','between','among',
+    'across','against','throughout','despite','except','beyond','toward',
+    'upon','whether','either','neither','both','each','every','several',
+    'various','certain','particular','specific','general','main','major',
+    'national','local','social','political','economic','human','natural',
+    'personal','public','private','special','full','whole','large','small',
+    'high','low','long','short','old','young','new','early','late','next',
+    'last','right','left','open','close','hard','easy','clear','dark',
+    'deep','free','real','true','white','black','red','green','blue',
+]);
+
+/**
+ * Kelime listesini C1/C2 seviyesine göre filtrele.
+ * Basit (A1-B1) kelimeleri çıkar, sadece zor olanları döndür.
+ */
+function _filterC1C2Words(kelimeler) {
+    const result = {};
+    for (const [eng, tr] of Object.entries(kelimeler || {})) {
+        const word = eng.trim().toLowerCase();
+        // Çok kısa kelimeler (1-2 harf) ve yaygın listedekiler → atla
+        if (word.length <= 2) continue;
+        if (_COMMON_WORDS.has(word)) continue;
+        // Yaygın suffix'lerle türetilmiş basit kelimeler de atla
+        // (örn. "walking", "helped", "teachers" → "walk", "help", "teacher" listede)
+        const stems = [
+            word.replace(/ing$/, ''),
+            word.replace(/ed$/, ''),
+            word.replace(/s$/, ''),
+            word.replace(/es$/, ''),
+            word.replace(/er$/, ''),
+            word.replace(/ers$/, ''),
+            word.replace(/ly$/, ''),
+            word.replace(/tion$/, 'te'),
+            word.replace(/ness$/, ''),
+            word.replace(/ment$/, ''),
+        ];
+        if (stems.some(s => s.length > 2 && _COMMON_WORDS.has(s))) continue;
+        result[eng] = tr;
+    }
+    return result;
 }
 
 function showParagrafOku(index) {
@@ -492,9 +590,11 @@ function showParagrafOku(index) {
         .filter(s => s.length > 3);
 
     // Her cümleye c1-word renklendirme + tıklanabilir span ekle
+    // Sadece C1/C2 seviyesi kelimeler highlight edilir
+    const c1c2Kelimeler = _filterC1C2Words(p.kelimeler || {});
     const islenmisMetin = paragrafSentences.map((sent, si) => {
         let s = sent;
-        for (let [ing, tr] of Object.entries(p.kelimeler || {})) {
+        for (let [ing, tr] of Object.entries(c1c2Kelimeler)) {
             const regex = new RegExp(`\\b(${ing.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})\\b`, 'gi');
             s = s.replace(regex, `<span class="c1-word" data-tr="${tr}">$1</span>`);
         }
@@ -519,7 +619,7 @@ function showParagrafOku(index) {
     // ── Sidebar: Paragraf İstatistikleri ──
     const words = (p.metin || '').trim().split(/\s+/).filter(w => w.length > 0);
     const sentCount = paragrafSentences.length;
-    const vocCount  = Object.keys(p.kelimeler || {}).length;
+    const vocCount  = Object.keys(c1c2Kelimeler).length;
     const readMin   = Math.ceil(words.length / 180); // ~180 kelime/dk
     const el = (id, v) => { const e = document.getElementById(id); if(e) e.textContent = v; };
     el('ps-word-count', words.length);
@@ -538,8 +638,8 @@ function showParagrafOku(index) {
     el('ps-accuracy',    accuracy + '%');
     el('ps-streak',      streak);
 
-    // ── Sidebar: Mini Sözlük ──
-    window._currentParagrafKelimeler = p.kelimeler || {};
+    // ── Sidebar: Mini Sözlük — sadece C1/C2 kelimeler ──
+    window._currentParagrafKelimeler = _filterC1C2Words(p.kelimeler || {});
 
     // Mobil touch bubble için c1-word
     // Use event delegation on container to avoid per-span listener memory leaks

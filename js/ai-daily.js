@@ -143,7 +143,7 @@ async function showImportSorularModal() {
             <button onclick="document.getElementById('import-modal-overlay').remove()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--ink3);">✕</button>
         </div>${paketler}</div>`;
     document.body.appendChild(overlay);
-    overlay.addEventListener('click', e => { if(e.target===overlay) overlay.remove(); });
+    overlay.addEventListener('click', e => { if(e.target===overlay) overlay.remove(); }, { once: true });
 }
 
 async function importSoruPaketi(paketId, btn) {
@@ -206,7 +206,7 @@ async function showImportParagrafModal() {
         <div style="font-size:.72rem;color:var(--ink3);text-align:center;margin-top:12px;">Yüklenen pasajlar Paragraf Okuma ve Soru Bankası'nda görünür.</div>
     </div>`;
     document.body.appendChild(overlay);
-    overlay.addEventListener('click', e => { if(e.target===overlay) overlay.remove(); });
+    overlay.addEventListener('click', e => { if(e.target===overlay) overlay.remove(); }, { once: true });
 }
 
 async function importParagrafPaketi(paketId, btn) {
@@ -270,7 +270,7 @@ function getTodayKey() {
     return new Date().toISOString().slice(0, 10); // "2025-02-26"
 }
 
-async function generateAIDailyParagraflar(force) {
+async function aiDailyGenerateParagraflar(force) {
     const todayKey = getTodayKey();
     const cacheKey = `ydt_ai_daily_${todayKey}`;
     const listEl = document.getElementById('ai-daily-paragraf-list');
@@ -520,7 +520,7 @@ function _saveAIPasaj(index) {
     const cnt = document.getElementById('reading-hub-saved-count');
     if (cnt) cnt.textContent = `${paragraflar.length} pasaj`;
 
-    _showToast('📥 Pasaj arşive eklendi!', 'success');
+    if (typeof _showAppToast === 'function') _showAppToast('📥 Pasaj arşive eklendi!');
 }
 window._saveAIPasaj = _saveAIPasaj;
 
@@ -588,7 +588,7 @@ function goToPasajOku() {
 }
 window.goToPasajOku = goToPasajOku;
 
-window.generateAIDailyParagraflar = generateAIDailyParagraflar;
+window.aiDailyGenerateParagraflar = aiDailyGenerateParagraflar;
 window.openAIDailyParagraf = openAIDailyParagraf;
 
 // ══════════════════════════════════════════════

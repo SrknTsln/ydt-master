@@ -199,11 +199,11 @@ function _aigRenderPreview(p) {
     });
 
     const vocPills = vocab.map(([eng, tr]) =>
-        `<span class="aig-vocab-pill" data-tr="${tr}" title="${tr}">${eng}</span>`
+        `<span class="aig-vocab-pill" data-tr="${_esc(tr)}" title="${_esc(tr)}">${_esc(eng)}</span>`
     ).join('');
 
     const vocCheckboxes = vocab.map(([eng, tr]) =>
-        `<label class="aig-wl-chip"><input type="checkbox" class="aig-wl-check" value="${eng}" data-tr="${tr}" checked><span class="aig-wl-eng">${eng}</span><span class="aig-wl-tr">${tr}</span></label>`
+        `<label class="aig-wl-chip"><input type="checkbox" class="aig-wl-check" value="${_esc(eng)}" data-tr="${_esc(tr)}" checked><span class="aig-wl-eng">${_esc(eng)}</span><span class="aig-wl-tr">${_esc(tr)}</span></label>`
     ).join('');
 
     const isAdmin = _isAdminUser();
@@ -213,14 +213,14 @@ function _aigRenderPreview(p) {
 
     const ukmLists = Object.keys(_ukmGetLists());
     const listOptions = ukmLists.length
-        ? ukmLists.map(n => `<option value="${n}">${n}</option>`).join('')
+        ? ukmLists.map(n => `<option value="${_esc(n)}">${_esc(n)}</option>`).join('')
         : `<option value="">— Önce Profil'den liste oluşturun —</option>`;
 
     previewEl.innerHTML = `
     <div class="aig-result-card">
         <div class="aig-result-hero">
             <div class="aig-result-badge">✨ AI Üretim · C1/C2</div>
-            <div class="aig-result-title">${p.title}</div>
+            <div class="aig-result-title">${_esc(p.title)}</div>
             <div class="aig-result-meta">⏱ ${readMin} dk · ${wordCount} kelime · ${sentences.length} cümle · ${vocab.length} voc</div>
         </div>
         <div class="aig-result-body">
@@ -382,33 +382,33 @@ SADECE şu JSON formatını döndür:
         const clauseColors = ['#3b82f6','#8b5cf6','#f59e0b','#10b981','#ef4444'];
 
         content.innerHTML = `
-            <div class="gx-sentence-box">"${sentence.trim()}"</div>
-            <div class="gx-tr">${r.tr_translation || ''}</div>
+            <div class="gx-sentence-box">"${_esc(sentence.trim())}"</div>
+            <div class="gx-tr">${_esc(r.tr_translation || '')}</div>
             <div class="gx-grid">
-                <div class="gx-chip"><span class="gx-chip-label">⏰ Zaman</span><span class="gx-chip-val">${r.tense}</span></div>
-                <div class="gx-chip"><span class="gx-chip-label">🔄 Voice</span><span class="gx-chip-val">${voiceIcon}</span></div>
-                <div class="gx-chip" style="grid-column:1/-1;"><span class="gx-chip-label">🧮 Formül</span><span class="gx-chip-val" style="font-family:monospace;font-size:.82rem;">${r.formula || '—'}</span></div>
+                <div class="gx-chip"><span class="gx-chip-label">⏰ Zaman</span><span class="gx-chip-val">${_esc(r.tense)}</span></div>
+                <div class="gx-chip"><span class="gx-chip-label">🔄 Voice</span><span class="gx-chip-val">${_esc(voiceIcon)}</span></div>
+                <div class="gx-chip" style="grid-column:1/-1;"><span class="gx-chip-label">🧮 Formül</span><span class="gx-chip-val" style="font-family:monospace;font-size:.82rem;">${_esc(r.formula || '—')}</span></div>
             </div>
             ${(r.clauses||[]).length ? `
             <div class="gx-section-title">📐 Clause Yapısı</div>
             <div class="gx-clauses">
                 ${r.clauses.map((cl, i) => `
                     <div class="gx-clause" style="border-left-color:${cl.color || clauseColors[i%5]};">
-                        <span class="gx-clause-type" style="color:${cl.color || clauseColors[i%5]};">${cl.type}</span>
-                        <span class="gx-clause-text">"${cl.text}"</span>
+                        <span class="gx-clause-type" style="color:${cl.color || clauseColors[i%5]};">${_esc(cl.type)}</span>
+                        <span class="gx-clause-text">"${_esc(cl.text)}"</span>
                     </div>`).join('')}
             </div>` : ''}
             ${(r.conjunctions||[]).length ? `
             <div class="gx-section-title">🔗 Bağlaçlar</div>
             <div class="gx-tags">
-                ${r.conjunctions.map(c => `<span class="gx-tag gx-tag-conj"><strong>${c.word}</strong> — ${c.role}</span>`).join('')}
+                ${r.conjunctions.map(c => `<span class="gx-tag gx-tag-conj"><strong>${_esc(c.word)}</strong> — ${_esc(c.role)}</span>`).join('')}
             </div>` : ''}
             ${(r.relative_clauses||[]).length ? `
             <div class="gx-section-title">🔀 Relative Clause</div>
             <div class="gx-tags">
-                ${r.relative_clauses.map(rc => `<span class="gx-tag gx-tag-rel">${rc}</span>`).join('')}
+                ${r.relative_clauses.map(rc => `<span class="gx-tag gx-tag-rel">${_esc(rc)}</span>`).join('')}
             </div>` : ''}
-            ${r.tip ? `<div class="gx-tip">💡 YDT Notu: ${r.tip}</div>` : ''}
+            ${r.tip ? `<div class="gx-tip">💡 YDT Notu: ${_esc(r.tip)}</div>` : ''}
         `;
     } catch(e) {
         content.innerHTML = `<div style="color:var(--red);font-size:.84rem;padding:10px;">⚠ Analiz başarısız: ${e.message}</div>`;

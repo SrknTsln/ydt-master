@@ -91,7 +91,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     setSidebarWidth();
-    window.addEventListener('resize', setSidebarWidth);
+    if (!window._profileResizeAttached) {
+        window.addEventListener('resize', setSidebarWidth);
+        window._profileResizeAttached = true;
+    }
 
     // Profil butonunu sidebar'a ekle
     const sbBottom = document.querySelector('.sb-bottom');

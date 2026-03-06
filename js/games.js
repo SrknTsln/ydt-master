@@ -1,3 +1,20 @@
+// ALIŞTIRMALAR SAYFASI
+// ══════════════════════════════════════════════
+function showExercisePage() {
+    const sel = document.getElementById('exercise-list-selector');
+    if (sel) {
+        sel.innerHTML = '';
+        Object.keys(allData).filter(k => Array.isArray(allData[k]))
+            .forEach(n => sel.add(new Option(n, n)));
+        const mainSel = document.getElementById('list-selector');
+        if (mainSel && mainSel.value) sel.value = mainSel.value;
+    }
+    const due   = typeof countSM2Due === 'function' ? countSM2Due() : 0;
+    const badge = document.getElementById('sm2-due-badge');
+    if (badge) badge.innerText = due > 0 ? due + ' bekliyor' : '';
+    showPage('exercise-page');
+}
+
 // ════════════════════════════════════════════════════════════════════
 // games.js  —  YDT Master Pro  ·  Oyun Merkezi v2.0
 // 10 Oyun: Kelime · Cümle · Seviye odaklı
@@ -10,8 +27,7 @@ const GM = (() => {
 // ══════════════════════════════════════════════════════
 // YARDIMCI FONKSİYONLAR
 // ══════════════════════════════════════════════════════
-function shuffle(a){ a=[...a]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
-function pick(a,n){ return shuffle(a).slice(0,n); }
+// shuffle() ve pick() → utils.js'de tanımlı (global)
 function rand(a){ return a[Math.floor(Math.random()*a.length)]; }
 function $id(id){ return document.getElementById(id); }
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }

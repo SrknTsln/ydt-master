@@ -3,14 +3,7 @@
 
 // SESLİ TELAFFUZ
 // ══════════════════════════════════════════════
-function speakWord(word) {
-    if (!window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const u   = new SpeechSynthesisUtterance(word);
-    u.lang    = 'en-US';
-    u.rate    = 0.85;
-    window.speechSynthesis.speak(u);
-}
+// speakWord(word, btn?) → utils.js'de tanımlı (global)
 
 // ══════════════════════════════════════════════
 // GÜNLÜK HEDEF
@@ -121,6 +114,16 @@ function getSM2DueWords() {
     Object.values(allData).forEach(list => {
         if (!Array.isArray(list)) return;
         list.forEach(w => {
+            if (!w || typeof w !== 'object') return;
+            // Farklı formatlarda saklanan İngilizce kelimeyi normalize et
+            if (!w.eng) {
+                w.eng = w.word || w.en || w.english || w.front || '';
+            }
+            if (!w.tr) {
+                w.tr = w.meaning || w.turkish || w.back || w.translation || '';
+            }
+            // eng alanı hâlâ boşsa bu kelimeyi SM-2 havuzuna ekleme
+            if (!w.eng) return;
             if (!w.sm2_next || w.sm2_next <= now) words.push(w);
         });
     });
@@ -138,20 +141,20 @@ function getNextSM2DateStr() {
     return minNext === Infinity ? '—' : new Date(minNext).toLocaleDateString('tr-TR');
 }
 
-let sm2Pool = [], sm2Idx = 0, sm2Known = 0, sm2Hard = 0, sm2Forgot = 0, sm2Streak = 0;
+const SM2State = { pool: [], idx: 0, known: 0, hard: 0, forgot: 0, streak: 0 };
 
 function _srUpdate() {
-    const total = sm2Known + sm2Hard + sm2Forgot;
-    const acc   = total ? Math.round(sm2Known / total * 100) : 0;
+    const total = SM2State.known + SM2State.hard + SM2State.forgot;
+    const acc   = total ? Math.round(SM2State.known / total * 100) : 0;
     const q = id => document.getElementById(id);
     const s = (id,v) => { const e=q(id); if(e) e.textContent=v; };
-    s('sr-streak-num', sm2Streak);
-    s('sr-known',   sm2Known);
-    s('sr-hard',    sm2Hard);
-    s('sr-forgot',  sm2Forgot);
+    s('sr-streak-num', SM2State.streak);
+    s('sr-known',   SM2State.known);
+    s('sr-hard',    SM2State.hard);
+    s('sr-forgot',  SM2State.forgot);
     s('sr-accuracy', total ? acc + '%' : '—');
     const fill = q('sr-prog-fill');
-    if (fill && sm2Pool.length) fill.style.width = (sm2Idx / sm2Pool.length * 100) + '%';
+    if (fill && SM2State.pool.length) fill.style.width = (SM2State.idx / SM2State.pool.length * 100) + '%';
 }
 const _SR_MOTS = [
     ['🧠','Beyin antrenmanı devam ediyor!'],
@@ -161,8 +164,8 @@ const _SR_MOTS = [
     ['🏆','Şampiyonlar böyle çalışır!'],
 ];
 function _srMotivation() {
-    const m = sm2Streak >= 4
-        ? ['🔥', sm2Streak + ' üst üste bildin! Harika!']
+    const m = SM2State.streak >= 4
+        ? ['🔥', SM2State.streak + ' üst üste bildin! Harika!']
         : _SR_MOTS[Math.floor(Math.random() * _SR_MOTS.length)];
     const e1 = document.getElementById('sr-mot-icon');
     const e2 = document.getElementById('sr-mot-text');
@@ -170,11 +173,11 @@ function _srMotivation() {
     if(e2) e2.textContent = m[1];
 }
 function startSM2Review() {
-    sm2Pool = getSM2DueWords();
-    if (sm2Pool.length === 0) {
+    SM2State.pool = getSM2DueWords();
+    if (SM2State.pool.length === 0) {
         _showAppToast('Bugün tekrar edilecek kelime yok! 🎉 En erken: ' + getNextSM2DateStr()); return;
     }
-    sm2Idx = 0; sm2Known = 0; sm2Hard = 0; sm2Forgot = 0; sm2Streak = 0;
+    SM2State.idx = 0; SM2State.known = 0; SM2State.hard = 0; SM2State.forgot = 0; SM2State.streak = 0;
     startModule();
     const old = document.querySelector('.sm2-done-btn');
     if (old) old.remove();
@@ -184,10 +187,14 @@ function startSM2Review() {
 }
 
 function loadSM2Q() {
-    const w = sm2Pool[sm2Idx];
-    document.getElementById('sm2-word').innerText             = w.eng;
+    const w = SM2State.pool[SM2State.idx];
+    if (!w) return;
+    // Normalize — getSM2DueWords zaten yapıyor ama ekstra güvenlik
+    const engText = w.eng || w.word || w.en || w.english || '?';
+    const trText  = w.tr  || w.meaning || w.turkish || '?';
+    document.getElementById('sm2-word').innerText             = engText;
     document.getElementById('sm2-mnemonic').innerText         = w.mnemonic ? '💡 ' + w.mnemonic : '';
-    document.getElementById('sm2-progress').innerText         = (sm2Idx + 1) + ' / ' + sm2Pool.length;
+    document.getElementById('sm2-progress').innerText         = (SM2State.idx + 1) + ' / ' + SM2State.pool.length;
     const sshow = document.getElementById('sm2-show-btn');
     if(sshow) sshow.style.display = '';
     const sfront = document.getElementById('sr-front');
@@ -195,7 +202,7 @@ function loadSM2Q() {
     const sans = document.getElementById('sm2-answer-section');
     if(sans) sans.style.display = 'none';
     const sans2 = document.getElementById('sm2-answer');
-    if(sans2) sans2.textContent = w.tr;
+    if(sans2) sans2.textContent = trText;
     _srUpdate(); _srMotivation();
 }
 
@@ -208,26 +215,26 @@ function showSM2Answer() {
 }
 
 function rateSM2(rating) {
-    const w = sm2Pool[sm2Idx];
+    const w = SM2State.pool[SM2State.idx];
     sm2_update(w, rating);
     if (rating >= 3) {
         stats.correctAnswers++; incrementDailyCount(); recordDailyPerf(true);
-        if (rating === 5) { sm2Known++; sm2Streak++; }
-        else              { sm2Known++; sm2Streak++; }
+        if (rating === 5) { SM2State.known++; SM2State.streak++; }
+        else              { SM2State.known++; SM2State.streak++; }
     } else if (rating === 2) {
-        sm2Hard++; sm2Streak = 0; recordDailyPerf(false);
+        SM2State.hard++; SM2State.streak = 0; recordDailyPerf(false);
     } else {
-        sm2Forgot++; sm2Streak = 0; recordDailyPerf(false);
+        SM2State.forgot++; SM2State.streak = 0; recordDailyPerf(false);
     }
     stats.totalAnswers++;
     window._saveData && window._saveData();
-    sm2Idx++;
+    SM2State.idx++;
     _srUpdate();
-    if (sm2Idx >= sm2Pool.length) {
+    if (SM2State.idx >= SM2State.pool.length) {
         const q = id => document.getElementById(id);
         const s = (id,v) => { const e=q(id); if(e) e.textContent=v; };
         s('sm2-word','🎉 Tebrikler!');
-        s('sm2-mnemonic', sm2Pool.length + ' kelime tekrar edildi.');
+        s('sm2-mnemonic', SM2State.pool.length + ' kelime tekrar edildi.');
         const sb = q('sm2-show-btn'); if(sb) sb.style.display='none';
         const sa = q('sm2-answer-section'); if(sa) sa.style.display='none';
         const fill = q('sr-prog-fill'); if(fill) fill.style.width='100%';
@@ -270,9 +277,7 @@ const TW_MOTIVATIONS = [
     ['💡','Göz kamaştırıyorsun!'],
 ];
 
-let twPool = [], twIdx = 0, twScore = 0, twAnswered = false;
-let twStreak = 0, twCorrectCount = 0, twWrongCount = 0;
-let twCurrentMode = 'full'; // 'full' | 'letters' | 'context'
+const TypingState = { pool: [], idx: 0, score: 0, answered: false, streak: 0, correct: 0, wrong: 0, mode: 'full' }; // 'full' | 'letters' | 'context'
 
 function _twPickMode(word) {
     const hasStory = word.story && word.story.trim().length > 5;
@@ -298,12 +303,12 @@ function startTypingQuiz() {
         _showAppToast('Önce bir kelime listesi ekleyin veya seçin.'); return;
     }
     currentActiveList = listName;
-    twPool         = [...allData[listName]].sort(() => Math.random() - 0.5);
-    twIdx          = 0;
-    twScore        = 0;
-    twStreak       = 0;
-    twCorrectCount = 0;
-    twWrongCount   = 0;
+    TypingState.pool         = [...allData[listName]].sort(() => Math.random() - 0.5);
+    TypingState.idx          = 0;
+    TypingState.score        = 0;
+    TypingState.streak       = 0;
+    TypingState.correct = 0;
+    TypingState.wrong   = 0;
     startModule();
     showPage('typing-page');
     _twUpdateStats();
@@ -311,16 +316,19 @@ function startTypingQuiz() {
 }
 
 function _twLoadQ() {
-    if (twIdx >= twPool.length) { _twFinish(); return; }
-    twAnswered = false;
-    const w    = twPool[twIdx];
-    twCurrentMode = _twPickMode(w);
+    if (TypingState.idx >= TypingState.pool.length) { _twFinish(); return; }
+    TypingState.answered = false;
+    const w    = TypingState.pool[TypingState.idx];
+    // Normalize
+    if (!w.eng) w.eng = w.word || w.en || w.english || w.front || '';
+    if (!w.tr)  w.tr  = w.meaning || w.turkish || w.back || w.translation || '';
+    TypingState.mode = _twPickMode(w);
 
     // Progress
-    const pct = twPool.length ? (twIdx / twPool.length * 100) : 0;
+    const pct = TypingState.pool.length ? (TypingState.idx / TypingState.pool.length * 100) : 0;
     document.getElementById('tw-progress-fill').style.width = pct + '%';
-    document.getElementById('tw-q-num').textContent   = twIdx + 1;
-    document.getElementById('tw-q-total').textContent = twPool.length;
+    document.getElementById('tw-q-num').textContent   = TypingState.idx + 1;
+    document.getElementById('tw-q-total').textContent = TypingState.pool.length;
 
     // Kelime
     document.getElementById('tw-word-text').textContent = w.eng;
@@ -335,8 +343,8 @@ function _twLoadQ() {
         letters: { icon: '🔡', label: 'Harfli İpucu' },
         context: { icon: '📖', label: 'Bağlam Cümlesi' }
     };
-    document.getElementById('tw-qtype-icon').textContent  = modes[twCurrentMode].icon;
-    document.getElementById('tw-qtype-label').textContent = modes[twCurrentMode].label;
+    document.getElementById('tw-qtype-icon').textContent  = modes[TypingState.mode].icon;
+    document.getElementById('tw-qtype-label').textContent = modes[TypingState.mode].label;
 
     // Context & letter hint göster/gizle
     const ctxWrap    = document.getElementById('tw-context-wrap');
@@ -344,12 +352,12 @@ function _twLoadQ() {
     ctxWrap.style.display = 'none';
     letWrap.style.display = 'none';
 
-    if (twCurrentMode === 'context' && w.story) {
+    if (TypingState.mode === 'context' && w.story) {
         const story = w.story.replace(new RegExp('\\b' + w.eng + '\\b', 'gi'),
             '<span class="tw-context-blank">_____</span>');
         document.getElementById('tw-context-text').innerHTML = story;
         ctxWrap.style.display = '';
-    } else if (twCurrentMode === 'letters') {
+    } else if (TypingState.mode === 'letters') {
         _twBuildLetterHint(w.tr);
         letWrap.style.display = '';
     }
@@ -404,13 +412,13 @@ function _twBuildLetterHint(word) {
 }
 
 function _twSetMotivation() {
-    const total = twCorrectCount + twWrongCount;
+    const total = TypingState.correct + TypingState.wrong;
     let mot;
     if (total === 0) mot = ['🎯', 'Hazır mısın? Hadi başlayalım!'];
-    else if (twStreak >= 5) mot = ['🔥', twStreak + ' üst üste doğru! Muhteşem seri!'];
-    else if (twStreak >= 3) mot = ['⚡', 'Harika! ' + twStreak + ' seri devam ediyor!'];
+    else if (TypingState.streak >= 5) mot = ['🔥', TypingState.streak + ' üst üste doğru! Muhteşem seri!'];
+    else if (TypingState.streak >= 3) mot = ['⚡', 'Harika! ' + TypingState.streak + ' seri devam ediyor!'];
     else {
-        const accuracy = total ? Math.round(twCorrectCount / total * 100) : 0;
+        const accuracy = total ? Math.round(TypingState.correct / total * 100) : 0;
         if (accuracy >= 90) mot = ['🏆', 'İnanılmaz! %' + accuracy + ' başarı oranı!'];
         else if (accuracy >= 70) mot = ['💪', 'Güzel gidiyorsun, %' + accuracy + ' doğruluk!'];
         else mot = TW_MOTIVATIONS[Math.floor(Math.random() * TW_MOTIVATIONS.length)];
@@ -420,18 +428,18 @@ function _twSetMotivation() {
 }
 
 function _twUpdateStats() {
-    document.getElementById('tw-score').textContent    = twScore;
-    document.getElementById('tw-streak').textContent   = twStreak;
-    document.getElementById('tw-correct').textContent  = twCorrectCount;
-    document.getElementById('tw-wrong').textContent    = twWrongCount;
-    const total = twCorrectCount + twWrongCount;
-    document.getElementById('tw-accuracy').textContent = total ? Math.round(twCorrectCount/total*100) + '%' : '—';
+    document.getElementById('tw-score').textContent    = TypingState.score;
+    document.getElementById('tw-streak').textContent   = TypingState.streak;
+    document.getElementById('tw-correct').textContent  = TypingState.correct;
+    document.getElementById('tw-wrong').textContent    = TypingState.wrong;
+    const total = TypingState.correct + TypingState.wrong;
+    document.getElementById('tw-accuracy').textContent = total ? Math.round(TypingState.correct/total*100) + '%' : '—';
 }
 
 function twCheck() {
-    if (twAnswered) return;
-    twAnswered = true;
-    const w      = twPool[twIdx];
+    if (TypingState.answered) return;
+    TypingState.answered = true;
+    const w      = TypingState.pool[TypingState.idx];
     const typed  = document.getElementById('tw-input').value.trim().toLowerCase();
     const target = w.tr.trim().toLowerCase();
     document.getElementById('tw-input').disabled = true;
@@ -456,11 +464,11 @@ function twCheck() {
     const fb = document.getElementById('tw-feedback');
 
     if (perfect) {
-        const bonus = twStreak >= 4 ? 5 : twStreak >= 2 ? 2 : 0;
+        const bonus = TypingState.streak >= 4 ? 5 : TypingState.streak >= 2 ? 2 : 0;
         const pts   = 10 + bonus;
-        twScore        += pts;
-        twStreak++;
-        twCorrectCount++;
+        TypingState.score        += pts;
+        TypingState.streak++;
+        TypingState.correct++;
         w.correctStreak = (w.correctStreak || 0) + 1;
         w.errorCount    = Math.max(0, (w.errorCount || 0) - 1);
         fb.className = 'tw-feedback correct';
@@ -472,8 +480,8 @@ function twCheck() {
         void scoreEl.offsetWidth;
         scoreEl.classList.add('tw-score-pop');
     } else {
-        twStreak = 0;
-        twWrongCount++;
+        TypingState.streak = 0;
+        TypingState.wrong++;
         w.errorCount    = (w.errorCount || 0) + 1;
         w.correctStreak = 0;
         fb.className = 'tw-feedback wrong';
@@ -488,15 +496,15 @@ function twCheck() {
 }
 
 function twNext() {
-    twIdx++;
+    TypingState.idx++;
     _twLoadQ();
 }
 
 function twSkip() {
-    if (twAnswered) { twNext(); return; }
-    twAnswered = true;
-    twStreak = 0;
-    const w = twPool[twIdx];
+    if (TypingState.answered) { twNext(); return; }
+    TypingState.answered = true;
+    TypingState.streak = 0;
+    const w = TypingState.pool[TypingState.idx];
     const fb = document.getElementById('tw-feedback');
     fb.className = 'tw-feedback wrong';
     fb.innerHTML = '⏭️ Geçildi. Doğrusu: <strong>' + w.tr + '</strong>';
@@ -505,18 +513,18 @@ function twSkip() {
     document.getElementById('tw-btn-skip').style.display = 'none';
     document.getElementById('tw-btn-next').style.display = '';
     document.getElementById('tw-input').disabled = true;
-    twWrongCount++;
+    TypingState.wrong++;
     _twUpdateStats();
     _twSetMotivation();
 }
 
 function _twFinish() {
-    const total    = twCorrectCount + twWrongCount;
-    const accuracy = total ? Math.round(twCorrectCount / total * 100) : 0;
-    const maxScore = twPool.length * 10;
+    const total    = TypingState.correct + TypingState.wrong;
+    const accuracy = total ? Math.round(TypingState.correct / total * 100) : 0;
+    const maxScore = TypingState.pool.length * 10;
     const fb = document.getElementById('tw-feedback');
     fb.className = 'tw-feedback correct';
-    fb.innerHTML = '🏁 <strong>Bitti!</strong> ' + twScore + '/' + maxScore + ' puan · %' + accuracy + ' doğruluk';
+    fb.innerHTML = '🏁 <strong>Bitti!</strong> ' + TypingState.score + '/' + maxScore + ' puan · %' + accuracy + ' doğruluk';
     document.getElementById('tw-btn-next').style.display = 'none';
     document.getElementById('tw-btn-check').style.display = 'none';
     document.getElementById('tw-submit-btn').style.display = 'none';
@@ -552,19 +560,19 @@ const nextTypingQ  = () => twNext();
 // ══════════════════════════════════════════════
 // BAĞLAM CÜMLESİ MODU
 // ══════════════════════════════════════════════
-let ctxPool = [], ctxIdx = 0, ctxTotalScore = 0, ctxAnswered = false, ctxWord = null, ctxCorrect = 0, ctxWrong = 0, ctxStreak = 0;
+const ContextState = { pool: [], idx: 0, totalScore: 0, answered: false, word: null, correct: 0, wrong: 0, streak: 0 };
 
 function _cxUpdate() {
-    const total = ctxCorrect + ctxWrong;
-    const acc   = total ? Math.round(ctxCorrect / total * 100) : 0;
+    const total = ContextState.correct + ContextState.wrong;
+    const acc   = total ? Math.round(ContextState.correct / total * 100) : 0;
     const s = (id,v) => { const e=document.getElementById(id); if(e) e.textContent=v; };
-    s('cx-correct',  ctxCorrect);
-    s('cx-wrong',    ctxWrong);
+    s('cx-correct',  ContextState.correct);
+    s('cx-wrong',    ContextState.wrong);
     s('cx-accuracy', total ? acc + '%' : '—');
-    s('cx-streak',   ctxStreak);
-    s('ctx-score',   ctxTotalScore);
+    s('cx-streak',   ContextState.streak);
+    s('ctx-score',   ContextState.totalScore);
     const fill = document.getElementById('cx-prog-fill');
-    if(fill && ctxPool.length) fill.style.width = (ctxIdx / ctxPool.length * 100) + '%';
+    if(fill && ContextState.pool.length) fill.style.width = (ContextState.idx / ContextState.pool.length * 100) + '%';
 }
 const _CX_MOTS = [
     ['📖','Cümleyi oku, boşluğu doldur!'],
@@ -574,8 +582,8 @@ const _CX_MOTS = [
     ["🧠","YDT'de tam böyle çıkıyor!"],
 ];
 function _cxMotivation() {
-    const m = ctxStreak >= 3
-        ? ['🔥', ctxStreak + ' üst üste doğru! Seri devam!']
+    const m = ContextState.streak >= 3
+        ? ['🔥', ContextState.streak + ' üst üste doğru! Seri devam!']
         : _CX_MOTS[Math.floor(Math.random() * _CX_MOTS.length)];
     const e1 = document.getElementById('cx-mot-icon');
     const e2 = document.getElementById('cx-mot-text');
@@ -595,8 +603,8 @@ function startContextMode() {
         _showAppToast('Önce bir kelime listesi ekleyin veya seçin.'); return;
     }
     currentActiveList = listName;
-    ctxPool       = [...allData[listName]].sort(() => Math.random() - 0.5);
-    ctxIdx        = 0; ctxTotalScore = 0; ctxCorrect = 0; ctxWrong = 0; ctxStreak = 0;
+    ContextState.pool       = [...allData[listName]].sort(() => Math.random() - 0.5);
+    ContextState.idx        = 0; ContextState.totalScore = 0; ContextState.correct = 0; ContextState.wrong = 0; ContextState.streak = 0;
     startModule();
     showPage('context-page');
     _cxUpdate(); _cxMotivation();
@@ -604,11 +612,14 @@ function startContextMode() {
 }
 
 async function ctxLoadQ() {
-    ctxAnswered = false;
-    ctxWord     = ctxPool[ctxIdx];
-    const w     = ctxWord;
-    document.getElementById('ctx-progress').innerText        = (ctxIdx + 1) + ' / ' + ctxPool.length;
-    document.getElementById('ctx-score').innerText           = ctxTotalScore;
+    ContextState.answered = false;
+    ContextState.word     = ContextState.pool[ContextState.idx];
+    const w     = ContextState.word;
+    // Normalize
+    if (!w.eng) w.eng = w.word || w.en || w.english || w.front || '';
+    if (!w.tr)  w.tr  = w.meaning || w.turkish || w.back || w.translation || '';
+    document.getElementById('ctx-progress').innerText        = (ContextState.idx + 1) + ' / ' + ContextState.pool.length;
+    document.getElementById('ctx-score').innerText           = ContextState.totalScore;
     document.getElementById('ctx-hint').innerText            = w.tr;
     document.getElementById('ctx-input').value               = '';
     document.getElementById('ctx-input').disabled            = false;
@@ -659,18 +670,18 @@ async function ctxGenerateSentence(w) {
 }
 
 async function ctxRegenSentence() {
-    if (!ctxWord) return;
+    if (!ContextState.word) return;
     document.getElementById('ctx-regen-btn').disabled        = true;
     document.getElementById('ctx-sentence').innerHTML        = '<em style="color:var(--ink3);">✨ Yeni cümle üretiliyor...</em>';
-    ctxWord.story = '';
-    await ctxGenerateSentence(ctxWord);
+    ContextState.word.story = '';
+    await ctxGenerateSentence(ContextState.word);
     document.getElementById('ctx-regen-btn').disabled = false;
 }
 
 function ctxCheck() {
-    if (ctxAnswered) return;
-    ctxAnswered     = true;
-    const w         = ctxWord;
+    if (ContextState.answered) return;
+    ContextState.answered     = true;
+    const w         = ContextState.word;
     const typed     = document.getElementById('ctx-input').value.trim().toLowerCase();
     const target    = w.eng.trim().toLowerCase();
     document.getElementById('ctx-input').disabled = true;
@@ -680,10 +691,10 @@ function ctxCheck() {
     const re        = new RegExp(escaped, 'gi');
 
     if (perfect) {
-        ctxTotalScore += 10;
+        ContextState.totalScore += 10;
         w.correctStreak = (w.correctStreak || 0) + 1;
         w.errorCount    = Math.max(0, (w.errorCount || 0) - 1);
-        ctxCorrect++; ctxStreak++;
+        ContextState.correct++; ContextState.streak++;
         const fbOk = document.getElementById('ctx-feedback');
         if(fbOk){ fbOk.textContent='✅ Doğru! +10 puan'; fbOk.className='cx-feedback cx-feedback-ok'; }
         document.getElementById('ctx-sentence').innerHTML =
@@ -692,7 +703,7 @@ function ctxCheck() {
     } else {
         w.errorCount    = (w.errorCount || 0) + 1;
         w.correctStreak = 0;
-        ctxWrong++; ctxStreak = 0;
+        ContextState.wrong++; ContextState.streak = 0;
         const fbErr = document.getElementById('ctx-feedback');
         if(fbErr){ fbErr.innerHTML='❌ Doğrusu: <strong>'+w.eng+'</strong>'; fbErr.className='cx-feedback cx-feedback-err'; }
         document.getElementById('ctx-sentence').innerHTML =
@@ -707,12 +718,12 @@ function ctxCheck() {
 }
 
 function ctxNext() {
-    ctxIdx++;
-    if (ctxIdx >= ctxPool.length) {
-        const total = ctxCorrect + ctxWrong;
-        const acc   = total ? Math.round(ctxCorrect/total*100) : 0;
+    ContextState.idx++;
+    if (ContextState.idx >= ContextState.pool.length) {
+        const total = ContextState.correct + ContextState.wrong;
+        const acc   = total ? Math.round(ContextState.correct/total*100) : 0;
         const fb2 = document.getElementById('ctx-feedback');
-        if(fb2){ fb2.innerHTML = '🏁 Bitti! <strong>'+ctxTotalScore+'/'+(ctxPool.length*10)+'</strong> puan &nbsp;·&nbsp; %'+acc+' başarı'; fb2.className='cx-feedback cx-feedback-ok'; }
+        if(fb2){ fb2.innerHTML = '🏁 Bitti! <strong>'+ContextState.totalScore+'/'+(ContextState.pool.length*10)+'</strong> puan &nbsp;·&nbsp; %'+acc+' başarı'; fb2.className='cx-feedback cx-feedback-ok'; }
         const nx = document.getElementById('ctx-next-btn');
         if(nx){ nx.textContent='← Menüye Dön'; nx.onclick=exitContext; nx.style.display=''; }
         const inp = document.getElementById('ctx-input'); if(inp) inp.style.display='none';

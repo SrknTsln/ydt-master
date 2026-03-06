@@ -12,7 +12,11 @@ function renderArsiv() {
        bk- CSS sınıflarını tam kullanır
        ═══════════════════════════════════════════════════════ */
 
-    const arsiv   = window.aiArsiv || [];
+    const arsiv   = (window.aiArsiv || []).filter(e =>
+        e && typeof e === 'object' &&
+        e.question && e.correct && e.options &&
+        (e.word || e.wordTr)  // en az word veya wordTr alanı olmalı
+    );
     const filter  = document.getElementById('arsiv-list-filter')?.value || '';
     const sidebar = document.getElementById('bk-sidebar');
     const cont    = document.getElementById('arsiv-content');
@@ -437,7 +441,7 @@ function renderArsiv() {
                 <div class="bk-q-meta-row">
                     <span class="bk-q-num">${globalNum}.</span>
                     ${q.listName ? `<span class="bk-q-word-chip">📚 ${q.listName}</span>` : ''}
-                    ${q.word ? `<span class="bk-q-word-chip">🔑 ${q.word}</span>` : ''}
+                    ${q.word ? `<span class="bk-q-word-chip">🔑 ${q.word}</span>` : (q.wordTr ? `<span class="bk-q-word-chip">🔑 ${q.wordTr}</span>` : '')}
                     <span class="bk-q-date">${tarih}</span>
                     ${revealed ? `<button class="bk-q-reset" id="reset_${qId}" onclick="resetBankQuestion('${qId}')" style="display:inline-flex;">↺ Tekrar</button>` : ''}
                 </div>
@@ -682,4 +686,19 @@ function mobRun(fn) {
 // ══════════════════════════════════════════════
 // BAŞLANGIÇ
 // ══════════════════════════════════════════════
+
+// ── Mevcut aiArsiv'deki bozuk (null/eksik) kayıtları temizle ──
+(function _cleanAiArsiv() {
+    if (!Array.isArray(window.aiArsiv)) return;
+    const before = window.aiArsiv.length;
+    window.aiArsiv = window.aiArsiv.filter(e =>
+        e && typeof e === 'object' &&
+        e.question && e.correct && e.options &&
+        (e.word || e.wordTr)
+    );
+    if (window.aiArsiv.length !== before) {
+        console.log(`[bank] ${before - window.aiArsiv.length} bozuk kelime arşiv kaydı temizlendi`);
+        try { localStorage.setItem('ydt_ai_arsiv', JSON.stringify(window.aiArsiv)); } catch(e) {}
+    }
+})();
 // ══════════════════════════════════════════════

@@ -17,10 +17,7 @@ function updateSM2Badge() {
 // ══════════════════════════════════════════════
 // AI YDT SINAV MODU
 // ══════════════════════════════════════════════
-let aiCurrentList  = [];
-let aiCurrentIndex = 0;
-let aiPageCorrect  = "";
-let aiAnswered     = false;
+const AiQuizState = { currentList: [], currentIndex: 0, pageCorrect: '', answered: false };
 let aiCurrentWord  = null; // mevcut sorunun kelime+veri referansı
 
 // Arşiv global
@@ -49,30 +46,30 @@ function updateAIStatsDisplay() {
 }
 
 // AI Vocabulary Test ayar state'i
-let _aiqCount = 10, _aiqDiff = 'ydt', _aiqType = 'bosluk', _aiqSelectedList = null;
+const AiQuizCfg = { count: 10, diff: 'ydt', type: 'bosluk', selectedList: null };
 let _aiqSessionCorrect = 0, _aiqSessionWrong = 0, _aiqSessionTotal = 0;
 
 function aiqSetCount(btn, val) {
     btn.closest('.aiq-setting-chips').querySelectorAll('.aiq-chip').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    _aiqCount = val;
+    AiQuizCfg.count = val;
     _aiqUpdateStartBtn();
 }
 function aiqSetDiff(btn, val) {
     btn.closest('.aiq-setting-chips').querySelectorAll('.aiq-chip').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    _aiqDiff = val;
+    AiQuizCfg.diff = val;
 }
 function aiqSetType(btn, val) {
     btn.closest('.aiq-setting-chips').querySelectorAll('.aiq-chip').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    _aiqType = val;
+    AiQuizCfg.type = val;
 }
 function _aiqUpdateStartBtn() {
     const sub = document.getElementById('aiq-start-sub');
     if (!sub) return;
-    const pool = _aiqSelectedList ? (allData[_aiqSelectedList] || []) : [];
-    const cnt  = _aiqCount === 0 ? pool.length : Math.min(_aiqCount, pool.length);
+    const pool = AiQuizCfg.selectedList ? (allData[AiQuizCfg.selectedList] || []) : [];
+    const cnt  = AiQuizCfg.count === 0 ? pool.length : Math.min(AiQuizCfg.count, pool.length);
     sub.textContent = cnt > 0 ? `${cnt} soru seçildi` : 'Liste seçin';
 }
 function _aiqUpdateStats() {
@@ -133,7 +130,7 @@ function _aiqPopulateListGrid() {
     Object.keys(allData).forEach(name => {
         const count = allData[name].length;
         const btn = document.createElement('button');
-        btn.className = 'aiq-list-btn' + (name === _aiqSelectedList ? ' active' : '');
+        btn.className = 'aiq-list-btn' + (name === AiQuizCfg.selectedList ? ' active' : '');
         btn.innerHTML = `<span class="aiq-list-name">${name}</span><span class="aiq-list-count">${count} kelime</span>`;
         btn.onclick = () => _aiqSelectList(name);
         grid.appendChild(btn);
@@ -141,7 +138,7 @@ function _aiqPopulateListGrid() {
 }
 
 function _aiqSelectList(name) {
-    _aiqSelectedList = name;
+    AiQuizCfg.selectedList = name;
     document.querySelectorAll('.aiq-list-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.aiq-list-btn').forEach(b => {
         if (b.querySelector('.aiq-list-name')?.textContent === name) b.classList.add('active');
@@ -152,7 +149,7 @@ function _aiqSelectList(name) {
 }
 
 function aiqBeginTest() {
-    if (!_aiqSelectedList || !allData[_aiqSelectedList]) {
+    if (!AiQuizCfg.selectedList || !allData[AiQuizCfg.selectedList]) {
         alert('Lütfen bir kelime grubu seçin!'); return;
     }
     const hasKey = true; // Puter.js her zaman mevcut
@@ -163,10 +160,10 @@ function aiqBeginTest() {
     }
 
     // Listeyi hazırla
-    const pool = [...allData[_aiqSelectedList]].sort(() => Math.random() - .5);
-    const cnt  = _aiqCount === 0 ? pool.length : Math.min(_aiqCount, pool.length);
-    aiCurrentList  = pool.slice(0, cnt);
-    aiCurrentIndex = 0;
+    const pool = [...allData[AiQuizCfg.selectedList]].sort(() => Math.random() - .5);
+    const cnt  = AiQuizCfg.count === 0 ? pool.length : Math.min(AiQuizCfg.count, pool.length);
+    AiQuizState.currentList  = pool.slice(0, cnt);
+    AiQuizState.currentIndex = 0;
     _aiqSessionCorrect = 0;
     _aiqSessionWrong   = 0;
     _aiqSessionTotal   = 0;
@@ -206,7 +203,7 @@ function saveKeyAndStart() {
 }
 
 async function fetchAIQuestionForCurrentWord() {
-    if (aiCurrentIndex >= aiCurrentList.length) {
+    if (AiQuizState.currentIndex >= AiQuizState.currentList.length) {
         // Test bitti — finish card göster
         const total   = _aiqSessionTotal;
         const correct = _aiqSessionCorrect;
@@ -231,15 +228,15 @@ async function fetchAIQuestionForCurrentWord() {
         return;
     }
 
-    aiAnswered = false;
-    const currentItem = aiCurrentList[aiCurrentIndex];
+    AiQuizState.answered = false;
+    const currentItem = AiQuizState.currentList[AiQuizState.currentIndex];
     const targetWord  = currentItem.word || currentItem.eng || currentItem.en;
-    aiCurrentWord = { word: targetWord, tr: currentItem.tr || currentItem.meaning || '', listName: _aiqSelectedList || '' };
+    aiCurrentWord = { word: targetWord, tr: currentItem.tr || currentItem.meaning || '', listName: AiQuizCfg.selectedList || '' };
 
-    const cnt = aiCurrentList.length;
-    document.getElementById('ai-word-counter').textContent = `${aiCurrentIndex + 1} / ${cnt}`;
+    const cnt = AiQuizState.currentList.length;
+    document.getElementById('ai-word-counter').textContent = `${AiQuizState.currentIndex + 1} / ${cnt}`;
     const lbl = document.getElementById('aiq-q-prog-label');
-    if (lbl) lbl.textContent = `${aiCurrentIndex + 1}/${cnt}`;
+    if (lbl) lbl.textContent = `${AiQuizState.currentIndex + 1}/${cnt}`;
 
     const tEl = document.getElementById('ai-target-display');
     if (tEl) tEl.textContent = '⏳ Hazırlanıyor';
@@ -256,9 +253,9 @@ async function fetchAIQuestionForCurrentWord() {
 
     // Zorluk ve tip belirle
     const diffMap = { ydt:'YDT seviyesinde ÖSYM tarzında', kolay:'B1 seviyesinde kolay', zor:'C1/C2 seviyesinde çok zor' };
-    const diffTxt = diffMap[_aiqDiff] || 'YDT seviyesinde';
-    const typeTxt = _aiqType === 'anlam' ? 'Bu kelimenin Türkçe anlamını soran çoktan seçmeli'
-        : _aiqType === 'karisik' ? (Math.random() > .5 ? 'boşluk doldurma' : 'anlam sorusu')
+    const diffTxt = diffMap[AiQuizCfg.diff] || 'YDT seviyesinde';
+    const typeTxt = AiQuizCfg.type === 'anlam' ? 'Bu kelimenin Türkçe anlamını soran çoktan seçmeli'
+        : AiQuizCfg.type === 'karisik' ? (Math.random() > .5 ? 'boşluk doldurma' : 'anlam sorusu')
         : 'boşluk doldurma';
 
     const prompt = `Sen uzman bir YDT İngilizce öğretmenisin. '${targetWord}' kelimesiyle ilgili, ${diffTxt} ${typeTxt} sorusu hazırla. 5 şıklı (A, B, C, D, E) olsun. SADECE şu JSON formatında ver:
@@ -282,27 +279,27 @@ async function fetchAIQuestionForCurrentWord() {
 function renderAIPageQuestion(qData) {
     // SORU NO göster — kelime AÇIKLANMAZ (cevap sızıntısı olur!)
     const targetEl = document.getElementById('ai-target-display');
-    const idx = aiCurrentIndex + 1;
+    const idx = AiQuizState.currentIndex + 1;
     if (targetEl) targetEl.textContent = `SORU ${idx}`;
 
     // Zorluk etiketi
     const diffLabels = { ydt:'🎯 YDT Seviyesi', kolay:'🟢 Kolay', zor:'🔴 Zor' };
     const diffEl = document.getElementById('aiq-q-difficulty');
-    if (diffEl) diffEl.textContent = diffLabels[_aiqDiff] || '🎯 YDT Seviyesi';
+    if (diffEl) diffEl.textContent = diffLabels[AiQuizCfg.diff] || '🎯 YDT Seviyesi';
 
     // Progress bar
-    const cnt = aiCurrentList.length;
+    const cnt = AiQuizState.currentList.length;
     const pb  = document.getElementById('ai-progress-bar');
-    if (pb) pb.style.width = Math.round((aiCurrentIndex / cnt) * 100) + '%';
-    document.getElementById('ai-word-counter').textContent = `${aiCurrentIndex + 1} / ${cnt}`;
+    if (pb) pb.style.width = Math.round((AiQuizState.currentIndex / cnt) * 100) + '%';
+    document.getElementById('ai-word-counter').textContent = `${AiQuizState.currentIndex + 1} / ${cnt}`;
     const lbl = document.getElementById('aiq-q-prog-label');
-    if (lbl) lbl.textContent = `${aiCurrentIndex + 1}/${cnt}`;
+    if (lbl) lbl.textContent = `${AiQuizState.currentIndex + 1}/${cnt}`;
 
     document.getElementById('ai-q-text').textContent = qData.question;
 
     const optsContainer = document.getElementById('ai-options');
     optsContainer.innerHTML = '';
-    aiPageCorrect = qData.correct;
+    AiQuizState.pageCorrect = qData.correct;
 
     for (const [key, val] of Object.entries(qData.options)) {
         const btn = document.createElement('button');
@@ -320,9 +317,9 @@ function renderAIPageQuestion(qData) {
 }
 
 function checkAIPageAnswer(btn, selectedKey, qData) {
-    if (aiAnswered) return;
-    aiAnswered      = true;
-    const isCorrect = (selectedKey === aiPageCorrect);
+    if (AiQuizState.answered) return;
+    AiQuizState.answered      = true;
+    const isCorrect = (selectedKey === AiQuizState.pageCorrect);
     recordAIStat(isCorrect);
     recordDailyPerf(isCorrect);
     saveToAiArsiv(qData, selectedKey, isCorrect);
@@ -336,7 +333,7 @@ function checkAIPageAnswer(btn, selectedKey, qData) {
         b.disabled = true;
         b.classList.add('aiq-opt-disabled');
         const k = b.dataset.key;
-        if (k === aiPageCorrect) b.classList.add('aiq-opt-correct');
+        if (k === AiQuizState.pageCorrect) b.classList.add('aiq-opt-correct');
         else if (k === selectedKey && !isCorrect) b.classList.add('aiq-opt-wrong');
     });
 
@@ -352,18 +349,21 @@ function checkAIPageAnswer(btn, selectedKey, qData) {
 }
 
 function nextAIQuestion() {
-    aiCurrentIndex++;
+    AiQuizState.currentIndex++;
     fetchAIQuestionForCurrentWord();
 }
 
 // ── Arşive kaydet ────────────────────────────────────
 function saveToAiArsiv(qData, selectedKey, isCorrect) {
     if (!qData || !qData.question) return;
+    const wordVal  = (aiCurrentWord?.word  || '').trim() || (aiCurrentWord?.tr || '').trim() || '';
+    const wordTrVal = (aiCurrentWord?.tr   || '').trim();
+    if (!wordVal && !wordTrVal) return; // kelime bilgisi yoksa arşive ekleme
     const entry = {
         id:        Date.now(),
         date:      new Date().toISOString(),
-        word:      aiCurrentWord?.word || '',
-        wordTr:    aiCurrentWord?.tr   || '',
+        word:      wordVal,
+        wordTr:    wordTrVal,
         listName:  aiCurrentWord?.listName || '',
         question:  qData.question,
         options:   qData.options,

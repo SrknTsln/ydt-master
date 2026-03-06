@@ -1,17 +1,27 @@
 // ── Utils + UKM — motor.js'den ayrıştırıldı
 // Bağımlılıklar: motor.js (global state)
 
+/**
+ * HTML entity encode — AI/user input'u innerHTML'e yazmadan önce uygula
+ * Sadece &  < > " ' karakterlerini encode eder; emoji ve Unicode bozulmaz.
+ * @param {*} s - sanitize edilecek değer
+ * @returns {string} güvenli HTML string
+ */
+function _esc(s) {
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+                          .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
 // PATCH: Uygulama geneli toast (alert yerine kullanılır)
 // ════════════════════════════════════════════════════════
-function _showAppToast(msg) {
-    const existing = document.getElementById('_app_toast');
-    if (existing) existing.remove();
-    const t = document.createElement('div');
-    t.id = '_app_toast';
-    t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:12px 20px;border-radius:12px;font-size:.84rem;font-weight:700;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,.3);max-width:80vw;text-align:center;pointer-events:none;';
-    t.textContent = '⚠️ ' + msg;
-    document.body.appendChild(t);
-    setTimeout(() => t.remove(), 3500);
+function _showAppToast(msg, type = 'warn') {
+    // showAIToast ai.js'de tanımlı — her zaman sonra yükleniyor
+    if (typeof showAIToast === 'function') {
+        showAIToast(msg, type);
+    } else {
+        // Fallback: ai.js henüz yüklenmediyse (edge case)
+        console.warn('[YDT Toast]', msg);
+    }
 }
 
 // ════════════════════════════════════════════════════════
@@ -611,12 +621,12 @@ async function ukmFetchAI() {
         document.getElementById('ukm-preview-eng').textContent = eng;
         document.getElementById('ukm-preview-tr').textContent  = tr;
         document.getElementById('ukm-preview-meta').innerHTML  =
-            (phonetic  ? `🔊 <em>${phonetic}</em>` : '') +
-            (syllables ? ` · ${syllables} hece`  : '') +
-            ` · ${pos.toUpperCase()} · ${level}` +
-            (engDef   ? `<br><span style="color:var(--ink2)">📖 ${engDef}</span>` : '') +
-            (mnemonic ? `<br>🧠 ${mnemonic}` : '') +
-            (example  ? `<br><span style="color:var(--ink3)">💬 ${example}</span>` : '');
+            (phonetic  ? `🔊 <em>${_esc(phonetic)}</em>` : '') +
+            (syllables ? ` · ${_esc(syllables)} hece`  : '') +
+            ` · ${_esc(pos.toUpperCase())} · ${_esc(level)}` +
+            (engDef   ? `<br><span style="color:var(--ink2)">📖 ${_esc(engDef)}</span>` : '') +
+            (mnemonic ? `<br>🧠 ${_esc(mnemonic)}` : '') +
+            (example  ? `<br><span style="color:var(--ink3)">💬 ${_esc(example)}</span>` : '');
 
         if (previewEl) previewEl.classList.add('show');
     } catch(e) {
@@ -690,3 +700,42 @@ document.addEventListener('ydtDataReady', () => {
 
 // ═══════════════════════════════════════════════════════════════
 // → js/aig.js (ayrı dosyaya taşındı)
+
+// ═══════════════════════════════════════════════════════════════
+// SHARED HELPERS  (games.js + kids.js + sm2-typing.js'den taşındı)
+// ═══════════════════════════════════════════════════════════════
+
+/** Fisher-Yates shuffle — yeni dizi döner, orijinale dokunmaz */
+function shuffle(a) {
+    a = [...a];
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+}
+
+/** Diziden rastgele n eleman seç */
+function pick(a, n) { return shuffle(a).slice(0, n); }
+
+/**
+ * Birleşik speakWord — kids.js (btn destekli) + sm2-typing.js versiyonları birleştirildi
+ * @param {string} word  - Okunacak İngilizce kelime
+ * @param {Element|null} btn - Opsiyonel buton; aktifken kw-listen-active class'ı alır
+ */
+function speakWord(word, btn = null) {
+    if (!window.speechSynthesis) {
+        if (typeof toast === 'function') toast('Bu tarayıcı sesi desteklemiyor 😔', 'bad');
+        return;
+    }
+    window.speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(word);
+    utt.lang  = 'en-US';
+    utt.rate  = 0.85;
+    utt.pitch = 1.1;
+    if (btn) {
+        btn.classList.add('kw-listen-active');
+        utt.onend = () => btn.classList.remove('kw-listen-active');
+    }
+    window.speechSynthesis.speak(utt);
+}
