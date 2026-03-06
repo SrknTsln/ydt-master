@@ -4,13 +4,13 @@
 // Kaynak: 10da10 YDT Adverbial Clauses notları (s. 60–74)
 // ════════════════════════════════════════════════════════════════
 
-var _cjCurrentSection = 'overview';
-var _cjAnswers = {};
-var _cjChecked = {};
-var _cjScore = 0;
-var CJ_TOTAL = 18;
+let _cjCurrentSection = 'overview';
+let _cjAnswers = {};
+let _cjChecked = {};
+let _cjScore = 0;
+const CJ_TOTAL = 18;
 
-var CJ_SECTIONS = [
+const CJ_SECTIONS = [
     { id: 'overview',       label: 'Genel Bakış',              grp: 'Genel' },
     { id: 'coordinating',   label: 'Coordinating (FANTBOYS)',   grp: 'Coordination' },
     { id: 'correlative',    label: 'Correlative Conjunctions',  grp: 'Coordination' },
@@ -25,7 +25,7 @@ var CJ_SECTIONS = [
     { id: 'exercises',      label: 'Alıştırmalar',              grp: 'Özel' }
 ];
 
-var CJ_DOT = {
+const CJ_DOT = {
     'Genel':          '#6366f1',
     'Coordination':   '#0369a1',
     'Subordinating':  '#16a34a',
@@ -33,94 +33,10 @@ var CJ_DOT = {
     'Özel':           '#e63946'
 };
 
-/* ════════ ENTRY POINT ════════ */
-function openConjSection(sectionId) {
-    _cjCurrentSection = sectionId || 'overview';
-    document.querySelectorAll('.container').forEach(function(c){ c.classList.add('hidden'); });
-    document.querySelectorAll('.arsiv-full-page').forEach(function(c){ c.classList.add('hidden'); });
-    var page = document.getElementById('conj-page');
-    if (page) page.classList.remove('hidden');
-    document.querySelectorAll('.sb-btn, .mob-drawer-btn').forEach(function(el){ el.classList.remove('active'); });
-    var sb = document.getElementById('sb-grammar-conj');
-    if (sb) sb.classList.add('active');
-    var di = document.getElementById('di-grammar-conj');
-    if (di) di.classList.add('active');
-    _cjRenderPage();
-}
-
-function _cjRenderPage() {
-    var page = document.getElementById('conj-page');
-    if (!page) return;
-    page.innerHTML =
-        '<div class="gr-topbar">'
-        + '<button class="gr-back-btn" onclick="navTo(\'index-page\')">←</button>'
-        + '<div><div class="gr-topbar-label">Grammar Modülü</div>'
-        + '<div class="gr-topbar-title">Adverbial Clauses &amp; Conjunctions</div></div>'
-        + '</div>'
-        + '<div class="gr-body">'
-        + '<nav class="gr-sidenav" id="cj-sidenav"></nav>'
-        + '<div class="gr-content" id="cj-content"></div>'
-        + '</div>';
-    _cjBuildSidenav();
-    _cjRenderSection(_cjCurrentSection);
-}
-
-function _cjBuildSidenav() {
-    var nav = document.getElementById('cj-sidenav');
-    if (!nav) return;
-    var groups = {};
-    CJ_SECTIONS.forEach(function(s) {
-        if (!groups[s.grp]) groups[s.grp] = [];
-        groups[s.grp].push(s);
-    });
-    var html = '';
-    ['Genel','Coordination','Subordinating','Transitions','Özel'].forEach(function(grp) {
-        var list = groups[grp];
-        if (!list) return;
-        html += '<div class="gr-sn-sec">' + grp + '</div>';
-        list.forEach(function(s) {
-            var active = s.id === _cjCurrentSection ? ' active' : '';
-            html += '<button class="gr-sn-btn' + active + '" onclick="_cjRenderSection(\'' + s.id + '\')">'
-                + '<span class="gr-sn-dot" style="background:' + CJ_DOT[grp] + '"></span>' + s.label + '</button>';
-        });
-    });
-    nav.innerHTML = html;
-}
-
-function _cjRenderSection(id) {
-    _cjCurrentSection = id;
-    _cjBuildSidenav();
-    var content = document.getElementById('cj-content');
-    if (!content) return;
-    content.scrollTop = 0;
-    var map = {
-        'overview':     cjOverview,
-        'coordinating': cjCoordinating,
-        'correlative':  cjCorrelative,
-        'cause':        cjCause,
-        'result':       cjResult,
-        'purpose':      cjPurpose,
-        'contrast':     cjContrast,
-        'time':         cjTime,
-        'addition':     cjAddition,
-        'reduction':    cjReduction,
-        'gerund':       cjGerund,
-        'exercises':    cjExercises
-    };
-    var fn = map[id];
-    content.innerHTML = fn ? fn() : '<div style="padding:40px">Yakında...</div>';
-    if (id === 'exercises') {
-        _cjScore = 0; _cjAnswers = {}; _cjChecked = {};
-        _cjUpdScore();
-        document.querySelectorAll('.cj-inp').forEach(function(inp, i) {
-            inp.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') { e.preventDefault(); cjCheckBlank(i); }
-            });
-        });
-    }
-}
+/* ════════ ENTRY POINT — GrammarModule engine ════════ */
 
 /* ════════ HELPERS ════════ */
+/* ════════ ENTRY POINT ════════ */
 function cjH(eyebrow, title, sub) {
     return '<div class="gr-hero" style="background:linear-gradient(135deg,#064e3b 0%,#16a34a 60%,#4ade80 100%)">'
         + '<div class="gr-hero-eyebrow">' + eyebrow + '</div>'
@@ -131,24 +47,24 @@ function cjH(eyebrow, title, sub) {
 function cjSH(label) { return '<div class="gr-sec-hd">' + label + '</div>'; }
 
 function cjTable(headers, rows) {
-    var ths = headers.map(function(h){ return '<th>' + h + '</th>'; }).join('');
-    var trs = rows.map(function(r){
+    const ths = headers.map(function(h){ return '<th>' + h + '</th>'; }).join('');
+    const trs = rows.map(function(r){
         return '<tr>' + r.map(function(c){ return '<td>' + c + '</td>'; }).join('') + '</tr>';
     }).join('');
     return '<div class="gr-tbl-wrap"><table class="gr-tbl"><thead><tr>' + ths + '</tr></thead><tbody>' + trs + '</tbody></table></div>';
 }
 
 function cjAcc(items) {
-    var cards = items.map(function(it) {
-        var exHtml = (it.examples||[]).map(function(ex, i) {
+    const cards = items.map(function(it) {
+        const exHtml = (it.examples||[]).map(function(ex, i) {
             return '<div class="gr-ex" style="border-left:3px solid #16a34a"><span class="gr-ex-n">'
                 + String(i+1).padStart(2,'0') + '</span>' + ex + '</div>';
         }).join('');
-        var noteHtml = (it.notes||[]).map(function(n){
+        const noteHtml = (it.notes||[]).map(function(n){
             return '<div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:8px;padding:10px 14px;margin:6px 0;font-size:.8rem;color:#14532d;line-height:1.7">'
                 + n + '</div>';
         }).join('');
-        var descHtml = it.desc ? '<p class="gr-acc-desc">' + it.desc + '</p>' : '';
+        const descHtml = it.desc ? '<p class="gr-acc-desc">' + it.desc + '</p>' : '';
         return '<div class="gr-acc" onclick="this.classList.toggle(\'open\')">'
             + '<div class="gr-acc-head">'
             + '<div class="gr-acc-ico" style="background:' + it.bg + '">' + it.ico + '</div>'
@@ -162,7 +78,7 @@ function cjAcc(items) {
 }
 
 function cjBox(color, title, lines) {
-    var styles = {
+    const styles = {
         blue:   'background:#eff6ff;border:2px solid #2563eb;color:#1e3a8a',
         sky:    'background:#f0f9ff;border:2px solid #0284c7;color:#0c4a6e',
         yellow: 'background:#fefce8;border:2px solid #ca8a04;color:#713f12',
@@ -171,7 +87,7 @@ function cjBox(color, title, lines) {
         red:    'background:#fff1f2;border:2px solid #e63946;color:#9f1239',
         orange: 'background:#fff7ed;border:2px solid #ea580c;color:#7c2d12'
     };
-    var content = lines.map(function(l){
+    const content = lines.map(function(l){
         return l === '' ? '<br>' : '<div style="margin-bottom:5px">' + l + '</div>';
     }).join('');
     return '<div style="' + (styles[color]||styles.sky) + ';border-radius:12px;padding:14px 18px;margin:4px 36px 8px;font-size:.82rem;line-height:1.8;">'
@@ -180,13 +96,13 @@ function cjBox(color, title, lines) {
 }
 
 function cjPill(label, color) {
-    var bg = color || '#16a34a';
+    const bg = color || '#16a34a';
     return '<span style="display:inline-block;background:' + bg + ';color:#fff;border-radius:20px;padding:2px 12px;font-size:.75rem;font-weight:700;margin:2px 4px 2px 0;">' + label + '</span>';
 }
 
 /* ════════ OVERVIEW ════════ */
 function cjOverview() {
-    var cards = [
+    const cards = [
         {id:'coordinating', emoji:'🔗', name:'Coordinating',   sub:'FANTBOYS: for, and, nor, then, but, or, yet, so', tc:'#1e3a8a', bc:'#dbeafe', bd:'#93c5fd'},
         {id:'correlative',  emoji:'⚖️', name:'Correlative',    sub:'both…and, not only…but also, neither…nor, either…or', tc:'#4c1d95', bc:'#f5f3ff', bd:'#c4b5fd'},
         {id:'cause',        emoji:'🔵', name:'Cause (Sebep)',   sub:'because, since, as, owing to, due to, thanks to…', tc:'#065f46', bc:'#d1fae5', bd:'#6ee7b7'},
@@ -199,7 +115,7 @@ function cjOverview() {
         {id:'gerund',       emoji:'📝', name:'Gerund & Infinitive', sub:'Cümlede isim görevi gören yapılar', tc:'#1e3a8a', bc:'#eff6ff', bd:'#93c5fd'},
     ];
 
-    var cardHtml = cards.map(function(c) {
+    const cardHtml = cards.map(function(c) {
         return '<div style="border:1.5px solid ' + c.bd + ';border-radius:14px;padding:16px;background:' + c.bc + ';cursor:pointer;transition:all .18s;"'
             + ' onmouseover="this.style.transform=\'translateY(-3px)\';this.style.boxShadow=\'0 8px 24px rgba(0,0,0,.1)\'"'
             + ' onmouseout="this.style.transform=\'\';this.style.boxShadow=\'\'"'
@@ -658,7 +574,7 @@ function cjGerund() {
    Set 4: Test Yourself 3 (1.E-10.E cevapları)
    Yeni set: CJ_SETS dizisine ekle
 ═══════════════════════════════════════════════════════════════ */
-var CJ_SETS = [
+const CJ_SETS = [
     {
         label: 'Set 1',
         questions: [
@@ -881,10 +797,10 @@ var CJ_SETS = [
     ------------------------------------------------- */
 ];
 
-var _cjSetIdx     = 0;
-var _cjSetScore   = 0;
-var _cjSetChecked = {};
-var _cjSetAnswers = {};
+let _cjSetIdx     = 0;
+let _cjSetScore   = 0;
+let _cjSetChecked = {};
+let _cjSetAnswers = {};
 
 function cjExercises() {
     _cjSetIdx = 0; _cjSetScore = 0; _cjSetChecked = {}; _cjSetAnswers = {};
@@ -892,21 +808,21 @@ function cjExercises() {
 }
 
 function _cjBuildExercisePage() {
-    var set   = CJ_SETS[_cjSetIdx];
-    var total = set.questions.length;
+    const set   = CJ_SETS[_cjSetIdx];
+    const total = set.questions.length;
 
-    var tabs = CJ_SETS.map(function(s, i) {
-        var active = i === _cjSetIdx
+    const tabs = CJ_SETS.map(function(s, i) {
+        const active = i === _cjSetIdx
             ? 'style="background:#16a34a;color:#fff;border-color:#16a34a;"' : '';
         return '<button class="gr-set-tab" ' + active + ' onclick="cjSwitchSet(' + i + ')">' + s.label + '</button>';
     }).join('');
 
-    var qCards = set.questions.map(function(q, i) {
-        var opts = q.opts.map(function(o, j) {
-            var letter = ['A','B','C','D','E'][j];
-            var lv     = ['a','b','c','d','e'][j];
-            var state  = _cjSetAnswers[_cjSetIdx + '_' + i];
-            var cls    = 'gr-opt';
+    const qCards = set.questions.map(function(q, i) {
+        const opts = q.opts.map(function(o, j) {
+            const letter = ['A','B','C','D','E'][j];
+            const lv     = ['a','b','c','d','e'][j];
+            const state  = _cjSetAnswers[_cjSetIdx + '_' + i];
+            let cls    = 'gr-opt';
             if (_cjSetChecked[_cjSetIdx + '_' + i]) {
                 if (lv === q.cor)                         cls += ' ok';
                 else if (lv === state && state !== q.cor) cls += ' bad';
@@ -915,12 +831,12 @@ function _cjBuildExercisePage() {
                 + '<span class="gr-opt-letter">' + letter + '</span>' + o + '</div>';
         }).join('');
 
-        var checked = _cjSetChecked[_cjSetIdx + '_' + i];
-        var fbCls   = checked ? (checked === 'ok' ? 'gr-fb show ok' : 'gr-fb show bad') : 'gr-fb';
-        var fbTxt   = checked === 'ok'  ? 'Dogru! ' + q.hint
+        const checked = _cjSetChecked[_cjSetIdx + '_' + i];
+        const fbCls   = checked ? (checked === 'ok' ? 'gr-fb show ok' : 'gr-fb show bad') : 'gr-fb';
+        const fbTxt   = checked === 'ok'  ? 'Dogru! ' + q.hint
                     : checked === 'bad' ? 'Yanlis. Dogru: ' + q.cor.toUpperCase() + ' -- ' + q.hint : '';
-        var cardCls = checked === 'ok' ? 'gr-q-card gr-c' : checked === 'bad' ? 'gr-q-card gr-w' : 'gr-q-card';
-        var btnDis  = checked ? 'disabled style="opacity:.4;pointer-events:none;"' : '';
+        const cardCls = checked === 'ok' ? 'gr-q-card gr-c' : checked === 'bad' ? 'gr-q-card gr-w' : 'gr-q-card';
+        const btnDis  = checked ? 'disabled style="opacity:.4;pointer-events:none;"' : '';
 
         return '<div class="' + cardCls + '" id="cjsc-' + i + '">'
             + '<div class="gr-q-num">SORU ' + String(i+1).padStart(2,'0') + ' -- ' + set.label.toUpperCase() + '</div>'
@@ -931,7 +847,7 @@ function _cjBuildExercisePage() {
             + '</div>';
     }).join('');
 
-    var nextBtn = _cjSetIdx < CJ_SETS.length - 1
+    const nextBtn = _cjSetIdx < CJ_SETS.length - 1
         ? '<button class="gr-retry-btn" style="background:#16a34a;color:#fff;border-color:#16a34a" onclick="cjNextSet()">Sonraki Set &rarr;</button>'
         : '<span style="font-size:.8rem;color:var(--ink3);align-self:center">Tum setler tamamlandi!</span>';
 
@@ -956,34 +872,34 @@ function _cjBuildExercisePage() {
 
 function cjSwitchSet(idx) {
     _cjSetIdx = idx; _cjSetScore = 0; _cjSetChecked = {}; _cjSetAnswers = {};
-    var cnt = document.getElementById('cj-content');
+    const cnt = document.getElementById('cj-content');
     if (cnt) { cnt.innerHTML = _cjBuildExercisePage(); cnt.scrollTop = 0; }
 }
 
 function cjSetOpt(qi, oi, letter) {
     if (_cjSetChecked[_cjSetIdx + '_' + qi]) return;
     CJ_SETS[_cjSetIdx].questions[qi].opts.forEach(function(_, j) {
-        var el = document.getElementById('cjso-' + qi + '-' + j);
+        const el = document.getElementById('cjso-' + qi + '-' + j);
         if (el) el.className = 'gr-opt' + (j === oi ? ' sel' : '');
     });
     _cjSetAnswers[_cjSetIdx + '_' + qi] = letter;
 }
 
 function cjCheckSetQ(qi) {
-    var q    = CJ_SETS[_cjSetIdx].questions[qi];
-    var sel  = _cjSetAnswers[_cjSetIdx + '_' + qi];
-    var fb   = document.getElementById('cjsfb-' + qi);
-    var card = document.getElementById('cjsc-' + qi);
+    const q    = CJ_SETS[_cjSetIdx].questions[qi];
+    const sel  = _cjSetAnswers[_cjSetIdx + '_' + qi];
+    const fb   = document.getElementById('cjsfb-' + qi);
+    const card = document.getElementById('cjsc-' + qi);
     if (!sel) { fb.textContent = 'Bir secenek secin!'; fb.className = 'gr-fb show bad'; return; }
-    var letters = ['a','b','c','d','e'];
+    const letters = ['a','b','c','d','e'];
     q.opts.forEach(function(_, j) {
-        var el = document.getElementById('cjso-' + qi + '-' + j);
+        const el = document.getElementById('cjso-' + qi + '-' + j);
         if (!el) return;
         el.classList.remove('sel');
         if (letters[j] === q.cor)                     el.classList.add('ok');
         else if (letters[j] === sel && sel !== q.cor) el.classList.add('bad');
     });
-    var btn = card.querySelector('.gr-chk-btn');
+    const btn = card.querySelector('.gr-chk-btn');
     if (btn) { btn.disabled = true; btn.style.opacity = '.4'; btn.style.pointerEvents = 'none'; }
     if (sel === q.cor) {
         card.classList.add('gr-c');
@@ -997,17 +913,17 @@ function cjCheckSetQ(qi) {
         fb.className = 'gr-fb show bad';
         _cjSetChecked[_cjSetIdx + '_' + qi] = 'bad';
     }
-    var el = document.getElementById('cj-live-score');
+    const el = document.getElementById('cj-live-score');
     if (el) el.textContent = _cjSetScore + ' / ' + CJ_SETS[_cjSetIdx].questions.length;
 }
 
 function cjSubmitSet() {
-    var total = CJ_SETS[_cjSetIdx].questions.length;
-    var panel = document.getElementById('cj-result');
+    const total = CJ_SETS[_cjSetIdx].questions.length;
+    const panel = document.getElementById('cj-result');
     if (!panel) return;
     panel.classList.add('show');
     document.getElementById('cj-res-score').textContent = _cjSetScore + '/' + total;
-    var pct = Math.round((_cjSetScore / total) * 100);
+    const pct = Math.round((_cjSetScore / total) * 100);
     document.getElementById('cj-res-msg').textContent =
         pct >= 90 ? 'Mukemmel! Bu seti harika geçirdin!'
       : pct >= 70 ? 'Cok iyi! Kücük eksikler var.'
@@ -1022,11 +938,47 @@ function cjNextSet()      { if (_cjSetIdx < CJ_SETS.length - 1) cjSwitchSet(_cjS
 
 
 /* ════════ GLOBALS ════════ */
-window.openConjSection    = openConjSection;
-window._cjRenderSection   = _cjRenderSection;
-window.cjSwitchSet        = cjSwitchSet;
-window.cjSetOpt           = cjSetOpt;
-window.cjCheckSetQ        = cjCheckSetQ;
-window.cjSubmitSet        = cjSubmitSet;
-window.cjRetrySameSet     = cjRetrySameSet;
-window.cjNextSet          = cjNextSet;
+// openConjSection ve _cjRenderSection: _initConjModule içinde atandı
+window.cjSwitchSet    = cjSwitchSet;
+window.cjSetOpt       = cjSetOpt;
+window.cjCheckSetQ    = cjCheckSetQ;
+window.cjSubmitSet    = cjSubmitSet;
+window.cjRetrySameSet = cjRetrySameSet;
+window.cjNextSet      = cjNextSet;
+
+(function _initConjModule() {
+    const _mod = new GrammarModule({
+        id:       'cj',
+        pageId:   'conj-page',
+        sbId:     'sb-grammar-conj',
+        diId:     'di-grammar-conj',
+        title:    'Adverbial Clauses &amp; Conjunctions',
+        sections: CJ_SECTIONS,
+        dotColors: CJ_DOT,
+        grpOrder: ['Genel', 'Coordination', 'Subordinating', 'Transitions', 'Özel'],
+        sectionMap: {
+            'overview':     function(){ return cjOverview(); },
+            'coordinating': function(){ return cjCoordinating(); },
+            'correlative':  function(){ return cjCorrelative(); },
+            'cause':        function(){ return cjCause(); },
+            'result':       function(){ return cjResult(); },
+            'purpose':      function(){ return cjPurpose(); },
+            'contrast':     function(){ return cjContrast(); },
+            'time':         function(){ return cjTime(); },
+            'addition':     function(){ return cjAddition(); },
+            'reduction':    function(){ return cjReduction(); },
+            'gerund':       function(){ return cjGerund(); },
+            'exercises':    function(){ return cjExercises(); }
+        },
+        onSectionRender: function(id) {
+            if (id === 'exercises') {
+                _cjScore = 0; _cjAnswers = {}; _cjChecked = {};
+                _cjUpdScore();
+            }
+        }
+    });
+
+    window.openConjSection  = function(sectionId) { _mod.open(sectionId || 'overview'); };
+    window._cjRenderSection = function(id)        { _mod.goTo(id); };
+    window['_cjGoTo']       = function(id)        { _mod.goTo(id); };
+})();

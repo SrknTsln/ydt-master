@@ -4,13 +4,13 @@
 // Kaynak: 10da10 YDT Gerunds & Infinitives notları (s. 74–81)
 // ════════════════════════════════════════════════════════════════
 
-var _grdCurrentSection = 'overview';
-var _grdAnswers = {};
-var _grdChecked = {};
-var _grdScore = 0;
-var GRD_TOTAL = 16;
+let _grdCurrentSection = 'overview';
+let _grdAnswers = {};
+let _grdChecked = {};
+let _grdScore = 0;
+const GRD_TOTAL = 16;
 
-var GRD_SECTIONS = [
+const GRD_SECTIONS = [
     { id: 'overview',    label: 'Genel Bakış',                grp: 'Genel' },
     { id: 'gerund-uses', label: 'Gerund — Kullanım (a–i)',    grp: 'Gerund' },
     { id: 'gerund-osym', label: 'ÖSYM Gerund İfadeleri',      grp: 'Gerund' },
@@ -24,7 +24,7 @@ var GRD_SECTIONS = [
     { id: 'exercises',   label: 'Alıştırmalar',                grp: 'Özel' }
 ];
 
-var GRD_DOT = {
+const GRD_DOT = {
     'Genel':         '#6366f1',
     'Gerund':        '#d97706',
     'Infinitive':    '#0369a1',
@@ -32,93 +32,10 @@ var GRD_DOT = {
     'Özel':          '#e63946'
 };
 
-/* ════════ ENTRY POINT ════════ */
-function openGerundSection(sectionId) {
-    _grdCurrentSection = sectionId || 'overview';
-    document.querySelectorAll('.container').forEach(function(c){ c.classList.add('hidden'); });
-    document.querySelectorAll('.arsiv-full-page').forEach(function(c){ c.classList.add('hidden'); });
-    var page = document.getElementById('gerund-page');
-    if (page) page.classList.remove('hidden');
-    document.querySelectorAll('.sb-btn, .mob-drawer-btn').forEach(function(el){ el.classList.remove('active'); });
-    var sb = document.getElementById('sb-grammar-gerund');
-    if (sb) sb.classList.add('active');
-    var di = document.getElementById('di-grammar-gerund');
-    if (di) di.classList.add('active');
-    _grdRenderPage();
-}
-
-function _grdRenderPage() {
-    var page = document.getElementById('gerund-page');
-    if (!page) return;
-    page.innerHTML =
-        '<div class="gr-topbar">'
-        + '<button class="gr-back-btn" onclick="navTo(\'index-page\')">←</button>'
-        + '<div><div class="gr-topbar-label">Grammar Modülü</div>'
-        + '<div class="gr-topbar-title">Gerunds &amp; Infinitives</div></div>'
-        + '</div>'
-        + '<div class="gr-body">'
-        + '<nav class="gr-sidenav" id="grd-sidenav"></nav>'
-        + '<div class="gr-content" id="grd-content"></div>'
-        + '</div>';
-    _grdBuildSidenav();
-    _grdRenderSection(_grdCurrentSection);
-}
-
-function _grdBuildSidenav() {
-    var nav = document.getElementById('grd-sidenav');
-    if (!nav) return;
-    var groups = {};
-    GRD_SECTIONS.forEach(function(s) {
-        if (!groups[s.grp]) groups[s.grp] = [];
-        groups[s.grp].push(s);
-    });
-    var html = '';
-    ['Genel','Gerund','Infinitive','Karşılaştırma','Özel'].forEach(function(grp) {
-        var list = groups[grp];
-        if (!list) return;
-        html += '<div class="gr-sn-sec">' + grp + '</div>';
-        list.forEach(function(s) {
-            var active = s.id === _grdCurrentSection ? ' active' : '';
-            html += '<button class="gr-sn-btn' + active + '" onclick="_grdRenderSection(\'' + s.id + '\')">'
-                + '<span class="gr-sn-dot" style="background:' + GRD_DOT[grp] + '"></span>' + s.label + '</button>';
-        });
-    });
-    nav.innerHTML = html;
-}
-
-function _grdRenderSection(id) {
-    _grdCurrentSection = id;
-    _grdBuildSidenav();
-    var content = document.getElementById('grd-content');
-    if (!content) return;
-    content.scrollTop = 0;
-    var map = {
-        'overview':    grdOverview,
-        'gerund-uses': grGerundUses,
-        'gerund-osym': grGerundOsym,
-        'gerund-verbs':grGerundVerbs,
-        'gerund-forms':grGerundForms,
-        'inf-uses':    grInfUses,
-        'inf-osym':    grInfOsym,
-        'inf-forms':   grInfForms,
-        'inf-lists':   grInfLists,
-        'dual':        grDual,
-        'exercises':   grdExercises
-    };
-    var fn = map[id];
-    content.innerHTML = fn ? fn() : '<div style="padding:40px">Yakında...</div>';
-    if (id === 'exercises') {
-        _grdScore = 0; _grdAnswers = {}; _grdChecked = {};
-        _grdUpdScore();
-        document.querySelectorAll('.grd-inp').forEach(function(inp, i) {
-            inp.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') { e.preventDefault(); grdCheckBlank(i); }
-            });
-        });
-    }
-}
+/* ════════ ENTRY POINT — GrammarModule engine ════════ */
 
 /* ════════ HELPERS ════════ */
+/* ════════ ENTRY POINT ════════ */
 function grdH(eyebrow, title, sub) {
     return '<div class="gr-hero" style="background:linear-gradient(135deg,#78350f 0%,#d97706 60%,#fbbf24 100%)">'
         + '<div class="gr-hero-eyebrow">' + eyebrow + '</div>'
@@ -129,24 +46,24 @@ function grdH(eyebrow, title, sub) {
 function grdSH(label) { return '<div class="gr-sec-hd">' + label + '</div>'; }
 
 function grdTable(headers, rows) {
-    var ths = headers.map(function(h){ return '<th>' + h + '</th>'; }).join('');
-    var trs = rows.map(function(r){
+    const ths = headers.map(function(h){ return '<th>' + h + '</th>'; }).join('');
+    const trs = rows.map(function(r){
         return '<tr>' + r.map(function(c){ return '<td>' + c + '</td>'; }).join('') + '</tr>';
     }).join('');
     return '<div class="gr-tbl-wrap"><table class="gr-tbl"><thead><tr>' + ths + '</tr></thead><tbody>' + trs + '</tbody></table></div>';
 }
 
 function grdAcc(items) {
-    var cards = items.map(function(it) {
-        var exHtml = (it.examples||[]).map(function(ex, i) {
+    const cards = items.map(function(it) {
+        const exHtml = (it.examples||[]).map(function(ex, i) {
             return '<div class="gr-ex" style="border-left:3px solid #d97706"><span class="gr-ex-n">'
                 + String(i+1).padStart(2,'0') + '</span>' + ex + '</div>';
         }).join('');
-        var noteHtml = (it.notes||[]).map(function(n){
+        const noteHtml = (it.notes||[]).map(function(n){
             return '<div style="background:#fef9c3;border:1.5px solid #fcd34d;border-radius:8px;padding:10px 14px;margin:6px 0;font-size:.8rem;color:#713f12;line-height:1.7">'
                 + n + '</div>';
         }).join('');
-        var descHtml = it.desc ? '<p class="gr-acc-desc">' + it.desc + '</p>' : '';
+        const descHtml = it.desc ? '<p class="gr-acc-desc">' + it.desc + '</p>' : '';
         return '<div class="gr-acc" onclick="this.classList.toggle(\'open\')">'
             + '<div class="gr-acc-head">'
             + '<div class="gr-acc-ico" style="background:' + it.bg + '">' + it.ico + '</div>'
@@ -160,7 +77,7 @@ function grdAcc(items) {
 }
 
 function grdBox(color, title, lines) {
-    var styles = {
+    const styles = {
         blue:   'background:#eff6ff;border:2px solid #2563eb;color:#1e3a8a',
         sky:    'background:#f0f9ff;border:2px solid #0284c7;color:#0c4a6e',
         yellow: 'background:#fefce8;border:2px solid #ca8a04;color:#713f12',
@@ -169,7 +86,7 @@ function grdBox(color, title, lines) {
         green:  'background:#f0fdf4;border:2px solid #16a34a;color:#14532d',
         red:    'background:#fff1f2;border:2px solid #e63946;color:#9f1239'
     };
-    var content = lines.map(function(l){
+    const content = lines.map(function(l){
         return l === '' ? '<br>' : '<div style="margin-bottom:5px">' + l + '</div>';
     }).join('');
     return '<div style="' + (styles[color]||styles.yellow) + ';border-radius:12px;padding:14px 18px;margin:4px 36px 8px;font-size:.82rem;line-height:1.8;">'
@@ -183,7 +100,7 @@ function grdPill(label, bg) {
 
 /* ════════ OVERVIEW ════════ */
 function grdOverview() {
-    var cards = [
+    const cards = [
         { id:'gerund-uses',  emoji:'📖', name:'Gerund Kullanımı',      sub:'Özne, nesne, tamamlayıcı, preposition, busy, algı fiilleri…',      tc:'#7c2d12', bc:'#ffedd5', bd:'#fdba74' },
         { id:'gerund-osym',  emoji:'⭐', name:'ÖSYM Gerund Kalıpları', sub:'have fun, look forward to, can\'t help, be used to…',               tc:'#713f12', bc:'#fef9c3', bd:'#fcd34d' },
         { id:'gerund-verbs', emoji:'📋', name:'Gerund Alan Fiiller',   sub:'Admit, enjoy, finish, suggest, postpone, risk…',                    tc:'#7c2d12', bc:'#ffedd5', bd:'#fdba74' },
@@ -195,7 +112,7 @@ function grdOverview() {
         { id:'dual',         emoji:'⚖️', name:'Gerund or Infinitive?', sub:'remember, regret, forget, stop, try, go on, mean, need…',          tc:'#4a044e', bc:'#fdf4ff', bd:'#e879f9' },
     ];
 
-    var cardHtml = cards.map(function(c) {
+    const cardHtml = cards.map(function(c) {
         return '<div style="border:1.5px solid ' + c.bd + ';border-radius:14px;padding:16px;background:' + c.bc + ';cursor:pointer;transition:all .18s;"'
             + ' onmouseover="this.style.transform=\'translateY(-3px)\';this.style.boxShadow=\'0 8px 24px rgba(0,0,0,.1)\'"'
             + ' onmouseout="this.style.transform=\'\';this.style.boxShadow=\'\'"'
@@ -294,7 +211,7 @@ function grGerundUses() {
 
 /* ════════ GERUND OSYM ════════ */
 function grGerundOsym() {
-    var list = [
+    const list = [
         'have fun / rest / time',
         'have trouble (in) / have difficulty (in)',
         'spend time / energy / money',
@@ -312,7 +229,7 @@ function grGerundOsym() {
         'there is no point in',
         'in the habit of',
     ];
-    var pillHtml = '<div style="display:flex;flex-wrap:wrap;gap:8px;padding:0 36px 24px;">'
+    const pillHtml = '<div style="display:flex;flex-wrap:wrap;gap:8px;padding:0 36px 24px;">'
         + list.map(function(v){
             return '<span style="background:#fef9c3;color:#713f12;border:1.5px solid #fcd34d;border-radius:10px;padding:5px 14px;font-size:.8rem;font-weight:700;">' + v + ' <span style="color:#d97706;font-weight:900">+ V+ing</span></span>';
         }).join('')
@@ -335,12 +252,12 @@ function grGerundOsym() {
 
 /* ════════ GERUND VERBS ════════ */
 function grGerundVerbs() {
-    var verbs = [
+    const verbs = [
         'Admit','Anticipate','Appreciate','Complete','Consider','Delay','Deny','Detest','Discuss','Disslike',
         'Enjoy','Fancy','Finish','Hate','Imagine','Involve','Justify','Mention','Mind','Practise',
         'Postpone','Remember','Recommend','Recall','Resent','Report','Risk','Suggest','Stop','Tolerate'
     ];
-    var pillHtml = '<div style="display:flex;flex-wrap:wrap;gap:8px;padding:0 36px 24px;">'
+    const pillHtml = '<div style="display:flex;flex-wrap:wrap;gap:8px;padding:0 36px 24px;">'
         + verbs.map(function(v){
             return '<span style="background:#ffedd5;color:#7c2d12;border:1.5px solid #fdba74;border-radius:10px;padding:5px 14px;font-size:.8rem;font-weight:700;">' + v + '</span>';
         }).join('')
@@ -479,11 +396,11 @@ function grInfForms() {
 
 /* ════════ INFINITIVE LISTS ════════ */
 function grInfLists() {
-    var nouns  = ['Ability','Attempt','Chance','Decision','Desire','Determination','Dream','Effort','Goal','Need','Offer','Plan','Permission','Proposal','Refusal','Request','Suggestion','Tendency','Wish','Way'];
-    var verbs  = ['Afford','Agree','Arrange','Ask','Attempt','Care','Decide','Demand','Deserve','Expect','Fail','Happen','Hesitate','Hope','Offer','Prepare','Pretend','Proceed','Promise','Propose','Prove','Seem','Struggle','Volunteer'];
+    const nouns  = ['Ability','Attempt','Chance','Decision','Desire','Determination','Dream','Effort','Goal','Need','Offer','Plan','Permission','Proposal','Refusal','Request','Suggestion','Tendency','Wish','Way'];
+    const verbs  = ['Afford','Agree','Arrange','Ask','Attempt','Care','Decide','Demand','Deserve','Expect','Fail','Happen','Hesitate','Hope','Offer','Prepare','Pretend','Proceed','Promise','Propose','Prove','Seem','Struggle','Volunteer'];
 
-    var nHtml = nouns.map(function(v){ return '<span style="background:#dbeafe;color:#1e3a8a;border:1px solid #93c5fd;border-radius:8px;padding:4px 12px;font-size:.8rem;font-weight:600;">' + v + '</span>'; }).join(' ');
-    var vHtml = verbs.map(function(v){ return '<span style="background:#ede9fe;color:#4c1d95;border:1px solid #c4b5fd;border-radius:8px;padding:4px 12px;font-size:.8rem;font-weight:600;">' + v + '</span>'; }).join(' ');
+    const nHtml = nouns.map(function(v){ return '<span style="background:#dbeafe;color:#1e3a8a;border:1px solid #93c5fd;border-radius:8px;padding:4px 12px;font-size:.8rem;font-weight:600;">' + v + '</span>'; }).join(' ');
+    const vHtml = verbs.map(function(v){ return '<span style="background:#ede9fe;color:#4c1d95;border:1px solid #c4b5fd;border-radius:8px;padding:4px 12px;font-size:.8rem;font-weight:600;">' + v + '</span>'; }).join(' ');
 
     return grdH('📚 İsim & Fiil Listeleri', 'Infinitive Alan İsimler & Fiiller', 'Bu isim ve fiillerin ardından to + V₁ gelir.')
         + grdSH('Infinitive Alan Bazı İsimler')
@@ -504,7 +421,7 @@ function grInfLists() {
 
 /* ════════ DUAL ════════ */
 function grDual() {
-    var rows = [
+    const rows = [
         ['<strong>remember</strong>',
          'Geçmiş bir olayı hatırlamak',
          'I still remember <strong>riding</strong> a bike as a kid.',
@@ -547,7 +464,7 @@ function grDual() {
          'I need <strong>to prepare</strong> food for dinner.'],
     ];
 
-    var tableHtml = '<div class="gr-tbl-wrap"><table class="gr-tbl">'
+    const tableHtml = '<div class="gr-tbl-wrap"><table class="gr-tbl">'
         + '<thead><tr>'
         + '<th>Fiil</th>'
         + '<th style="background:#fde68a;color:#713f12">+ V<sub>ing</sub><br><small>Türkçe Anlam</small></th>'
@@ -575,7 +492,7 @@ function grDual() {
 }
 
 /* ════════ EXERCISES ════════ */
-var GRD_BLANKS = [
+const GRD_BLANKS = [
     { q:'___ books enriches human ideas. (gerund — özne)',
       ans:['reading','Reading'], hint:'Gerund özne: V+ing' },
     { q:'I look forward to ___ you again. (ÖSYM gerund kalıbı)',
@@ -598,7 +515,7 @@ var GRD_BLANKS = [
       ans:['enough to get'], hint:'"enough to V₁" = yeterince … yapmak için' },
 ];
 
-var GRD_MCQS = [
+const GRD_MCQS = [
     { q:'I enjoy ___ to music while studying.',
       opts:['listen','to listen','listening','listened'],
       cor:'c', hint:'"enjoy" ardından V+ing alır' },
@@ -626,7 +543,7 @@ var GRD_MCQS = [
 ];
 
 /* ════════ EXERCISES — SET SİSTEMİ ════════ */
-var GRD_SETS = [
+const GRD_SETS = [
     {
         label: 'Set 1 — ÖYS & Test 1',
         questions: [
@@ -1154,10 +1071,10 @@ var GRD_SETS = [
     },
 ];
 
-var _grdSetIdx     = 0;
-var _grdSetScore   = 0;
-var _grdSetChecked = {};
-var _grdSetAnswers = {};
+let _grdSetIdx     = 0;
+let _grdSetScore   = 0;
+let _grdSetChecked = {};
+let _grdSetAnswers = {};
 
 function grdExercises() {
     _grdSetIdx = 0; _grdSetScore = 0; _grdSetChecked = {}; _grdSetAnswers = {};
@@ -1165,21 +1082,21 @@ function grdExercises() {
 }
 
 function _grdBuildExercisePage() {
-    var set   = GRD_SETS[_grdSetIdx];
-    var total = set.questions.length;
+    const set   = GRD_SETS[_grdSetIdx];
+    const total = set.questions.length;
 
-    var tabs = GRD_SETS.map(function(s, i) {
-        var active = i === _grdSetIdx
+    const tabs = GRD_SETS.map(function(s, i) {
+        const active = i === _grdSetIdx
             ? 'style="background:#d97706;color:#fff;border-color:#d97706;"' : '';
         return '<button class="gr-set-tab" ' + active + ' onclick="grdSwitchSet(' + i + ')">' + s.label + '</button>';
     }).join('');
 
-    var qCards = set.questions.map(function(q, i) {
-        var opts = q.opts.map(function(o, j) {
-            var letter = ['A','B','C','D','E'][j];
-            var lv     = ['a','b','c','d','e'][j];
-            var state  = _grdSetAnswers[_grdSetIdx + '_' + i];
-            var cls = 'gr-opt';
+    const qCards = set.questions.map(function(q, i) {
+        const opts = q.opts.map(function(o, j) {
+            const letter = ['A','B','C','D','E'][j];
+            const lv     = ['a','b','c','d','e'][j];
+            const state  = _grdSetAnswers[_grdSetIdx + '_' + i];
+            let cls = 'gr-opt';
             if (_grdSetChecked[_grdSetIdx + '_' + i]) {
                 if (lv === q.cor)                         cls += ' ok';
                 else if (lv === state && state !== q.cor) cls += ' bad';
@@ -1188,12 +1105,12 @@ function _grdBuildExercisePage() {
                 + '<span class="gr-opt-letter">' + letter + '</span>' + o + '</div>';
         }).join('');
 
-        var checked = _grdSetChecked[_grdSetIdx + '_' + i];
-        var fbCls   = checked ? (checked === 'ok' ? 'gr-fb show ok' : 'gr-fb show bad') : 'gr-fb';
-        var fbTxt   = checked === 'ok'  ? ('✅ Doğru! ' + q.hint)
+        const checked = _grdSetChecked[_grdSetIdx + '_' + i];
+        const fbCls   = checked ? (checked === 'ok' ? 'gr-fb show ok' : 'gr-fb show bad') : 'gr-fb';
+        const fbTxt   = checked === 'ok'  ? ('✅ Doğru! ' + q.hint)
                     : checked === 'bad' ? ('❌ Yanlış. Doğru: ' + q.cor.toUpperCase() + ' — ' + q.hint) : '';
-        var cardCls = checked === 'ok' ? 'gr-q-card gr-c' : checked === 'bad' ? 'gr-q-card gr-w' : 'gr-q-card';
-        var btnDis  = checked ? 'disabled style="opacity:.4;pointer-events:none;"' : '';
+        const cardCls = checked === 'ok' ? 'gr-q-card gr-c' : checked === 'bad' ? 'gr-q-card gr-w' : 'gr-q-card';
+        const btnDis  = checked ? 'disabled style="opacity:.4;pointer-events:none;"' : '';
 
         return '<div class="' + cardCls + '" id="grdsc-' + i + '">'
             + '<div class="gr-q-num">SORU ' + String(i+1).padStart(2,'0') + ' — ' + set.label.toUpperCase() + '</div>'
@@ -1228,35 +1145,35 @@ function _grdBuildExercisePage() {
 
 function grdSwitchSet(idx) {
     _grdSetIdx = idx; _grdSetScore = 0; _grdSetChecked = {}; _grdSetAnswers = {};
-    var cnt = document.getElementById('grd-content');
+    const cnt = document.getElementById('grd-content');
     if (cnt) { cnt.innerHTML = _grdBuildExercisePage(); cnt.scrollTop = 0; }
 }
 
 function grdSetOpt(qi, oi, letter) {
     if (_grdSetChecked[_grdSetIdx + '_' + qi]) return;
     GRD_SETS[_grdSetIdx].questions[qi].opts.forEach(function(_, j) {
-        var el = document.getElementById('grdso-' + qi + '-' + j);
+        const el = document.getElementById('grdso-' + qi + '-' + j);
         if (el) el.className = 'gr-opt' + (j === oi ? ' sel' : '');
     });
     _grdSetAnswers[_grdSetIdx + '_' + qi] = letter;
 }
 
 function grdCheckSetQ(qi) {
-    var q    = GRD_SETS[_grdSetIdx].questions[qi];
-    var sel  = _grdSetAnswers[_grdSetIdx + '_' + qi];
-    var fb   = document.getElementById('grdsfb-' + qi);
-    var card = document.getElementById('grdsc-' + qi);
+    const q    = GRD_SETS[_grdSetIdx].questions[qi];
+    const sel  = _grdSetAnswers[_grdSetIdx + '_' + qi];
+    const fb   = document.getElementById('grdsfb-' + qi);
+    const card = document.getElementById('grdsc-' + qi);
     if (!fb) return;
     if (!sel) { fb.textContent = 'Bir seçenek seçin!'; fb.className = 'gr-fb show bad'; return; }
-    var letters = ['a','b','c','d','e'];
+    const letters = ['a','b','c','d','e'];
     q.opts.forEach(function(_, j) {
-        var el = document.getElementById('grdso-' + qi + '-' + j);
+        const el = document.getElementById('grdso-' + qi + '-' + j);
         if (!el) return;
         el.classList.remove('sel');
         if (letters[j] === q.cor)                     el.classList.add('ok');
         else if (letters[j] === sel && sel !== q.cor) el.classList.add('bad');
     });
-    var btn = card ? card.querySelector('.gr-chk-btn') : null;
+    const btn = card ? card.querySelector('.gr-chk-btn') : null;
     if (btn) { btn.disabled = true; btn.style.opacity = '.4'; btn.style.pointerEvents = 'none'; }
     if (sel === q.cor) {
         if (card) card.classList.add('gr-c');
@@ -1270,17 +1187,17 @@ function grdCheckSetQ(qi) {
         fb.className = 'gr-fb show bad';
         _grdSetChecked[_grdSetIdx + '_' + qi] = 'bad';
     }
-    var el = document.getElementById('grd-live-score');
+    const el = document.getElementById('grd-live-score');
     if (el) el.textContent = _grdSetScore + ' / ' + GRD_SETS[_grdSetIdx].questions.length;
 }
 
 function grdSubmitSet() {
-    var total = GRD_SETS[_grdSetIdx].questions.length;
-    var panel = document.getElementById('grd-result');
+    const total = GRD_SETS[_grdSetIdx].questions.length;
+    const panel = document.getElementById('grd-result');
     if (!panel) return;
     panel.classList.add('show');
     document.getElementById('grd-res-score').textContent = _grdSetScore + '/' + total;
-    var pct = Math.round((_grdSetScore / total) * 100);
+    const pct = Math.round((_grdSetScore / total) * 100);
     document.getElementById('grd-res-msg').textContent =
         pct >= 90 ? '🎉 Mükemmel! Bu seti harika geçirdin!'
       : pct >= 70 ? '👏 Çok iyi! Küçük eksikler var.'
@@ -1293,12 +1210,47 @@ function grdRetrySameSet() { grdSwitchSet(_grdSetIdx); }
 function grdNextSet()      { if (_grdSetIdx < GRD_SETS.length - 1) grdSwitchSet(_grdSetIdx + 1); }
 
 /* ════════ GLOBALS ════════ */
-window.openGerundSection = openGerundSection;
-window._grdRenderSection  = _grdRenderSection;
-window.grdSwitchSet      = grdSwitchSet;
-window.grdSetOpt         = grdSetOpt;
-window.grdCheckSetQ      = grdCheckSetQ;
-window.grdSubmitSet      = grdSubmitSet;
-window.grdRetrySameSet   = grdRetrySameSet;
-window.grdNextSet        = grdNextSet;
+// openGerundSection ve _grdRenderSection: _initGerundModule içinde atandı
+window.grdSwitchSet    = grdSwitchSet;
+window.grdSetOpt       = grdSetOpt;
+window.grdCheckSetQ    = grdCheckSetQ;
+window.grdSubmitSet    = grdSubmitSet;
+window.grdRetrySameSet = grdRetrySameSet;
+window.grdNextSet      = grdNextSet;
 
+
+(function _initGerundModule() {
+    const _mod = new GrammarModule({
+        id:       'grd',
+        pageId:   'gerund-page',
+        sbId:     'sb-grammar-gerund',
+        diId:     'di-grammar-gerund',
+        title:    'Gerunds &amp; Infinitives',
+        sections: GRD_SECTIONS,
+        dotColors: GRD_DOT,
+        grpOrder: ['Genel', 'Gerund', 'Infinitive', 'Karşılaştırma', 'Özel'],
+        sectionMap: {
+            'overview':    function(){ return grdOverview(); },
+            'gerund-uses': function(){ return grGerundUses(); },
+            'gerund-osym': function(){ return grGerundOsym(); },
+            'gerund-verbs':function(){ return grGerundVerbs(); },
+            'gerund-forms':function(){ return grGerundForms(); },
+            'inf-uses':    function(){ return grInfUses(); },
+            'inf-osym':    function(){ return grInfOsym(); },
+            'inf-forms':   function(){ return grInfForms(); },
+            'inf-lists':   function(){ return grInfLists(); },
+            'dual':        function(){ return grDual(); },
+            'exercises':   function(){ return grdExercises(); }
+        },
+        onSectionRender: function(id) {
+            if (id === 'exercises') {
+                _grdScore = 0; _grdAnswers = {}; _grdChecked = {};
+                _grdUpdScore();
+            }
+        }
+    });
+
+    window.openGerundSection = function(sectionId) { _mod.open(sectionId || 'overview'); };
+    window._grdRenderSection = function(id)        { _mod.goTo(id); };
+    window['_grdGoTo']       = function(id)        { _mod.goTo(id); };
+})();

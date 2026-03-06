@@ -4,13 +4,13 @@
 // Kaynak: 10da10 YDT Tag Questions & Quantifiers (s. 93–98)
 // ════════════════════════════════════════════════════════════════
 
-var _tqCurrentSection = 'overview';
-var _tqAnswers = {};
-var _tqChecked = {};
-var _tqScore = 0;
-var TQ_TOTAL = 16;
+let _tqCurrentSection = 'overview';
+let _tqAnswers = {};
+let _tqChecked = {};
+let _tqScore = 0;
+const TQ_TOTAL = 16;
 
-var TQ_SECTIONS = [
+const TQ_SECTIONS = [
     { id: 'overview',   label: 'Genel Bakış',              grp: 'Genel' },
     { id: 'tag',        label: 'Tag Questions (a–e)',       grp: 'Tag Questions' },
     { id: 'some-any',   label: '1 — Some / Any / No',       grp: 'Quantifiers' },
@@ -24,95 +24,20 @@ var TQ_SECTIONS = [
     { id: 'exercises',  label: 'Alıştırmalar',              grp: 'Özel' }
 ];
 
-var TQ_DOT = {
+const TQ_DOT = {
     'Genel':         '#6366f1',
     'Tag Questions': '#0369a1',
     'Quantifiers':   '#b45309',
     'Özel':          '#e63946'
 };
 
-/* ════════ ENTRY POINT ════════ */
-function openTagQuantSection(sectionId) {
-    _tqCurrentSection = sectionId || 'overview';
-    document.querySelectorAll('.container').forEach(function(c){ c.classList.add('hidden'); });
-    document.querySelectorAll('.arsiv-full-page').forEach(function(c){ c.classList.add('hidden'); });
-    var page = document.getElementById('tagquant-page');
-    if (page) page.classList.remove('hidden');
-    document.querySelectorAll('.sb-btn, .mob-drawer-btn').forEach(function(el){ el.classList.remove('active'); });
-    var sb = document.getElementById('sb-grammar-tagquant');
-    if (sb) sb.classList.add('active');
-    var di = document.getElementById('di-grammar-tagquant');
-    if (di) di.classList.add('active');
-    _tqRenderPage();
-}
+/* ════════ ENTRY POINT — GrammarModule engine ════════ */
+// İçerik fonksiyonlarına dokunulmadı. Sadece navigation/render
+// altyapısı grammar-engine.js'e taşındı.
 
-function _tqRenderPage() {
-    var page = document.getElementById('tagquant-page');
-    if (!page) return;
-    page.innerHTML =
-        '<div class="gr-topbar">'
-        + '<button class="gr-back-btn" onclick="navTo(\'index-page\')">←</button>'
-        + '<div><div class="gr-topbar-label">Grammar Modülü</div>'
-        + '<div class="gr-topbar-title">Tag Questions &amp; Quantifiers</div></div>'
-        + '</div>'
-        + '<div class="gr-body">'
-        + '<nav class="gr-sidenav" id="tq-sidenav"></nav>'
-        + '<div class="gr-content" id="tq-content"></div>'
-        + '</div>';
-    _tqBuildSidenav();
-    _tqRenderSection(_tqCurrentSection);
-}
-
-function _tqBuildSidenav() {
-    var nav = document.getElementById('tq-sidenav');
-    if (!nav) return;
-    var groups = {};
-    TQ_SECTIONS.forEach(function(s) {
-        if (!groups[s.grp]) groups[s.grp] = [];
-        groups[s.grp].push(s);
-    });
-    var html = '';
-    ['Genel','Tag Questions','Quantifiers','Özel'].forEach(function(grp) {
-        var list = groups[grp];
-        if (!list) return;
-        html += '<div class="gr-sn-sec">' + grp + '</div>';
-        list.forEach(function(s) {
-            var active = s.id === _tqCurrentSection ? ' active' : '';
-            html += '<button class="gr-sn-btn' + active + '" onclick="_tqRenderSection(\'' + s.id + '\')">'
-                + '<span class="gr-sn-dot" style="background:' + TQ_DOT[grp] + '"></span>' + s.label + '</button>';
-        });
-    });
-    nav.innerHTML = html;
-}
-
-function _tqRenderSection(id) {
-    _tqCurrentSection = id;
-    _tqBuildSidenav();
-    var content = document.getElementById('tq-content');
-    if (!content) return;
-    content.scrollTop = 0;
-    var map = {
-        'overview':   tqOverview,
-        'tag':        tqTag,
-        'some-any':   tqSomeAny,
-        'much-many':  tqMuchMany,
-        'few-little': tqFewLittle,
-        'all-most':   tqAllMost,
-        'both':       tqBoth,
-        'each-every': tqEachEvery,
-        'number':     tqNumber,
-        'large':      tqLarge,
-        'exercises':  tqExercises
-    };
-    var fn = map[id];
-    content.innerHTML = fn ? fn() : '<div style="padding:40px">Yakında...</div>';
-    if (id === 'exercises') {
-        _tqScore = 0; _tqAnswers = {}; _tqChecked = {};
-        _tqUpdScore();
-    }
-}
 
 /* ════════ HELPERS ════════ */
+/* ════════ ENTRY POINT ════════ */
 function tqH(eyebrow, title, sub) {
     return '<div class="gr-hero" style="background:linear-gradient(135deg,#0c4a6e 0%,#0369a1 60%,#38bdf8 100%)">'
         + '<div class="gr-hero-eyebrow">' + eyebrow + '</div>'
@@ -123,8 +48,8 @@ function tqH(eyebrow, title, sub) {
 function tqSH(label) { return '<div class="gr-sec-hd">' + label + '</div>'; }
 
 function tqTable(headers, rows) {
-    var ths = headers.map(function(h){ return '<th>' + h + '</th>'; }).join('');
-    var trs = rows.map(function(r){
+    const ths = headers.map(function(h){ return '<th>' + h + '</th>'; }).join('');
+    const trs = rows.map(function(r){
         return '<tr>' + r.map(function(c){ return '<td>' + c + '</td>'; }).join('') + '</tr>';
     }).join('');
     return '<div class="gr-tbl-wrap"><table class="gr-tbl"><thead><tr>' + ths + '</tr></thead><tbody>' + trs + '</tbody></table></div>';
@@ -132,14 +57,14 @@ function tqTable(headers, rows) {
 
 function tqAcc(items) {
     return '<div class="gr-acc-wrap">' + items.map(function(it) {
-        var exHtml = (it.examples||[]).map(function(ex, i) {
+        const exHtml = (it.examples||[]).map(function(ex, i) {
             return '<div class="gr-ex" style="border-left:3px solid #0369a1"><span class="gr-ex-n">'
                 + String(i+1).padStart(2,'0') + '</span>' + ex + '</div>';
         }).join('');
-        var noteHtml = (it.notes||[]).map(function(n){
+        const noteHtml = (it.notes||[]).map(function(n){
             return '<div style="background:#f0f9ff;border:1.5px solid #7dd3fc;border-radius:8px;padding:10px 14px;margin:6px 0;font-size:.8rem;color:#0c4a6e;line-height:1.7">' + n + '</div>';
         }).join('');
-        var descHtml = it.desc ? '<p class="gr-acc-desc">' + it.desc + '</p>' : '';
+        const descHtml = it.desc ? '<p class="gr-acc-desc">' + it.desc + '</p>' : '';
         return '<div class="gr-acc" onclick="this.classList.toggle(\'open\')">'
             + '<div class="gr-acc-head">'
             + '<div class="gr-acc-ico" style="background:' + it.bg + '">' + it.ico + '</div>'
@@ -152,7 +77,7 @@ function tqAcc(items) {
 }
 
 function tqBox(color, title, lines) {
-    var styles = {
+    const styles = {
         blue:   'background:#eff6ff;border:2px solid #2563eb;color:#1e3a8a',
         sky:    'background:#f0f9ff;border:2px solid #0284c7;color:#0c4a6e',
         yellow: 'background:#fefce8;border:2px solid #ca8a04;color:#713f12',
@@ -161,7 +86,7 @@ function tqBox(color, title, lines) {
         red:    'background:#fff1f2;border:2px solid #e63946;color:#9f1239',
         purple: 'background:#f5f3ff;border:2px solid #7c3aed;color:#4c1d95'
     };
-    var content = lines.map(function(l){
+    const content = lines.map(function(l){
         return l === '' ? '<br>' : '<div style="margin-bottom:5px">' + l + '</div>';
     }).join('');
     return '<div style="' + (styles[color]||styles.sky) + ';border-radius:12px;padding:14px 18px;margin:4px 36px 12px;font-size:.82rem;line-height:1.8;">'
@@ -175,7 +100,7 @@ function tqPill(label, bg) {
 
 /* ════════ OVERVIEW ════════ */
 function tqOverview() {
-    var cards = [
+    const cards = [
         { id:'tag',        emoji:'❓', name:'Tag Questions',          sub:'"değil mi?" — olumlu/olumsuz denge, özel durumlar',           tc:'#1e3a8a', bc:'#dbeafe', bd:'#93c5fd' },
         { id:'some-any',   emoji:'🔵', name:'Some / Any / No',        sub:'bazı/birkaç vs her/herhangi vs hiç',                          tc:'#0c4a6e', bc:'#e0f2fe', bd:'#7dd3fc' },
         { id:'much-many',  emoji:'🟡', name:'Much / Many / A lot of', sub:'sayılamayan vs sayılabilen vs her ikisi',                     tc:'#713f12', bc:'#fef9c3', bd:'#fcd34d' },
@@ -187,7 +112,7 @@ function tqOverview() {
         { id:'large',      emoji:'📦', name:'A large amount of…',     sub:'büyük miktarda — sayılamayan vs her ikisi',                  tc:'#7c2d12', bc:'#ffedd5', bd:'#fdba74' },
     ];
 
-    var cardHtml = cards.map(function(c) {
+    const cardHtml = cards.map(function(c) {
         return '<div style="border:1.5px solid ' + c.bd + ';border-radius:14px;padding:16px;background:' + c.bc + ';cursor:pointer;transition:all .18s;"'
             + ' onmouseover="this.style.transform=\'translateY(-3px)\';this.style.boxShadow=\'0 8px 24px rgba(0,0,0,.1)\'"'
             + ' onmouseout="this.style.transform=\'\';this.style.boxShadow=\'\'"'
@@ -525,7 +450,7 @@ function tqLarge() {
 }
 
 /* ════════ EXERCISES ════════ */
-var TQ_BLANKS = [
+const TQ_BLANKS = [
     { q:'She won\'t come back, ___ she? (tag question)',
       ans:['will'], hint:'Olumsuz cümle → olumlu tag: "will she?"' },
     { q:'Let\'s study for the exam, ___ we? (tag question)',
@@ -548,7 +473,7 @@ var TQ_BLANKS = [
       ans:['number'], hint:'"a number of" + çoğul isim + çoğul fiil' },
 ];
 
-var TQ_MCQS = [
+const TQ_MCQS = [
     { q:'Everyone at the meeting accepted the project, ___ ___?',
       opts:["didn't they","didn't he","don't they","wasn't it"],
       cor:'a', hint:'"everyone" için "they" kullanılır; olumlu cümle → olumsuz tag' },
@@ -576,20 +501,20 @@ var TQ_MCQS = [
 ];
 
 function tqExercises() {
-    var blankCards = TQ_BLANKS.map(function(q, i) {
+    const blankCards = TQ_BLANKS.map(function(q, i) {
         return '<div class="gr-q-card" id="tqq-b' + i + '">'
             + '<div class="gr-q-num">SORU ' + String(i+1).padStart(2,'0') + ' / BÖLÜM A</div>'
             + '<div class="gr-q-text">' + q.q + '</div>'
-            + '<input class="gr-q-inp tq-inp" id="tq-inp-' + i + '" placeholder="doğru yapıyı yaz…" autocomplete="off"><br>'
+            + '<input class="gr-q-inp tq-inp" id="tq-inp-' + i + '" data-index="' + i + '" placeholder="doğru yapıyı yaz…" autocomplete="off"><br>'
             + '<button class="gr-chk-btn" style="border-color:#0369a1;color:#0369a1" onclick="tqCheckBlank(' + i + ')">Kontrol Et</button>'
             + '<div class="gr-fb" id="tq-fb-b' + i + '"></div>'
             + '</div>';
     }).join('');
 
-    var mcqCards = TQ_MCQS.map(function(q, i) {
-        var opts = q.opts.map(function(o, j) {
-            var letter = ['A','B','C','D'][j];
-            var lv = ['a','b','c','d'][j];
+    const mcqCards = TQ_MCQS.map(function(q, i) {
+        const opts = q.opts.map(function(o, j) {
+            const letter = ['A','B','C','D'][j];
+            const lv = ['a','b','c','d'][j];
             return '<div class="gr-opt" id="tq-opt-' + i + '-' + j + '" onclick="tqSelectOpt(' + i + ',' + j + ',\'' + lv + '\')">'
                 + '<span class="gr-opt-letter">' + letter + '</span>' + o + '</div>';
         }).join('');
@@ -620,20 +545,20 @@ function tqExercises() {
 
 /* ════════ EXERCISE LOGIC ════════ */
 function _tqUpdScore() {
-    var el = document.getElementById('tq-live-score');
+    const el = document.getElementById('tq-live-score');
     if (el) el.textContent = _tqScore + ' / ' + TQ_TOTAL;
 
     if (typeof saveGrammarScore === 'function') saveGrammarScore('tq', _tqScore);
 }
 
 function tqCheckBlank(i) {
-    var inp  = document.getElementById('tq-inp-' + i);
-    var fb   = document.getElementById('tq-fb-b' + i);
-    var card = document.getElementById('tqq-b' + i);
+    const inp  = document.getElementById('tq-inp-' + i);
+    const fb   = document.getElementById('tq-fb-b' + i);
+    const card = document.getElementById('tqq-b' + i);
     if (!inp || !fb) return;
-    var val = inp.value.trim().toLowerCase().replace(/\s+/g,' ');
+    const val = inp.value.trim().toLowerCase().replace(/\s+/g,' ');
     if (!val) { fb.textContent = 'Bir cevap girin!'; fb.className = 'gr-fb show bad'; return; }
-    var correct = TQ_BLANKS[i].ans.map(function(a){ return a.toLowerCase().trim(); });
+    const correct = TQ_BLANKS[i].ans.map(function(a){ return a.toLowerCase().trim(); });
     if (correct.indexOf(val) !== -1) {
         inp.classList.add('ok'); card.classList.add('gr-c');
         fb.textContent = '✅ Doğru! ' + TQ_BLANKS[i].ans[0];
@@ -649,23 +574,23 @@ function tqCheckBlank(i) {
 
 function tqSelectOpt(qi, oi, letter) {
     TQ_MCQS[qi].opts.forEach(function(_, j) {
-        var el = document.getElementById('tq-opt-' + qi + '-' + j);
+        const el = document.getElementById('tq-opt-' + qi + '-' + j);
         if (el) el.classList.remove('sel');
     });
-    var el = document.getElementById('tq-opt-' + qi + '-' + oi);
+    const el = document.getElementById('tq-opt-' + qi + '-' + oi);
     if (el) el.classList.add('sel');
     _tqAnswers['m'+qi] = letter;
 }
 
 function tqCheckMCQ(i) {
-    var q    = TQ_MCQS[i];
-    var sel  = _tqAnswers['m'+i];
-    var fb   = document.getElementById('tq-fb-m' + i);
-    var card = document.getElementById('tqq-m' + i);
+    const q    = TQ_MCQS[i];
+    const sel  = _tqAnswers['m'+i];
+    const fb   = document.getElementById('tq-fb-m' + i);
+    const card = document.getElementById('tqq-m' + i);
     if (!sel) { fb.textContent = 'Bir seçenek seçin!'; fb.className = 'gr-fb show bad'; return; }
-    var letters = ['a','b','c','d'];
+    const letters = ['a','b','c','d'];
     q.opts.forEach(function(_, j) {
-        var el = document.getElementById('tq-opt-' + i + '-' + j);
+        const el = document.getElementById('tq-opt-' + i + '-' + j);
         if (!el) return;
         el.classList.remove('sel');
         if (letters[j] === q.cor) el.classList.add('ok');
@@ -685,13 +610,13 @@ function tqCheckMCQ(i) {
 }
 
 function tqSubmitAll() {
-    var panel   = document.getElementById('tq-result');
-    var scoreEl = document.getElementById('tq-res-score');
-    var msgEl   = document.getElementById('tq-res-msg');
+    const panel   = document.getElementById('tq-result');
+    const scoreEl = document.getElementById('tq-res-score');
+    const msgEl   = document.getElementById('tq-res-msg');
     if (!panel) return;
     panel.classList.add('show');
     scoreEl.textContent = _tqScore + '/' + TQ_TOTAL;
-    var pct = Math.round((_tqScore / TQ_TOTAL) * 100);
+    const pct = Math.round((_tqScore / TQ_TOTAL) * 100);
     msgEl.textContent = pct >= 87 ? '🎉 Mükemmel! Tag Questions & Quantifiers konusuna tam hâkimsin!'
                       : pct >= 65 ? '👏 Çok iyi! a few/few farkı ve tag question özel durumlarını gözden geçir.'
                       : pct >= 44 ? '📚 İyi başlangıç. Quantifiers tablosuna ve "a number of vs the number of" farkına tekrar bak!'
@@ -700,9 +625,57 @@ function tqSubmitAll() {
 }
 
 /* ════════ GLOBALS ════════ */
-window.openTagQuantSection = openTagQuantSection;
-window._tqRenderSection    = _tqRenderSection;
-window.tqCheckBlank        = tqCheckBlank;
-window.tqSelectOpt         = tqSelectOpt;
-window.tqCheckMCQ          = tqCheckMCQ;
-window.tqSubmitAll         = tqSubmitAll;
+// openTagQuantSection ve _tqRenderSection: _initTagQuantModule içinde atandı
+window.tqCheckBlank = tqCheckBlank;
+window.tqSelectOpt  = tqSelectOpt;
+window.tqCheckMCQ   = tqCheckMCQ;
+window.tqSubmitAll  = tqSubmitAll;
+
+(function _initTagQuantModule() {
+    const _mod = new GrammarModule({
+        id:       'tq',
+        pageId:   'tagquant-page',
+        sbId:     'sb-grammar-tagquant',
+        diId:     'di-grammar-tagquant',
+        title:    'Tag Questions &amp; Quantifiers',
+        sections: TQ_SECTIONS,
+        dotColors: TQ_DOT,
+        grpOrder: ['Genel', 'Tag Questions', 'Quantifiers', 'Özel'],
+        sectionMap: {
+            'overview':   function(){ return tqOverview(); },
+            'tag':        function(){ return tqTag(); },
+            'some-any':   function(){ return tqSomeAny(); },
+            'much-many':  function(){ return tqMuchMany(); },
+            'few-little': function(){ return tqFewLittle(); },
+            'all-most':   function(){ return tqAllMost(); },
+            'both':       function(){ return tqBoth(); },
+            'each-every': function(){ return tqEachEvery(); },
+            'number':     function(){ return tqNumber(); },
+            'large':      function(){ return tqLarge(); },
+            'exercises':  function(){ return tqExercises(); }
+        },
+        onSectionRender: function(id) {
+            if (id === 'exercises') {
+                _tqScore = 0; _tqAnswers = {}; _tqChecked = {};
+                _tqUpdScore();
+            }
+        }
+    });
+
+    // Geriye dönük uyumluluk + event delegation (bir kez kurulur)
+    window.openTagQuantSection = function(sectionId) {
+        _mod.open(sectionId || 'overview');
+        const page = document.getElementById('tagquant-page');
+        if (page && !page._listenerAttached) {
+            page.addEventListener('keydown', function(e) {
+                if (!e.target.classList.contains('tq-inp')) return;
+                if (e.key !== 'Enter') return;
+                e.preventDefault();
+                tqCheckBlank(parseInt(e.target.dataset.index));
+            });
+            page._listenerAttached = true;
+        }
+    };
+    window._tqRenderSection    = function(id)        { _mod.goTo(id); };
+    window['_tqGoTo']          = function(id)        { _mod.goTo(id); };
+})();

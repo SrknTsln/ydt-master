@@ -265,8 +265,7 @@ let wm={}, pq={}, mem_={}, sp_={}, sb_={}, scr_={}, ls_={}, cat_={};
 // ══════════════════════════════════════════════════════
 // HELPERS
 // ══════════════════════════════════════════════════════
-function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
-function pick(a,n){return shuffle(a).slice(0,n);}
+// shuffle() ve pick() → utils.js'de tanımlı (global)
 function xpL(l){return l*60;}
 function txpL(l){let t=0;for(let i=1;i<l;i++)t+=xpL(i);return t;}
 function save(){
@@ -916,17 +915,7 @@ function startListen(){
     ls_.qs=shuffle(WORLDS[CW].words).slice(0,10); ls_.i=0; ls_.ok=0;
     rls();
 }
-function speakWord(word, btn){
-    if(!window.speechSynthesis){toast('Bu tarayıcı sesi desteklemiyor 😔','bad');return;}
-    window.speechSynthesis.cancel();
-    const utt=new SpeechSynthesisUtterance(word);
-    utt.lang='en-US'; utt.rate=0.85; utt.pitch=1.1;
-    if(btn){
-        btn.classList.add('kw-listen-active');
-        utt.onend=()=>btn.classList.remove('kw-listen-active');
-    }
-    window.speechSynthesis.speak(utt);
-}
+// speakWord(word, btn) → utils.js'de tanımlı (global)
 function rls(){
     const ga=$id('kw-ga'); if(!ga)return;
     if(ls_.i>=ls_.qs.length){endGame(ls_.ok,ls_.qs.length,ls_.ok*2,ls_.ok>=7?'lst':null,'listen');return;}

@@ -4,13 +4,13 @@
 // Kaynak: 10da10 YDT Active-Passive-Causative notları (s. 31–36)
 // ════════════════════════════════════════════════════════════════
 
-var _paCurrentSection = 'overview';
-var _paAnswers = {};
-var _paChecked = {};
-var _paScore = 0;
-var PA_TOTAL = 15;
+let _paCurrentSection = 'overview';
+let _paAnswers = {};
+let _paChecked = {};
+let _paScore = 0;
+const PA_TOTAL = 15;
 
-var PA_SECTIONS = [
+const PA_SECTIONS = [
     { id: 'overview',     label: 'Genel Bakış',               grp: 'Genel' },
     { id: 'concept',      label: '1. Temel Kavram',            grp: 'Passive' },
     { id: 'tense-table',  label: '2. Tense Tablosu',           grp: 'Passive' },
@@ -24,95 +24,17 @@ var PA_SECTIONS = [
     { id: 'exercises',    label: 'Alıştırmalar',               grp: 'Özel' }
 ];
 
-var PA_DOT = {
+const PA_DOT = {
     'Genel': '#6366f1',
     'Passive': '#7c3aed',
     'Causative': '#b45309',
     'Özel': '#e63946'
 };
 
-/* ════════ ENTRY POINT ════════ */
-function openPassiveSection(sectionId) {
-    _paCurrentSection = sectionId || 'overview';
-    document.querySelectorAll('.container').forEach(function(c){ c.classList.add('hidden'); });
-    document.querySelectorAll('.arsiv-full-page').forEach(function(c){ c.classList.add('hidden'); });
-    var page = document.getElementById('passive-page');
-    if (page) page.classList.remove('hidden');
-    document.querySelectorAll('.sb-btn, .mob-drawer-btn').forEach(function(el){ el.classList.remove('active'); });
-    var sb = document.getElementById('sb-grammar-passive');
-    if (sb) sb.classList.add('active');
-    var di = document.getElementById('di-grammar-passive');
-    if (di) di.classList.add('active');
-    _paRenderPage();
-}
-
-function _paRenderPage() {
-    var page = document.getElementById('passive-page');
-    if (!page) return;
-    page.innerHTML = '<div class="gr-topbar"><button class="gr-back-btn" onclick="navTo(\'index-page\')">←</button>'
-        + '<div><div class="gr-topbar-label">Grammar Modülü</div>'
-        + '<div class="gr-topbar-title">Active / Passive &amp; Causative</div></div></div>'
-        + '<div class="gr-body"><nav class="gr-sidenav" id="pa-sidenav"></nav>'
-        + '<div class="gr-content" id="pa-content"></div></div>';
-    _paBuildSidenav();
-    _paRenderSection(_paCurrentSection);
-}
-
-function _paBuildSidenav() {
-    var nav = document.getElementById('pa-sidenav');
-    if (!nav) return;
-    var groups = {};
-    PA_SECTIONS.forEach(function(s) {
-        if (!groups[s.grp]) groups[s.grp] = [];
-        groups[s.grp].push(s);
-    });
-    var html = '';
-    ['Genel','Passive','Causative','Özel'].forEach(function(grp) {
-        var list = groups[grp];
-        if (!list) return;
-        html += '<div class="gr-sn-sec">' + grp + '</div>';
-        list.forEach(function(s) {
-            var active = s.id === _paCurrentSection ? ' active' : '';
-            html += '<button class="gr-sn-btn' + active + '" onclick="_paRenderSection(\'' + s.id + '\')">'
-                + '<span class="gr-sn-dot" style="background:' + PA_DOT[grp] + '"></span>' + s.label + '</button>';
-        });
-    });
-    nav.innerHTML = html;
-}
-
-function _paRenderSection(id) {
-    _paCurrentSection = id;
-    _paBuildSidenav();
-    var content = document.getElementById('pa-content');
-    if (!content) return;
-    content.scrollTop = 0;
-    var map = {
-        'overview':     paOverview,
-        'concept':      paConcept,
-        'tense-table':  paTenseTable,
-        'intransitive': paIntransitive,
-        'by-agent':     paByAgent,
-        'stative':      paStative,
-        'gerund-inf':   paGerundInf,
-        'it-believed':  paItBelieved,
-        'causative':    paCausative,
-        'tips':         paTips,
-        'exercises':    paExercises
-    };
-    var fn = map[id];
-    content.innerHTML = fn ? fn() : '<div style="padding:40px">Yakında...</div>';
-    if (id === 'exercises') {
-        _paScore = 0; _paAnswers = {}; _paChecked = {};
-        _paUpdScore();
-        document.querySelectorAll('.pa-inp').forEach(function(inp, i) {
-            inp.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') { e.preventDefault(); paCheckBlank(i); }
-            });
-        });
-    }
-}
+/* ════════ ENTRY POINT — GrammarModule engine ════════ */
 
 /* ════════ HELPERS ════════ */
+/* ════════ ENTRY POINT ════════ */
 function paH(eyebrow, title, sub) {
     return '<div class="gr-hero" style="background:linear-gradient(135deg,#2e1065 0%,#4c1d95 55%,#7c3aed 100%)">'
         + '<div class="gr-hero-eyebrow">' + eyebrow + '</div>'
@@ -123,20 +45,20 @@ function paH(eyebrow, title, sub) {
 function paSH(label) { return '<div class="gr-sec-hd">' + label + '</div>'; }
 
 function paTable(headers, rows, cls) {
-    var ths = headers.map(function(h){ return '<th>' + h + '</th>'; }).join('');
-    var trs = rows.map(function(r){
+    const ths = headers.map(function(h){ return '<th>' + h + '</th>'; }).join('');
+    const trs = rows.map(function(r){
         return '<tr>' + r.map(function(c){ return '<td>' + c + '</td>'; }).join('') + '</tr>';
     }).join('');
     return '<div class="gr-tbl-wrap"><table class="gr-tbl ' + (cls||'') + '"><thead><tr>' + ths + '</tr></thead><tbody>' + trs + '</tbody></table></div>';
 }
 
 function paAcc(items) {
-    var cards = items.map(function(it) {
-        var exHtml = (it.examples||[]).map(function(ex, i) {
+    const cards = items.map(function(it) {
+        const exHtml = (it.examples||[]).map(function(ex, i) {
             return '<div class="gr-ex" style="border-left:3px solid #7c3aed"><span class="gr-ex-n">'
                 + String(i+1).padStart(2,'0') + '</span>' + ex + '</div>';
         }).join('');
-        var descHtml = it.desc ? '<p class="gr-acc-desc">' + it.desc + '</p>' : '';
+        const descHtml = it.desc ? '<p class="gr-acc-desc">' + it.desc + '</p>' : '';
         return '<div class="gr-acc" onclick="this.classList.toggle(\'open\')">'
             + '<div class="gr-acc-head">'
             + '<div class="gr-acc-ico" style="background:' + it.bg + '">' + it.ico + '</div>'
@@ -150,7 +72,7 @@ function paAcc(items) {
 }
 
 function paBox(color, title, lines) {
-    var styles = {
+    const styles = {
         yellow:  'background:#fefce8;border:2px solid #ca8a04;color:#713f12',
         purple:  'background:#f5f3ff;border:2px solid #7c3aed;color:#4c1d95',
         amber:   'background:#fffbeb;border:2px solid #d97706;color:#78350f',
@@ -158,7 +80,7 @@ function paBox(color, title, lines) {
         green:   'background:#f0fdf4;border:2px solid #16a34a;color:#14532d',
         blue:    'background:#eff6ff;border:2px solid #2563eb;color:#1e3a8a'
     };
-    var content = lines.map(function(l){ return l === '' ? '<br>' : '<div style="margin-bottom:5px">' + l + '</div>'; }).join('');
+    const content = lines.map(function(l){ return l === '' ? '<br>' : '<div style="margin-bottom:5px">' + l + '</div>'; }).join('');
     return '<div style="' + (styles[color]||styles.purple) + ';border-radius:12px;padding:14px 18px;margin:4px 36px 8px;font-size:.82rem;line-height:1.8;">'
         + (title ? '<div style="font-weight:900;margin-bottom:7px">' + title + '</div>' : '')
         + content + '</div>';
@@ -167,7 +89,7 @@ function paBox(color, title, lines) {
 /* ════════ SECTIONS ════════ */
 
 function paOverview() {
-    var cards = [
+    const cards = [
         {id:'concept',      emoji:'💡', name:'Temel Kavram',         sub:'Active → Passive dönüşümü nasıl yapılır?', c:'#ede9fe', b:'#c4b5fd', t:'#4c1d95'},
         {id:'tense-table',  emoji:'📊', name:'Tense Tablosu',        sub:'8 tense için active → passive örnekleri',   c:'#ede9fe', b:'#c4b5fd', t:'#4c1d95'},
         {id:'intransitive', emoji:'🚫', name:'Geçişsiz Fiiller',     sub:'Passive yapılamayan fiiller listesi',        c:'#fff1f2', b:'#fca5a5', t:'#9f1239'},
@@ -178,7 +100,7 @@ function paOverview() {
         {id:'causative',    emoji:'⚙️', name:'Causative Yapı',       sub:'have / make / let / get + kişi/nesne',      c:'#fef3c7', b:'#fbbf24', t:'#92400e'},
         {id:'tips',         emoji:'🎯', name:'Soru İpuçları',        sub:'8 kritik ÖSYM ipucu',                       c:'#fff1f2', b:'#fca5a5', t:'#9f1239'},
     ];
-    var cardHtml = cards.map(function(c) {
+    const cardHtml = cards.map(function(c) {
         return '<div style="border:1.5px solid ' + c.b + ';border-radius:14px;padding:16px;background:' + c.c + ';cursor:pointer;transition:all .18s;"'
             + ' onmouseover="this.style.transform=\'translateY(-3px)\';this.style.boxShadow=\'0 8px 24px rgba(0,0,0,.1)\'"'
             + ' onmouseout="this.style.transform=\'\';this.style.boxShadow=\'\'"'
@@ -363,7 +285,7 @@ function paCausative() {
 }
 
 function paTips() {
-    var tips = [
+    const tips = [
         {num:'01', title:'Tenses ve Modals konusunun sağlam olması gerekir.',
          rules:[{ico:'💡', text:'Passive sorularını çözerken önce cümlenin hangi zamanda olduğunu belirle.'}]},
         {num:'02', title:'"by" edatı her zaman "tarafından" anlamı vermez.',
@@ -376,7 +298,7 @@ function paTips() {
             {ico:'🚫', text:'appear, go, happen, live, sleep, die, fall, rise, sit, stand, swim... → passive YAPILMAZ'},
             {ico:'💡', text:'Fiilin nesne alıp almadığını kontrol et; nesne yoksa passive yapılamaz.'},
          ]},
-        {num:'04', title:'Boşluktan sonra nesne var mı yok mu? → Active mi Passive mi?',
+        {num:'04', title:'Boşluktan sonra nesne const mı yok mu? → Active mi Passive mi?',
          rules:[
             {ico:'✅', text:'Boşluktan sonra <strong>nesne varsa</strong> → aktif seçeneklere gidilir.'},
             {ico:'✅', text:'Boşluktan sonra <strong>nesne yoksa ve edat (to, by…) gelmişse</strong> → pasif seçeneklere gidilir.'},
@@ -397,8 +319,8 @@ function paTips() {
             {ico:'💡', text:'make → V₁ (tosuz) | let → V₁ (tosuz) | get → to V₁ (tolu)'},
          ]},
     ];
-    var cards = tips.map(function(t) {
-        var rules = t.rules.map(function(r) {
+    const cards = tips.map(function(t) {
+        const rules = t.rules.map(function(r) {
             return '<div style="display:flex;gap:10px;padding:9px 13px;background:#f7f7fb;border-radius:10px;margin-top:7px;font-size:.82rem;color:#374151;line-height:1.6;">'
                 + '<span style="flex-shrink:0;margin-top:1px">' + r.ico + '</span>' + r.text + '</div>';
         }).join('');
@@ -419,7 +341,7 @@ function paTips() {
    EXERCISES — Set tabanlı MCQ sistemi
    Her set 10 soru. Yeni set eklemek için PA_SETS'e obje ekle.
 ════════════════════════════════════════════════════ */
-var PA_SETS = [
+const PA_SETS = [
     /* ── Set 1: Temel Passive alıştırmaları ── */
     {
         label: 'Set 1',
@@ -1117,12 +1039,12 @@ var PA_SETS = [
 ];
 
 /* ── Set state ── */
-var _paSetIdx     = 0;
-var _paSetScore   = 0;
-var _paSetChecked = {};
-var _paSetAnswers = {};
+let _paSetIdx     = 0;
+let _paSetScore   = 0;
+let _paSetChecked = {};
+let _paSetAnswers = {};
 
-var PA_BLANKS = [
+const PA_BLANKS = [
     {q:'The letter ___ (write / simple past passive) by the secretary yesterday.',
      ans:['was written'], hint:'Simple Past Passive: was/were + V₃'},
     {q:'The project ___ (complete / present perfect passive) by the team.',
@@ -1139,7 +1061,7 @@ var PA_BLANKS = [
      ans:['to help'], hint:'get + someone + to V₁'},
 ];
 
-var PA_MCQS = [
+const PA_MCQS = [
     {q:'The novel "Çalıkuşu" ___ by Reşat Nuri Güntekin.',
      opts:['wrote','has written','was written','is writing'],
      cor:'c', hint:'Passive Simple Past: was/were + V₃'},
@@ -1174,19 +1096,19 @@ function paExercises() {
    SET-BASED EXERCISE ENGINE
 ════════════════════════════════════════════════════ */
 function _paBuildExercisePage() {
-    var set   = PA_SETS[_paSetIdx];
-    var total = set.questions.length;
-    var letters = ['A','B','C','D','E'];
-    var lv      = ['a','b','c','d','e'];
+    const set   = PA_SETS[_paSetIdx];
+    const total = set.questions.length;
+    const letters = ['A','B','C','D','E'];
+    const lv      = ['a','b','c','d','e'];
 
     /* ── Set sekme butonları ── */
-    var tabs = PA_SETS.map(function(s, i) {
+    const tabs = PA_SETS.map(function(s, i) {
         return '<button class="gr-set-tab' + (i === _paSetIdx ? ' active' : '') + '" onclick="paSwitchSet(' + i + ')">' + s.label + '</button>';
     }).join('');
 
     /* ── Soru kartları ── */
-    var cards = set.questions.map(function(q, i) {
-        var opts = q.opts.map(function(o, j) {
+    const cards = set.questions.map(function(q, i) {
+        const opts = q.opts.map(function(o, j) {
             return '<div class="gr-opt" id="pa-sopt-' + i + '-' + j + '" onclick="paSetOpt(' + i + ',' + j + ',\'' + lv[j] + '\')">'
                 + '<span class="gr-opt-letter">' + letters[j] + '</span>' + o + '</div>';
         }).join('');
@@ -1200,9 +1122,9 @@ function _paBuildExercisePage() {
     }).join('');
 
     /* ── Navigasyon ── */
-    var prevBtn = _paSetIdx > 0
+    const prevBtn = _paSetIdx > 0
         ? '<button class="gr-nav-btn" onclick="paSwitchSet(' + (_paSetIdx-1) + ')">← Önceki Set</button>' : '';
-    var nextBtn = _paSetIdx < PA_SETS.length - 1
+    const nextBtn = _paSetIdx < PA_SETS.length - 1
         ? '<button class="gr-nav-btn" onclick="paSwitchSet(' + (_paSetIdx+1) + ')">Sonraki Set →</button>' : '';
 
     return paH('✨ Pratik Yap', 'Alıştırmalar — ' + set.label,
@@ -1228,7 +1150,7 @@ function _paBuildExercisePage() {
    SET EXERCISE LOGIC
 ════════════════════════════════════════════════════ */
 function _paUpdSetScore() {
-    var el = document.getElementById('pa-live-score');
+    const el = document.getElementById('pa-live-score');
     if (el) el.textContent = _paSetScore + ' / ' + PA_SETS[_paSetIdx].questions.length;
 }
 
@@ -1241,26 +1163,26 @@ function paSwitchSet(idx) {
 }
 
 function paSetOpt(qi, oi, letter) {
-    var q = PA_SETS[_paSetIdx].questions[qi];
+    const q = PA_SETS[_paSetIdx].questions[qi];
     q.opts.forEach(function(_, j) {
-        var el = document.getElementById('pa-sopt-' + qi + '-' + j);
+        const el = document.getElementById('pa-sopt-' + qi + '-' + j);
         if (el) el.classList.remove('sel');
     });
-    var el = document.getElementById('pa-sopt-' + qi + '-' + oi);
+    const el = document.getElementById('pa-sopt-' + qi + '-' + oi);
     if (el) el.classList.add('sel');
     _paSetAnswers[qi] = letter;
 }
 
 function paCheckSetQ(i) {
-    var q    = PA_SETS[_paSetIdx].questions[i];
-    var sel  = _paSetAnswers[i];
-    var fb   = document.getElementById('pa-sfb-' + i);
-    var card = document.getElementById('pa-sq-' + i);
+    const q    = PA_SETS[_paSetIdx].questions[i];
+    const sel  = _paSetAnswers[i];
+    const fb   = document.getElementById('pa-sfb-' + i);
+    const card = document.getElementById('pa-sq-' + i);
     if (!fb) return;
     if (!sel) { fb.textContent = 'Bir seçenek seçin!'; fb.className = 'gr-fb show bad'; return; }
-    var letters = ['a','b','c','d','e'];
+    const letters = ['a','b','c','d','e'];
     q.opts.forEach(function(_, j) {
-        var el = document.getElementById('pa-sopt-' + i + '-' + j);
+        const el = document.getElementById('pa-sopt-' + i + '-' + j);
         if (!el) return;
         el.classList.remove('sel');
         if (letters[j] === q.cor) el.classList.add('ok');
@@ -1280,15 +1202,15 @@ function paCheckSetQ(i) {
 }
 
 function paSubmitSet() {
-    var set     = PA_SETS[_paSetIdx];
-    var total   = set.questions.length;
-    var panel   = document.getElementById('pa-result');
-    var scoreEl = document.getElementById('pa-res-score');
-    var msgEl   = document.getElementById('pa-res-msg');
+    const set     = PA_SETS[_paSetIdx];
+    const total   = set.questions.length;
+    const panel   = document.getElementById('pa-result');
+    const scoreEl = document.getElementById('pa-res-score');
+    const msgEl   = document.getElementById('pa-res-msg');
     if (!panel) return;
     panel.classList.add('show');
     scoreEl.textContent = _paSetScore + '/' + total;
-    var pct = Math.round((_paSetScore / total) * 100);
+    const pct = Math.round((_paSetScore / total) * 100);
     msgEl.textContent = pct >= 90 ? '🎉 Mükemmel! Passive yapılarına tam hâkimsin!'
                       : pct >= 70 ? '👏 Çok iyi! Tense kombinasyonlarını biraz daha gözden geçir.'
                       : pct >= 50 ? '📚 İyi başlangıç. Passive tense tablosuna tekrar bak!'
@@ -1300,16 +1222,51 @@ function paRetrySameSet() { paSwitchSet(_paSetIdx); }
 function paNextSet()      { if (_paSetIdx < PA_SETS.length - 1) paSwitchSet(_paSetIdx + 1); }
 
 /* ════════ GLOBALS ════════ */
-window.openPassiveSection = openPassiveSection;
-window._paRenderSection   = _paRenderSection;
-window.paSwitchSet        = paSwitchSet;
-window.paSetOpt           = paSetOpt;
-window.paCheckSetQ        = paCheckSetQ;
-window.paSubmitSet        = paSubmitSet;
-window.paRetrySameSet     = paRetrySameSet;
-window.paNextSet          = paNextSet;
+// openPassiveSection ve _paRenderSection: _initPassiveModule içinde atandı
+window.paSwitchSet    = paSwitchSet;
+window.paSetOpt       = paSetOpt;
+window.paCheckSetQ    = paCheckSetQ;
+window.paSubmitSet    = paSubmitSet;
+window.paRetrySameSet = paRetrySameSet;
+window.paNextSet      = paNextSet;
 /* legacy stubs */
-window.paCheckBlank       = function(){};
-window.paSelectOpt        = paSetOpt;
-window.paCheckMCQ         = paCheckSetQ;
-window.paSubmitAll        = paSubmitSet;
+window.paCheckBlank   = function(){};
+window.paSelectOpt    = paSetOpt;
+window.paCheckMCQ     = paCheckSetQ;
+window.paSubmitAll    = paSubmitSet;
+
+(function _initPassiveModule() {
+    const _mod = new GrammarModule({
+        id:       'pa',
+        pageId:   'passive-page',
+        sbId:     'sb-grammar-passive',
+        diId:     'di-grammar-passive',
+        title:    'Active / Passive &amp; Causative',
+        sections: PA_SECTIONS,
+        dotColors: PA_DOT,
+        grpOrder: ['Genel', 'Passive', 'Causative', 'Özel'],
+        sectionMap: {
+            'overview':     function(){ return paOverview(); },
+            'concept':      function(){ return paConcept(); },
+            'tense-table':  function(){ return paTenseTable(); },
+            'intransitive': function(){ return paIntransitive(); },
+            'by-agent':     function(){ return paByAgent(); },
+            'stative':      function(){ return paStative(); },
+            'gerund-inf':   function(){ return paGerundInf(); },
+            'it-believed':  function(){ return paItBelieved(); },
+            'causative':    function(){ return paCausative(); },
+            'tips':         function(){ return paTips(); },
+            'exercises':    function(){ return paExercises(); }
+        },
+        onSectionRender: function(id) {
+            if (id === 'exercises') {
+                _paScore = 0; _paAnswers = {}; _paChecked = {};
+                _paUpdScore();
+            }
+        }
+    });
+
+    window.openPassiveSection = function(sectionId) { _mod.open(sectionId || 'overview'); };
+    window._paRenderSection   = function(id)        { _mod.goTo(id); };
+    window['_paGoTo']         = function(id)        { _mod.goTo(id); };
+})();

@@ -33,122 +33,16 @@ const MD_SECTIONS = [
 const MD_DOT = { 'Genel': '#6366f1', 'Kullanımlar': '#d97706', 'Özel': '#e63946' };
 
 /* ════════════════════════════════════════════════════
-   ENTRY POINT
+   ENTRY POINT — GrammarModule engine
 ════════════════════════════════════════════════════ */
-function openModalsSection(sectionId) {
-    _mdCurrentSection = sectionId || 'overview';
-
-    // Show modals-page using existing showPage mechanism
-    document.querySelectorAll('.container').forEach(c => c.classList.add('hidden'));
-    document.querySelectorAll('.arsiv-full-page').forEach(c => c.classList.add('hidden'));
-    document.querySelectorAll('.cx-page, .sr-page, .tw-page').forEach(c => c.classList.add('hidden'));
-    const page = document.getElementById('modals-page');
-    if (page) page.classList.remove('hidden');
-
-    // Mark sidebar active
-    document.querySelectorAll('.sb-btn, .mob-drawer-btn').forEach(el => el.classList.remove('active'));
-    const sb = document.getElementById('sb-grammar-modals');
-    if (sb) sb.classList.add('active');
-    const di = document.getElementById('di-grammar-modals');
-    if (di) di.classList.add('active');
-
-    _mdRenderPage();
-}
-
-/* ════════════════════════════════════════════════════
-   PAGE STRUCTURE
-════════════════════════════════════════════════════ */
-function _mdRenderPage() {
-    const page = document.getElementById('modals-page');
-    if (!page) return;
-
-    page.innerHTML = `
-        <div class="gr-topbar">
-            <button class="gr-back-btn" onclick="navTo('index-page')">←</button>
-            <div>
-                <div class="gr-topbar-label">Grammar Modülü</div>
-                <div class="gr-topbar-title">Modals</div>
-            </div>
-        </div>
-        <div class="gr-body">
-            <nav class="gr-sidenav" id="md-sidenav"></nav>
-            <div class="gr-content" id="md-content"></div>
-        </div>`;
-
-    _mdBuildSidenav();
-    _mdRenderSection(_mdCurrentSection);
-}
-
-/* ════════════════════════════════════════════════════
-   SIDENAV
-════════════════════════════════════════════════════ */
-function _mdBuildSidenav() {
-    const nav = document.getElementById('md-sidenav');
-    if (!nav) return;
-
-    const groups = {};
-    MD_SECTIONS.forEach(s => {
-        if (!groups[s.grp]) groups[s.grp] = [];
-        groups[s.grp].push(s);
-    });
-
-    let html = '';
-    ['Genel', 'Kullanımlar', 'Özel'].forEach(grp => {
-        const list = groups[grp];
-        if (!list) return;
-        html += `<div class="gr-sn-sec">${grp}</div>`;
-        list.forEach(s => {
-            const active = s.id === _mdCurrentSection ? ' active' : '';
-            html += `<button class="gr-sn-btn${active}" onclick="_mdRenderSection('${s.id}')">
-                <span class="gr-sn-dot" style="background:${MD_DOT[grp]}"></span>${s.label}
-            </button>`;
-        });
-    });
-    nav.innerHTML = html;
-}
-
-/* ════════════════════════════════════════════════════
-   SECTION ROUTER
-════════════════════════════════════════════════════ */
-function _mdRenderSection(id) {
-    _mdCurrentSection = id;
-    _mdBuildSidenav();
-
-    const content = document.getElementById('md-content');
-    if (!content) return;
-    content.scrollTop = 0;
-
-    const map = {
-        'overview':    mdOverview,
-        'ability':     mdAbility,
-        'request':     mdRequest,
-        'obligation':  mdObligation,
-        'lack-obl':    mdLackObl,
-        'prohibition': mdProhibition,
-        'advice':      mdAdvice,
-        'expectation': mdExpectation,
-        'preference':  mdPreference,
-        'habitual':    mdHabitual,
-        'deduction':   mdDeduction,
-        'offer':       mdOffer,
-        'tips':        mdTips,
-        'exercises':   mdExercises,
-    };
-
-    const fn = map[id];
-    content.innerHTML = fn ? fn() : '<div style="padding:40px">Yakında...</div>';
-
-    if (id === 'exercises') {
-        _mdScore = 0; _mdAnswers = {}; _mdChecked = {};
-        _mdUpdScore();
-        document.querySelectorAll('.md-inp').forEach((inp, i) => {
-            inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); mdCheckBlank(i); } });
-        });
-    }
-}
 
 /* ════════════════════════════════════════════════════
    HTML BUILDER HELPERS (reuse grammar.js patterns)
+════════════════════════════════════════════════════ */
+/* ── Dot colors per group ── */
+
+/* ════════════════════════════════════════════════════
+   ENTRY POINT
 ════════════════════════════════════════════════════ */
 function mdH(eyebrow, title, sub) {
     return `<div class="gr-hero gr-hero-modal">
@@ -1354,16 +1248,54 @@ function mdNextSet()      { if (_mdSetIdx < MD_SETS.length - 1) mdSwitchSet(_mdS
 /* ════════════════════════════════════════════════════
    EXPOSE GLOBALS
 ════════════════════════════════════════════════════ */
-window.openModalsSection = openModalsSection;
-window._mdRenderSection  = _mdRenderSection;
-window.mdSwitchSet       = mdSwitchSet;
-window.mdSetOpt          = mdSetOpt;
-window.mdCheckSetQ       = mdCheckSetQ;
-window.mdSubmitSet       = mdSubmitSet;
-window.mdRetrySameSet    = mdRetrySameSet;
-window.mdNextSet         = mdNextSet;
+// openModalsSection ve _mdRenderSection: _initModalsModule içinde atandı
+window.mdSwitchSet    = mdSwitchSet;
+window.mdSetOpt       = mdSetOpt;
+window.mdCheckSetQ    = mdCheckSetQ;
+window.mdSubmitSet    = mdSubmitSet;
+window.mdRetrySameSet = mdRetrySameSet;
+window.mdNextSet      = mdNextSet;
 /* legacy stubs (eski referanslar kırılmasın) */
-window.mdCheckBlank      = () => {};
-window.mdSelectOpt       = mdSetOpt;
-window.mdCheckMCQ        = mdCheckSetQ;
-window.mdSubmitAll       = mdSubmitSet;
+window.mdCheckBlank   = () => {};
+window.mdSelectOpt    = mdSetOpt;
+window.mdCheckMCQ     = mdCheckSetQ;
+window.mdSubmitAll    = mdSubmitSet;
+
+(function _initModalsModule() {
+    const _mod = new GrammarModule({
+        id:       'md',
+        pageId:   'modals-page',
+        sbId:     'sb-grammar-modals',
+        diId:     'di-grammar-modals',
+        title:    'Modals',
+        sections: MD_SECTIONS,
+        dotColors: MD_DOT,
+        grpOrder: ['Genel', 'Kullanımlar', 'Özel'],
+        sectionMap: {
+            'overview':    () => mdOverview(),
+            'ability':     () => mdAbility(),
+            'request':     () => mdRequest(),
+            'obligation':  () => mdObligation(),
+            'lack-obl':    () => mdLackObl(),
+            'prohibition': () => mdProhibition(),
+            'advice':      () => mdAdvice(),
+            'expectation': () => mdExpectation(),
+            'preference':  () => mdPreference(),
+            'habitual':    () => mdHabitual(),
+            'deduction':   () => mdDeduction(),
+            'offer':       () => mdOffer(),
+            'tips':        () => mdTips(),
+            'exercises':   () => mdExercises()
+        },
+        onSectionRender(id) {
+            if (id === 'exercises') {
+                _mdScore = 0; _mdAnswers = {}; _mdChecked = {};
+                _mdUpdScore();
+            }
+        }
+    });
+
+    window.openModalsSection = (sectionId) => _mod.open(sectionId || 'overview');
+    window._mdRenderSection  = (id)        => _mod.goTo(id);
+    window['_mdGoTo']        = (id)        => _mod.goTo(id);
+})();

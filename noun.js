@@ -4,13 +4,13 @@
 // Kaynak: 10da10 YDT Noun Clauses & Reported Speech notları (s. 81–92)
 // ════════════════════════════════════════════════════════════════
 
-var _ncCurrentSection = 'overview';
-var _ncAnswers = {};
-var _ncChecked = {};
-var _ncScore = 0;
-var NC_TOTAL = 15;
+let _ncCurrentSection = 'overview';
+let _ncAnswers = {};
+let _ncChecked = {};
+let _ncScore = 0;
+const NC_TOTAL = 15;
 
-var NC_SECTIONS = [
+const NC_SECTIONS = [
     { id: 'overview',     label: 'Genel Bakış',               grp: 'Genel' },
     { id: 'that',         label: '1. That / The Fact That',   grp: 'Noun Clauses' },
     { id: 'if-whether',   label: '2. If / Whether',           grp: 'Noun Clauses' },
@@ -24,95 +24,17 @@ var NC_SECTIONS = [
     { id: 'exercises',    label: 'Alıştırmalar',              grp: 'Özel' }
 ];
 
-var NC_DOT = {
+const NC_DOT = {
     'Genel': '#6366f1',
     'Noun Clauses': '#b45309',
     'Reported Speech': '#0369a1',
     'Özel': '#e63946'
 };
 
-/* ════════ ENTRY POINT ════════ */
-function openNounSection(sectionId) {
-    _ncCurrentSection = sectionId || 'overview';
-    document.querySelectorAll('.container').forEach(function(c){ c.classList.add('hidden'); });
-    document.querySelectorAll('.arsiv-full-page').forEach(function(c){ c.classList.add('hidden'); });
-    var page = document.getElementById('noun-page');
-    if (page) page.classList.remove('hidden');
-    document.querySelectorAll('.sb-btn, .mob-drawer-btn').forEach(function(el){ el.classList.remove('active'); });
-    ['sb-grammar-noun','di-grammar-noun'].forEach(function(id){
-        var el = document.getElementById(id);
-        if (el) el.classList.add('active');
-    });
-    _ncRenderPage();
-}
-
-function _ncRenderPage() {
-    var page = document.getElementById('noun-page');
-    if (!page) return;
-    page.innerHTML = '<div class="gr-topbar"><button class="gr-back-btn" onclick="navTo(\'index-page\')">←</button>'
-        + '<div><div class="gr-topbar-label">Grammar Modülü</div>'
-        + '<div class="gr-topbar-title">Noun Clauses &amp; Reported Speech</div></div></div>'
-        + '<div class="gr-body"><nav class="gr-sidenav" id="nc-sidenav"></nav>'
-        + '<div class="gr-content" id="nc-content"></div></div>';
-    _ncBuildSidenav();
-    _ncRenderSection(_ncCurrentSection);
-}
-
-function _ncBuildSidenav() {
-    var nav = document.getElementById('nc-sidenav');
-    if (!nav) return;
-    var groups = {};
-    NC_SECTIONS.forEach(function(s) {
-        if (!groups[s.grp]) groups[s.grp] = [];
-        groups[s.grp].push(s);
-    });
-    var html = '';
-    ['Genel','Noun Clauses','Reported Speech','Özel'].forEach(function(grp) {
-        var list = groups[grp];
-        if (!list) return;
-        html += '<div class="gr-sn-sec">' + grp + '</div>';
-        list.forEach(function(s) {
-            var active = s.id === _ncCurrentSection ? ' active' : '';
-            html += '<button class="gr-sn-btn' + active + '" onclick="_ncRenderSection(\'' + s.id + '\')">'
-                + '<span class="gr-sn-dot" style="background:' + NC_DOT[grp] + '"></span>' + s.label + '</button>';
-        });
-    });
-    nav.innerHTML = html;
-}
-
-function _ncRenderSection(id) {
-    _ncCurrentSection = id;
-    _ncBuildSidenav();
-    var content = document.getElementById('nc-content');
-    if (!content) return;
-    content.scrollTop = 0;
-    var map = {
-        'overview':     ncOverview,
-        'that':         ncThat,
-        'if-whether':   ncIfWhether,
-        'wh-questions': ncWHQuestions,
-        'ever-words':   ncEverWords,
-        'subjunctive':  ncSubjunctive,
-        'tense-concord':ncTenseConcord,
-        'reported':     ncReported,
-        'tense-change': ncTenseChange,
-        'time-change':  ncTimeChange,
-        'exercises':    ncExercises
-    };
-    var fn = map[id];
-    content.innerHTML = fn ? fn() : '<div style="padding:40px">Yakında...</div>';
-    if (id === 'exercises') {
-        _ncScore = 0; _ncAnswers = {}; _ncChecked = {};
-        _ncUpdScore();
-        document.querySelectorAll('.nc-inp').forEach(function(inp, i) {
-            inp.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') { e.preventDefault(); ncCheckBlank(i); }
-            });
-        });
-    }
-}
+/* ════════ ENTRY POINT — GrammarModule engine ════════ */
 
 /* ════════ HELPERS ════════ */
+/* ════════ ENTRY POINT ════════ */
 function ncH(eyebrow, title, sub) {
     return '<div class="gr-hero" style="background:linear-gradient(135deg,#431407 0%,#b45309 60%,#f59e0b 100%)">'
         + '<div class="gr-hero-eyebrow">' + eyebrow + '</div>'
@@ -123,20 +45,20 @@ function ncH(eyebrow, title, sub) {
 function ncSH(label) { return '<div class="gr-sec-hd">' + label + '</div>'; }
 
 function ncTable(headers, rows) {
-    var ths = headers.map(function(h){ return '<th>' + h + '</th>'; }).join('');
-    var trs = rows.map(function(r){
+    const ths = headers.map(function(h){ return '<th>' + h + '</th>'; }).join('');
+    const trs = rows.map(function(r){
         return '<tr>' + r.map(function(c){ return '<td>' + c + '</td>'; }).join('') + '</tr>';
     }).join('');
     return '<div class="gr-tbl-wrap"><table class="gr-tbl"><thead><tr>' + ths + '</tr></thead><tbody>' + trs + '</tbody></table></div>';
 }
 
 function ncAcc(items) {
-    var cards = items.map(function(it) {
-        var exHtml = (it.examples||[]).map(function(ex, i) {
+    const cards = items.map(function(it) {
+        const exHtml = (it.examples||[]).map(function(ex, i) {
             return '<div class="gr-ex" style="border-left:3px solid #b45309"><span class="gr-ex-n">'
                 + String(i+1).padStart(2,'0') + '</span>' + ex + '</div>';
         }).join('');
-        var descHtml = it.desc ? '<p class="gr-acc-desc">' + it.desc + '</p>' : '';
+        const descHtml = it.desc ? '<p class="gr-acc-desc">' + it.desc + '</p>' : '';
         return '<div class="gr-acc" onclick="this.classList.toggle(\'open\')">'
             + '<div class="gr-acc-head">'
             + '<div class="gr-acc-ico" style="background:' + it.bg + '">' + it.ico + '</div>'
@@ -150,7 +72,7 @@ function ncAcc(items) {
 }
 
 function ncBox(color, title, lines) {
-    var styles = {
+    const styles = {
         amber:  'background:#fffbeb;border:2px solid #d97706;color:#78350f',
         yellow: 'background:#fefce8;border:2px solid #ca8a04;color:#713f12',
         blue:   'background:#eff6ff;border:2px solid #2563eb;color:#1e3a8a',
@@ -159,14 +81,14 @@ function ncBox(color, title, lines) {
         green:  'background:#f0fdf4;border:2px solid #16a34a;color:#14532d',
         purple: 'background:#f5f3ff;border:2px solid #7c3aed;color:#4c1d95'
     };
-    var content = lines.map(function(l){ return l===''?'<br>':'<div style="margin-bottom:5px">'+l+'</div>'; }).join('');
+    const content = lines.map(function(l){ return l===''?'<br>':'<div style="margin-bottom:5px">'+l+'</div>'; }).join('');
     return '<div style="'+(styles[color]||styles.amber)+';border-radius:12px;padding:14px 18px;margin:4px 36px 8px;font-size:.82rem;line-height:1.8;">'
         +(title?'<div style="font-weight:900;margin-bottom:7px">'+title+'</div>':'')+content+'</div>';
 }
 
 /* ════════ OVERVIEW ════════ */
 function ncOverview() {
-    var cards = [
+    const cards = [
         {id:'that',         e:'💡', n:'That / The Fact That', s:'Kararlı durum — tam cümle (SVO)', c:'#fffbeb', b:'#fcd34d', t:'#92400e'},
         {id:'if-whether',   e:'❓', n:'If / Whether',         s:'-ip/-madığını — kararsız durum',   c:'#fffbeb', b:'#fcd34d', t:'#92400e'},
         {id:'wh-questions', e:'🔍', n:'WH-Questions',         s:'what, when, where, who, how…',     c:'#fffbeb', b:'#fcd34d', t:'#92400e'},
@@ -177,7 +99,7 @@ function ncOverview() {
         {id:'tense-change', e:'🔄', n:'Tense Değişimi',       s:'8 zaman için backshift tablosu',    c:'#eff6ff', b:'#93c5fd', t:'#1e3a8a'},
         {id:'time-change',  e:'📅', n:'Zaman & Pronoun',      s:'now→then, I→he/she değişimleri',    c:'#eff6ff', b:'#93c5fd', t:'#1e3a8a'},
     ];
-    var cardHtml = cards.map(function(c) {
+    const cardHtml = cards.map(function(c) {
         return '<div style="border:1.5px solid '+c.b+';border-radius:14px;padding:16px;background:'+c.c+';cursor:pointer;transition:all .18s;"'
             +' onmouseover="this.style.transform=\'translateY(-3px)\';this.style.boxShadow=\'0 8px 24px rgba(0,0,0,.1)\'"'
             +' onmouseout="this.style.transform=\'\';this.style.boxShadow=\'\'"'
@@ -433,7 +355,7 @@ function ncTimeChange() {
 }
 
 /* ════════ EXERCISES — SET SİSTEMİ ════════ */
-var NC_SETS = [
+const NC_SETS = [
     {
         label: 'Set 1',
         questions: [
@@ -961,10 +883,10 @@ var NC_SETS = [
     },
 ];
 
-var _ncSetIdx     = 0;
-var _ncSetScore   = 0;
-var _ncSetChecked = {};
-var _ncSetAnswers = {};
+let _ncSetIdx     = 0;
+let _ncSetScore   = 0;
+let _ncSetChecked = {};
+let _ncSetAnswers = {};
 
 function ncExercises() {
     _ncSetIdx = 0; _ncSetScore = 0; _ncSetChecked = {}; _ncSetAnswers = {};
@@ -972,21 +894,21 @@ function ncExercises() {
 }
 
 function _ncBuildExercisePage() {
-    var set   = NC_SETS[_ncSetIdx];
-    var total = set.questions.length;
+    const set   = NC_SETS[_ncSetIdx];
+    const total = set.questions.length;
 
-    var tabs = NC_SETS.map(function(s, i) {
-        var active = i === _ncSetIdx
+    const tabs = NC_SETS.map(function(s, i) {
+        const active = i === _ncSetIdx
             ? 'style="background:#b45309;color:#fff;border-color:#b45309;"' : '';
         return '<button class="gr-set-tab" ' + active + ' onclick="ncSwitchSet(' + i + ')">' + s.label + '</button>';
     }).join('');
 
-    var qCards = set.questions.map(function(q, i) {
-        var opts = q.opts.map(function(o, j) {
-            var letter = ['A','B','C','D','E'][j];
-            var lv     = ['a','b','c','d','e'][j];
-            var state  = _ncSetAnswers[_ncSetIdx + '_' + i];
-            var cls = 'gr-opt';
+    const qCards = set.questions.map(function(q, i) {
+        const opts = q.opts.map(function(o, j) {
+            const letter = ['A','B','C','D','E'][j];
+            const lv     = ['a','b','c','d','e'][j];
+            const state  = _ncSetAnswers[_ncSetIdx + '_' + i];
+            let cls = 'gr-opt';
             if (_ncSetChecked[_ncSetIdx + '_' + i]) {
                 if (lv === q.cor)                         cls += ' ok';
                 else if (lv === state && state !== q.cor) cls += ' bad';
@@ -996,12 +918,12 @@ function _ncBuildExercisePage() {
                 + '</div>';
         }).join('');
 
-        var checked = _ncSetChecked[_ncSetIdx + '_' + i];
-        var fbCls   = checked ? (checked === 'ok' ? 'gr-fb show ok' : 'gr-fb show bad') : 'gr-fb';
-        var fbTxt   = checked === 'ok'  ? ('✅ Doğru! ' + q.hint)
+        const checked = _ncSetChecked[_ncSetIdx + '_' + i];
+        const fbCls   = checked ? (checked === 'ok' ? 'gr-fb show ok' : 'gr-fb show bad') : 'gr-fb';
+        const fbTxt   = checked === 'ok'  ? ('✅ Doğru! ' + q.hint)
                     : checked === 'bad' ? ('❌ Yanlış. Doğru: ' + q.cor.toUpperCase() + ' — ' + q.hint) : '';
-        var cardCls = checked === 'ok' ? 'gr-q-card gr-c' : checked === 'bad' ? 'gr-q-card gr-w' : 'gr-q-card';
-        var btnDis  = checked ? 'disabled style="opacity:.4;pointer-events:none;"' : '';
+        const cardCls = checked === 'ok' ? 'gr-q-card gr-c' : checked === 'bad' ? 'gr-q-card gr-w' : 'gr-q-card';
+        const btnDis  = checked ? 'disabled style="opacity:.4;pointer-events:none;"' : '';
 
         return '<div class="' + cardCls + '" id="ncsc-' + i + '">'
             + '<div class="gr-q-num">SORU ' + String(i+1).padStart(2,'0') + ' — ' + set.label.toUpperCase() + '</div>'
@@ -1036,35 +958,35 @@ function _ncBuildExercisePage() {
 
 function ncSwitchSet(idx) {
     _ncSetIdx = idx; _ncSetScore = 0; _ncSetChecked = {}; _ncSetAnswers = {};
-    var cnt = document.getElementById('nc-content');
+    const cnt = document.getElementById('nc-content');
     if (cnt) { cnt.innerHTML = _ncBuildExercisePage(); cnt.scrollTop = 0; }
 }
 
 function ncSetOpt(qi, oi, letter) {
     if (_ncSetChecked[_ncSetIdx + '_' + qi]) return;
     NC_SETS[_ncSetIdx].questions[qi].opts.forEach(function(_, j) {
-        var el = document.getElementById('ncso-' + qi + '-' + j);
+        const el = document.getElementById('ncso-' + qi + '-' + j);
         if (el) el.className = 'gr-opt' + (j === oi ? ' sel' : '');
     });
     _ncSetAnswers[_ncSetIdx + '_' + qi] = letter;
 }
 
 function ncCheckSetQ(qi) {
-    var q    = NC_SETS[_ncSetIdx].questions[qi];
-    var sel  = _ncSetAnswers[_ncSetIdx + '_' + qi];
-    var fb   = document.getElementById('ncsfb-' + qi);
-    var card = document.getElementById('ncsc-' + qi);
+    const q    = NC_SETS[_ncSetIdx].questions[qi];
+    const sel  = _ncSetAnswers[_ncSetIdx + '_' + qi];
+    const fb   = document.getElementById('ncsfb-' + qi);
+    const card = document.getElementById('ncsc-' + qi);
     if (!fb) return;
     if (!sel) { fb.textContent = 'Bir seçenek seçin!'; fb.className = 'gr-fb show bad'; return; }
-    var letters = ['a','b','c','d','e'];
+    const letters = ['a','b','c','d','e'];
     q.opts.forEach(function(_, j) {
-        var el = document.getElementById('ncso-' + qi + '-' + j);
+        const el = document.getElementById('ncso-' + qi + '-' + j);
         if (!el) return;
         el.classList.remove('sel');
         if (letters[j] === q.cor)                     el.classList.add('ok');
         else if (letters[j] === sel && sel !== q.cor) el.classList.add('bad');
     });
-    var btn = card ? card.querySelector('.gr-chk-btn') : null;
+    const btn = card ? card.querySelector('.gr-chk-btn') : null;
     if (btn) { btn.disabled = true; btn.style.opacity = '.4'; btn.style.pointerEvents = 'none'; }
     if (sel === q.cor) {
         if (card) card.classList.add('gr-c');
@@ -1078,17 +1000,17 @@ function ncCheckSetQ(qi) {
         fb.className = 'gr-fb show bad';
         _ncSetChecked[_ncSetIdx + '_' + qi] = 'bad';
     }
-    var el = document.getElementById('nc-live-score');
+    const el = document.getElementById('nc-live-score');
     if (el) el.textContent = _ncSetScore + ' / ' + NC_SETS[_ncSetIdx].questions.length;
 }
 
 function ncSubmitSet() {
-    var total = NC_SETS[_ncSetIdx].questions.length;
-    var panel = document.getElementById('nc-result');
+    const total = NC_SETS[_ncSetIdx].questions.length;
+    const panel = document.getElementById('nc-result');
     if (!panel) return;
     panel.classList.add('show');
     document.getElementById('nc-res-score').textContent = _ncSetScore + '/' + total;
-    var pct = Math.round((_ncSetScore / total) * 100);
+    const pct = Math.round((_ncSetScore / total) * 100);
     document.getElementById('nc-res-msg').textContent =
         pct >= 90 ? '🎉 Mükemmel! Bu seti harika geçirdin!'
       : pct >= 70 ? '👏 Çok iyi! Küçük eksikler var.'
@@ -1101,17 +1023,16 @@ function ncRetrySameSet() { ncSwitchSet(_ncSetIdx); }
 function ncNextSet()      { if (_ncSetIdx < NC_SETS.length - 1) ncSwitchSet(_ncSetIdx + 1); }
 
 /* ════════ GLOBALS ════════ */
-window.openNounSection  = openNounSection;
-window._ncRenderSection = _ncRenderSection;
-window.ncSwitchSet      = ncSwitchSet;
-window.ncSetOpt         = ncSetOpt;
-window.ncCheckSetQ      = ncCheckSetQ;
-window.ncSubmitSet      = ncSubmitSet;
-window.ncRetrySameSet   = ncRetrySameSet;
-window.ncNextSet        = ncNextSet;
+// openNounSection ve _ncRenderSection: _initNounModule içinde atandı
+window.ncSwitchSet    = ncSwitchSet;
+window.ncSetOpt       = ncSetOpt;
+window.ncCheckSetQ    = ncCheckSetQ;
+window.ncSubmitSet    = ncSubmitSet;
+window.ncRetrySameSet = ncRetrySameSet;
+window.ncNextSet      = ncNextSet;
 
 /* ════════ EXERCISES ════════ */
-var NC_BLANKS = [
+const NC_BLANKS = [
     {q:'___ the Earth orbits the Sun is a well-known scientific truth.',
      ans:['that','the fact that'], hint:'"That" veya "The fact that" özne konumunda'},
     {q:'Everyone hopes ___ the pandemic will end as soon as possible.',
@@ -1128,7 +1049,7 @@ var NC_BLANKS = [
      ans:['had'], hint:'Reported speech: Simple Past → Past Perfect (had + V₃)'},
 ];
 
-var NC_MCQS = [
+const NC_MCQS = [
     {q:'My sister is proud ___ the fact that she graduated with honors.',
      opts:['that','of','in','about'],
      cor:'b', hint:'Preposition + "the fact that" (preposition\'dan sonra "that" gelmez)'},
@@ -1156,3 +1077,39 @@ var NC_MCQS = [
 ];
 
 // Eski boşluk doldurma/MCQ fonksiyonları Set sistemiyle değiştirildi.
+
+(function _initNounModule() {
+    const _mod = new GrammarModule({
+        id:       'nc',
+        pageId:   'noun-page',
+        sbId:     'sb-grammar-noun',
+        diId:     'di-grammar-noun',
+        title:    'Noun Clauses &amp; Reported Speech',
+        sections: NC_SECTIONS,
+        dotColors: NC_DOT,
+        grpOrder: ['Genel', 'Noun Clauses', 'Reported Speech', 'Özel'],
+        sectionMap: {
+            'overview':     function(){ return ncOverview(); },
+            'that':         function(){ return ncThat(); },
+            'if-whether':   function(){ return ncIfWhether(); },
+            'wh-questions': function(){ return ncWHQuestions(); },
+            'ever-words':   function(){ return ncEverWords(); },
+            'subjunctive':  function(){ return ncSubjunctive(); },
+            'tense-concord':function(){ return ncTenseConcord(); },
+            'reported':     function(){ return ncReported(); },
+            'tense-change': function(){ return ncTenseChange(); },
+            'time-change':  function(){ return ncTimeChange(); },
+            'exercises':    function(){ return ncExercises(); }
+        },
+        onSectionRender: function(id) {
+            if (id === 'exercises') {
+                _ncScore = 0; _ncAnswers = {}; _ncChecked = {};
+                _ncUpdScore();
+            }
+        }
+    });
+
+    window.openNounSection  = function(sectionId) { _mod.open(sectionId || 'overview'); };
+    window._ncRenderSection = function(id)        { _mod.goTo(id); };
+    window['_ncGoTo']       = function(id)        { _mod.goTo(id); };
+})();

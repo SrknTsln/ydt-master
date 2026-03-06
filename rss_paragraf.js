@@ -74,7 +74,15 @@ const RSS_SOURCES_GAMING = [
 // Tüm kaynaklar düz liste (loading UI için)
 const RSS_SOURCES = [...RSS_SOURCES_SCIENCE, ...RSS_SOURCES_TECH, ...RSS_SOURCES_GAMING];
 
-/* ── CORS Proxy'leri ────────────────────────────────────────── */
+/* ── CORS Proxy Yapılandırması ──────────────────────────────── */
+// Cloudflare Worker URL'ini buraya yapıştır (deploy ettikten sonra)
+// Örn: 'https://ydt-proxy.KULLANICI.workers.dev'
+const WORKER_URL = 'https://autumn-hill-be24ydt-master.stasalan.workers.dev';
+
+// Worker hazır mı? (URL güncellenmemişse eski proxy'lere fallback)
+const _workerReady = WORKER_URL && !WORKER_URL.includes('KULLANICI');
+
+// Eski yedek proxy'ler (Worker çalışmadığında fallback)
 const RSS_API_KEY = 'vsl1eq3auurlhgourjr8rznm6q7l8zxy0pkhwnxo';
 const RSS_PROXIES = [
     u => `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(u)}&api_key=vsl1eq3auurlhgourjr8rznm6q7l8zxy0pkhwnxo&count=10`,
@@ -141,13 +149,31 @@ function _parseRSS2JSON(data) {
 
 /* ── Tek kaynaktan sıralı proxy ile çek ─────────────────────── */
 async function _fetchOneSource(source) {
-    // 1. ÖNCELİK: Ücretsiz proxy'ler paralel — rss2json kotasını korur
+
+    // 1. ÖNCELİK: Kendi Cloudflare Worker'ı — limitsiz, hızlı, güvenilir
+    if (_workerReady) {
+        try {
+            const workerUrl = `${WORKER_URL}/rss?url=${encodeURIComponent(source.url)}`;
+            const res = await fetch(workerUrl, { signal: AbortSignal.timeout(8000) });
+            if (res.ok) {
+                const xml = await res.text();
+                if (xml && xml.includes('<item')) {
+                    const items = _parseXML(xml);
+                    if (items.length) {
+                        console.log(`[RSS ✅] ${source.name} → Worker (${items.length} item)`);
+                        return { source, items };
+                    }
+                }
+            }
+        } catch(e) {
+            console.warn(`[RSS ⚠️] ${source.name} Worker timeout, fallback deneniyor…`);
+        }
+    }
+
+    // 2. FALLBACK: Ücretsiz proxy'ler paralel (Worker yoksa veya başarısız olursa)
     const freeProxies = [
-        // allorigins → JSON wrapper: { contents: "<xml>..." }
         { make: u => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`, mode: 'json' },
-        // corsproxy.io → raw XML text
         { make: u => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,          mode: 'text' },
-        // codetabs → raw XML text  (parametre "url", eski "quest" değil)
         { make: u => `https://api.codetabs.com/v1/proxy?url=${encodeURIComponent(u)}`, mode: 'text' },
     ];
     const freeTries = freeProxies.map(async ({ make, mode }) => {
@@ -176,7 +202,7 @@ async function _fetchOneSource(source) {
         if (winner) return winner;
     } catch(_) {}
 
-    // 2. FALLBACK: Ücretsiz proxy'ler başarısız → rss2json API key kullan
+    // 3. SON FALLBACK: rss2json API key
     try {
         const url = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(source.url)}&api_key=${RSS_API_KEY}&count=10`;
         const res = await fetch(url, { signal: AbortSignal.timeout(10000) });

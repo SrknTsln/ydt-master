@@ -4,13 +4,13 @@
 // Kaynak: 10da10 YDT Conditionals-Wish Clauses notları (s. 46–53)
 // ════════════════════════════════════════════════════════════════
 
-var _cnCurrentSection = 'overview';
-var _cnAnswers = {};
-var _cnChecked = {};
-var _cnScore = 0;
-var CN_TOTAL = 15;
+let _cnCurrentSection = 'overview';
+let _cnAnswers = {};
+let _cnChecked = {};
+let _cnScore = 0;
+const CN_TOTAL = 15;
 
-var CN_SECTIONS = [
+const CN_SECTIONS = [
     { id: 'overview',    label: 'Genel Bakış',              grp: 'Genel' },
     { id: 'type0',       label: 'Type 0 — Genel Gerçekler', grp: 'Conditionals' },
     { id: 'type1',       label: 'Type 1 — Gelecek Olasılık',grp: 'Conditionals' },
@@ -25,96 +25,17 @@ var CN_SECTIONS = [
     { id: 'exercises',   label: 'Alıştırmalar',              grp: 'Özel' }
 ];
 
-var CN_DOT = {
+const CN_DOT = {
     'Genel': '#6366f1',
     'Conditionals': '#0369a1',
     'Wish': '#7e22ce',
     'Özel': '#e63946'
 };
 
-/* ════════ ENTRY POINT ════════ */
-function openConditionalsSection(sectionId) {
-    _cnCurrentSection = sectionId || 'overview';
-    document.querySelectorAll('.container').forEach(function(c){ c.classList.add('hidden'); });
-    document.querySelectorAll('.arsiv-full-page').forEach(function(c){ c.classList.add('hidden'); });
-    var page = document.getElementById('conditionals-page');
-    if (page) page.classList.remove('hidden');
-    document.querySelectorAll('.sb-btn, .mob-drawer-btn').forEach(function(el){ el.classList.remove('active'); });
-    var sb = document.getElementById('sb-grammar-conditionals');
-    if (sb) sb.classList.add('active');
-    var di = document.getElementById('di-grammar-conditionals');
-    if (di) di.classList.add('active');
-    _cnRenderPage();
-}
-
-function _cnRenderPage() {
-    var page = document.getElementById('conditionals-page');
-    if (!page) return;
-    page.innerHTML = '<div class="gr-topbar"><button class="gr-back-btn" onclick="navTo(\'index-page\')">←</button>'
-        + '<div><div class="gr-topbar-label">Grammar Modülü</div>'
-        + '<div class="gr-topbar-title">Conditionals &amp; Wish Clauses</div></div></div>'
-        + '<div class="gr-body"><nav class="gr-sidenav" id="cn-sidenav"></nav>'
-        + '<div class="gr-content" id="cn-content"></div></div>';
-    _cnBuildSidenav();
-    _cnRenderSection(_cnCurrentSection);
-}
-
-function _cnBuildSidenav() {
-    var nav = document.getElementById('cn-sidenav');
-    if (!nav) return;
-    var groups = {};
-    CN_SECTIONS.forEach(function(s) {
-        if (!groups[s.grp]) groups[s.grp] = [];
-        groups[s.grp].push(s);
-    });
-    var html = '';
-    ['Genel','Conditionals','Wish','Özel'].forEach(function(grp) {
-        var list = groups[grp];
-        if (!list) return;
-        html += '<div class="gr-sn-sec">' + grp + '</div>';
-        list.forEach(function(s) {
-            var active = s.id === _cnCurrentSection ? ' active' : '';
-            html += '<button class="gr-sn-btn' + active + '" onclick="_cnRenderSection(\'' + s.id + '\')">'
-                + '<span class="gr-sn-dot" style="background:' + CN_DOT[grp] + '"></span>' + s.label + '</button>';
-        });
-    });
-    nav.innerHTML = html;
-}
-
-function _cnRenderSection(id) {
-    _cnCurrentSection = id;
-    _cnBuildSidenav();
-    var content = document.getElementById('cn-content');
-    if (!content) return;
-    content.scrollTop = 0;
-    var map = {
-        'overview':    cnOverview,
-        'type0':       cnType0,
-        'type1':       cnType1,
-        'type2':       cnType2,
-        'type3':       cnType3,
-        'mixed1':      cnMixed1,
-        'mixed2':      cnMixed2,
-        'inversion':   cnInversion,
-        'other-words': cnOtherWords,
-        'wish':        cnWish,
-        'tips':        cnTips,
-        'exercises':   cnExercises
-    };
-    var fn = map[id];
-    content.innerHTML = fn ? fn() : '<div style="padding:40px">Yakında...</div>';
-    if (id === 'exercises') {
-        _cnScore = 0; _cnAnswers = {}; _cnChecked = {};
-        _cnUpdScore();
-        document.querySelectorAll('.cn-inp').forEach(function(inp, i) {
-            inp.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') { e.preventDefault(); cnCheckBlank(i); }
-            });
-        });
-    }
-}
+/* ════════ ENTRY POINT — GrammarModule engine ════════ */
 
 /* ════════ HELPERS ════════ */
+/* ════════ ENTRY POINT ════════ */
 function cnH(eyebrow, title, sub) {
     return '<div class="gr-hero" style="background:linear-gradient(135deg,#0c1445 0%,#0369a1 60%,#0ea5e9 100%)">'
         + '<div class="gr-hero-eyebrow">' + eyebrow + '</div>'
@@ -125,20 +46,20 @@ function cnH(eyebrow, title, sub) {
 function cnSH(label) { return '<div class="gr-sec-hd">' + label + '</div>'; }
 
 function cnTable(headers, rows) {
-    var ths = headers.map(function(h){ return '<th>' + h + '</th>'; }).join('');
-    var trs = rows.map(function(r){
+    const ths = headers.map(function(h){ return '<th>' + h + '</th>'; }).join('');
+    const trs = rows.map(function(r){
         return '<tr>' + r.map(function(c){ return '<td>' + c + '</td>'; }).join('') + '</tr>';
     }).join('');
     return '<div class="gr-tbl-wrap"><table class="gr-tbl"><thead><tr>' + ths + '</tr></thead><tbody>' + trs + '</tbody></table></div>';
 }
 
 function cnAcc(items) {
-    var cards = items.map(function(it) {
-        var exHtml = (it.examples||[]).map(function(ex, i) {
+    const cards = items.map(function(it) {
+        const exHtml = (it.examples||[]).map(function(ex, i) {
             return '<div class="gr-ex" style="border-left:3px solid #0369a1"><span class="gr-ex-n">'
                 + String(i+1).padStart(2,'0') + '</span>' + ex + '</div>';
         }).join('');
-        var descHtml = it.desc ? '<p class="gr-acc-desc">' + it.desc + '</p>' : '';
+        const descHtml = it.desc ? '<p class="gr-acc-desc">' + it.desc + '</p>' : '';
         return '<div class="gr-acc" onclick="this.classList.toggle(\'open\')">'
             + '<div class="gr-acc-head">'
             + '<div class="gr-acc-ico" style="background:' + it.bg + '">' + it.ico + '</div>'
@@ -152,7 +73,7 @@ function cnAcc(items) {
 }
 
 function cnBox(color, title, lines) {
-    var styles = {
+    const styles = {
         blue:   'background:#eff6ff;border:2px solid #2563eb;color:#1e3a8a',
         sky:    'background:#f0f9ff;border:2px solid #0284c7;color:#0c4a6e',
         yellow: 'background:#fefce8;border:2px solid #ca8a04;color:#713f12',
@@ -160,7 +81,7 @@ function cnBox(color, title, lines) {
         green:  'background:#f0fdf4;border:2px solid #16a34a;color:#14532d',
         red:    'background:#fff1f2;border:2px solid #e63946;color:#9f1239'
     };
-    var content = lines.map(function(l){ return l === '' ? '<br>' : '<div style="margin-bottom:5px">' + l + '</div>'; }).join('');
+    const content = lines.map(function(l){ return l === '' ? '<br>' : '<div style="margin-bottom:5px">' + l + '</div>'; }).join('');
     return '<div style="' + (styles[color]||styles.sky) + ';border-radius:12px;padding:14px 18px;margin:4px 36px 8px;font-size:.82rem;line-height:1.8;">'
         + (title ? '<div style="font-weight:900;margin-bottom:7px">' + title + '</div>' : '')
         + content + '</div>';
@@ -168,7 +89,7 @@ function cnBox(color, title, lines) {
 
 /* ════════ OVERVIEW ════════ */
 function cnOverview() {
-    var cards = [
+    const cards = [
         {id:'type0',       emoji:'🟢', name:'Type 0',      sub:'Genel gerçekler, bilimsel olgular',          tc:'#065f46', bc:'#dcfce7', bd:'#6ee7b7'},
         {id:'type1',       emoji:'🔵', name:'Type 1',      sub:'Gerçek / olası gelecek koşullar',            tc:'#1e3a8a', bc:'#dbeafe', bd:'#93c5fd'},
         {id:'type2',       emoji:'🟡', name:'Type 2',      sub:'Hayal / şimdiki zamanda gerçek dışı',        tc:'#713f12', bc:'#fef9c3', bd:'#fcd34d'},
@@ -179,7 +100,7 @@ function cnOverview() {
         {id:'other-words', emoji:'🔗', name:'Diğer Bağlaçlar', sub:'unless, even if, in case, suppose, but for…', tc:'#1e3a8a', bc:'#eff6ff', bd:'#93c5fd'},
         {id:'wish',        emoji:'✨', name:'Wish Clauses', sub:'Dilek / pişmanlık: present, past, future',  tc:'#4c1d95', bc:'#f5f3ff', bd:'#c4b5fd'},
     ];
-    var cardHtml = cards.map(function(c) {
+    const cardHtml = cards.map(function(c) {
         return '<div style="border:1.5px solid ' + c.bd + ';border-radius:14px;padding:16px;background:' + c.bc + ';cursor:pointer;transition:all .18s;"'
             + ' onmouseover="this.style.transform=\'translateY(-3px)\';this.style.boxShadow=\'0 8px 24px rgba(0,0,0,.1)\'"'
             + ' onmouseout="this.style.transform=\'\';this.style.boxShadow=\'\'"'
@@ -423,7 +344,7 @@ function cnWish() {
 
 /* ════════ TIPS ════════ */
 function cnTips() {
-    var tips = [
+    const tips = [
         {num:'01', title:'If yapısının cümle başında mı, ortasında mı olduğuna bak.',
          rules:[{ico:'💡', text:'"whether or not" anlamına gelen "if" ile koşul bildiren "if" karıştırılmamalıdır. Cümle ortasındaki "if" → whether or not anlamı taşıyabilir.'}]},
         {num:'02', title:'If yanına asla "will, would, be going to, used to" almaz.',
@@ -448,8 +369,8 @@ function cnTips() {
             {ico:'✅', text:'I wish you <strong>would help</strong> me. ✅ (özneler farklı: I - you)'},
          ]},
     ];
-    var cards = tips.map(function(t) {
-        var rules = t.rules.map(function(r) {
+    const cards = tips.map(function(t) {
+        const rules = t.rules.map(function(r) {
             return '<div style="display:flex;gap:10px;padding:9px 13px;background:#f7f7fb;border-radius:10px;margin-top:7px;font-size:.82rem;color:#374151;line-height:1.6;">'
                 + '<span style="flex-shrink:0;margin-top:1px">' + r.ico + '</span>' + r.text + '</div>';
         }).join('');
@@ -467,7 +388,7 @@ function cnTips() {
 }
 
 /* ════════ EXERCISES — SET SİSTEMİ ════════ */
-var CN_SETS = [
+const CN_SETS = [
     {
         label: 'Set 1',
         questions: [
@@ -946,7 +867,7 @@ var CN_SETS = [
              cor:'d', hint:'Mixed Type 2 (3+2): hadn\'t failed → wouldn\'t be paying now (geçmiş neden → şimdiki sonuç)'},
             {q:'As I live so close to the border, I would consider studying Welsh, but I\'ve heard that it is a very difficult language.',
              opts:['If I hadn\'t heard that Welsh is extremely hard, I would think about studying it because I live near Wales.','If I didn\'t find learning languages so hard, I would probably learn Welsh, especially as I live close to Wales.','Of all the languages I have learnt, Welsh was by far the hardest even though I could practise near the border.','Living so close to Wales, I have the opportunity to learn Welsh, but I think it is going to be difficult.','As I live close to Wales, I should learn Welsh, but I probably won\'t because I find the language extremely difficult.'],
-             cor:'d', hint:'"would consider" (şartlı istek) + "but I\'ve heard" (gerçek engel) → fırsatım var ama zor olduğunu duydum'},
+             cor:'d', hint:'"would consider" (şartlı istek) + "but I\'ve heard" (gerçek engel) → fırsatım const ama zor olduğunu duydum'},
             {q:'Because seven students had their hands in the mixture, I don\'t recommend that you eat that marmalade.',
              opts:['If I were you, I wouldn\'t eat that marmalade as the mixture was handled by seven school children.','I was discouraged from eating the marmalade because seven students had handled the mixture.','I would probably be more inclined to eat the marmalade if seven school children hadn\'t had their hands in it.','The marmalade would probably taste nicer if seven students hadn\'t all put their hands in it.','Were I you, I wouldn\'t allow all seven students to put their hands in the marmalade.'],
              cor:'a', hint:'"If I were you" = Type 2 tavsiye → "I wouldn\'t eat" (öneri)'},
@@ -1030,10 +951,10 @@ var CN_SETS = [
     },
 ];
 
-var _cnSetIdx     = 0;
-var _cnSetScore   = 0;
-var _cnSetChecked = {};
-var _cnSetAnswers = {};
+let _cnSetIdx     = 0;
+let _cnSetScore   = 0;
+let _cnSetChecked = {};
+let _cnSetAnswers = {};
 
 function cnExercises() {
     _cnSetIdx = 0; _cnSetScore = 0; _cnSetChecked = {}; _cnSetAnswers = {};
@@ -1041,21 +962,21 @@ function cnExercises() {
 }
 
 function _cnBuildExercisePage() {
-    var set   = CN_SETS[_cnSetIdx];
-    var total = set.questions.length;
+    const set   = CN_SETS[_cnSetIdx];
+    const total = set.questions.length;
 
-    var tabs = CN_SETS.map(function(s, i) {
-        var active = i === _cnSetIdx
+    const tabs = CN_SETS.map(function(s, i) {
+        const active = i === _cnSetIdx
             ? 'style="background:#0369a1;color:#fff;border-color:#0369a1;"' : '';
         return '<button class="gr-set-tab" ' + active + ' onclick="cnSwitchSet(' + i + ')">' + s.label + '</button>';
     }).join('');
 
-    var qCards = set.questions.map(function(q, i) {
-        var opts = q.opts.map(function(o, j) {
-            var letter = ['A','B','C','D','E'][j];
-            var lv     = ['a','b','c','d','e'][j];
-            var state  = _cnSetAnswers[_cnSetIdx + '_' + i];
-            var cls = 'gr-opt';
+    const qCards = set.questions.map(function(q, i) {
+        const opts = q.opts.map(function(o, j) {
+            const letter = ['A','B','C','D','E'][j];
+            const lv     = ['a','b','c','d','e'][j];
+            const state  = _cnSetAnswers[_cnSetIdx + '_' + i];
+            let cls = 'gr-opt';
             if (_cnSetChecked[_cnSetIdx + '_' + i]) {
                 if (lv === q.cor)                         cls += ' ok';
                 else if (lv === state && state !== q.cor) cls += ' bad';
@@ -1065,12 +986,12 @@ function _cnBuildExercisePage() {
                 + '</div>';
         }).join('');
 
-        var checked = _cnSetChecked[_cnSetIdx + '_' + i];
-        var fbCls   = checked ? (checked === 'ok' ? 'gr-fb show ok' : 'gr-fb show bad') : 'gr-fb';
-        var fbTxt   = checked === 'ok'  ? ('✅ Doğru! ' + q.hint)
+        const checked = _cnSetChecked[_cnSetIdx + '_' + i];
+        const fbCls   = checked ? (checked === 'ok' ? 'gr-fb show ok' : 'gr-fb show bad') : 'gr-fb';
+        const fbTxt   = checked === 'ok'  ? ('✅ Doğru! ' + q.hint)
                     : checked === 'bad' ? ('❌ Yanlış. Doğru: ' + q.cor.toUpperCase() + ' — ' + q.hint) : '';
-        var cardCls = checked === 'ok' ? 'gr-q-card gr-c' : checked === 'bad' ? 'gr-q-card gr-w' : 'gr-q-card';
-        var btnDis  = checked ? 'disabled style="opacity:.4;pointer-events:none;"' : '';
+        const cardCls = checked === 'ok' ? 'gr-q-card gr-c' : checked === 'bad' ? 'gr-q-card gr-w' : 'gr-q-card';
+        const btnDis  = checked ? 'disabled style="opacity:.4;pointer-events:none;"' : '';
 
         return '<div class="' + cardCls + '" id="cnsc-' + i + '">'
             + '<div class="gr-q-num">SORU ' + String(i+1).padStart(2,'0') + ' — ' + set.label.toUpperCase() + '</div>'
@@ -1081,7 +1002,7 @@ function _cnBuildExercisePage() {
             + '</div>';
     }).join('');
 
-    var html = cnH('✨ Pratik Yap', 'Alıştırmalar', CN_SETS.length + ' set × 10 soru — gerçek YDT soruları')
+    const html = cnH('✨ Pratik Yap', 'Alıştırmalar', CN_SETS.length + ' set × 10 soru — gerçek YDT soruları')
         + '<div class="gr-quiz-wrap">'
         + '<div class="gr-set-tabs">' + tabs + '</div>'
         + '<div class="gr-score-bar">'
@@ -1107,35 +1028,35 @@ function _cnBuildExercisePage() {
 
 function cnSwitchSet(idx) {
     _cnSetIdx = idx; _cnSetScore = 0; _cnSetChecked = {}; _cnSetAnswers = {};
-    var cnt = document.getElementById('cn-content');
+    const cnt = document.getElementById('cn-content');
     if (cnt) { cnt.innerHTML = _cnBuildExercisePage(); cnt.scrollTop = 0; }
 }
 
 function cnSetOpt(qi, oi, letter) {
     if (_cnSetChecked[_cnSetIdx + '_' + qi]) return;
     CN_SETS[_cnSetIdx].questions[qi].opts.forEach(function(_, j) {
-        var el = document.getElementById('cnso-' + qi + '-' + j);
+        const el = document.getElementById('cnso-' + qi + '-' + j);
         if (el) el.className = 'gr-opt' + (j === oi ? ' sel' : '');
     });
     _cnSetAnswers[_cnSetIdx + '_' + qi] = letter;
 }
 
 function cnCheckSetQ(qi) {
-    var q    = CN_SETS[_cnSetIdx].questions[qi];
-    var sel  = _cnSetAnswers[_cnSetIdx + '_' + qi];
-    var fb   = document.getElementById('cnsfb-' + qi);
-    var card = document.getElementById('cnsc-' + qi);
+    const q    = CN_SETS[_cnSetIdx].questions[qi];
+    const sel  = _cnSetAnswers[_cnSetIdx + '_' + qi];
+    const fb   = document.getElementById('cnsfb-' + qi);
+    const card = document.getElementById('cnsc-' + qi);
     if (!fb) return;
     if (!sel) { fb.textContent = 'Bir seçenek seçin!'; fb.className = 'gr-fb show bad'; return; }
-    var letters = ['a','b','c','d','e'];
+    const letters = ['a','b','c','d','e'];
     q.opts.forEach(function(_, j) {
-        var el = document.getElementById('cnso-' + qi + '-' + j);
+        const el = document.getElementById('cnso-' + qi + '-' + j);
         if (!el) return;
         el.classList.remove('sel');
         if (letters[j] === q.cor)                     el.classList.add('ok');
         else if (letters[j] === sel && sel !== q.cor) el.classList.add('bad');
     });
-    var btn = card ? card.querySelector('.gr-chk-btn') : null;
+    const btn = card ? card.querySelector('.gr-chk-btn') : null;
     if (btn) { btn.disabled = true; btn.style.opacity = '.4'; btn.style.pointerEvents = 'none'; }
     if (sel === q.cor) {
         if (card) card.classList.add('gr-c');
@@ -1149,17 +1070,17 @@ function cnCheckSetQ(qi) {
         fb.className = 'gr-fb show bad';
         _cnSetChecked[_cnSetIdx + '_' + qi] = 'bad';
     }
-    var el = document.getElementById('cn-live-score');
+    const el = document.getElementById('cn-live-score');
     if (el) el.textContent = _cnSetScore + ' / ' + CN_SETS[_cnSetIdx].questions.length;
 }
 
 function cnSubmitSet() {
-    var total = CN_SETS[_cnSetIdx].questions.length;
-    var panel = document.getElementById('cn-result');
+    const total = CN_SETS[_cnSetIdx].questions.length;
+    const panel = document.getElementById('cn-result');
     if (!panel) return;
     panel.classList.add('show');
     document.getElementById('cn-res-score').textContent = _cnSetScore + '/' + total;
-    var pct = Math.round((_cnSetScore / total) * 100);
+    const pct = Math.round((_cnSetScore / total) * 100);
     document.getElementById('cn-res-msg').textContent =
         pct >= 90 ? '🎉 Mükemmel! Bu seti harika geçirdin!'
       : pct >= 70 ? '👏 Çok iyi! Küçük eksikler var.'
@@ -1172,11 +1093,47 @@ function cnRetrySameSet() { cnSwitchSet(_cnSetIdx); }
 function cnNextSet()      { if (_cnSetIdx < CN_SETS.length - 1) cnSwitchSet(_cnSetIdx + 1); }
 
 /* ════════ GLOBALS ════════ */
-window.openConditionalsSection = openConditionalsSection;
-window._cnRenderSection        = _cnRenderSection;
-window.cnSwitchSet             = cnSwitchSet;
-window.cnSetOpt                = cnSetOpt;
-window.cnCheckSetQ             = cnCheckSetQ;
-window.cnSubmitSet             = cnSubmitSet;
-window.cnRetrySameSet          = cnRetrySameSet;
-window.cnNextSet               = cnNextSet;
+// openConditionalsSection ve _cnRenderSection: _initConditionalsModule içinde atandı
+window.cnSwitchSet    = cnSwitchSet;
+window.cnSetOpt       = cnSetOpt;
+window.cnCheckSetQ    = cnCheckSetQ;
+window.cnSubmitSet    = cnSubmitSet;
+window.cnRetrySameSet = cnRetrySameSet;
+window.cnNextSet      = cnNextSet;
+
+(function _initConditionalsModule() {
+    const _mod = new GrammarModule({
+        id:       'cn',
+        pageId:   'conditionals-page',
+        sbId:     'sb-grammar-conditionals',
+        diId:     'di-grammar-conditionals',
+        title:    'Conditionals &amp; Wish Clauses',
+        sections: CN_SECTIONS,
+        dotColors: CN_DOT,
+        grpOrder: ['Genel', 'Conditionals', 'Wish', 'Özel'],
+        sectionMap: {
+            'overview':    function(){ return cnOverview(); },
+            'type0':       function(){ return cnType0(); },
+            'type1':       function(){ return cnType1(); },
+            'type2':       function(){ return cnType2(); },
+            'type3':       function(){ return cnType3(); },
+            'mixed1':      function(){ return cnMixed1(); },
+            'mixed2':      function(){ return cnMixed2(); },
+            'inversion':   function(){ return cnInversion(); },
+            'other-words': function(){ return cnOtherWords(); },
+            'wish':        function(){ return cnWish(); },
+            'tips':        function(){ return cnTips(); },
+            'exercises':   function(){ return cnExercises(); }
+        },
+        onSectionRender: function(id) {
+            if (id === 'exercises') {
+                _cnScore = 0; _cnAnswers = {}; _cnChecked = {};
+                _cnUpdScore();
+            }
+        }
+    });
+
+    window.openConditionalsSection = function(sectionId) { _mod.open(sectionId || 'overview'); };
+    window._cnRenderSection        = function(id)        { _mod.goTo(id); };
+    window['_cnGoTo']              = function(id)        { _mod.goTo(id); };
+})();

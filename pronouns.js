@@ -34,85 +34,6 @@ const PR_DOT = {
     'Özel': '#e63946'
 };
 
-function openPronounsSection(sectionId) {
-    _prCurrentSection = sectionId || 'overview';
-    document.querySelectorAll('.container').forEach(function(c){ c.classList.add('hidden'); });
-    document.querySelectorAll('.arsiv-full-page').forEach(function(c){ c.classList.add('hidden'); });
-    var page = document.getElementById('pronouns-page');
-    if (page) page.classList.remove('hidden');
-    document.querySelectorAll('.sb-btn, .mob-drawer-btn').forEach(function(el){ el.classList.remove('active'); });
-    var sb = document.getElementById('sb-grammar-pronouns');
-    if (sb) sb.classList.add('active');
-    var di = document.getElementById('di-grammar-pronouns');
-    if (di) di.classList.add('active');
-    _prRenderPage();
-}
-
-function _prRenderPage() {
-    var page = document.getElementById('pronouns-page');
-    if (!page) return;
-    page.innerHTML = '<div class="gr-topbar"><button class="gr-back-btn" onclick="navTo(\'index-page\')">←</button><div><div class="gr-topbar-label">Grammar Modülü</div><div class="gr-topbar-title">Pronouns — Zamirler</div></div></div><div class="gr-body"><nav class="gr-sidenav" id="pr-sidenav"></nav><div class="gr-content" id="pr-content"></div></div>';
-    _prBuildSidenav();
-    _prRenderSection(_prCurrentSection);
-}
-
-function _prBuildSidenav() {
-    var nav = document.getElementById('pr-sidenav');
-    if (!nav) return;
-    var groups = {};
-    PR_SECTIONS.forEach(function(s) {
-        if (!groups[s.grp]) groups[s.grp] = [];
-        groups[s.grp].push(s);
-    });
-    var html = '';
-    ['Genel', 'Pronoun Türleri', '"Other" Ailesi', 'Özel'].forEach(function(grp) {
-        var list = groups[grp];
-        if (!list) return;
-        html += '<div class="gr-sn-sec">' + grp + '</div>';
-        list.forEach(function(s) {
-            var active = s.id === _prCurrentSection ? ' active' : '';
-            html += '<button class="gr-sn-btn' + active + '" onclick="_prRenderSection(\'' + s.id + '\')">'
-                  + '<span class="gr-sn-dot" style="background:' + PR_DOT[grp] + '"></span>' + s.label
-                  + '</button>';
-        });
-    });
-    nav.innerHTML = html;
-}
-
-function _prRenderSection(id) {
-    _prCurrentSection = id;
-    _prBuildSidenav();
-    var content = document.getElementById('pr-content');
-    if (!content) return;
-    content.scrollTop = 0;
-    var map = {
-        'overview':       prOverview,
-        'personal':       prPersonal,
-        'possessive-adj': prPossessiveAdj,
-        'possessive-pro': prPossessivePro,
-        'reflexive':      prReflexive,
-        'another':        prAnother,
-        'the-other':      prTheOther,
-        'others':         prOthers,
-        'other-plural':   prOtherPlural,
-        'each-other':     prEachOther,
-        'every-other':    prEveryOther,
-        'one-after':      prOneAfter,
-        'tips':           prTips,
-        'exercises':      prExercises
-    };
-    var fn = map[id];
-    content.innerHTML = fn ? fn() : '<div style="padding:40px">Yakında...</div>';
-    if (id === 'exercises') {
-        _prScore = 0; _prAnswers = {}; _prChecked = {};
-        _prUpdScore();
-        document.querySelectorAll('.pr-inp').forEach(function(inp, i) {
-            inp.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') { e.preventDefault(); prCheckBlank(i); }
-            });
-        });
-    }
-}
 
 /* ── Helpers ── */
 function prH(eyebrow, title, sub) {
@@ -129,19 +50,19 @@ function prInfo(type, title, body) {
 }
 
 function prTable(headers, rows, cls) {
-    var ths = headers.map(function(h){ return '<th>' + h + '</th>'; }).join('');
-    var trs = rows.map(function(r){
+    const ths = headers.map(function(h){ return '<th>' + h + '</th>'; }).join('');
+    const trs = rows.map(function(r){
         return '<tr>' + r.map(function(c){ return '<td>' + c + '</td>'; }).join('') + '</tr>';
     }).join('');
     return '<div class="gr-tbl-wrap"><table class="gr-tbl ' + (cls||'') + '"><thead><tr>' + ths + '</tr></thead><tbody>' + trs + '</tbody></table></div>';
 }
 
 function prAcc(items) {
-    var cards = items.map(function(it) {
-        var exHtml = (it.examples||[]).map(function(ex, i) {
+    const cards = items.map(function(it) {
+        const exHtml = (it.examples||[]).map(function(ex, i) {
             return '<div class="gr-ex" style="border-left:3px solid #059669"><span class="gr-ex-n">' + String(i+1).padStart(2,'0') + '</span>' + ex + '</div>';
         }).join('');
-        var descHtml = it.desc ? '<p class="gr-acc-desc">' + it.desc + '</p>' : '';
+        const descHtml = it.desc ? '<p class="gr-acc-desc">' + it.desc + '</p>' : '';
         return '<div class="gr-acc" onclick="this.classList.toggle(\'open\')">'
             + '<div class="gr-acc-head">'
             + '<div class="gr-acc-ico" style="background:' + it.bg + '">' + it.ico + '</div>'
@@ -155,14 +76,14 @@ function prAcc(items) {
 }
 
 function prBox(color, title, lines) {
-    var styles = {
+    const styles = {
         yellow: 'background:#fefce8;border:2px solid #ca8a04;color:#713f12',
         green:  'background:#f0fdf4;border:2px solid #16a34a;color:#14532d',
         blue:   'background:#eff6ff;border:2px solid #2563eb;color:#1e3a8a',
         red:    'background:#fff1f2;border:2px solid #e63946;color:#9f1239',
         teal:   'background:#f0fdfa;border:2px solid #0d9488;color:#134e4a'
     };
-    var content = lines.map(function(l){ return l === '' ? '<br>' : '<div style="margin-bottom:4px">' + l + '</div>'; }).join('');
+    const content = lines.map(function(l){ return l === '' ? '<br>' : '<div style="margin-bottom:4px">' + l + '</div>'; }).join('');
     return '<div style="' + (styles[color]||styles.teal) + ';border-radius:12px;padding:14px 18px;margin:4px 36px 4px;font-size:.82rem;line-height:1.75;">'
         + (title ? '<div style="font-weight:900;margin-bottom:7px">' + title + '</div>' : '')
         + content + '</div>';
@@ -171,7 +92,7 @@ function prBox(color, title, lines) {
 /* ══ SECTIONS ══ */
 
 function prOverview() {
-    var sections = [
+    const sections = [
         {id:'personal',       emoji:'👤', name:'Personal Pronouns',       tr:'Şahıs Zamirleri',          color:'#dbeafe', border:'#93c5fd', tc:'#1e3a8a', desc:'Özne ve nesne yerine kullanılır (I, you, he, she…)'},
         {id:'possessive-adj', emoji:'📌', name:'Possessive Adjectives',    tr:'İyelik Sıfatı',            color:'#fef9c3', border:'#fcd34d', tc:'#713f12', desc:'Ardından isim gelir, ait olduğu nesneyi gösterir (my, your, his…)'},
         {id:'possessive-pro', emoji:'🏷️', name:'Possessive Pronouns',      tr:'İyelik Zamiri',            color:'#fef3c7', border:'#fbbf24', tc:'#92400e', desc:'İsim yerine kullanılır, ardından isim gelmez (mine, yours, his…)'},
@@ -184,11 +105,11 @@ function prOverview() {
         {id:'every-other',    emoji:'📅', name:'Every Other',              tr:'Her iki … da bir',         color:'#fff1f2', border:'#fca5a5', tc:'#9f1239', desc:'Düzenli aralıklar: every other day/week'},
         {id:'one-after',      emoji:'➡️', name:'One After Another',        tr:'Sırayla, teker teker',     color:'#fff1f2', border:'#fca5a5', tc:'#9f1239', desc:'Arka arkaya, sırasıyla'},
     ];
-    var cards = sections.map(function(c) {
+    const cards = sections.map(function(c) {
         return '<div style="border:1.5px solid ' + c.border + ';border-radius:14px;padding:16px;background:' + c.color + ';cursor:pointer;transition:all .18s;"'
             + ' onmouseover="this.style.transform=\'translateY(-3px)\';this.style.boxShadow=\'0 8px 24px rgba(0,0,0,.09)\'"'
             + ' onmouseout="this.style.transform=\'\';this.style.boxShadow=\'\'"'
-            + ' onclick="_prRenderSection(\'' + c.id + '\')">'
+            + ' onclick="PronounsModule.goTo(\'' + c.id + '\')">'
             + '<div style="font-size:1.3rem;margin-bottom:8px">' + c.emoji + '</div>'
             + '<div style="font-size:.96rem;font-weight:900;color:#1a1a2e;margin-bottom:3px">' + c.name + '</div>'
             + '<div style="font-size:.6rem;font-weight:900;letter-spacing:1.2px;text-transform:uppercase;color:' + c.tc + ';margin-bottom:7px">' + c.tr + '</div>'
@@ -197,7 +118,7 @@ function prOverview() {
     }).join('');
     return prH('👤 Zamirler', 'Pronouns', 'Zamirlerin tüm türleri: şahıs, iyelik, dönüşlü ve "other" ailesi. Bir konuya tıkla ve başla.')
         + '<div style="padding:24px 36px;display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px">' + cards + '</div>'
-        + '<div style="padding:0 36px 36px;text-align:center;"><button onclick="_prRenderSection(\'exercises\')" style="padding:14px 32px;background:linear-gradient(135deg,#059669,#0d9488);border:none;border-radius:13px;color:#fff;font-size:.9rem;font-weight:900;cursor:pointer;font-family:inherit;">✨ Alıştırmalara Geç</button></div>';
+        + '<div style="padding:0 36px 36px;text-align:center;"><button onclick="PronounsModule.goTo(\'exercises\')" style="padding:14px 32px;background:linear-gradient(135deg,#059669,#0d9488);border:none;border-radius:13px;color:#fff;font-size:.9rem;font-weight:900;cursor:pointer;font-family:inherit;">✨ Alıştırmalara Geç</button></div>';
 }
 
 function prPersonal() {
@@ -407,7 +328,7 @@ function prOneAfter() {
 }
 
 function prTips() {
-    var tips = [
+    const tips = [
         {num:'01', title:'Possessive Adj. mi, Possessive Pronoun mu?',
          rules:[
             {ico:'📌', text:'Ardından <strong>isim varsa</strong> → Possessive Adjective: <em>This is <u>my</u> book.</em>'},
@@ -438,8 +359,8 @@ function prTips() {
             {ico:'💡', text:'Sınavda ikisi de birbirinin yerine kabul edilir.'},
          ]},
     ];
-    var cards = tips.map(function(t) {
-        var rules = t.rules.map(function(r) {
+    const cards = tips.map(function(t) {
+        const rules = t.rules.map(function(r) {
             return '<div style="display:flex;gap:10px;padding:9px 13px;background:#f7f7fb;border-radius:10px;margin-top:7px;font-size:.82rem;color:#374151;line-height:1.6;">'
                 + '<span style="flex-shrink:0;margin-top:1px">' + r.ico + '</span>' + r.text + '</div>';
         }).join('');
@@ -457,7 +378,7 @@ function prTips() {
 }
 
 /* ── Exercises ── */
-var PR_BLANKS = [
+const PR_BLANKS = [
     {q:'The cat hurt ___. It fell from the tree. <em style="font-size:.76rem;color:#999">[reflexive]</em>', ans:['itself'], hint:'Özne = nesne → itself'},
     {q:'This is not your umbrella. That one is ___. <em style="font-size:.76rem;color:#999">[poss. pronoun]</em>', ans:['yours'], hint:'Ardından isim yok → possessive pronoun: yours'},
     {q:'I go to the gym ___ two days. (her iki günde bir)', ans:['every other'], hint:'Düzenli aralık → every other'},
@@ -467,7 +388,7 @@ var PR_BLANKS = [
     {q:"The two friends hadn't seen ___ for years. (birbirlerini)", ans:['each other','one another'], hint:'Karşılıklı eylem → each other / one another'},
 ];
 
-var PR_MCQS = [
+const PR_MCQS = [
     {q:'This is not ___ fault. It was an accident.', opts:['my','mine','me','myself'], cor:'a', hint:'Ardından isim var → possessive adjective: my'},
     {q:'Sertab Erener is a famous Turkish singer. ___ won Eurovision in 2003.', opts:['He','It','She','They'], cor:'c', hint:'Kadın özne → she'},
     {q:'The country is proud of ___ achievements.', opts:['its','it','itself','their'], cor:'a', hint:'Ülkenin kendi başarıları → its (poss. adj.)'},
@@ -479,7 +400,7 @@ var PR_MCQS = [
 ];
 
 function prExercises() {
-    var blankCards = PR_BLANKS.map(function(q, i) {
+    const blankCards = PR_BLANKS.map(function(q, i) {
         return '<div class="gr-q-card" id="prq-b' + i + '">'
             + '<div class="gr-q-num">SORU ' + String(i+1).padStart(2,'0') + ' / BÖLÜM A</div>'
             + '<div class="gr-q-text">' + q.q + '</div>'
@@ -489,10 +410,10 @@ function prExercises() {
             + '</div>';
     }).join('');
 
-    var mcqCards = PR_MCQS.map(function(q, i) {
-        var opts = q.opts.map(function(o, j) {
-            var letter = ['A','B','C','D'][j];
-            var lv = ['a','b','c','d'][j];
+    const mcqCards = PR_MCQS.map(function(q, i) {
+        const opts = q.opts.map(function(o, j) {
+            const letter = ['A','B','C','D'][j];
+            const lv = ['a','b','c','d'][j];
             return '<div class="gr-opt" id="pr-opt-' + i + '-' + j + '" onclick="prSelectOpt(' + i + ',' + j + ',\'' + lv + '\')">'
                 + '<span class="gr-opt-letter">' + letter + '</span>' + o + '</div>';
         }).join('');
@@ -517,26 +438,26 @@ function prExercises() {
         + '<div class="gr-res-score" id="pr-res-score" style="color:#059669">0/' + PR_TOTAL + '</div>'
         + '<div class="gr-res-lbl">Toplam Puan</div>'
         + '<div class="gr-res-msg" id="pr-res-msg"></div>'
-        + '<button class="gr-retry-btn" style="border-color:#059669;color:#059669" onclick="_prRenderSection(\'exercises\')">🔄 Tekrar Dene</button>'
+        + '<button class="gr-retry-btn" style="border-color:#059669;color:#059669" onclick="PronounsModule.goTo(\'exercises\')">🔄 Tekrar Dene</button>'
         + '</div></div>';
 }
 
 /* ── Exercise Logic ── */
 function _prUpdScore() {
-    var el = document.getElementById('pr-live-score');
+    const el = document.getElementById('pr-live-score');
     if (el) el.textContent = _prScore + ' / ' + PR_TOTAL;
 
     if (typeof saveGrammarScore === 'function') saveGrammarScore('pr', _prScore);
 }
 
 function prCheckBlank(i) {
-    var inp  = document.getElementById('pr-inp-' + i);
-    var fb   = document.getElementById('pr-fb-b' + i);
-    var card = document.getElementById('prq-b' + i);
+    const inp  = document.getElementById('pr-inp-' + i);
+    const fb   = document.getElementById('pr-fb-b' + i);
+    const card = document.getElementById('prq-b' + i);
     if (!inp || !fb) return;
-    var val = inp.value.trim().toLowerCase().replace(/\s+/g,' ');
+    const val = inp.value.trim().toLowerCase().replace(/\s+/g,' ');
     if (!val) { fb.textContent = 'Bir cevap girin!'; fb.className = 'gr-fb show bad'; return; }
-    var correct = PR_BLANKS[i].ans.map(function(a){ return a.toLowerCase(); });
+    const correct = PR_BLANKS[i].ans.map(function(a){ return a.toLowerCase(); });
     if (correct.indexOf(val) !== -1) {
         inp.classList.add('ok'); card.classList.add('gr-c');
         fb.textContent = '✅ Doğru! ' + PR_BLANKS[i].ans[0];
@@ -552,23 +473,23 @@ function prCheckBlank(i) {
 
 function prSelectOpt(qi, oi, letter) {
     PR_MCQS[qi].opts.forEach(function(_, j) {
-        var el = document.getElementById('pr-opt-' + qi + '-' + j);
+        const el = document.getElementById('pr-opt-' + qi + '-' + j);
         if (el) el.classList.remove('sel');
     });
-    var el = document.getElementById('pr-opt-' + qi + '-' + oi);
+    const el = document.getElementById('pr-opt-' + qi + '-' + oi);
     if (el) el.classList.add('sel');
     _prAnswers['m'+qi] = letter;
 }
 
 function prCheckMCQ(i) {
-    var q    = PR_MCQS[i];
-    var sel  = _prAnswers['m'+i];
-    var fb   = document.getElementById('pr-fb-m' + i);
-    var card = document.getElementById('prq-m' + i);
+    const q    = PR_MCQS[i];
+    const sel  = _prAnswers['m'+i];
+    const fb   = document.getElementById('pr-fb-m' + i);
+    const card = document.getElementById('prq-m' + i);
     if (!sel) { fb.textContent = 'Bir seçenek seçin!'; fb.className = 'gr-fb show bad'; return; }
-    var letters = ['a','b','c','d'];
+    const letters = ['a','b','c','d'];
     q.opts.forEach(function(_, j) {
-        var el = document.getElementById('pr-opt-' + i + '-' + j);
+        const el = document.getElementById('pr-opt-' + i + '-' + j);
         if (!el) return;
         el.classList.remove('sel');
         if (letters[j] === q.cor) el.classList.add('ok');
@@ -588,13 +509,13 @@ function prCheckMCQ(i) {
 }
 
 function prSubmitAll() {
-    var panel   = document.getElementById('pr-result');
-    var scoreEl = document.getElementById('pr-res-score');
-    var msgEl   = document.getElementById('pr-res-msg');
+    const panel   = document.getElementById('pr-result');
+    const scoreEl = document.getElementById('pr-res-score');
+    const msgEl   = document.getElementById('pr-res-msg');
     if (!panel) return;
     panel.classList.add('show');
     scoreEl.textContent = _prScore + '/' + PR_TOTAL;
-    var pct = Math.round((_prScore / PR_TOTAL) * 100);
+    const pct = Math.round((_prScore / PR_TOTAL) * 100);
     msgEl.textContent = pct >= 87 ? '🎉 Mükemmel! Pronouns konusuna tamamen hâkimsin!'
                       : pct >= 65 ? '👏 Çok iyi! "Other" ailesini biraz daha tekrar edelim.'
                       : pct >= 45 ? '📚 İyi başlangıç. Possessive ve "other" farkını tekrar et!'
@@ -602,9 +523,44 @@ function prSubmitAll() {
     panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+
+/* ── GrammarModule engine (pilot) ── */
+const PronounsModule = new GrammarModule({
+    id:         'pronouns',
+    pageId:     'pronouns-page',
+    sbId:       'sb-grammar-pronouns',
+    diId:       'di-grammar-pronouns',
+    title:      'Pronouns — Zamirler',
+    sections:   PR_SECTIONS,
+    dotColors:  PR_DOT,
+    grpOrder:   ['Genel', 'Pronoun Türleri', '"Other" Ailesi', 'Özel'],
+    sectionMap: {
+        'overview':       prOverview,
+        'personal':       prPersonal,
+        'possessive-adj': prPossessiveAdj,
+        'possessive-pro': prPossessivePro,
+        'reflexive':      prReflexive,
+        'another':        prAnother,
+        'the-other':      prTheOther,
+        'others':         prOthers,
+        'other-plural':   prOtherPlural,
+        'each-other':     prEachOther,
+        'every-other':    prEveryOther,
+        'one-after':      prOneAfter,
+        'tips':           prTips,
+        'exercises':      prExercises,
+    },
+    onSectionRender: function(id) {
+        if (id === 'exercises') {
+            _prScore = 0; _prAnswers = {}; _prChecked = {};
+            _prUpdScore();
+        }
+    },
+});
+function openPronounsSection(id) { PronounsModule.open(id); }
+
 /* ── Globals ── */
 window.openPronounsSection = openPronounsSection;
-window._prRenderSection    = _prRenderSection;
 window.prCheckBlank        = prCheckBlank;
 window.prSelectOpt         = prSelectOpt;
 window.prCheckMCQ          = prCheckMCQ;

@@ -141,7 +141,7 @@
 </div>
 
 <nav class="mob-bottomnav" aria-label="Alt navigasyon">
-    <button class="mob-tab active" id="bn-home"     onclick="navTo('index-page')">        <span aria-hidden="true" class="mob-tab-icon">🏠</span>Ana Sayfa</button>
+    <button class="mob-tab active" id="bn-home"     data-nav="index-page">        <span aria-hidden="true" class="mob-tab-icon">🏠</span>Ana Sayfa</button>
     <button class="mob-tab"        id="bn-study"    onclick="startStudyFromNav()">        <span aria-hidden="true" class="mob-tab-icon">📖</span>Öğren</button>
     <button class="mob-tab"        id="bn-quiz"     onclick="startQuizFromNav()">         <span aria-hidden="true" class="mob-tab-icon">🎯</span>Vocab Test<span class="mob-tab-badge" id="bn-sm2-badge" style="display:none"></span></button>
     <button class="mob-tab"        id="bn-stats"    onclick="showStatsPage()">            <span aria-hidden="true" class="mob-tab-icon">📊</span>İstatistik</button>
@@ -178,7 +178,7 @@
     <!-- ── PRIMARY NAV ── -->
     <nav class="sb-nav sb-nav-primary" aria-label="Ana menü">
         <div class="sb-sec">Ana Menü</div>
-        <button class="sb-btn active" id="sb-home" title="Ana Sayfa" onclick="navTo('index-page')">             <span aria-hidden="true" class="sb-icon">🏠</span> Ana Sayfa</button>
+        <button class="sb-btn active" id="sb-home" title="Ana Sayfa" data-nav="index-page">             <span aria-hidden="true" class="sb-icon">🏠</span> Ana Sayfa</button>
         <button class="sb-btn"        id="sb-ai-ydt" title="AI Vocab Test" onclick="startAIQuizMode()">               <span aria-hidden="true" class="sb-icon">🤖</span> AI Vocabulary Test</button>
         <button class="sb-btn"        id="sb-paragraf" title="AI Reading" onclick="showParagrafListesi()">              <span aria-hidden="true" class="sb-icon">📖</span> AI Reading</button>
         <button class="sb-btn"        id="sb-study" title="Kelime Öğren" onclick="startStudyFromNav()">             <span aria-hidden="true" class="sb-icon">📖</span> Kelime Öğren</button>
@@ -229,7 +229,7 @@
             <button class="sb-btn sb-btn-sec" id="sb-profil" title="Profil" onclick="navTo('profil-page'); showProfilPage(); setTimeout(()=>window.AuthModule&&window.AuthModule.updateProfilWidgets(),100)" style="margin-bottom:4px;">
                 <span aria-hidden="true" class="sb-icon">👤</span> Profil
             </button>
-            <button class="sb-btn sb-btn-admin" id="sb-admin" title="Yönetim" onclick="navTo('admin-page')" style="display:none;">
+            <button class="sb-btn sb-btn-admin" id="sb-admin" title="Yönetim" data-nav="admin-page" style="display:none;">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0;opacity:.6">
                     <circle cx="7" cy="7" r="2.5" stroke="currentColor" stroke-width="1.4"/>
                     <path d="M7 1v1.5M7 11.5V13M1 7h1.5M11.5 7H13M2.93 2.93l1.06 1.06M10.01 10.01l1.06 1.06M2.93 11.07l1.06-1.06M10.01 3.99l1.06-1.06" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
@@ -590,7 +590,7 @@
 
         <!-- Topbar -->
         <div class="sp-topbar">
-            <button class="sp-back" onclick="navTo('index-page')">←</button>
+            <button class="sp-back" data-nav="index-page">←</button>
             <div class="sp-topbar-title">📊 Gelişim Raporu</div>
             <span class="sp-topbar-sub">Tüm zamanlar</span>
         </div>
@@ -1075,7 +1075,7 @@
             <div style="font-size:.8rem; color:var(--ink3); text-align:center; line-height:1.6; max-width:260px;">
                 Bu panel yalnızca yetkili yönetici hesabına açıktır.
             </div>
-            <button onclick="navTo('index-page')" style="margin-top:24px; padding:10px 24px;
+            <button data-nav="index-page" style="margin-top:24px; padding:10px 24px;
                 background:var(--red); color:#fff; border:none; border-radius:12px;
                 font-family:inherit; font-weight:700; font-size:.85rem; cursor:pointer;">
                 ← Ana Sayfaya Dön
@@ -1087,7 +1087,7 @@
 
             <!-- ── TOP BAR ── -->
             <div class="adm-topbar">
-                <button class="adm-back" onclick="navTo('index-page')">←</button>
+                <button class="adm-back" data-nav="index-page">←</button>
                 <div class="adm-topbar-brand">
                     <span aria-hidden="true" class="adm-topbar-icon">⚙️</span>
                     <div>
@@ -1987,7 +1987,7 @@
     </div>
 
     <div id="profil-page" class="container hidden" style="text-align:left; padding-bottom: 32px;">
-        <button class="back-btn" onclick="navTo('index-page')">←</button>
+        <button class="back-btn" data-nav="index-page">←</button>
 
         <!-- Google Auth Hero -->
         <div class="profil-google-hero">
@@ -2319,6 +2319,18 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
         appId: "1:674787283521:web:fccca6b20e174f9e79ecc0"
     };
 
+    /* ── Firestore Security Rules (Firebase Console > Firestore > Rules) ──
+       Aşağıdaki kuralları ekleyin:
+
+       match /shared/{docId} {
+         // Herkes okuyabilir
+         allow read: if true;
+         // Sadece admin yazabilir
+         allow write: if request.auth != null
+                      && request.auth.token.email == 'stasalan@gmail.com';
+       }
+       ── */
+
     const firebaseApp = initializeApp(firebaseConfig);
     let syncTimeout = null;
 
@@ -2362,6 +2374,8 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
         // gr_scores, grammar_scores, perf_hist, streak, daily — motor.js zaten yazıyor
         saveToFirebase();
     };
+    // YDT namespace alias — window._saveData ile senkron kalır
+    if (window.YDT) window.YDT.save = window._saveData;
 
     function saveToFirebase() {
         // Artık Firestore üzerinden _saveUserData() kullanıyoruz.
@@ -2594,6 +2608,35 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
             console.warn('Firestore yükleme hatası:', e);
             _authSyncBar('synced', 'Yerel veriler kullanılıyor');
             setSyncStatus('idle');
+        }
+
+        // ── Paylaşımlı (admin) içerikleri yükle ──────────────────────────
+        // Admin'in eklediği paragraflar shared/content doc'unda tutulur.
+        // Her kullanıcı login olduğunda kendi paragraflarına merge edilir.
+        try {
+            const _lsSet = (k, v) => { try { if (v !== null && v !== undefined) localStorage.setItem(k, JSON.stringify(v)); } catch(e){} };
+            const sharedSnap = await getDoc(doc(fsdb, 'shared', 'content'));
+            if (sharedSnap.exists()) {
+                const sharedData = sharedSnap.data();
+                if (Array.isArray(sharedData.paragraflar) && sharedData.paragraflar.length > 0) {
+                    const sharedPara = sharedData.paragraflar;
+                    const current = window.paragraflar || [];
+                    // Başlığa göre deduplicate: shared olanlar her zaman taban, üstüne kullanıcının kişisel eklemeleri
+                    const sharedTitles = new Set(sharedPara.map(p => p.baslik));
+                    const personalExtra = current.filter(p => !sharedTitles.has(p.baslik));
+                    window.paragraflar = [...sharedPara, ...personalExtra];
+                    _lsSet('ydt_paragraflar', window.paragraflar);
+                    console.log(`[shared] ${sharedPara.length} paylaşımlı paragraf yüklendi, ${personalExtra.length} kişisel ek`);
+                }
+                // paragrafSorular da paylaşımlıysa merge et
+                if (sharedData.paragrafSorular && typeof sharedData.paragrafSorular === 'object') {
+                    window.paragrafSorular = { ...sharedData.paragrafSorular, ...(window.paragrafSorular || {}) };
+                    _lsSet('ydt_paragraf_sorular', window.paragrafSorular);
+                }
+                if (typeof window._populateParagrafListesi === 'function') window._populateParagrafListesi();
+            }
+        } catch(e) {
+            console.warn('[shared] Paylaşımlı içerik yüklenemedi:', e);
         } finally {
             document.dispatchEvent(new Event('ydtDataReady'));
         }
@@ -2679,6 +2722,23 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
                 ...ydtaiStats,
                 ...apiKeyData
             }, { merge: true });
+
+            // ── Admin ise paylaşımlı içeriği de güncelle ──────────────────
+            // Tüm kullanıcıların görebileceği shared/content doc'una yaz.
+            const ADMIN_EMAIL_SYNC = 'stasalan@gmail.com';
+            if (window._currentUser?.email === ADMIN_EMAIL_SYNC && paragraflarData.length > 0) {
+                try {
+                    await setDoc(doc(fsdb, 'shared', 'content'), {
+                        paragraflar:     paragraflarData,
+                        paragrafSorular: paragrafSorularData,
+                        updatedAt:       new Date().toISOString(),
+                        updatedBy:       uid
+                    }, { merge: true });
+                    console.log(`[shared] ${paragraflarData.length} paragraf shared/content'e yazıldı`);
+                } catch(sharedErr) {
+                    console.warn('[shared] Admin paylaşım yazma hatası:', sharedErr);
+                }
+            }
 
             _authSyncBar('synced', 'Kaydedildi ✓');
             setSyncStatus('ok');
@@ -2838,6 +2898,7 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
 <script src="js/ai-daily.js"></script>
 <script src="js/aig.js"></script>
 <script src="js/profile.js"></script>
+<script src="grammar-engine.js"></script>
 <script src="grammar.js"></script>
 <script src="modals.js"></script>
 <script src="pronouns.js"></script>
@@ -2859,7 +2920,7 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
 
         <!-- ── TOPBAR ── -->
         <div class="bk-topbar">
-            <button class="bk-back" onclick="navTo('index-page')" title="Geri">←</button>
+            <button class="bk-back" data-nav="index-page" title="Geri">←</button>
             <div style="flex:1;min-width:0;">
                 <span class="bk-topbar-title">🗃️ Soru Bankası
                     <span class="bk-topbar-badge" id="bk-total-badge">—</span>

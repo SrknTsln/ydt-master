@@ -4,13 +4,13 @@
 // Kaynak: 10da10 YDT Relative Clauses notları (s. 54–59)
 // ════════════════════════════════════════════════════════════════
 
-var _rcCurrentSection = 'overview';
-var _rcAnswers = {};
-var _rcChecked = {};
-var _rcScore = 0;
-var RC_TOTAL = 15;
+let _rcCurrentSection = 'overview';
+let _rcAnswers = {};
+let _rcChecked = {};
+let _rcScore = 0;
+const RC_TOTAL = 15;
 
-var RC_SECTIONS = [
+const RC_SECTIONS = [
     { id: 'overview',    label: 'Genel Bakış',                  grp: 'Genel' },
     { id: 'defining',    label: '1. Defining RC',               grp: 'Temel Türler' },
     { id: 'non-def',     label: '2. Non-Defining RC',           grp: 'Temel Türler' },
@@ -26,7 +26,7 @@ var RC_SECTIONS = [
     { id: 'exercises',   label: 'Alıştırmalar',                 grp: 'Özel' }
 ];
 
-var RC_DOT = {
+const RC_DOT = {
     'Genel': '#6366f1',
     'Temel Türler': '#0891b2',
     'Relative Pronouns': '#047857',
@@ -34,90 +34,10 @@ var RC_DOT = {
     'Özel': '#e63946'
 };
 
-/* ════════ ENTRY POINT ════════ */
-function openRelativeSection(sectionId) {
-    _rcCurrentSection = sectionId || 'overview';
-    document.querySelectorAll('.container').forEach(function(c){ c.classList.add('hidden'); });
-    document.querySelectorAll('.arsiv-full-page').forEach(function(c){ c.classList.add('hidden'); });
-    var page = document.getElementById('relative-page');
-    if (page) page.classList.remove('hidden');
-    document.querySelectorAll('.sb-btn, .mob-drawer-btn').forEach(function(el){ el.classList.remove('active'); });
-    var sb = document.getElementById('sb-grammar-relative');
-    if (sb) sb.classList.add('active');
-    var di = document.getElementById('di-grammar-relative');
-    if (di) di.classList.add('active');
-    _rcRenderPage();
-}
-
-function _rcRenderPage() {
-    var page = document.getElementById('relative-page');
-    if (!page) return;
-    page.innerHTML = '<div class="gr-topbar"><button class="gr-back-btn" onclick="navTo(\'index-page\')">←</button>'
-        + '<div><div class="gr-topbar-label">Grammar Modülü</div>'
-        + '<div class="gr-topbar-title">Relative Clauses — Sıfat Cümlecikleri</div></div></div>'
-        + '<div class="gr-body"><nav class="gr-sidenav" id="rc-sidenav"></nav>'
-        + '<div class="gr-content" id="rc-content"></div></div>';
-    _rcBuildSidenav();
-    _rcRenderSection(_rcCurrentSection);
-}
-
-function _rcBuildSidenav() {
-    var nav = document.getElementById('rc-sidenav');
-    if (!nav) return;
-    var groups = {};
-    RC_SECTIONS.forEach(function(s) {
-        if (!groups[s.grp]) groups[s.grp] = [];
-        groups[s.grp].push(s);
-    });
-    var html = '';
-    ['Genel','Temel Türler','Relative Pronouns','Reduction','Özel'].forEach(function(grp) {
-        var list = groups[grp];
-        if (!list) return;
-        html += '<div class="gr-sn-sec">' + grp + '</div>';
-        list.forEach(function(s) {
-            var active = s.id === _rcCurrentSection ? ' active' : '';
-            html += '<button class="gr-sn-btn' + active + '" onclick="_rcRenderSection(\'' + s.id + '\')">'
-                + '<span class="gr-sn-dot" style="background:' + RC_DOT[grp] + '"></span>' + s.label + '</button>';
-        });
-    });
-    nav.innerHTML = html;
-}
-
-function _rcRenderSection(id) {
-    _rcCurrentSection = id;
-    _rcBuildSidenav();
-    var content = document.getElementById('rc-content');
-    if (!content) return;
-    content.scrollTop = 0;
-    var map = {
-        'overview':    rcOverview,
-        'defining':    rcDefining,
-        'non-def':     rcNonDef,
-        'subject':     rcSubject,
-        'object':      rcObject,
-        'preposition': rcPreposition,
-        'whose':       rcWhose,
-        'when':        rcWhen,
-        'where':       rcWhere,
-        'why':         rcWhy,
-        'reduction':   rcReduction,
-        'tips':        rcTips,
-        'exercises':   rcExercises
-    };
-    var fn = map[id];
-    content.innerHTML = fn ? fn() : '<div style="padding:40px">Yakında...</div>';
-    if (id === 'exercises') {
-        _rcScore = 0; _rcAnswers = {}; _rcChecked = {};
-        _rcUpdScore();
-        document.querySelectorAll('.rc-inp').forEach(function(inp, i) {
-            inp.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') { e.preventDefault(); rcCheckBlank(i); }
-            });
-        });
-    }
-}
+/* ════════ ENTRY POINT — GrammarModule engine ════════ */
 
 /* ════════ HELPERS ════════ */
+/* ════════ ENTRY POINT ════════ */
 function rcH(eyebrow, title, sub) {
     return '<div class="gr-hero" style="background:linear-gradient(135deg,#022c22 0%,#047857 60%,#10b981 100%)">'
         + '<div class="gr-hero-eyebrow">' + eyebrow + '</div>'
@@ -128,20 +48,20 @@ function rcH(eyebrow, title, sub) {
 function rcSH(label) { return '<div class="gr-sec-hd">' + label + '</div>'; }
 
 function rcTable(headers, rows) {
-    var ths = headers.map(function(h){ return '<th>' + h + '</th>'; }).join('');
-    var trs = rows.map(function(r){
+    const ths = headers.map(function(h){ return '<th>' + h + '</th>'; }).join('');
+    const trs = rows.map(function(r){
         return '<tr>' + r.map(function(c){ return '<td>' + c + '</td>'; }).join('') + '</tr>';
     }).join('');
     return '<div class="gr-tbl-wrap"><table class="gr-tbl"><thead><tr>' + ths + '</tr></thead><tbody>' + trs + '</tbody></table></div>';
 }
 
 function rcAcc(items) {
-    var cards = items.map(function(it) {
-        var exHtml = (it.examples||[]).map(function(ex, i) {
+    const cards = items.map(function(it) {
+        const exHtml = (it.examples||[]).map(function(ex, i) {
             return '<div class="gr-ex" style="border-left:3px solid #047857"><span class="gr-ex-n">'
                 + String(i+1).padStart(2,'0') + '</span>' + ex + '</div>';
         }).join('');
-        var descHtml = it.desc ? '<p class="gr-acc-desc">' + it.desc + '</p>' : '';
+        const descHtml = it.desc ? '<p class="gr-acc-desc">' + it.desc + '</p>' : '';
         return '<div class="gr-acc" onclick="this.classList.toggle(\'open\')">'
             + '<div class="gr-acc-head">'
             + '<div class="gr-acc-ico" style="background:' + it.bg + '">' + it.ico + '</div>'
@@ -155,7 +75,7 @@ function rcAcc(items) {
 }
 
 function rcBox(color, title, lines) {
-    var styles = {
+    const styles = {
         green:  'background:#f0fdf4;border:2px solid #16a34a;color:#14532d',
         teal:   'background:#f0fdfa;border:2px solid #0d9488;color:#134e4a',
         yellow: 'background:#fefce8;border:2px solid #ca8a04;color:#713f12',
@@ -163,7 +83,7 @@ function rcBox(color, title, lines) {
         blue:   'background:#eff6ff;border:2px solid #2563eb;color:#1e3a8a',
         amber:  'background:#fffbeb;border:2px solid #d97706;color:#78350f'
     };
-    var content = lines.map(function(l){ return l === '' ? '<br>' : '<div style="margin-bottom:5px">' + l + '</div>'; }).join('');
+    const content = lines.map(function(l){ return l === '' ? '<br>' : '<div style="margin-bottom:5px">' + l + '</div>'; }).join('');
     return '<div style="' + (styles[color]||styles.teal) + ';border-radius:12px;padding:14px 18px;margin:4px 36px 8px;font-size:.82rem;line-height:1.8;">'
         + (title ? '<div style="font-weight:900;margin-bottom:7px">' + title + '</div>' : '')
         + content + '</div>';
@@ -171,7 +91,7 @@ function rcBox(color, title, lines) {
 
 /* ════════ OVERVIEW ════════ */
 function rcOverview() {
-    var cards = [
+    const cards = [
         {id:'defining',    e:'✅', n:'Defining RC',           s:'Tanımlayıcı — virgülsüz, "that" kullanılır',    c:'#f0fdf4', b:'#6ee7b7', t:'#065f46'},
         {id:'non-def',     e:'📌', n:'Non-Defining RC',       s:'Ekstra bilgi — virgüllü, "that" kullanılmaz',   c:'#f0fdf4', b:'#6ee7b7', t:'#065f46'},
         {id:'subject',     e:'👤', n:'Özne Konumunda',        s:'who / which / that + fiil',                     c:'#eff6ff', b:'#93c5fd', t:'#1e3a8a'},
@@ -183,7 +103,7 @@ function rcOverview() {
         {id:'why',         e:'❓', n:'Why / For Which',       s:'"reason" sonrası sebep bağlacı',                c:'#eff6ff', b:'#93c5fd', t:'#1e3a8a'},
         {id:'reduction',   e:'✂️', n:'Reduction (Kısaltma)', s:'Active: Ving | Passive: V₃ / being V₃',         c:'#fffbeb', b:'#fcd34d', t:'#713f12'},
     ];
-    var cardHtml = cards.map(function(c) {
+    const cardHtml = cards.map(function(c) {
         return '<div style="border:1.5px solid ' + c.b + ';border-radius:14px;padding:16px;background:' + c.c + ';cursor:pointer;transition:all .18s;"'
             + ' onmouseover="this.style.transform=\'translateY(-3px)\';this.style.boxShadow=\'0 8px 24px rgba(0,0,0,.1)\'"'
             + ' onmouseout="this.style.transform=\'\';this.style.boxShadow=\'\'"'
@@ -409,7 +329,7 @@ function rcReduction() {
 
 /* ════════ TIPS ════════ */
 function rcTips() {
-    var tips = [
+    const tips = [
         {num:'01', title:'Boşluktan sonra fiil varsa → özne konumunda → who / which / that gelir.',
          rules:[
             {ico:'💡', text:'Boşluktan sonra fiil geliyorsa bu cümle özne durumundadır → <strong>who / which / that</strong>'},
@@ -451,8 +371,8 @@ function rcTips() {
         {num:'11', title:'"When" zaman ifadesi yerine "in which / during which / at which" kullanılabilir.',
          rules:[{ico:'💡', text:'"in which" aylar ve yıllar | "during which" süreç | "at which" saatler için tercih edilir'}]},
     ];
-    var cards = tips.map(function(t) {
-        var rules = t.rules.map(function(r) {
+    const cards = tips.map(function(t) {
+        const rules = t.rules.map(function(r) {
             return '<div style="display:flex;gap:10px;padding:9px 13px;background:#f7f7fb;border-radius:10px;margin-top:7px;font-size:.82rem;color:#374151;line-height:1.6;">'
                 + '<span style="flex-shrink:0;margin-top:1px">' + r.ico + '</span>' + r.text + '</div>';
         }).join('');
@@ -470,7 +390,7 @@ function rcTips() {
 }
 
 /* ════════ EXERCISES ════════ */
-var RC_BLANKS = [
+const RC_BLANKS = [
     {q:'The woman ___ is talking to the teacher is the mistress.',
      ans:['who','that'], hint:'Özne + fiil gelmiş → who / that'},
     {q:'Orhan Pamuk, ___ won the Nobel Prize, was born in 1952.',
@@ -487,7 +407,7 @@ var RC_BLANKS = [
      ans:['why','for which','that'], hint:'"reason" ardından → why / for which / that'},
 ];
 
-var RC_MCQS = [
+const RC_MCQS = [
     {q:'The phone ___ I bought last week is very quick.',
      opts:['who','whom','which','whose'],
      cor:'c', hint:'Cansız nesne + nesne konumu → which'},
@@ -515,20 +435,20 @@ var RC_MCQS = [
 ];
 
 function rcExercises() {
-    var blankCards = RC_BLANKS.map(function(q, i) {
+    const blankCards = RC_BLANKS.map(function(q, i) {
         return '<div class="gr-q-card" id="rcq-b' + i + '">'
             + '<div class="gr-q-num">SORU ' + String(i+1).padStart(2,'0') + ' / BÖLÜM A</div>'
             + '<div class="gr-q-text">' + q.q + '</div>'
-            + '<input class="gr-q-inp rc-inp" id="rc-inp-' + i + '" placeholder="relative pronoun yaz…" autocomplete="off"><br>'
+            + '<input class="gr-q-inp rc-inp" id="rc-inp-' + i + '" data-index="' + i + '" placeholder="relative pronoun yaz…" autocomplete="off"><br>'
             + '<button class="gr-chk-btn" style="border-color:#047857;color:#047857" onclick="rcCheckBlank(' + i + ')">Kontrol Et</button>'
             + '<div class="gr-fb" id="rc-fb-b' + i + '"></div>'
             + '</div>';
     }).join('');
 
-    var mcqCards = RC_MCQS.map(function(q, i) {
-        var opts = q.opts.map(function(o, j) {
-            var letter = ['A','B','C','D'][j];
-            var lv = ['a','b','c','d'][j];
+    const mcqCards = RC_MCQS.map(function(q, i) {
+        const opts = q.opts.map(function(o, j) {
+            const letter = ['A','B','C','D'][j];
+            const lv = ['a','b','c','d'][j];
             return '<div class="gr-opt" id="rc-opt-' + i + '-' + j + '" onclick="rcSelectOpt(' + i + ',' + j + ',\'' + lv + '\')">'
                 + '<span class="gr-opt-letter">' + letter + '</span>' + o + '</div>';
         }).join('');
@@ -559,19 +479,19 @@ function rcExercises() {
 
 /* ════════ EXERCISE LOGIC ════════ */
 function _rcUpdScore() {
-    var el = document.getElementById('rc-live-score');
+    const el = document.getElementById('rc-live-score');
     if (el) el.textContent = _rcScore + ' / ' + RC_TOTAL;
 
     if (typeof saveGrammarScore === 'function') saveGrammarScore('rc', _rcScore);
 }
 
 function rcCheckBlank(i) {
-    var inp  = document.getElementById('rc-inp-' + i);
-    var fb   = document.getElementById('rc-fb-b' + i);
-    var card = document.getElementById('rcq-b' + i);
+    const inp  = document.getElementById('rc-inp-' + i);
+    const fb   = document.getElementById('rc-fb-b' + i);
+    const card = document.getElementById('rcq-b' + i);
     if (!inp || !fb) return;
-    var val = inp.value.trim().toLowerCase().replace(/\s+/g,' ');
-    var correct = RC_BLANKS[i].ans.map(function(a){ return a.toLowerCase(); });
+    const val = inp.value.trim().toLowerCase().replace(/\s+/g,' ');
+    const correct = RC_BLANKS[i].ans.map(function(a){ return a.toLowerCase(); });
     if (correct.indexOf(val) !== -1 || val === '') {
         if (val === '' && correct.indexOf('') === -1) {
             fb.textContent = 'Bir cevap girin!'; fb.className = 'gr-fb show bad'; return;
@@ -590,23 +510,23 @@ function rcCheckBlank(i) {
 
 function rcSelectOpt(qi, oi, letter) {
     RC_MCQS[qi].opts.forEach(function(_, j) {
-        var el = document.getElementById('rc-opt-' + qi + '-' + j);
+        const el = document.getElementById('rc-opt-' + qi + '-' + j);
         if (el) el.classList.remove('sel');
     });
-    var el = document.getElementById('rc-opt-' + qi + '-' + oi);
+    const el = document.getElementById('rc-opt-' + qi + '-' + oi);
     if (el) el.classList.add('sel');
     _rcAnswers['m'+qi] = letter;
 }
 
 function rcCheckMCQ(i) {
-    var q    = RC_MCQS[i];
-    var sel  = _rcAnswers['m'+i];
-    var fb   = document.getElementById('rc-fb-m' + i);
-    var card = document.getElementById('rcq-m' + i);
+    const q    = RC_MCQS[i];
+    const sel  = _rcAnswers['m'+i];
+    const fb   = document.getElementById('rc-fb-m' + i);
+    const card = document.getElementById('rcq-m' + i);
     if (!sel) { fb.textContent = 'Bir seçenek seçin!'; fb.className = 'gr-fb show bad'; return; }
-    var letters = ['a','b','c','d'];
+    const letters = ['a','b','c','d'];
     q.opts.forEach(function(_, j) {
-        var el = document.getElementById('rc-opt-' + i + '-' + j);
+        const el = document.getElementById('rc-opt-' + i + '-' + j);
         if (!el) return;
         el.classList.remove('sel');
         if (letters[j] === q.cor) el.classList.add('ok');
@@ -626,13 +546,13 @@ function rcCheckMCQ(i) {
 }
 
 function rcSubmitAll() {
-    var panel   = document.getElementById('rc-result');
-    var scoreEl = document.getElementById('rc-res-score');
-    var msgEl   = document.getElementById('rc-res-msg');
+    const panel   = document.getElementById('rc-result');
+    const scoreEl = document.getElementById('rc-res-score');
+    const msgEl   = document.getElementById('rc-res-msg');
     if (!panel) return;
     panel.classList.add('show');
     scoreEl.textContent = _rcScore + '/' + RC_TOTAL;
-    var pct = Math.round((_rcScore / RC_TOTAL) * 100);
+    const pct = Math.round((_rcScore / RC_TOTAL) * 100);
     msgEl.textContent = pct >= 87 ? '🎉 Mükemmel! Relative Clauses konusuna tam hâkimsin!'
                       : pct >= 65 ? '👏 Çok iyi! Reduction ve preposition kullanımını biraz daha tekrar et.'
                       : pct >= 45 ? '📚 İyi başlangıç. Defining/Non-defining farkını ve whose/where/when kurallarını tekrar et!'
@@ -641,9 +561,59 @@ function rcSubmitAll() {
 }
 
 /* ════════ GLOBALS ════════ */
-window.openRelativeSection = openRelativeSection;
-window._rcRenderSection    = _rcRenderSection;
-window.rcCheckBlank        = rcCheckBlank;
-window.rcSelectOpt         = rcSelectOpt;
-window.rcCheckMCQ          = rcCheckMCQ;
-window.rcSubmitAll         = rcSubmitAll;
+// openRelativeSection ve _rcRenderSection: _initRelativeModule içinde atandı
+window.rcCheckBlank = rcCheckBlank;
+window.rcSelectOpt  = rcSelectOpt;
+window.rcCheckMCQ   = rcCheckMCQ;
+window.rcSubmitAll  = rcSubmitAll;
+
+(function _initRelativeModule() {
+    const _mod = new GrammarModule({
+        id:       'rc',
+        pageId:   'relative-page',
+        sbId:     'sb-grammar-relative',
+        diId:     'di-grammar-relative',
+        title:    'Relative Clauses — Sıfat Cümlecikleri',
+        sections: RC_SECTIONS,
+        dotColors: RC_DOT,
+        grpOrder: ['Genel', 'Temel Türler', 'Relative Pronouns', 'Reduction', 'Özel'],
+        sectionMap: {
+            'overview':    function(){ return rcOverview(); },
+            'defining':    function(){ return rcDefining(); },
+            'non-def':     function(){ return rcNonDef(); },
+            'subject':     function(){ return rcSubject(); },
+            'object':      function(){ return rcObject(); },
+            'preposition': function(){ return rcPreposition(); },
+            'whose':       function(){ return rcWhose(); },
+            'when':        function(){ return rcWhen(); },
+            'where':       function(){ return rcWhere(); },
+            'why':         function(){ return rcWhy(); },
+            'reduction':   function(){ return rcReduction(); },
+            'tips':        function(){ return rcTips(); },
+            'exercises':   function(){ return rcExercises(); }
+        },
+        onSectionRender: function(id) {
+            if (id === 'exercises') {
+                _rcScore = 0; _rcAnswers = {}; _rcChecked = {};
+                _rcUpdScore();
+            }
+        }
+    });
+
+    // Event delegation — sadece bir kez kurulur
+    window.openRelativeSection = function(sectionId) {
+        _mod.open(sectionId || 'overview');
+        const page = document.getElementById('relative-page');
+        if (page && !page._listenerAttached) {
+            page.addEventListener('keydown', function(e) {
+                if (!e.target.classList.contains('rc-inp')) return;
+                if (e.key !== 'Enter') return;
+                e.preventDefault();
+                rcCheckBlank(parseInt(e.target.dataset.index));
+            });
+            page._listenerAttached = true;
+        }
+    };
+    window._rcRenderSection    = function(id)        { _mod.goTo(id); };
+    window['_rcGoTo']          = function(id)        { _mod.goTo(id); };
+})();

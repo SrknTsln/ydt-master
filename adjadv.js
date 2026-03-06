@@ -4,13 +4,13 @@
 // Kaynak: 10da10 YDT Adjectives & Adverbs notları (s. 37–45)
 // ════════════════════════════════════════════════════════════════
 
-var _aaCurrentSection = 'overview';
-var _aaAnswers = {};
-var _aaChecked = {};
-var _aaScore = 0;
-var AA_TOTAL = 16;
+let _aaCurrentSection = 'overview';
+let _aaAnswers = {};
+let _aaChecked = {};
+let _aaScore = 0;
+const AA_TOTAL = 16;
 
-var AA_SECTIONS = [
+const AA_SECTIONS = [
     { id: 'overview',     label: 'Genel Bakış',               grp: 'Genel' },
     { id: 'adjectives',   label: 'Adjectives (Sıfatlar)',      grp: 'Adjectives' },
     { id: 'participle',   label: 'Participle Adjectives',      grp: 'Adjectives' },
@@ -28,7 +28,7 @@ var AA_SECTIONS = [
     { id: 'exercises',    label: 'Alıştırmalar',               grp: 'Özel' }
 ];
 
-var AA_DOT = {
+const AA_DOT = {
     'Genel':      '#6366f1',
     'Adjectives': '#7c3aed',
     'Adverbs':    '#0369a1',
@@ -36,92 +36,10 @@ var AA_DOT = {
     'Özel':       '#e63946'
 };
 
-/* ════════ ENTRY POINT ════════ */
-function openAdjAdvSection(sectionId) {
-    _aaCurrentSection = sectionId || 'overview';
-    document.querySelectorAll('.container').forEach(function(c){ c.classList.add('hidden'); });
-    document.querySelectorAll('.arsiv-full-page').forEach(function(c){ c.classList.add('hidden'); });
-    var page = document.getElementById('adjadv-page');
-    if (page) page.classList.remove('hidden');
-    document.querySelectorAll('.sb-btn, .mob-drawer-btn').forEach(function(el){ el.classList.remove('active'); });
-    var sb = document.getElementById('sb-grammar-adjadv');
-    if (sb) sb.classList.add('active');
-    var di = document.getElementById('di-grammar-adjadv');
-    if (di) di.classList.add('active');
-    _aaRenderPage();
-}
-
-function _aaRenderPage() {
-    var page = document.getElementById('adjadv-page');
-    if (!page) return;
-    page.innerHTML =
-        '<div class="gr-topbar">'
-        + '<button class="gr-back-btn" onclick="navTo(\'index-page\')">←</button>'
-        + '<div><div class="gr-topbar-label">Grammar Modülü</div>'
-        + '<div class="gr-topbar-title">Adjectives &amp; Adverbs</div></div>'
-        + '</div>'
-        + '<div class="gr-body">'
-        + '<nav class="gr-sidenav" id="aa-sidenav"></nav>'
-        + '<div class="gr-content" id="aa-content"></div>'
-        + '</div>';
-    _aaBuildSidenav();
-    _aaRenderSection(_aaCurrentSection);
-}
-
-function _aaBuildSidenav() {
-    var nav = document.getElementById('aa-sidenav');
-    if (!nav) return;
-    var groups = {};
-    AA_SECTIONS.forEach(function(s) {
-        if (!groups[s.grp]) groups[s.grp] = [];
-        groups[s.grp].push(s);
-    });
-    var html = '';
-    ['Genel','Adjectives','Adverbs','Comparison','Özel'].forEach(function(grp) {
-        var list = groups[grp];
-        if (!list) return;
-        html += '<div class="gr-sn-sec">' + grp + '</div>';
-        list.forEach(function(s) {
-            var active = s.id === _aaCurrentSection ? ' active' : '';
-            html += '<button class="gr-sn-btn' + active + '" onclick="_aaRenderSection(\'' + s.id + '\')">'
-                + '<span class="gr-sn-dot" style="background:' + AA_DOT[grp] + '"></span>' + s.label + '</button>';
-        });
-    });
-    nav.innerHTML = html;
-}
-
-function _aaRenderSection(id) {
-    _aaCurrentSection = id;
-    _aaBuildSidenav();
-    var content = document.getElementById('aa-content');
-    if (!content) return;
-    content.scrollTop = 0;
-    var map = {
-        'overview':    aaOverview,
-        'adjectives':  aaAdjectives,
-        'participle':  aaParticiple,
-        'adverbs':     aaAdverbs,
-        'irregular':   aaIrregular,
-        'dikkat':      aaDikkat,
-        'degree':      aaDegree,
-        'fairly':      aaFairly,
-        'so-such':     aaSoSuch,
-        'comparison':  aaComparison,
-        'as-as':       aaAsAs,
-        'similar':     aaSimilar,
-        'the-more':    aaTheMore,
-        'superlatives':aaSuperlatives,
-        'exercises':   aaExercises
-    };
-    var fn = map[id];
-    content.innerHTML = fn ? fn() : '<div style="padding:40px">Yakında...</div>';
-    if (id === 'exercises') {
-        _aaScore = 0; _aaAnswers = {}; _aaChecked = {};
-        _aaUpdScore();
-    }
-}
+/* ════════ ENTRY POINT — GrammarModule engine ════════ */
 
 /* ════════ HELPERS ════════ */
+/* ════════ ENTRY POINT ════════ */
 function aaH(eyebrow, title, sub) {
     return '<div class="gr-hero" style="background:linear-gradient(135deg,#4c1d95 0%,#7c3aed 60%,#a78bfa 100%)">'
         + '<div class="gr-hero-eyebrow">' + eyebrow + '</div>'
@@ -132,8 +50,8 @@ function aaH(eyebrow, title, sub) {
 function aaSH(label) { return '<div class="gr-sec-hd">' + label + '</div>'; }
 
 function aaTable(headers, rows) {
-    var ths = headers.map(function(h){ return '<th>' + h + '</th>'; }).join('');
-    var trs = rows.map(function(r){
+    const ths = headers.map(function(h){ return '<th>' + h + '</th>'; }).join('');
+    const trs = rows.map(function(r){
         return '<tr>' + r.map(function(c){ return '<td>' + c + '</td>'; }).join('') + '</tr>';
     }).join('');
     return '<div class="gr-tbl-wrap"><table class="gr-tbl"><thead><tr>' + ths + '</tr></thead><tbody>' + trs + '</tbody></table></div>';
@@ -141,14 +59,14 @@ function aaTable(headers, rows) {
 
 function aaAcc(items) {
     return '<div class="gr-acc-wrap">' + items.map(function(it) {
-        var exHtml = (it.examples||[]).map(function(ex, i) {
+        const exHtml = (it.examples||[]).map(function(ex, i) {
             return '<div class="gr-ex" style="border-left:3px solid #7c3aed"><span class="gr-ex-n">'
                 + String(i+1).padStart(2,'0') + '</span>' + ex + '</div>';
         }).join('');
-        var noteHtml = (it.notes||[]).map(function(n){
+        const noteHtml = (it.notes||[]).map(function(n){
             return '<div style="background:#f5f3ff;border:1.5px solid #c4b5fd;border-radius:8px;padding:10px 14px;margin:6px 0;font-size:.8rem;color:#4c1d95;line-height:1.7">' + n + '</div>';
         }).join('');
-        var descHtml = it.desc ? '<p class="gr-acc-desc">' + it.desc + '</p>' : '';
+        const descHtml = it.desc ? '<p class="gr-acc-desc">' + it.desc + '</p>' : '';
         return '<div class="gr-acc" onclick="this.classList.toggle(\'open\')">'
             + '<div class="gr-acc-head">'
             + '<div class="gr-acc-ico" style="background:' + it.bg + '">' + it.ico + '</div>'
@@ -161,7 +79,7 @@ function aaAcc(items) {
 }
 
 function aaBox(color, title, lines) {
-    var styles = {
+    const styles = {
         purple: 'background:#f5f3ff;border:2px solid #7c3aed;color:#4c1d95',
         blue:   'background:#eff6ff;border:2px solid #2563eb;color:#1e3a8a',
         sky:    'background:#f0f9ff;border:2px solid #0284c7;color:#0c4a6e',
@@ -170,7 +88,7 @@ function aaBox(color, title, lines) {
         green:  'background:#f0fdf4;border:2px solid #16a34a;color:#14532d',
         red:    'background:#fff1f2;border:2px solid #e63946;color:#9f1239'
     };
-    var content = lines.map(function(l){
+    const content = lines.map(function(l){
         return l === '' ? '<br>' : '<div style="margin-bottom:5px">' + l + '</div>';
     }).join('');
     return '<div style="' + (styles[color]||styles.yellow) + ';border-radius:12px;padding:14px 18px;margin:4px 36px 12px;font-size:.82rem;line-height:1.8;">'
@@ -184,7 +102,7 @@ function aaPill(label, bg) {
 
 /* ════════ OVERVIEW ════════ */
 function aaOverview() {
-    var cards = [
+    const cards = [
         { id:'adjectives',  emoji:'🔵', name:'Adjectives',              sub:'İsim niteleme, linking verbs (be/seem/look…), turn/grow',       tc:'#4c1d95', bc:'#f5f3ff', bd:'#c4b5fd' },
         { id:'participle',  emoji:'🟣', name:'Participle Adjectives',   sub:'-ing (present) vs -ed (past): thrilling / thrilled…',          tc:'#4c1d95', bc:'#faf5ff', bd:'#d8b4fe' },
         { id:'adverbs',     emoji:'🔷', name:'Adverbs',                  sub:'Manner, time, place, frequency, degree, focus, sentence…',     tc:'#1e3a8a', bc:'#dbeafe', bd:'#93c5fd' },
@@ -200,7 +118,7 @@ function aaOverview() {
         { id:'superlatives',emoji:'🏆', name:'Superlatives',             sub:'"the …est / the most" — en üstünlük',                        tc:'#7c2d12', bc:'#ffedd5', bd:'#fdba74' },
     ];
 
-    var cardHtml = cards.map(function(c) {
+    const cardHtml = cards.map(function(c) {
         return '<div style="border:1.5px solid ' + c.bd + ';border-radius:14px;padding:16px;background:' + c.bc + ';cursor:pointer;transition:all .18s;"'
             + ' onmouseover="this.style.transform=\'translateY(-3px)\';this.style.boxShadow=\'0 8px 24px rgba(0,0,0,.1)\'"'
             + ' onmouseout="this.style.transform=\'\';this.style.boxShadow=\'\'"'
@@ -274,7 +192,7 @@ function aaAdjectives() {
 
 /* ════════ PARTICIPLE ADJECTIVES ════════ */
 function aaParticiple() {
-    var pairs = [
+    const pairs = [
         ['Thrill',      'Thrilling',      'Thrilled',      'The <strong>thrilling</strong> motocross left us <strong>thrilled</strong>.'],
         ['Tire',        'Tiring',         'Tired',         'After a <strong>tiring</strong> day at school, I feel so <strong>tired</strong>.'],
         ['Relax',       'Relaxing',       'Relaxed',       'Spending the weekend in the forest was so <strong>relaxing</strong>. I returned home feeling <strong>relaxed</strong>.'],
@@ -285,7 +203,7 @@ function aaParticiple() {
         ['Entertain',   'Entertaining',   'Entertained',   'The theater show was really <strong>entertaining</strong>. The viewer was thoroughly <strong>entertained</strong>.'],
     ];
 
-    var tableHtml = '<div class="gr-tbl-wrap"><table class="gr-tbl"><thead><tr>'
+    const tableHtml = '<div class="gr-tbl-wrap"><table class="gr-tbl"><thead><tr>'
         + '<th>Fiil (Verb)</th>'
         + '<th style="background:#dbeafe;color:#1e3a8a">Present Participle<br><small>V+ing → "…dırıcı, …tırıcı"<br>(durum kaynağı)</small></th>'
         + '<th style="background:#fde68a;color:#713f12">Past Participle<br><small>V₃ → "…mış, …miş"<br>(duyguyu yaşayan)</small></th>'
@@ -313,7 +231,7 @@ function aaParticiple() {
 
 /* ════════ ADVERBS ════════ */
 function aaAdverbs() {
-    var types = [
+    const types = [
         ['Adverbs of manner',    'beautifully, diligently, vividly, softly, rapidly…',      'Eylemin <strong>"nasıl"</strong> gerçekleştiğini belirtir.', 'Most speakers speak <strong>fluently</strong>.'],
         ['Adverbs of time',      'tomorrow, early, lately, now…',                           'Eylemin <strong>"ne zaman"</strong> gerçekleştiğini belirtir.', 'Students have to get up <strong>early</strong> tomorrow.'],
         ['Adverbs of frequency', 'always, never, occasionally, frequently…',                'Eylemin <strong>"ne sıklıkla"</strong> gerçekleştiğini belirtir.', 'Healthy people <strong>always</strong> eat fruit and drink lots of water.'],
@@ -574,7 +492,7 @@ function aaSuperlatives() {
 }
 
 /* ════════ EXERCISES ════════ */
-var AA_SETS = [
+const AA_SETS = [
     {
         label: 'Set 1',
         questions: [
@@ -867,10 +785,10 @@ var AA_SETS = [
     ------------------------------------------------- */
 ];
 
-var _aaSetIdx     = 0;
-var _aaSetScore   = 0;
-var _aaSetChecked = {};
-var _aaSetAnswers = {};
+let _aaSetIdx     = 0;
+let _aaSetScore   = 0;
+let _aaSetChecked = {};
+let _aaSetAnswers = {};
 
 function aaExercises() {
     _aaSetIdx = 0; _aaSetScore = 0; _aaSetChecked = {}; _aaSetAnswers = {};
@@ -878,21 +796,21 @@ function aaExercises() {
 }
 
 function _aaBuildExercisePage() {
-    var set   = AA_SETS[_aaSetIdx];
-    var total = set.questions.length;
+    const set   = AA_SETS[_aaSetIdx];
+    const total = set.questions.length;
 
-    var tabs = AA_SETS.map(function(s, i) {
-        var active = i === _aaSetIdx
+    const tabs = AA_SETS.map(function(s, i) {
+        const active = i === _aaSetIdx
             ? 'style="background:#7c3aed;color:#fff;border-color:#7c3aed;"' : '';
         return '<button class="gr-set-tab" ' + active + ' onclick="aaSwitchSet(' + i + ')">' + s.label + '</button>';
     }).join('');
 
-    var qCards = set.questions.map(function(q, i) {
-        var opts = q.opts.map(function(o, j) {
-            var letter = ['A','B','C','D','E'][j];
-            var lv     = ['a','b','c','d','e'][j];
-            var state  = _aaSetAnswers[_aaSetIdx + '_' + i];
-            var cls    = 'gr-opt';
+    const qCards = set.questions.map(function(q, i) {
+        const opts = q.opts.map(function(o, j) {
+            const letter = ['A','B','C','D','E'][j];
+            const lv     = ['a','b','c','d','e'][j];
+            const state  = _aaSetAnswers[_aaSetIdx + '_' + i];
+            let cls    = 'gr-opt';
             if (_aaSetChecked[_aaSetIdx + '_' + i]) {
                 if (lv === q.cor)                         cls += ' ok';
                 else if (lv === state && state !== q.cor) cls += ' bad';
@@ -901,12 +819,12 @@ function _aaBuildExercisePage() {
                 + '<span class="gr-opt-letter">' + letter + '</span>' + o + '</div>';
         }).join('');
 
-        var checked = _aaSetChecked[_aaSetIdx + '_' + i];
-        var fbCls   = checked ? (checked === 'ok' ? 'gr-fb show ok' : 'gr-fb show bad') : 'gr-fb';
-        var fbTxt   = checked === 'ok'  ? 'Dogru! ' + q.hint
+        const checked = _aaSetChecked[_aaSetIdx + '_' + i];
+        const fbCls   = checked ? (checked === 'ok' ? 'gr-fb show ok' : 'gr-fb show bad') : 'gr-fb';
+        const fbTxt   = checked === 'ok'  ? 'Dogru! ' + q.hint
                     : checked === 'bad' ? 'Yanlis. Dogru: ' + q.cor.toUpperCase() + ' -- ' + q.hint : '';
-        var cardCls = checked === 'ok' ? 'gr-q-card gr-c' : checked === 'bad' ? 'gr-q-card gr-w' : 'gr-q-card';
-        var btnDis  = checked ? 'disabled style="opacity:.4;pointer-events:none;"' : '';
+        const cardCls = checked === 'ok' ? 'gr-q-card gr-c' : checked === 'bad' ? 'gr-q-card gr-w' : 'gr-q-card';
+        const btnDis  = checked ? 'disabled style="opacity:.4;pointer-events:none;"' : '';
 
         return '<div class="' + cardCls + '" id="aasc-' + i + '">'
             + '<div class="gr-q-num">SORU ' + String(i+1).padStart(2,'0') + ' -- ' + set.label.toUpperCase() + '</div>'
@@ -917,7 +835,7 @@ function _aaBuildExercisePage() {
             + '</div>';
     }).join('');
 
-    var nextBtn = _aaSetIdx < AA_SETS.length - 1
+    const nextBtn = _aaSetIdx < AA_SETS.length - 1
         ? '<button class="gr-retry-btn" style="background:#7c3aed;color:#fff;border-color:#7c3aed" onclick="aaNextSet()">Sonraki Set </button>'
         : '<span style="font-size:.8rem;color:var(--ink3);align-self:center">Tum setler tamamlandi!</span>';
 
@@ -942,34 +860,34 @@ function _aaBuildExercisePage() {
 
 function aaSwitchSet(idx) {
     _aaSetIdx = idx; _aaSetScore = 0; _aaSetChecked = {}; _aaSetAnswers = {};
-    var cnt = document.getElementById('aa-content');
+    const cnt = document.getElementById('aa-content');
     if (cnt) { cnt.innerHTML = _aaBuildExercisePage(); cnt.scrollTop = 0; }
 }
 
 function aaSetOpt(qi, oi, letter) {
     if (_aaSetChecked[_aaSetIdx + '_' + qi]) return;
     AA_SETS[_aaSetIdx].questions[qi].opts.forEach(function(_, j) {
-        var el = document.getElementById('aaso-' + qi + '-' + j);
+        const el = document.getElementById('aaso-' + qi + '-' + j);
         if (el) el.className = 'gr-opt' + (j === oi ? ' sel' : '');
     });
     _aaSetAnswers[_aaSetIdx + '_' + qi] = letter;
 }
 
 function aaCheckSetQ(qi) {
-    var q    = AA_SETS[_aaSetIdx].questions[qi];
-    var sel  = _aaSetAnswers[_aaSetIdx + '_' + qi];
-    var fb   = document.getElementById('aasfb-' + qi);
-    var card = document.getElementById('aasc-' + qi);
+    const q    = AA_SETS[_aaSetIdx].questions[qi];
+    const sel  = _aaSetAnswers[_aaSetIdx + '_' + qi];
+    const fb   = document.getElementById('aasfb-' + qi);
+    const card = document.getElementById('aasc-' + qi);
     if (!sel) { fb.textContent = 'Bir secenek secin!'; fb.className = 'gr-fb show bad'; return; }
-    var letters = ['a','b','c','d','e'];
+    const letters = ['a','b','c','d','e'];
     q.opts.forEach(function(_, j) {
-        var el = document.getElementById('aaso-' + qi + '-' + j);
+        const el = document.getElementById('aaso-' + qi + '-' + j);
         if (!el) return;
         el.classList.remove('sel');
         if (letters[j] === q.cor)                     el.classList.add('ok');
         else if (letters[j] === sel && sel !== q.cor) el.classList.add('bad');
     });
-    var btn = card.querySelector('.gr-chk-btn');
+    const btn = card.querySelector('.gr-chk-btn');
     if (btn) { btn.disabled = true; btn.style.opacity = '.4'; btn.style.pointerEvents = 'none'; }
     if (sel === q.cor) {
         card.classList.add('gr-c');
@@ -983,17 +901,17 @@ function aaCheckSetQ(qi) {
         fb.className = 'gr-fb show bad';
         _aaSetChecked[_aaSetIdx + '_' + qi] = 'bad';
     }
-    var el = document.getElementById('aa-live-score');
+    const el = document.getElementById('aa-live-score');
     if (el) el.textContent = _aaSetScore + ' / ' + AA_SETS[_aaSetIdx].questions.length;
 }
 
 function aaSubmitSet() {
-    var total = AA_SETS[_aaSetIdx].questions.length;
-    var panel = document.getElementById('aa-result');
+    const total = AA_SETS[_aaSetIdx].questions.length;
+    const panel = document.getElementById('aa-result');
     if (!panel) return;
     panel.classList.add('show');
     document.getElementById('aa-res-score').textContent = _aaSetScore + '/' + total;
-    var pct = Math.round((_aaSetScore / total) * 100);
+    const pct = Math.round((_aaSetScore / total) * 100);
     document.getElementById('aa-res-msg').textContent =
         pct >= 90 ? 'Mukemmel! Bu seti harika gecirdin!'
       : pct >= 70 ? 'Cok iyi! Kucuk eksikler var.'
@@ -1007,11 +925,50 @@ function aaRetrySameSet() { aaSwitchSet(_aaSetIdx); }
 function aaNextSet()      { if (_aaSetIdx < AA_SETS.length - 1) aaSwitchSet(_aaSetIdx + 1); }
 
 
-window.openAdjAdvSection = openAdjAdvSection;
-window._aaRenderSection  = _aaRenderSection;
-window.aaSwitchSet       = aaSwitchSet;
-window.aaSetOpt          = aaSetOpt;
-window.aaCheckSetQ       = aaCheckSetQ;
-window.aaSubmitSet       = aaSubmitSet;
-window.aaRetrySameSet    = aaRetrySameSet;
-window.aaNextSet         = aaNextSet;
+// openAdjAdvSection ve _aaRenderSection: _initAdjAdvModule içinde atandı
+window.aaSwitchSet    = aaSwitchSet;
+window.aaSetOpt       = aaSetOpt;
+window.aaCheckSetQ    = aaCheckSetQ;
+window.aaSubmitSet    = aaSubmitSet;
+window.aaRetrySameSet = aaRetrySameSet;
+window.aaNextSet      = aaNextSet;
+
+(function _initAdjAdvModule() {
+    const _mod = new GrammarModule({
+        id:       'aa',
+        pageId:   'adjadv-page',
+        sbId:     'sb-grammar-adjadv',
+        diId:     'di-grammar-adjadv',
+        title:    'Adjectives &amp; Adverbs',
+        sections: AA_SECTIONS,
+        dotColors: AA_DOT,
+        grpOrder: ['Genel', 'Adjectives', 'Adverbs', 'Comparison', 'Özel'],
+        sectionMap: {
+            'overview':    function(){ return aaOverview(); },
+            'adjectives':  function(){ return aaAdjectives(); },
+            'participle':  function(){ return aaParticiple(); },
+            'adverbs':     function(){ return aaAdverbs(); },
+            'irregular':   function(){ return aaIrregular(); },
+            'dikkat':      function(){ return aaDikkat(); },
+            'degree':      function(){ return aaDegree(); },
+            'fairly':      function(){ return aaFairly(); },
+            'so-such':     function(){ return aaSoSuch(); },
+            'comparison':  function(){ return aaComparison(); },
+            'as-as':       function(){ return aaAsAs(); },
+            'similar':     function(){ return aaSimilar(); },
+            'the-more':    function(){ return aaTheMore(); },
+            'superlatives':function(){ return aaSuperlatives(); },
+            'exercises':   function(){ return aaExercises(); }
+        },
+        onSectionRender: function(id) {
+            if (id === 'exercises') {
+                _aaScore = 0; _aaAnswers = {}; _aaChecked = {};
+                _aaUpdScore();
+            }
+        }
+    });
+
+    window.openAdjAdvSection = function(sectionId) { _mod.open(sectionId || 'overview'); };
+    window._aaRenderSection  = function(id)        { _mod.goTo(id); };
+    window['_aaGoTo']        = function(id)        { _mod.goTo(id); };
+})();

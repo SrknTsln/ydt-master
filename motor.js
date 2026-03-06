@@ -2,6 +2,24 @@
 // motor.js  –  Tüm uygulama mantığı
 // ════════════════════════════════════════════════════
 
+// ── YDT Global Namespace ──────────────────────────────
+// window.* kirliliğini azaltmak için merkezi namespace
+// Kademeli migrasyon: eski window.X atamaları silinmeden
+// önce burada da tutulur (backward compat için alias)
+window.YDT = window.YDT || {
+    // Arşiv state (en çok kullanılan window.* atamaları)
+    aiArsiv:            [],
+    aiGramerArsiv:      [],
+    // Paragraf state
+    paragraflar:        [],
+    paragrafSorular:    {},
+    // Save callback — Firebase sync
+    save:               null,   // window._saveData yerine
+    // Navigasyon state
+    arsivGroupPage:     null,   // window._arsivGroupPage yerine
+    arsivActiveSubList: null,   // window._arsivActiveSubList yerine
+};
+
 // --- GENEL DEĞİŞKENLER ---
 let currentActiveList = "", studyIndex = 0, currentWord, score = 0, canAnswer = true, moduleStartTime = null;
 
@@ -134,10 +152,6 @@ function navTo(pageId) {
     if (pageId === 'admin-page') { adminCheckAccess(); }
 }
 
-function showExercisePage() {
-    showPage('exercise-page');
-}
-
 // ══════════════════════════════════════════════
 // → js/admin.js (ayrı dosyaya taşındı)
 // → js/stats.js (ayrı dosyaya taşındı)
@@ -168,7 +182,7 @@ function importData(e) {
                 _showAppToast('Geçersiz yedek dosyası! allData veya stats eksik.'); return;
             }
             if (confirm("Tüm veriler yedekle değiştirilecek? Bu işlem geri alınamaz.")) {
-                allData = _normalizeAllData(imp.allData || {});
+                allData = imp.allData;
                 stats   = imp.stats;
                 window._saveData && window._saveData();
                 location.reload();
@@ -180,28 +194,11 @@ function importData(e) {
     reader.readAsText(file);
 }
 
-// Firestore array-like objects → gerçek array'e dönüştür
-function _normalizeAllData(data) {
-    if (!data || typeof data !== 'object') return {};
-    const out = {};
-    for (const [key, val] of Object.entries(data)) {
-        if (Array.isArray(val)) {
-            out[key] = val;
-        } else if (val && typeof val === 'object') {
-            // Firestore: {0: {...}, 1: {...}} → array
-            const nums = Object.keys(val).every(k => !isNaN(k));
-            out[key] = nums ? Object.values(val) : [];
-        }
-        // string/number/null değerleri sil
-    }
-    return out;
-}
-
 function updateSelectors() {
     // Her zaman güncel user-scoped allData'yı oku
     if (typeof getUserKey === 'function') {
         const raw = localStorage.getItem(getUserKey('all_data'));
-        if (raw) { try { allData = _normalizeAllData(JSON.parse(raw)); } catch(e) {} }
+        if (raw) { try { allData = JSON.parse(raw); } catch(e) {} }
     }
 
     // Sadece array olan listeleri göster (Firestore bazen object döndürebilir)
@@ -240,7 +237,7 @@ function updateIndexStats() {
         const rawAD = localStorage.getItem(getUserKey('all_data'));
         const rawST = localStorage.getItem(getUserKey('stats'));
         if (rawAD && Object.keys(window.allData || {}).length === 0) {
-            try { allData = _normalizeAllData(JSON.parse(rawAD)); } catch(e) {}
+            try { allData = JSON.parse(rawAD); } catch(e) {}
         }
         if (rawST) {
             try { const s = JSON.parse(rawST); if (s) { stats = s; if (isNaN(stats.totalMinutes)) stats.totalMinutes = 0; } } catch(e) {}
@@ -443,8 +440,7 @@ SADECE JSON array döndür, başka hiçbir şey yazma:
 function renderAiGenPreview() {
     const list = document.getElementById('ai-gen-preview-list');
     list.innerHTML = '';
-    // Sanitize AI-generated content before DOM injection
-    function _esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    // _esc() -> utils.js'de global tanimli
     aiGenWords.forEach((w, i) => {
         const card = document.createElement('div');
         card.className = 'ai-gen-word-card';
@@ -505,3 +501,18 @@ function aiGenSaveToList() {
 // ══════════════════════════════════════════════
 // → js/ai-daily.js (ayrı dosyaya taşındı)
 // → js/utils.js (ayrı dosyaya taşındı)
+
+// TODO: Kaldır — namespace migrasyon tamamlanınca
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('[YDT] Namespace initialized:', Object.keys(window.YDT));
+});
+
+// ── Delegated nav listener (Task 8) ──────────────────────────────
+(function _initNavDelegation() {
+    document.addEventListener('click', function(e) {
+        const navBtn = e.target.closest('[data-nav]');
+        if (!navBtn) return;
+        e.preventDefault();
+        navTo(navBtn.dataset.nav);
+    });
+})();

@@ -35,141 +35,18 @@ const GR_SECS_LABELS = { present: 'Present (Şimdi)', past: 'Past (Geçmiş)', f
 const GR_SEC_ORDER = ['', 'present', 'past', 'future', 'modal'];
 
 /* ════════════════════════════════════════════════════
-   ENTRY POINT — sidebar & mobile call this
+   ENTRY POINT — GrammarModule engine
+   Not: GR_SECTIONS 'cat' field kullanır → engine grp'e normalize eder.
+   Sidenav grup başlıkları GR_SECS_LABELS'dan gelir; bu nedenle
+   sections dizisini grp=label olarak dönüştürüyoruz.
 ════════════════════════════════════════════════════ */
-function openGrammarSection(sectionId) {
-    _grCurrentSection = sectionId || 'overview';
-
-    // Show grammar page using existing showPage mechanism
-    // grammar-page has class arsiv-full-page so showPage handles it
-    document.querySelectorAll('.container').forEach(c => c.classList.add('hidden'));
-    document.querySelectorAll('.arsiv-full-page').forEach(c => c.classList.add('hidden'));
-    const page = document.getElementById('grammar-page');
-    if (page) page.classList.remove('hidden');
-
-    // Mark sidebar active
-    document.querySelectorAll('.sb-btn, .mob-drawer-btn').forEach(el => el.classList.remove('active'));
-    const sbGrammar = document.getElementById('sb-grammar-tenses');
-    if (sbGrammar) sbGrammar.classList.add('active');
-    const diGrammar = document.getElementById('di-grammar-tenses');
-    if (diGrammar) diGrammar.classList.add('active');
-
-    // Render the full page structure
-    _grRenderPage();
-}
-
-/* ════════════════════════════════════════════════════
-   PAGE STRUCTURE RENDER
-════════════════════════════════════════════════════ */
-function _grRenderPage() {
-    const page = document.getElementById('grammar-page');
-    if (!page) return;
-
-    page.innerHTML = `
-        <div class="gr-topbar">
-            <button class="gr-back-btn" onclick="navTo('index-page')">←</button>
-            <div>
-                <div class="gr-topbar-label">Grammar Modülü</div>
-                <div class="gr-topbar-title" id="gr-topbar-title">English Tenses</div>
-            </div>
-        </div>
-        <div class="gr-body">
-            <nav class="gr-sidenav" id="gr-sidenav"></nav>
-            <div class="gr-content" id="gr-content"></div>
-        </div>`;
-
-    _grBuildSidenav();
-    _grRenderSection(_grCurrentSection);
-}
-
-/* ════════════════════════════════════════════════════
-   SIDENAV
-════════════════════════════════════════════════════ */
-function _grBuildSidenav() {
-    const nav = document.getElementById('gr-sidenav');
-    if (!nav) return;
-
-    // Group by category
-    const groups = {};
-    GR_SECTIONS.forEach(s => {
-        const k = s.cat || '__g';
-        if (!groups[k]) groups[k] = [];
-        groups[k].push(s);
-    });
-
-    let html = '';
-    GR_SEC_ORDER.forEach(cat => {
-        const key = cat || '__g';
-        const list = groups[key];
-        if (!list) return;
-        const label = GR_SECS_LABELS[cat];
-        html += `<div class="gr-sn-sec">${label}</div>`;
-        list.forEach(s => {
-            const dot = GR_DOTS[s.cat] || '#aaa';
-            const active = s.id === _grCurrentSection ? ' active' : '';
-            html += `<button class="gr-sn-btn${active}" onclick="_grRenderSection('${s.id}')">
-                <span class="gr-sn-dot" style="background:${dot}"></span>${s.label}
-            </button>`;
-        });
-    });
-    nav.innerHTML = html;
-}
-
-/* ════════════════════════════════════════════════════
-   SECTION ROUTER
-════════════════════════════════════════════════════ */
-function _grRenderSection(id) {
-    _grCurrentSection = id;
-
-    // Update sidenav active state
-    document.querySelectorAll('.gr-sn-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.gr-sn-btn').forEach(b => {
-        if (b.onclick && b.onclick.toString().includes(`'${id}'`)) b.classList.add('active');
-    });
-    // Also update sidebar sub-items
-    document.querySelectorAll('.sb-sub-item').forEach(b => {
-        b.classList.toggle('active', b.getAttribute('onclick') && b.getAttribute('onclick').includes(`'${id}'`));
-    });
-
-    const content = document.getElementById('gr-content');
-    if (!content) return;
-    content.scrollTop = 0;
-
-    const map = {
-        'overview':         grOverview,
-        'simple-present':   grSimplePresent,
-        'pres-cont':        grPresCont,
-        'pres-perf':        grPresPerf,
-        'pres-perf-cont':   grPresPerfCont,
-        'simple-past':      grSimplePast,
-        'past-cont':        grPastCont,
-        'past-perf':        grPastPerf,
-        'past-perf-cont':   grPastPerfCont,
-        'simple-future':    grSimpleFuture,
-        'future-cont':      grFutureCont,
-        'future-perf':      grFuturePerf,
-        'future-perf-cont': grFuturePerfCont,
-        'modals':           grModals,
-        'tips':             grTips,
-        'exercises':        grExercises,
-    };
-
-    const fn = map[id];
-    content.innerHTML = fn ? fn() : '<div style="padding:40px">Yakında...</div>';
-
-    // Reset exercises on each render
-    if (id === 'exercises') {
-        _grScore = 0; _grAnswers = {}; _grChecked = {};
-        _grUpdScore();
-        // Bind enter key
-        document.querySelectorAll('.gr-q-inp').forEach((inp, i) => {
-            inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); grCheckBlank(i); } });
-        });
-    }
-}
 
 /* ════════════════════════════════════════════════════
    HTML BUILDER HELPERS
+════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════
+   ENTRY POINT — sidebar & mobile call this
 ════════════════════════════════════════════════════ */
 function grHero(eyebrow, colorClass, title, sub) {
     return `<div class="gr-hero ${colorClass}">
@@ -1701,11 +1578,72 @@ function grNextSet()      { if (_grSetIdx < GR_SETS.length - 1) grSwitchSet(_grS
 /* ════════════════════════════════════════════════════
    EXPOSE GLOBALS
 ════════════════════════════════════════════════════ */
-window.openGrammarSection = openGrammarSection;
-window._grRenderSection   = _grRenderSection;
-window.grSetOpt           = grSetOpt;
-window.grCheckSetQ        = grCheckSetQ;
-window.grSubmitSet        = grSubmitSet;
-window.grSwitchSet        = grSwitchSet;
-window.grRetrySameSet     = grRetrySameSet;
-window.grNextSet          = grNextSet;
+// openGrammarSection ve _grRenderSection: _initGrammarModule içinde atandı
+window.grSetOpt       = grSetOpt;
+window.grCheckSetQ    = grCheckSetQ;
+window.grSubmitSet    = grSubmitSet;
+window.grSwitchSet    = grSwitchSet;
+window.grRetrySameSet = grRetrySameSet;
+window.grNextSet      = grNextSet;
+
+(function _initGrammarModule() {
+    // cat → display label eşlemesiyle sections'ı dönüştür
+    const mappedSections = GR_SECTIONS.map(s => ({
+        ...s,
+        grp: GR_SECS_LABELS[s.cat] ?? s.cat ?? 'Genel'
+    }));
+
+    // dotColors: grp label → renk
+    const dotColors = {};
+    Object.entries(GR_DOTS).forEach(([cat, color]) => {
+        const label = GR_SECS_LABELS[cat] ?? cat;
+        dotColors[label] = color;
+    });
+
+    // grpOrder: GR_SEC_ORDER → display label sırasıyla
+    const grpOrder = GR_SEC_ORDER.map(cat => GR_SECS_LABELS[cat] ?? cat);
+
+    const _mod = new GrammarModule({
+        id:       'gr',
+        pageId:   'grammar-page',
+        sbId:     'sb-grammar-tenses',
+        diId:     'di-grammar-tenses',
+        title:    'English Tenses',
+        sections: mappedSections,
+        dotColors,
+        grpOrder,
+        sectionMap: {
+            'overview':         () => grOverview(),
+            'simple-present':   () => grSimplePresent(),
+            'pres-cont':        () => grPresCont(),
+            'pres-perf':        () => grPresPerf(),
+            'pres-perf-cont':   () => grPresPerfCont(),
+            'simple-past':      () => grSimplePast(),
+            'past-cont':        () => grPastCont(),
+            'past-perf':        () => grPastPerf(),
+            'past-perf-cont':   () => grPastPerfCont(),
+            'simple-future':    () => grSimpleFuture(),
+            'future-cont':      () => grFutureCont(),
+            'future-perf':      () => grFuturePerf(),
+            'future-perf-cont': () => grFuturePerfCont(),
+            'modals':           () => grModals(),
+            'tips':             () => grTips(),
+            'exercises':        () => grExercises()
+        },
+        onSectionRender(id) {
+            // sb-sub-item active state — grammar.js'e özgü ek davranış
+            document.querySelectorAll('.sb-sub-item').forEach(b => {
+                b.classList.toggle('active',
+                    b.getAttribute('onclick') && b.getAttribute('onclick').includes(`'${id}'`));
+            });
+            if (id === 'exercises') {
+                _grScore = 0; _grAnswers = {}; _grChecked = {};
+                _grUpdScore();
+            }
+        }
+    });
+
+    window.openGrammarSection = (sectionId) => _mod.open(sectionId || 'overview');
+    window._grRenderSection   = (id)        => _mod.goTo(id);
+    window['_grGoTo']         = (id)        => _mod.goTo(id);
+})();
