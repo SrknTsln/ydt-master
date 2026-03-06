@@ -399,6 +399,10 @@ function saveAIPasajToArsiv(passage) {
     if (arsiv.length > 100) arsiv.length = 100;
     localStorage.setItem('ydt_ai_pasaj_arsiv', JSON.stringify(arsiv));
 
+    // ÖNEMLİ: window.aiPasajArsiv global değişkenini güncelle
+    // Böylece Firebase sync geldiğinde eski veriyle üzerine yazmaz
+    window.aiPasajArsiv = arsiv;
+
     // paragraflar[] dizisine ekle + localStorage'a yaz
     const newEntry = {
         baslik   : passage.title,
@@ -415,6 +419,9 @@ function saveAIPasajToArsiv(passage) {
     try {
         localStorage.setItem('ydt_paragraflar', JSON.stringify(paragraflar));
     } catch(e) {}
+
+    // Firebase'e hemen kaydet — senkron sonrası veri kaybını önler
+    if (window._saveData) window._saveData();
 
     // UI'yı güncelle — Yüklü Pasajlar sayacı ve listesi
     const cnt = document.getElementById('reading-hub-saved-count');
