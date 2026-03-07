@@ -288,7 +288,7 @@ function _ukmGetQuota() {
             const q = JSON.parse(raw);
             if (q.date === _ukmToday()) return q;
         }
-    } catch(e) {}
+    } catch(e) { console.debug("[UKM] quota read hatası, sıfırlandı"); }
     return { date: _ukmToday(), listsCreated: 0 };
 }
 
@@ -738,4 +738,111 @@ function speakWord(word, btn = null) {
         utt.onend = () => btn.classList.remove('kw-listen-active');
     }
     window.speechSynthesis.speak(utt);
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// YDT NAMESPACE — window.* kirliliğini önler
+// Yeni özellikler window.YDT.xxx ile eklenir
+// Mevcut global fonksiyonlar geriye dönük uyumluluk için korunur
+// ════════════════════════════════════════════════════════════════════════
+(function _initYDTNamespace() {
+    if (window.YDT) return; // Zaten var
+    window.YDT = {
+        version: '4.7',
+        // ── Merkezi localStorage yardımcıları ──────────────────────────
+        /**
+         * Güvenli localStorage.setItem — QuotaExceededError yakalar
+         * @param {string} key
+         * @param {*} value  — JSON.stringify ile serialize edilir
+         * @returns {boolean} başarı durumu
+         */
+        lsSet(key, value) {
+            try {
+                localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+                return true;
+            } catch (e) {
+                if (e.name === 'QuotaExceededError' || e.code === 22) {
+                    console.warn('[YDT] localStorage dolu — temizleniyor…', key);
+                    _lsPurgeOldCache(); // En eski RSS cache'lerini sil
+                    try {
+                        localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+                        return true;
+                    } catch (e2) {
+                        console.error('[YDT] localStorage kurtarma başarısız:', key, e2.message);
+                        if (typeof showAIToast === 'function') {
+                            showAIToast('💾 Depolama alanı doldu. Eski veriler temizlendi.', 'warn');
+                        }
+                    }
+                } else {
+                    console.error('[YDT] localStorage.setItem hatası:', key, e.message);
+                }
+                return false;
+            }
+        },
+
+        /**
+         * Güvenli localStorage.getItem — JSON parse hatası yakalar
+         * @param {string} key
+         * @param {*} fallback  — parse hatasında döner
+         */
+        lsGet(key, fallback = null) {
+            try {
+                const raw = localStorage.getItem(key);
+                if (raw === null) return fallback;
+                return JSON.parse(raw);
+            } catch (_) {
+                return fallback;
+            }
+        },
+
+        // ── AI Rate Limiter ─────────────────────────────────────────────
+        /**
+         * AI çağrısı debounce/rate limit — aynı key için min ms bekleme
+         * @param {string} key       — hangi operasyon (ör: 'analyze', 'generate')
+         * @param {number} minMs     — ms cinsinden minimum bekleme (default 1000ms)
+         * @returns {boolean}  true → çağrıya izin, false → too soon
+         */
+        _aiLastCall: {},
+        _aiInFlight: {},
+        canAICall(key, minMs = 1000) {
+            const now = Date.now();
+            if (this._aiInFlight[key]) return false;      // Zaten uçuşta
+            if ((now - (this._aiLastCall[key] || 0)) < minMs) return false; // Çok erken
+            return true;
+        },
+        markAICall(key) {
+            this._aiLastCall[key] = Date.now();
+            this._aiInFlight[key] = true;
+        },
+        doneAICall(key) {
+            this._aiInFlight[key] = false;
+        },
+    };
+
+    // ── Alias: eski global isimlere köprü ────────────────────────────
+    // Geriye dönük uyumluluk — mevcut kodlar bozulmasın
+    window._lsSet = window.YDT.lsSet.bind(window.YDT);
+    window._lsGet = window.YDT.lsGet.bind(window.YDT);
+
+    console.log('[YDT Namespace] ✅ v4.7 yüklendi — YDT.lsSet / YDT.lsGet / YDT.canAICall hazır');
+})();
+
+// ── localStorage QuotaExceededError temizleyici ────────────────────────
+// RSS cache slot'larını tarihe göre sıralayıp en eskilerini siler
+function _lsPurgeOldCache() {
+    try {
+        const rssKeys = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (k && (k.startsWith('ydt_rss_cache_') || k.startsWith('ydt_ai_arsiv'))) {
+                rssKeys.push(k);
+            }
+        }
+        // En eski yarısını sil (tarih yoksa doğrusal sırayla)
+        rssKeys.sort();
+        rssKeys.slice(0, Math.max(1, Math.floor(rssKeys.length / 2))).forEach(k => {
+            try { localStorage.removeItem(k); } catch (_) { console.debug('[YDT] removeItem hatası:', k); }
+        });
+        console.log(`[YDT] localStorage temizlendi: ${rssKeys.length} cache slot → ${Math.ceil(rssKeys.length / 2)} kaldı`);
+    } catch (_) { console.warn('[YDT] Purge genel hata'); }
 }

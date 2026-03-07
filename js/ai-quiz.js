@@ -1,3 +1,9 @@
+// JSON güvenli parse — bozuk veri, tarayıcı eklentisi veya AI hatası uygulamayı çökertemez
+function safeJsonParse(str, fallback = null) {
+    if (str == null) return fallback;
+    try { return JSON.parse(str); } catch(e) { return fallback; }
+}
+
 // ── AI YDT Sınav Modu + SM2 Badge — motor.js'den ayrıştırıldı
 // Bağımlılıklar: motor.js (global state)
 
@@ -10,7 +16,7 @@ function updateSM2Badge() {
     const due = countSM2Due();
     ['sb-sm2-badge', 'di-sm2-badge', 'mt-sm2-badge', 'bn-sm2-badge'].forEach(id => {
         const el = document.getElementById(id);
-        if (el) { el.innerText = due; el.style.display = due > 0 ? '' : 'none'; }
+        if (el) { el.innerText = due; el.style.display = 'none'; } // badge sidebar'da gizli
     });
 }
 
@@ -21,8 +27,8 @@ const AiQuizState = { currentList: [], currentIndex: 0, pageCorrect: '', answere
 let aiCurrentWord  = null; // mevcut sorunun kelime+veri referansı
 
 // Arşiv global
-window.aiArsiv      = JSON.parse(localStorage.getItem('ydt_ai_arsiv') || '[]');
-window.aiGramerArsiv = JSON.parse(localStorage.getItem('ydt_gramer_arsiv') || '[]');
+window.aiArsiv      = safeJsonParse(localStorage.getItem('ydt_ai_arsiv'), []);
+window.aiGramerArsiv = safeJsonParse(localStorage.getItem('ydt_gramer_arsiv'), []);
 
 function recordAIStat(isCorrect) {
     let t = parseInt(localStorage.getItem('ydtai_tot') || '0');
@@ -97,7 +103,9 @@ function startAIQuizMode() {
     document.querySelectorAll('.sb-btn, .mob-drawer-btn').forEach(b => b.classList.remove('active'));
     const aiBtnSb = document.getElementById('sb-ai-ydt');
     if (aiBtnSb) aiBtnSb.classList.add('active');
-    document.getElementById('ai-quiz-page').classList.remove('hidden');
+    const aiqPage = document.getElementById('ai-quiz-page');
+    if (!aiqPage) { console.warn('[ai-quiz] ai-quiz-page elementi bulunamadı'); return; }
+    aiqPage.classList.remove('hidden');
 
     // Kontrol paneli göster, quiz alanı gizle
     const cp = document.getElementById('aiq-control-panel');
@@ -390,7 +398,7 @@ function updateArsivBadge() {
     const paraCount   = Object.values(pSorular).reduce((s, v) => s + (v.questions || []).length, 0);
     const total       = kelimeCount + gramerCount + paraCount;
     const el = document.getElementById('arsiv-badge');
-    if (el) { el.textContent = total; el.style.display = total ? '' : 'none'; }
+    if (el) { el.textContent = total; el.style.display = 'none'; } // badge sidebar'da gizli
 }
 
 // ── Arşiv sayfası ────────────────────────────────────
@@ -434,7 +442,7 @@ let _grammarSorulariReady = false;
 
 // Gramer sorularını aiGramerArsiv'e yükle (localStorage'da yoksa)
 window.aiGramerArsiv = (function() {
-    const saved = JSON.parse(localStorage.getItem('ydt_gramer_arsiv') || '[]');
+    const saved = safeJsonParse(localStorage.getItem('ydt_gramer_arsiv'), []);
     if (saved.length > 0) return saved;
     // GRAMMAR_SORULARI henüz fetch ile yükleniyor — _initGramerArsiv tamamlaninca doldurulur
     return [];
@@ -445,7 +453,7 @@ window.aiGramerArsiv = (function() {
     await new Promise(r => { const t = setInterval(() => {
         if (_grammarSorulariReady) { clearInterval(t); r(); }
     }, 50); });
-    const saved = JSON.parse(localStorage.getItem('ydt_gramer_arsiv') || '[]');
+    const saved = safeJsonParse(localStorage.getItem('ydt_gramer_arsiv'), []);
     if (saved.length > 0) { window.aiGramerArsiv = saved; return; }
     window.aiGramerArsiv = GRAMMAR_SORULARI.map((s, idx) => ({
         id:          s.no || (idx + 1),

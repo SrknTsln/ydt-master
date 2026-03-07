@@ -89,16 +89,17 @@ function renderYDTQuestions(questions, prefix) {
     const total = questions.length;
     const cardsHtml = questions.map((q, qi) => `
         <div class="ydt-slide" id="ydt-slide-${prefix}-${qi}" style="display:${qi===0?'block':'none'};">
-            <div class="p-ydt-card-type">${q.icon || '📝'} ${q.type}</div>
-            <div class="p-ydt-question">${q.question}</div>
+            <div class="p-ydt-card-type">${q.icon || '📝'} ${_esc(q.type)}</div>
+            <div class="p-ydt-question">${_esc(q.question)}</div>
             <div class="p-ydt-options" id="ydt-opts-${prefix}-${qi}">
                 ${(q.options || []).map(opt => {
-                    const letter = opt[0];
-                    return `<button class="p-ydt-opt" onclick="checkYDTAnswer(this,'${prefix}',${qi},'${letter}','${q.answer}')">${opt}</button>`;
+                    const letter = _esc(opt[0]);
+                    const answer = _esc(q.answer);
+                    return `<button class="p-ydt-opt" onclick="checkYDTAnswer(this,'${prefix}',${qi},'${letter}','${answer}')">${_esc(opt)}</button>`;
                 }).join('')}
             </div>
             <div class="p-ydt-explanation" id="ydt-exp-${prefix}-${qi}" style="display:none;">
-                <strong>💡 Açıklama:</strong> ${q.explanation}
+                <strong>💡 Açıklama:</strong> ${_esc(q.explanation)}
             </div>
         </div>`).join('');
 
@@ -195,7 +196,7 @@ function renderAdminParagrafListe() {
         return `
         <div class="admin-paragraf-item" id="ap-item-${i}">
             <div class="ap-title">
-                <span>📄 ${p.baslik}</span>
+                <span>📄 ${_esc(p.baslik)}</span>
                 <span class="ap-word-count">${Object.keys(p.kelimeler || {}).length} kelime</span>
             </div>
             <div class="ap-actions">

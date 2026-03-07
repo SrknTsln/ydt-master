@@ -1,3 +1,10 @@
+// XSS koruma yardımcısı (paragraf.js'deki ile aynı)
+function _esc(s) {
+    if (s == null) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+                    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
 // ── SM2 Spaced Repetition + Sesli Telaffuz + Yazarak Cevap + Bağlam Cümlesi — motor.js'den ayrıştırıldı
 // Bağımlılıklar: motor.js (global state: allData, stats)
 
@@ -353,7 +360,9 @@ function _twLoadQ() {
     letWrap.style.display = 'none';
 
     if (TypingState.mode === 'context' && w.story) {
-        const story = w.story.replace(new RegExp('\\b' + w.eng + '\\b', 'gi'),
+        // XSS koruması: story önce escape edilir, sonra sadece blank span geri eklenir
+        const safeStory = _esc(w.story);
+        const story = safeStory.replace(new RegExp('\\b' + _esc(w.eng) + '\\b', 'gi'),
             '<span class="tw-context-blank">_____</span>');
         document.getElementById('tw-context-text').innerHTML = story;
         ctxWrap.style.display = '';

@@ -1,3 +1,16 @@
+// JSON güvenli parse — bozuk veri, tarayıcı eklentisi veya AI hatası uygulamayı çökertemez
+function safeJsonParse(str, fallback = null) {
+    if (str == null) return fallback;
+    try { return JSON.parse(str); } catch(e) { return fallback; }
+}
+
+// XSS koruma yardımcısı
+function _esc(s) {
+    if (s == null) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+                    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
 // ── AI cascade + providers — motor.js'den ayrıştırıldı
 // Bağımlılıklar: motor.js (global state: allData, stats, paragraflar)
 
@@ -13,25 +26,76 @@ function isQuotaError(msg) {
            m.includes('limit exceeded') || m.includes('overloaded');
 }
 
-// Ekranda küçük durum tostu göster
-function showAIToast(msg, type = 'info', duration) {
+// ── Toast Kuyruğu — birden fazla işlem aynı anda tamamlandığında üst üste binmeyi önler
+const _toastQueue  = [];
+let   _toastActive = false;
+const TOAST_MAX_QUEUE = 3;   // Daha fazlası düşer (flood koruması)
+
+function _toastNext() {
+    if (_toastQueue.length === 0) { _toastActive = false; return; }
+    _toastActive = true;
+    const { msg, type, duration } = _toastQueue.shift();
+
     let t = document.getElementById('ai-cascade-toast');
-    if (t) t.remove();
+    if (t) { t.classList.remove('show'); t.remove(); }
+
     t = document.createElement('div');
-    t.id = 'ai-cascade-toast';
+    t.id        = 'ai-cascade-toast';
     t.className = `ai-cascade-toast ai-toast-${type}`;
     t.innerHTML = msg;
     document.body.appendChild(t);
     requestAnimationFrame(() => t.classList.add('show'));
-    clearTimeout(window._toastTimer);
+
     const ms = duration || (type === 'warn' ? 5000 : type === 'error' ? 7000 : 2400);
+    clearTimeout(window._toastTimer);
     window._toastTimer = setTimeout(() => {
         t.classList.remove('show');
-        setTimeout(() => t && t.remove(), 350);
+        setTimeout(() => {
+            if (t && t.parentNode) t.remove();
+            _toastNext(); // Sıradaki toast'ı göster
+        }, 350);
     }, ms);
 }
 
-// Provider tanımları — sırayla denenir
+// Ekranda küçük durum tostu göster (kuyruklu)
+function showAIToast(msg, type = 'info', duration) {
+    // Kuyruğa ekle — doluysa (flood) en eski düşer
+    if (_toastQueue.length >= TOAST_MAX_QUEUE) {
+        _toastQueue.shift(); // En eski mesajı at
+    }
+    _toastQueue.push({ msg, type, duration });
+    // Aktif toast yoksa hemen başlat
+    if (!_toastActive) {
+        _toastNext();
+    }
+}
+
+// ── AI Worker URL (RSS proxy ile aynı Worker) ────────────────────
+// Anahtarlar client'a hiç gelmiyor — Worker env variable olarak saklar
+// Cloudflare Dashboard → Workers → Settings → Environment Variables:
+//   GEMINI_API_KEY / GROQ_API_KEY / OPENROUTER_API_KEY / MISTRAL_API_KEY
+const AI_WORKER_URL = 'https://autumn-hill-be24ydt-master.stasalan.workers.dev';
+
+// Worker üzerinden AI çağrısı — tek provider
+async function _workerAICall(endpoint, prompt) {
+    const resp = await fetch(`${AI_WORKER_URL}/ai/${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt })
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || `${endpoint} worker error ${resp.status}`);
+
+    // Worker { raw: "..." } formatında döner — JSON string'i parse et
+    const raw = typeof data.raw === 'string' ? data.raw : JSON.stringify(data);
+    const clean = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/,'').trim();
+    const match = clean.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
+    if (!match) throw new Error(`${endpoint}: JSON bulunamadı → ` + clean.slice(0, 80));
+    return JSON.parse(match[0]);
+}
+
+// Provider tanımları — artık key localStorage'da saklanmıyor
+// call() fonksiyonları Worker üzerinden proxy'leniyor
 const AI_PROVIDERS = [
     {
         id: 'puter', name: 'Puter.js (GPT-4o)', icon: '🆓',
@@ -40,13 +104,23 @@ const AI_PROVIDERS = [
         keyHint: null,
         keyLink: null,
         async call(prompt) {
-            if (typeof puter === 'undefined' || !puter?.ai?.chat) throw new Error('puter_not_loaded');
+            // Puter defer ile yüklendiğinden hazır olana kadar bekle (max 5sn)
+            if (typeof puter === 'undefined' || !puter?.ai?.chat) {
+                await new Promise((resolve, reject) => {
+                    const start = Date.now();
+                    const check = () => {
+                        if (typeof puter !== 'undefined' && puter?.ai?.chat) return resolve();
+                        if (Date.now() - start > 5000) return reject(new Error('puter_not_loaded'));
+                        setTimeout(check, 200);
+                    };
+                    check();
+                });
+            }
             const resp = await puter.ai.chat(
                 [{ role: 'system', content: 'You must respond with valid JSON only. No markdown, no explanation.' },
                  { role: 'user',   content: prompt }],
                 { model: 'gpt-4o-mini' }
             );
-            // response.message.content: string (GPT) veya array (Claude)
             const content = resp?.message?.content;
             const raw = Array.isArray(content) ? (content[0]?.text || '') :
                         (typeof content === 'string' ? content :
@@ -58,136 +132,74 @@ const AI_PROVIDERS = [
     },
     {
         id: 'gemini', name: 'Gemini', icon: '✨',
-        lsKey: 'ydt_gemini_api_key',
-        note: 'Free: 1.500 istek/gün · Gemini 1.5 Flash',
-        keyHint: 'AIza...',
-        keyLink: 'https://aistudio.google.com/app/apikey',
+        // lsKey artık sadece UI'da "aktif" göstergesi için — değer saklanmıyor
+        lsKey: 'ydt_gemini_enabled',
+        note: 'Gemini 2.0 Flash · Worker proxy ile güvenli',
+        keyHint: null,
+        keyLink: null,
         async call(prompt) {
-            const key = localStorage.getItem(this.lsKey);
-            if (!key) throw new Error('no_key');
-
-            // gemini-2.0-flash önce, olmazsa 1.5-flash
-            let resp, data;
-            for (const model of ['gemini-2.0-flash', 'gemini-1.5-flash']) {
-                resp = await fetch(
-                    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
-                    { method:'POST', headers:{'Content-Type':'application/json'},
-                      body: JSON.stringify({ contents:[{parts:[{text: prompt + '\n\nReturn ONLY valid JSON. No markdown fences.'}]}] }) }
-                );
-                data = await resp.json();
-                // 404 = bu model yok, diğerini dene
-                if (data.error?.code === 404 || data.error?.status === 'NOT_FOUND') continue;
-                break; // ya başarılı ya da quota/auth hatası — döngüyü kır
-            }
-
-            // Hata varsa fırlat — cascade yakalasın
-            if (data.error) throw new Error(data.error.message || data.error.status || 'Gemini error');
-
-            const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-            const match = raw.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
-            if (!match) throw new Error('Gemini: geçerli JSON bulunamadı → ' + raw.slice(0,60));
-            return JSON.parse(match[0]);
+            return await _workerAICall('gemini', prompt);
         }
     },
     {
         id: 'groq', name: 'Groq (Llama)', icon: '⚡',
-        lsKey: 'ydt_groq_api_key',
-        note: 'Free: 14.400 istek/gün · Llama 3.3 70B · Çok Hızlı',
-        keyHint: 'gsk_...',
-        keyLink: 'https://console.groq.com/keys',
+        lsKey: 'ydt_groq_enabled',
+        note: 'Llama 3.3 70B · Çok Hızlı · Worker proxy ile güvenli',
+        keyHint: null,
+        keyLink: null,
         async call(prompt) {
-            const key = localStorage.getItem(this.lsKey);
-            if (!key) throw new Error('no_key');
-            const r = await fetch('https://api.groq.com/openai/v1/chat/completions',
-                { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${key}`},
-                  body: JSON.stringify({ model:'llama-3.3-70b-versatile', temperature:0.3,
-                    messages:[{role:'system',content:'You must respond with valid JSON only. No markdown, no explanation, just the JSON object or array.'},
-                               {role:'user',content:prompt}] }) }
-            );
-            const d = await r.json();
-            if (d.error) throw new Error(d.error.message || JSON.stringify(d.error));
-            let raw = d.choices?.[0]?.message?.content || '';
-            const match = raw.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
-            if (!match) throw new Error('Groq JSON parse hatası: ' + raw.slice(0,80));
-            return JSON.parse(match[0]);
+            return await _workerAICall('groq', prompt);
         }
     },
     {
         id: 'openrouter', name: 'OpenRouter', icon: '🌐',
-        lsKey: 'ydt_openrouter_api_key',
-        note: 'Free: Llama 3.3 8B · Kredi kartı gerektirmez',
-        keyHint: 'sk-or-...',
-        keyLink: 'https://openrouter.ai/keys',
+        lsKey: 'ydt_openrouter_enabled',
+        note: 'Free modeller · Worker proxy ile güvenli',
+        keyHint: null,
+        keyLink: null,
         async call(prompt) {
-            const key = localStorage.getItem(this.lsKey);
-            if (!key) throw new Error('no_key');
-            // Güncel free modeller — sırayla dene
-            const models = [
-                'meta-llama/llama-3.3-8b-instruct:free',
-                'meta-llama/llama-3.1-70b-instruct:free',
-                'mistralai/mistral-7b-instruct:free',
-                'google/gemma-3-4b-it:free'
-            ];
-            let lastErr = null;
-            for (const model of models) {
-                try {
-                    const r = await fetch('https://openrouter.ai/api/v1/chat/completions',
-                        { method:'POST',
-                          headers:{'Content-Type':'application/json','Authorization':`Bearer ${key}`,
-                                   'HTTP-Referer':'https://ydt-master.web.app','X-Title':'YDT Master'},
-                          body: JSON.stringify({ model, temperature:0.3,
-                            messages:[{role:'system',content:'You must respond with valid JSON only. No markdown, no explanation.'},
-                                       {role:'user',content:prompt}] }) }
-                    );
-                    const d = await r.json();
-                    // Model bulunamadıysa sonraki modeli dene
-                    if (d.error?.code === 404 || (d.error?.message || '').includes('not found') || (d.error?.message || '').includes('No endpoints')) {
-                        lastErr = new Error(d.error.message); continue;
-                    }
-                    if (d.error) throw new Error(d.error.message || JSON.stringify(d.error));
-                    let raw = d.choices?.[0]?.message?.content || '';
-                    const match = raw.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
-                    if (!match) throw new Error('OpenRouter JSON parse hatası: ' + raw.slice(0,80));
-                    return JSON.parse(match[0]);
-                } catch(e) { lastErr = e; }
-            }
-            throw lastErr || new Error('OpenRouter: tüm modeller başarısız');
+            return await _workerAICall('openrouter', prompt);
         }
     },
     {
         id: 'mistral', name: 'Mistral AI', icon: '🌪️',
-        lsKey: 'ydt_mistral_api_key',
-        note: 'Free: 1 milyar token/ay · Mistral Small',
-        keyHint: '...',
-        keyLink: 'https://console.mistral.ai/api-keys',
+        lsKey: 'ydt_mistral_enabled',
+        note: 'Mistral Small · Worker proxy ile güvenli',
+        keyHint: null,
+        keyLink: null,
         async call(prompt) {
-            const key = localStorage.getItem(this.lsKey);
-            if (!key) throw new Error('no_key');
-            const r = await fetch('https://api.mistral.ai/v1/chat/completions',
-                { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${key}`},
-                  body: JSON.stringify({ model:'mistral-small-latest', temperature:0.3,
-                    messages:[{role:'system',content:'You must respond with valid JSON only. No markdown, no explanation.'},
-                               {role:'user',content:prompt}] }) }
-            );
-            const d = await r.json();
-            if (d.error) throw new Error(d.error.message || JSON.stringify(d.error));
-            let raw = d.choices?.[0]?.message?.content || '';
-            const match = raw.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
-            if (!match) throw new Error('Mistral JSON parse hatası: ' + raw.slice(0,80));
-            return JSON.parse(match[0]);
+            return await _workerAICall('mistral', prompt);
         }
     }
 ];
 
 // Ana cascade çağrısı — tüm provider'ları sırayla dener
+// Artık localStorage'da anahtar aranmıyor — Worker env'den sağlar
+// ── AI Rate Limiting: aynı anda birden fazla paralel çağrıyı önle ──────
+const _aiCallQueue = { inFlight: 0, lastCallMs: 0 };
+const AI_RATE_LIMIT_MS = 800;  // Ardışık çağrılar arası minimum ms
+const AI_MAX_PARALLEL  = 3;    // Maksimum eşzamanlı çağrı
+
 async function aiCall(prompt) {
-    // Puter.js her zaman kullanılabilir (key gerektirmez), diğerleri key varsa eklenir
-    const puter_provider = AI_PROVIDERS.find(p => p.id === 'puter');
-    const keyed = AI_PROVIDERS.filter(p => p.id !== 'puter' && localStorage.getItem(p.lsKey));
-    const available = (puter_provider ? [puter_provider] : []).concat(keyed);
+    // Rate limit kontrolü
+    const now = Date.now();
+    const msSinceLast = now - _aiCallQueue.lastCallMs;
+    if (_aiCallQueue.inFlight >= AI_MAX_PARALLEL) {
+        throw new Error('Çok fazla eşzamanlı AI isteği. Lütfen bekleyin.');
+    }
+    if (msSinceLast < AI_RATE_LIMIT_MS && _aiCallQueue.inFlight > 0) {
+        // Çok hızlı ardışık çağrı — kısa bekle
+        await new Promise(r => setTimeout(r, AI_RATE_LIMIT_MS - msSinceLast));
+    }
+    _aiCallQueue.inFlight++;
+    _aiCallQueue.lastCallMs = Date.now();
+
+    // Tüm provider'lar Worker üzerinden aktif (Puter.js önce, sonra Worker proxy'ler)
+    const available = AI_PROVIDERS; // hepsi her zaman denenir
 
     if (!available.length) {
-        alert('AI özelliği şu an kullanılamıyor.\nYönetim paneli → 🔑 AI API Anahtarları bölümüne gidin.');
+        _aiCallQueue.inFlight--;
+        alert('AI özelliği şu an kullanılamıyor.');
         throw new Error('no_api_key');
     }
 
@@ -212,6 +224,7 @@ async function aiCall(prompt) {
                 const t = document.getElementById('ai-cascade-toast');
                 if (t) { t.classList.remove('show'); setTimeout(() => t.remove(), 350); }
             }
+            _aiCallQueue.inFlight--;
             return result;
 
         } catch (err) {
@@ -235,6 +248,7 @@ async function aiCall(prompt) {
             }
         }
     }
+    _aiCallQueue.inFlight--;
     throw lastErr || new Error('all_failed');
 }
 
@@ -358,7 +372,7 @@ SADECE şu JSON formatını döndür:
         qDiv.innerHTML = renderYDTQuestions(questions, 'n');
 
     } catch(e) {
-        qDiv.innerHTML = `<div style="color:var(--red);font-size:.85rem;padding:12px;">⚠ Hata: ${e.message}<br><small>API anahtarınızı ve bağlantınızı kontrol edin.</small></div>`;
+        qDiv.innerHTML = `<div style="color:var(--red);font-size:.85rem;padding:12px;">⚠ Hata: ${_esc(e.message)}<br><small>API anahtarınızı ve bağlantınızı kontrol edin.</small></div>`;
     }
 
     btn.disabled  = false;
@@ -476,7 +490,7 @@ SADECE şu JSON formatını döndür:
             ${r.tip ? `<div class="gx-tip">💡 YDT Notu: ${_esc(r.tip)}</div>` : ''}
         `;
     } catch(e) {
-        content.innerHTML = `<div style="color:var(--red);font-size:.84rem;padding:10px;">⚠ Analiz başarısız: ${e.message}</div>`;
+        content.innerHTML = `<div style="color:var(--red);font-size:.84rem;padding:10px;">⚠ Analiz başarısız: ${_esc(e.message)}</div>`;
     }
 }
 

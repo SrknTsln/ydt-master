@@ -1,3 +1,10 @@
+// XSS koruma yardımcısı
+function _esc(s) {
+    if (s == null) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+                    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
 // ── Soru Bankası / Arşiv — motor.js'den ayrıştırıldı
 // Bağımlılıklar: motor.js (global state)
 
@@ -588,7 +595,7 @@ function solveBankQuestion(qId, selected) {
     if (expDiv && q.explanation) {
         const borderColor = selected === correct ? '#22c55e' : '#ef4444';
         expDiv.style.borderLeftColor = borderColor;
-        expDiv.innerHTML  = `<strong style="color:#6366f1;font-size:.78rem;">💡 Açıklama</strong><br><br>${q.explanation}`;
+        expDiv.innerHTML  = `<strong style="color:#6366f1;font-size:.78rem;">💡 Açıklama</strong><br><br>${_esc(q.explanation)}`;
         expDiv.style.display = 'block';
     }
 

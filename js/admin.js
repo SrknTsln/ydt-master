@@ -1,23 +1,51 @@
+// JSON güvenli parse — bozuk veri, tarayıcı eklentisi veya AI hatası uygulamayı çökertemez
+function safeJsonParse(str, fallback = null) {
+    if (str == null) return fallback;
+    try { return JSON.parse(str); } catch(e) { return fallback; }
+}
+
 // ── Admin paneli — motor.js'den ayrıştırıldı
 // Bağımlılıklar: motor.js (global state: allData, stats, paragraflar)
 
-// 🔐 YÖNETİM PANELİ — Google Email Kontrolü
+// 🔐 YÖNETİM PANELİ — Worker üzerinden admin kontrolü
+// Admin e-postası client-side kodda tutulmaz — Worker env'den kontrol edilir
 // ══════════════════════════════════════════════
-const ADMIN_EMAIL = 'stasalan@gmail.com';
 
-function adminCheckAccess() {
+async function adminCheckAccess() {
     const denied  = document.getElementById('admin-access-denied');
     const content = document.getElementById('admin-panel-content');
-    // Firebase Auth üzerinden mevcut kullanıcıyı kontrol et
     const user = (window.AuthModule && window._currentUser) ? window._currentUser : null;
     const email = user ? user.email : null;
 
-    if (email === ADMIN_EMAIL) {
-        if (denied)  denied.style.display  = 'none';
-        if (content) content.style.display = 'flex';
-        content.style.flexDirection = 'column';
-        adminUnlockPanel();
-    } else {
+    if (!email) {
+        if (denied)  denied.style.display  = 'flex';
+        if (content) content.style.display = 'none';
+        return;
+    }
+
+    // Admin kontrolü Cloudflare Worker'a taşındı — e-posta client'ta saklanmaz
+    try {
+        const workerUrl = (typeof window._AI_WORKER_URL !== 'undefined')
+            ? window._AI_WORKER_URL
+            : 'https://autumn-hill-be24ydt-master.stasalan.workers.dev';
+        const res = await fetch(`${workerUrl}/admin/check`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        if (data && data.isAdmin === true) {
+            window._adminVerified = true;  // rss_paragraf.js _isAdmin() için
+            if (denied)  denied.style.display  = 'none';
+            if (content) content.style.display = 'flex';
+            content.style.flexDirection = 'column';
+            adminUnlockPanel();
+        } else {
+            if (denied)  denied.style.display  = 'flex';
+            if (content) content.style.display = 'none';
+        }
+    } catch(e) {
+        console.error('[adminCheckAccess] Worker hatası:', e.message);
         if (denied)  denied.style.display  = 'flex';
         if (content) content.style.display = 'none';
     }
@@ -248,7 +276,7 @@ function _admParseQuestions(text, category) {
 function _admSaveToBank(questions, category) {
     // Kategori bazlı bankalar localStorage'da tutulur
     const key  = `ydt_bank_${category}`;
-    const existing = JSON.parse(localStorage.getItem(key) || '[]');
+    const existing = safeJsonParse(localStorage.getItem(key), []);
     const merged   = [...existing, ...questions];
     localStorage.setItem(key, JSON.stringify(merged));
     // Firebase sync
@@ -257,7 +285,7 @@ function _admSaveToBank(questions, category) {
 
 function admBankGetCount(category) {
     const key = `ydt_bank_${category}`;
-    return JSON.parse(localStorage.getItem(key) || '[]').length;
+    return safeJsonParse(localStorage.getItem(key), []).length;
 }
 
 function adminUpdateBankCounts() {

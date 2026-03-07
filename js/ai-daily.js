@@ -1,3 +1,9 @@
+// JSON güvenli parse — bozuk veri, tarayıcı eklentisi veya AI hatası uygulamayı çökertemez
+function safeJsonParse(str, fallback = null) {
+    if (str == null) return fallback;
+    try { return JSON.parse(str); } catch(e) { return fallback; }
+}
+
 // ── Rozet Sistemi + Isı Haritası + AI Günlük Paragraflar + Çeviri Modu — motor.js'den ayrıştırıldı
 // Bağımlılıklar: motor.js (global state: allData, stats)
 
@@ -16,7 +22,7 @@ const BADGE_DEFS = [
 ];
 
 function renderBadges(streak, total, learned, st) {
-    const grid    = document.getElementById('badges-grid');
+    const grid    = $id('badges-grid');
     if (!grid) return;
     const earned  = JSON.parse(localStorage.getItem('ydt_badges') || '[]');
     const newlyEarned = [];
@@ -52,8 +58,8 @@ function showBadgeToast(b) {
 // 📊 ISI HARİTASI
 // ══════════════════════════════════════════════
 function renderHeatmap() {
-    const sel    = document.getElementById('heatmap-list-sel');
-    const grid   = document.getElementById('heatmap-grid');
+    const sel    = $id('heatmap-list-sel');
+    const grid   = $id('heatmap-grid');
     if (!sel || !grid) return;
     const listName = sel.value;
     const words    = allData[listName] || [];
@@ -83,13 +89,13 @@ function hmShowWord(el, eng, tr, err, str) {
     el.classList.add('hm-selected');
 
     // tooltip popup
-    const old = document.getElementById('hm-popup');
+    const old = $id('hm-popup');
     if (old) old.remove();
     const pop = document.createElement('div');
     pop.id = 'hm-popup';
     pop.className = 'hm-popup';
     pop.innerHTML = `<strong>${eng}</strong> — ${tr}<br><span style="font-size:.7rem;opacity:.8">${err} hata · ${str} doğru</span>`;
-    document.getElementById('heatmap-grid').appendChild(pop);
+    $id('heatmap-grid').appendChild(pop);
     setTimeout(() => pop.classList.add('show'), 10);
     setTimeout(() => { pop.classList.remove('show'); setTimeout(() => pop.remove(), 300); }, 2500);
 }
@@ -140,7 +146,7 @@ async function showImportSorularModal() {
     overlay.innerHTML = `<div style="background:var(--bg,#f8f8f8);border-radius:18px;max-width:520px;width:100%;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.25);max-height:80vh;overflow-y:auto;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
             <div style="font-size:1rem;font-weight:900;color:var(--ink);">📥 Kelime Paketi Yükle</div>
-            <button onclick="document.getElementById('import-modal-overlay').remove()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--ink3);">✕</button>
+            <button onclick="$id('import-modal-overlay').remove()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--ink3);">✕</button>
         </div>${paketler}</div>`;
     document.body.appendChild(overlay);
     overlay.addEventListener('click', e => { if(e.target===overlay) overlay.remove(); }, { once: true });
@@ -173,7 +179,7 @@ async function importSoruPaketi(paketId, btn) {
     localStorage.setItem('ydt_gramer_arsiv', JSON.stringify(window.aiGramerArsiv || []));
     if (window.updateArsivBadge) window.updateArsivBadge();
     btn.textContent = '✅ Yüklendi!'; btn.style.background='#dcfce7'; btn.style.color='#16a34a';
-    setTimeout(() => { const ov=document.getElementById('import-modal-overlay'); if(ov) ov.remove(); if(typeof showAIArsiv==='function') showAIArsiv(); }, 900);
+    setTimeout(() => { const ov=$id('import-modal-overlay'); if(ov) ov.remove(); if(typeof showAIArsiv==='function') showAIArsiv(); }, 900);
 }
 
 
@@ -201,7 +207,7 @@ async function showImportParagrafModal() {
     overlay.innerHTML = `<div style="background:var(--bg,#f8f8f8);border-radius:18px;max-width:520px;width:100%;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.25);max-height:80vh;overflow-y:auto;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
             <div style="font-size:1rem;font-weight:900;color:var(--ink);">📖 Paragraf Paketi Yükle</div>
-            <button onclick="document.getElementById('paragraf-import-overlay').remove()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--ink3);">✕</button>
+            <button onclick="$id('paragraf-import-overlay').remove()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--ink3);">✕</button>
         </div>${paketler}
         <div style="font-size:.72rem;color:var(--ink3);text-align:center;margin-top:12px;">Yüklenen pasajlar Paragraf Okuma ve Soru Bankası'nda görünür.</div>
     </div>`;
@@ -236,7 +242,7 @@ async function importParagrafPaketi(paketId, btn) {
     else localStorage.setItem('ydt_paragraf_sorular', JSON.stringify(window.paragrafSorular));
     if (typeof renderAdminParagrafListe==='function') renderAdminParagrafListe();
     btn.textContent='✅ Yüklendi!'; btn.style.background='#dcfce7'; btn.style.color='#16a34a';
-    setTimeout(() => { const ov=document.getElementById('paragraf-import-overlay'); if(ov) ov.remove(); renderArsiv(); }, 900);
+    setTimeout(() => { const ov=$id('paragraf-import-overlay'); if(ov) ov.remove(); renderArsiv(); }, 900);
 }
 
 window.showImportSorularModal  = showImportSorularModal;
@@ -273,8 +279,8 @@ function getTodayKey() {
 async function aiDailyGenerateParagraflar(force) {
     const todayKey = getTodayKey();
     const cacheKey = `ydt_ai_daily_${todayKey}`;
-    const listEl = document.getElementById('ai-daily-paragraf-list');
-    const badgeEl = document.getElementById('ai-daily-date-badge');
+    const listEl = $id('ai-daily-paragraf-list');
+    const badgeEl = $id('ai-daily-date-badge');
     if (badgeEl) {
         const [y,m,d] = todayKey.split('-');
         badgeEl.textContent = `${d}.${m}.${y}`;
@@ -287,7 +293,9 @@ async function aiDailyGenerateParagraflar(force) {
             try {
                 renderAIDailyParagraflar(JSON.parse(cached), listEl);
                 return;
-            } catch(e) {}
+            } catch(e) {
+                console.warn('[AI Daily] Cache parse/render hatası, yeniden yüklenecek:', e.message);
+            }
         }
     }
 
@@ -416,17 +424,24 @@ function saveAIPasajToArsiv(passage) {
         }
     }
     // paragraflar'ı doğrudan localStorage'a yaz (motorun okuduğu key)
-    try {
-        localStorage.setItem('ydt_paragraflar', JSON.stringify(paragraflar));
-    } catch(e) {}
+    // QuotaExceededError korumalı write
+    if (window.YDT) {
+        window.YDT.lsSet('ydt_paragraflar', paragraflar);
+    } else {
+        try {
+            localStorage.setItem('ydt_paragraflar', JSON.stringify(paragraflar));
+        } catch(e) {
+            console.warn('[AI Daily] paragraflar localStorage yazma hatası:', e.message);
+        }
+    }
 
     // Firebase'e hemen kaydet — senkron sonrası veri kaybını önler
     if (window._saveData) window._saveData();
 
     // UI'yı güncelle — Yüklü Pasajlar sayacı ve listesi
-    const cnt = document.getElementById('reading-hub-saved-count');
+    const cnt = $id('reading-hub-saved-count');
     if (cnt) cnt.textContent = paragraflar.length > 0 ? `${paragraflar.length} pasaj` : '';
-    const rh2stat = document.getElementById('rh2-stat-passages');
+    const rh2stat = $id('rh2-stat-passages');
     if (rh2stat) rh2stat.textContent = paragraflar.length || '—';
 
     return true;
@@ -517,7 +532,7 @@ function _saveAIPasaj(index) {
     }
 
     // Badge güncelle
-    const cnt = document.getElementById('reading-hub-saved-count');
+    const cnt = $id('reading-hub-saved-count');
     if (cnt) cnt.textContent = `${paragraflar.length} pasaj`;
 
     if (typeof _showAppToast === 'function') _showAppToast('📥 Pasaj arşive eklendi!');
@@ -525,10 +540,51 @@ function _saveAIPasaj(index) {
 window._saveAIPasaj = _saveAIPasaj;
 
 
-function openAIDailyParagraf(index) {
+async function openAIDailyParagraf(index) {
     const passages = window._aiDailyPassages;
     if (!passages || !passages[index]) return;
-    const p = passages[index];
+    let p = passages[index];
+
+    // Lazy AI analizi — henüz analiz edilmediyse şimdi yap
+    if (p._needsAI && p._articleRef) {
+        // Kart üzerinde yükleniyor göstergesi
+        const card = document.getElementById(`ai-card-${index}`);
+        const footer = card?.querySelector('.rh2-card-footer');
+        if (footer) footer.innerHTML = `<span class="rh2-pill rh2-pill-ai" style="animation:pulse 1s infinite">🤖 Analiz ediliyor...</span>`;
+
+        try {
+            if (typeof aiCall === 'function') {
+                const article = p._articleRef;
+                const aiData = await Promise.race([
+                    _analyzeWithAI(article._text || article.description || '', article.title || ''),
+                    new Promise(res => setTimeout(() => res(null), 12000))
+                ]);
+                if (aiData) {
+                    // Pasajı AI verisi ile güncelle
+                    const updated = _toPassageSync(article, aiData);
+                    passages[index] = { ...updated, _needsAI: false };
+                    p = passages[index];
+
+                    // Kartı güncelle
+                    if (card && footer) {
+                        const vocEntries = Object.entries(p.vocabulary || {});
+                        const vocPills = vocEntries.slice(0, 5).map(([eng, tr]) =>
+                            `<span class="rh2-pill rh2-pill-voc" title="${tr}">${eng}</span>`).join('');
+                        footer.innerHTML = `
+                            ${vocEntries.length > 0 ? `<span class="rh2-pill rh2-pill-word">📖 ${vocEntries.length} kelime</span>` : ''}
+                            <span class="rh2-pill rh2-pill-level">${p.level || 'B2'}</span>
+                            <span class="rh2-pill rh2-pill-ai">✅ AI Analiz</span>
+                            ${vocPills}`;
+                    }
+                } else {
+                    p._needsAI = false; // başarısız, tekrar deneme
+                }
+            }
+        } catch(e) {
+            p._needsAI = false;
+            console.warn('[openAIDailyParagraf] AI analiz başarısız:', e.message);
+        }
+    }
 
     // Build a temporary paragraf object and show it
     const tempP = {
@@ -539,15 +595,18 @@ function openAIDailyParagraf(index) {
 
     // Push to paragraflar temporarily if not exists
     const exists = paragraflar.findIndex(x => x.baslik === p.title);
-    let idx;
     if (exists >= 0) {
-        idx = exists;
+        paragraflar[exists] = tempP; // güncelle
     } else {
         paragraflar.push(tempP);
-        idx = paragraflar.length - 1;
     }
 
-    showParagrafOku(idx);
+    // Async işlemlerden (Firebase, _saveData) index kaymasını önlemek için
+    // push/update sonrası title'a göre index'i yeniden bul
+    const finalIdx = paragraflar.findIndex(x => x.baslik === p.title);
+    if (finalIdx >= 0) {
+        showParagrafOku(finalIdx);
+    }
 }
 
 // showParagrafListesi is already defined above with hub support
@@ -600,8 +659,8 @@ let _translateBound = false;
 
 function toggleTranslateMode() {
     _translateModeOn = !_translateModeOn;
-    const btn = document.getElementById('translate-mode-btn');
-    const metinEl = document.getElementById('p-oku-metin');
+    const btn = $id('translate-mode-btn');
+    const metinEl = $id('p-oku-metin');
     if (!btn || !metinEl) return;
 
     if (_translateModeOn) {
@@ -636,7 +695,7 @@ function toggleTranslateMode() {
 function _getWordFromEvent(e) {
     const el = e.target;
     if (el.classList.contains('c1-word')) return el.dataset.tr || null;
-    if (el.classList.contains('p-sentence') || el === document.getElementById('p-oku-metin')) return null;
+    if (el.classList.contains('p-sentence') || el === $id('p-oku-metin')) return null;
     return null;
 }
 
