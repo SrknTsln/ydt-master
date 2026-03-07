@@ -1,24 +1,24 @@
+// ── DOM Element Cache — tekrarlanan querySelector maliyetini azaltır ──
+// showPage() her çağrıldığında DOM değişebilir, cache invalidate edilir
+const _domCache = new Map();
+function $id(id) {
+    // Önce cache'e bak; yoksa sorgula ve kaydet
+    if (_domCache.has(id)) {
+        const el = _domCache.get(id);
+        // Hâlâ DOM'a bağlı mı?
+        if (el && el.isConnected) return el;
+        _domCache.delete(id); // Stale entry temizle
+    }
+    const el = document.getElementById(id);
+    if (el) _domCache.set(id, el);
+    return el;
+}
+/** Cache'i temizle — showPage gibi büyük DOM değişikliklerinden sonra çağır */
+function _invalidateDomCache() { _domCache.clear(); }
+
 // ════════════════════════════════════════════════════
 // motor.js  –  Tüm uygulama mantığı
 // ════════════════════════════════════════════════════
-
-// ── YDT Global Namespace ──────────────────────────────
-// window.* kirliliğini azaltmak için merkezi namespace
-// Kademeli migrasyon: eski window.X atamaları silinmeden
-// önce burada da tutulur (backward compat için alias)
-window.YDT = window.YDT || {
-    // Arşiv state (en çok kullanılan window.* atamaları)
-    aiArsiv:            [],
-    aiGramerArsiv:      [],
-    // Paragraf state
-    paragraflar:        [],
-    paragrafSorular:    {},
-    // Save callback — Firebase sync
-    save:               null,   // window._saveData yerine
-    // Navigasyon state
-    arsivGroupPage:     null,   // window._arsivGroupPage yerine
-    arsivActiveSubList: null,   // window._arsivActiveSubList yerine
-};
 
 // --- GENEL DEĞİŞKENLER ---
 let currentActiveList = "", studyIndex = 0, currentWord, score = 0, canAnswer = true, moduleStartTime = null;
@@ -198,11 +198,10 @@ function updateSelectors() {
     // Her zaman güncel user-scoped allData'yı oku
     if (typeof getUserKey === 'function') {
         const raw = localStorage.getItem(getUserKey('all_data'));
-        if (raw) { try { allData = JSON.parse(raw); } catch(e) {} }
+        if (raw) { try { allData = JSON.parse(raw); } catch(e) { console.warn("[YDT] allData parse hatası (localStorage bozuk olabilir):", e.message); } }
     }
 
-    // Sadece array olan listeleri göster (Firestore bazen object döndürebilir)
-    const keys = Object.keys(allData).filter(k => Array.isArray(allData[k]));
+    const keys = Object.keys(allData);
 
     ['list-selector', 'edit-list-selector', 'exercise-list-selector',
      'game-list-selector', 'ai-gen-target-list'].forEach(id => {
@@ -229,7 +228,7 @@ function updateIndexStats() {
         const el = document.getElementById(id);
         if (el) el.innerHTML = '';
     });
-    const streakEl0 = document.getElementById('idx-streak-val');
+    const streakEl0 = $id('idx-streak-val');
     if (streakEl0) streakEl0.innerHTML = '';
 
     // Veri oku — allData boşsa localStorage'dan fallback
@@ -237,27 +236,29 @@ function updateIndexStats() {
         const rawAD = localStorage.getItem(getUserKey('all_data'));
         const rawST = localStorage.getItem(getUserKey('stats'));
         if (rawAD && Object.keys(window.allData || {}).length === 0) {
-            try { allData = JSON.parse(rawAD); } catch(e) {}
+            try { allData = JSON.parse(rawAD); } catch(e) { console.warn("[YDT] allData (AD) parse hatası:", e.message); }
         }
         if (rawST) {
-            try { const s = JSON.parse(rawST); if (s) { stats = s; if (isNaN(stats.totalMinutes)) stats.totalMinutes = 0; } } catch(e) {}
+            try { const s = JSON.parse(rawST); if (s) { stats = s; if (isNaN(stats.totalMinutes)) stats.totalMinutes = 0; } } catch(e) { console.warn("[YDT] stats parse hatası:", e.message); }
         }
     }
 
     let total = 0, learned = 0;
     Object.values(allData).forEach(list => {
-        if (!Array.isArray(list)) return; // Firestore bazen object döner
+        // Güvenli kontrol: Firestore merge sonrası bazı değerler array olmayabilir
+        if (!Array.isArray(list)) return;
         total += list.length;
         list.forEach(w => {
-            if ((w.errorCount || 0) <= 0 && (w.correctStreak || 0) >= 2) learned++;
+            if (w && typeof w === 'object' &&
+                (w.errorCount || 0) <= 0 && (w.correctStreak || 0) >= 2) learned++;
         });
     });
 
     // KPI elementleri varsa doldur (kaldırılmış olabilir)
-    const elTotal = document.getElementById('idx-total');
-    const elLearned = document.getElementById('idx-learned');
-    const elAcc = document.getElementById('idx-accuracy');
-    const elStreak = document.getElementById('idx-streak-val');
+    const elTotal = $id('idx-total');
+    const elLearned = $id('idx-learned');
+    const elAcc = $id('idx-accuracy');
+    const elStreak = $id('idx-streak-val');
 
     if (elTotal)   elTotal.innerText   = total;
     if (elLearned) elLearned.innerText = learned;
@@ -352,7 +353,7 @@ function updateCascadeStatus() {
 
     // Kaç servis aktif?
     const activeCount = AI_PROVIDERS.filter(p => localStorage.getItem(p.lsKey)).length;
-    let warn = document.getElementById('cascade-warn');
+    let warn = $id('cascade-warn');
     if (!warn) {
         warn = document.createElement('div');
         warn.id = 'cascade-warn';
@@ -375,13 +376,13 @@ function updateCascadeStatus() {
 }
 
 function aiGenSaveKey() {
-    const key = (document.getElementById('ai-gen-api-key')?.value || '').trim();
+    const key = ($id('ai-gen-api-key')?.value || '').trim();
     if (!key) return;
     // Save to Gemini provider key (primary provider in cascade)
     const geminiProvider = typeof AI_PROVIDERS !== 'undefined' ? AI_PROVIDERS.find(p => p.id === 'gemini') : null;
     const lsKey = geminiProvider ? geminiProvider.lsKey : 'ydt_gemini_api_key';
     localStorage.setItem(lsKey, key);
-    const statusEl = document.getElementById('ai-gen-key-status');
+    const statusEl = $id('ai-gen-key-status');
     if (statusEl) statusEl.innerHTML = '<span style="color:#22c55e;font-weight:700;">✓ Kaydedildi</span>';
     updateCascadeStatus();
 }
@@ -390,14 +391,14 @@ function navToAdmin() {
     navTo('admin-page');
     updateCascadeStatus();
     // target list selector doldur
-    const sel = document.getElementById('ai-gen-target-list');
+    const sel = $id('ai-gen-target-list');
     if (sel) { sel.innerHTML = ''; Object.keys(allData).forEach(n => sel.add(new Option(n, n))); }
 }
 
 async function aiGenerateWords() {
-    const topic = document.getElementById('ai-gen-topic').value.trim();
-    const count = parseInt(document.getElementById('ai-gen-count').value) || 10;
-    const level = document.getElementById('ai-gen-level').value;
+    const topic = $id('ai-gen-topic').value.trim();
+    const count = parseInt($id('ai-gen-count').value) || 10;
+    const level = $id('ai-gen-level').value;
 
     if (!topic) { alert('Lütfen bir konu girin!'); return; }
 
@@ -407,10 +408,10 @@ async function aiGenerateWords() {
         return;
     }
 
-    document.getElementById('ai-gen-btn').disabled = true;
-    document.getElementById('ai-gen-preview').style.display = 'none';
-    document.getElementById('ai-gen-loading').style.display = 'block';
-    document.getElementById('ai-gen-loading-text').innerText = `"${topic}" konusu için ${count} kelime üretiliyor...`;
+    $id('ai-gen-btn').disabled = true;
+    $id('ai-gen-preview').style.display = 'none';
+    $id('ai-gen-loading').style.display = 'block';
+    $id('ai-gen-loading-text').innerText = `"${topic}" konusu için ${count} kelime üretiliyor...`;
 
     const prompt = `Sen YDT İngilizce sınav uzmanısın. "${topic}" konusunda, ${level} seviyesinde ${count} adet İngilizce kelime üret.
 
@@ -425,12 +426,12 @@ SADECE JSON array döndür, başka hiçbir şey yazma:
 
     try {
         aiGenWords = await aiCall(prompt);
-        document.getElementById('ai-gen-loading').style.display = 'none';
-        document.getElementById('ai-gen-btn').disabled = false;
+        $id('ai-gen-loading').style.display = 'none';
+        $id('ai-gen-btn').disabled = false;
         renderAiGenPreview();
     } catch (e) {
-        document.getElementById('ai-gen-loading').style.display = 'none';
-        document.getElementById('ai-gen-btn').disabled = false;
+        $id('ai-gen-loading').style.display = 'none';
+        $id('ai-gen-btn').disabled = false;
         if (e.message !== 'no_api_key' && e.message !== 'all_failed') {
             alert('Hata: ' + e.message);
         }
@@ -438,9 +439,10 @@ SADECE JSON array döndür, başka hiçbir şey yazma:
 }
 
 function renderAiGenPreview() {
-    const list = document.getElementById('ai-gen-preview-list');
+    const list = $id('ai-gen-preview-list');
     list.innerHTML = '';
-    // _esc() -> utils.js'de global tanimli
+    // Sanitize AI-generated content before DOM injection
+    function _esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
     aiGenWords.forEach((w, i) => {
         const card = document.createElement('div');
         card.className = 'ai-gen-word-card';
@@ -455,8 +457,8 @@ function renderAiGenPreview() {
         <div class="aig-meta" style="color:var(--ink3);">📖 ${_esc(w.story) || '—'}</div>`;
         list.appendChild(card);
     });
-    document.getElementById('ai-gen-preview-count').innerText = `${aiGenWords.length} kelime`;
-    document.getElementById('ai-gen-preview').style.display = 'block';
+    $id('ai-gen-preview-count').innerText = `${aiGenWords.length} kelime`;
+    $id('ai-gen-preview').style.display = 'block';
 }
 
 function aiGenRemoveWord(i) {
@@ -466,12 +468,12 @@ function aiGenRemoveWord(i) {
 
 function aiGenDiscard() {
     aiGenWords = [];
-    document.getElementById('ai-gen-preview').style.display = 'none';
+    $id('ai-gen-preview').style.display = 'none';
 }
 
 function aiGenSaveToList() {
     if (!aiGenWords.length) return;
-    const targetList = document.getElementById('ai-gen-target-list').value;
+    const targetList = $id('ai-gen-target-list').value;
     if (!targetList || !allData[targetList]) {
         alert('Lütfen hedef liste seçin.');
         return;
@@ -486,10 +488,10 @@ function aiGenSaveToList() {
     window._saveData && window._saveData();
     updateSelectors();
     aiGenDiscard();
-    document.getElementById('ai-gen-topic').value = '';
+    $id('ai-gen-topic').value = '';
 
     // Bildirim
-    const btn = document.getElementById('ai-gen-btn');
+    const btn = $id('ai-gen-btn');
     btn.innerText = `✅ ${newWords.length} kelime eklendi!`;
     btn.style.background = '#22c55e';
     setTimeout(() => {
@@ -501,18 +503,3 @@ function aiGenSaveToList() {
 // ══════════════════════════════════════════════
 // → js/ai-daily.js (ayrı dosyaya taşındı)
 // → js/utils.js (ayrı dosyaya taşındı)
-
-// TODO: Kaldır — namespace migrasyon tamamlanınca
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('[YDT] Namespace initialized:', Object.keys(window.YDT));
-});
-
-// ── Delegated nav listener (Task 8) ──────────────────────────────
-(function _initNavDelegation() {
-    document.addEventListener('click', function(e) {
-        const navBtn = e.target.closest('[data-nav]');
-        if (!navBtn) return;
-        e.preventDefault();
-        navTo(navBtn.dataset.nav);
-    });
-})();

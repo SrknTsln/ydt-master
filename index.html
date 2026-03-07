@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://js.puter.com https://*.puter.com https://www.gstatic.com https://apis.google.com https://cdnjs.cloudflare.com https://cdn-cgi.cloudflare.com; connect-src 'self' https://autumn-hill-be24ydt-master.stasalan.workers.dev https://*.googleapis.com https://*.google.com https://apis.google.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://*.groq.com https://openrouter.ai https://api.mistral.ai https://api.anthropic.com https://generativelanguage.googleapis.com https://feeds.bbci.co.uk https://www.theguardian.com https://feeds.npr.org https://api.rss2json.com https://api.allorigins.win https://corsproxy.io https://api.codetabs.com https://oauth2.googleapis.com https://*.puter.com wss://*.puter.com; font-src 'self' https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https://*.googleusercontent.com https://lh3.googleusercontent.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com; object-src 'none';">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>YDT Master Pro — AI Destekli İngilizce</title>
@@ -54,10 +55,13 @@
             <em style="font-size:.65rem;font-weight:600;color:var(--ink3);font-style:normal;">by Serkan Hoca</em>
         </span>
     </div>
-    <div class="mob-sync">
-            <div id="sync-dot-mob" style="width:7px;height:7px;border-radius:50%;background:var(--c-sync-idle);flex-shrink:0"></div>
-            <span id="sync-lbl-mob">Yerel</span>
-        </div>
+    <div class="mob-sync" style="margin-left:auto;">
+        <div id="sync-dot-mob" style="width:7px;height:7px;border-radius:50%;background:var(--c-sync-idle);flex-shrink:0"></div>
+        <span id="sync-lbl-mob">Yerel</span>
+    </div>
+    <button class="mob-topbar-theme-btn" onclick="toggleTheme()" aria-label="Tema değiştir">
+        <span id="theme-icon">🌙</span>
+    </button>
 </header>
 
 <div class="mob-drawer-overlay" id="mob-overlay" onclick="mobCloseDrawer()"></div>
@@ -229,7 +233,7 @@
             <button class="sb-btn sb-btn-sec" id="sb-profil" title="Profil" onclick="navTo('profil-page'); showProfilPage(); setTimeout(()=>window.AuthModule&&window.AuthModule.updateProfilWidgets(),100)" style="margin-bottom:4px;">
                 <span aria-hidden="true" class="sb-icon">👤</span> Profil
             </button>
-            <button class="sb-btn sb-btn-admin" id="sb-admin" title="Yönetim" data-nav="admin-page" style="display:none;">
+            <button class="sb-btn sb-btn-admin" id="sb-admin" title="Yönetim" data-nav="admin-page" onclick="navToAdmin()" style="display:none;">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0;opacity:.6">
                     <circle cx="7" cy="7" r="2.5" stroke="currentColor" stroke-width="1.4"/>
                     <path d="M7 1v1.5M7 11.5V13M1 7h1.5M11.5 7H13M2.93 2.93l1.06 1.06M10.01 10.01l1.06 1.06M2.93 11.07l1.06-1.06M10.01 3.99l1.06-1.06" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
@@ -262,6 +266,15 @@
                     <span class="dash-today-eyebrow">📅 Günün Görevi</span>
                     <div class="dash-today-title" id="dash-today-title">Yükleniyor...</div>
                     <div class="dash-today-meta" id="dash-today-meta"></div>
+                    <!-- Listeler özet butonu -->
+                    <button class="dash-lists-toggle" id="dash-lists-toggle" style="display:none;" onclick="toggleDashLists()">
+                        <span id="dash-lists-toggle-label">📚 Listeler</span>
+                        <svg class="dash-lists-chev" id="dash-lists-chev" width="12" height="12" viewBox="0 0 12 12" fill="none">
+                            <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                    <!-- Açılır chip listesi -->
+                    <div class="dash-lists-dropdown" id="dash-lists-dropdown" style="display:none;"></div>
                 </div>
                 <div class="dash-today-icon" id="dash-today-icon">🎯</div>
             </div>
@@ -529,7 +542,6 @@
                 <span>AI Üret</span>
             </button>
             <!-- Sağ: yenile -->
-            <div style="flex:1;"></div>
             <button id="ai-daily-refresh-btn" onclick="generateAIDailyParagraflar(true)" class="rh2-refresh-btn" style="display:none;">
                 <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
                     <path d="M11.5 2A6 6 0 1 0 12 6.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
@@ -538,6 +550,15 @@
                 Yenile
             </button>
         </div>
+
+        <!-- ══ MOBİL AI ÜRET SHORTCUT ══ -->
+        <button class="rh2-mob-generate-btn" onclick="openReadingHub('generate')">
+            <span>✨</span>
+            <span>AI ile Özgün Paragraf Üret</span>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M3 7h8M7 3l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </button>
 
         <!-- ══ PANEL: AI ══ -->
         <div id="ai-daily-paragraf-list" class="rh2-grid" style="display:none;">
@@ -2004,7 +2025,7 @@
                     <div id="profil-gh-email" class="profil-gh-email">—</div>
                     <div class="profil-gh-badge">🔒 Veriler güvende · Google ile giriş</div>
                 </div>
-                <button class="profil-gh-logout" onclick="window.AuthModule onclick="ydtSignOut()"onclick="ydtSignOut()" window.AuthModule.authSignOut()">
+                <button class="profil-gh-logout" onclick="window.AuthModule ? window.AuthModule.authSignOut() : ydtSignOut()">
                     Çıkış
                 </button>
             </div>
@@ -2266,12 +2287,6 @@
 
 </div>
 
-<!-- ── Mobil yüzen tema toggle FAB ── -->
-<button id="mob-theme-fab" onclick="toggleTheme()" aria-label="Tema değiştir"
-    class="mob-theme-fab">
-    <span id="theme-icon">🌙</span>
-</button>
-
 <!-- ── Global fonksiyonlar: onclick="" attribute'larından erişilebilir ── -->
 <script>
 function sbToggleCollapse() {
@@ -2320,14 +2335,34 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
     };
 
     /* ── Firestore Security Rules (Firebase Console > Firestore > Rules) ──
-       Aşağıdaki kuralları ekleyin:
+       Aşağıdaki kuralları Firebase Console'da uygulayın:
 
-       match /shared/{docId} {
-         // Herkes okuyabilir
-         allow read: if true;
-         // Sadece admin yazabilir
-         allow write: if request.auth != null
-                      && request.auth.token.email == 'stasalan@gmail.com';
+       rules_version = '2';
+       service cloud.firestore {
+         match /databases/{database}/documents {
+
+           // Kullanıcı kendi dökümanına ve subcollection'larına erişebilir
+           match /users/{userId} {
+             allow read, write: if request.auth != null && request.auth.uid == userId;
+
+             match /lists/{listId} {
+               allow read, write: if request.auth != null && request.auth.uid == userId;
+             }
+             match /arsiv/{arsivId} {
+               allow read, write: if request.auth != null && request.auth.uid == userId;
+             }
+             match /content/{contentId} {
+               allow read, write: if request.auth != null && request.auth.uid == userId;
+             }
+           }
+
+           // Paylaşımlı içerik: herkes okur, sadece admin yazar
+           match /shared/{docId} {
+             allow read: if true;
+             allow write: if request.auth != null
+                          && request.auth.token.email == 'stasalan@gmail.com';
+           }
+         }
        }
        ── */
 
@@ -2377,15 +2412,81 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
     // YDT namespace alias — window._saveData ile senkron kalır
     if (window.YDT) window.YDT.save = window._saveData;
 
+    // ════════════════════════════════════════════════════════════════════
+    // OFFLINE SYNC QUEUE — internet kesilince değişiklikler kaybolmasın
+    // ════════════════════════════════════════════════════════════════════
+    const PENDING_SYNC_KEY = 'ydt_pending_sync';
+    let _syncRetryTimer = null;
+
+    /** Bekleyen sync'i localStorage'a işaretle */
+    function _markPendingSync() {
+        try { localStorage.setItem(PENDING_SYNC_KEY, String(Date.now())); } catch(_) {}
+    }
+    /** Bekleyen sync bayrağını temizle */
+    function _clearPendingSync() {
+        try { localStorage.removeItem(PENDING_SYNC_KEY); } catch(_) {}
+    }
+    /** Bekleyen sync var mı? */
+    function _hasPendingSync() {
+        return !!localStorage.getItem(PENDING_SYNC_KEY);
+    }
+
+    /**
+     * Çevrimiçi olunca otomatik sync yap
+     * Sayfa açıkken internet kesilip tekrar geldiğinde çağrılır
+     */
+    async function _onNetworkRestore() {
+        const uid = window._currentUser?.uid;
+        if (!uid || !_hasPendingSync()) return;
+        console.log('[YDT Sync] Bağlantı geri geldi — bekleyen sync gönderiliyor…');
+        setSyncStatus('syncing');
+        if (typeof showAIToast === 'function') showAIToast('☁️ Bağlantı sağlandı, veriler senkronize ediliyor…', 'info', 3000);
+        try {
+            if (window.AuthModule && typeof window.AuthModule.syncNow === 'function') {
+                await window.AuthModule.syncNow();
+            }
+            _clearPendingSync();
+            setSyncStatus('ok');
+        } catch(e) {
+            console.warn('[YDT Sync] Restore sync hatası:', e.message);
+            setSyncStatus('error');
+        }
+    }
+
+    // Ağ event listener'ları — sadece bir kez bağla
+    if (!window._ytdNetworkListenersAdded) {
+        window.addEventListener('online',  _onNetworkRestore);
+        window.addEventListener('offline', () => {
+            setSyncStatus('error');
+            if (typeof showAIToast === 'function') showAIToast('📴 İnternet bağlantısı kesildi. Veriler yerel kayıt edilecek.', 'warn', 5000);
+        });
+        window._ytdNetworkListenersAdded = true;
+    }
+
     function saveToFirebase() {
         // Artık Firestore üzerinden _saveUserData() kullanıyoruz.
         // Bu fonksiyon yalnızca window.AuthModule.syncNow() çağrısıyla tetiklenir.
         const uid = window._currentUser?.uid;
         if (!uid) return;
+
+        // Çevrimdışıysa bekleyen sync olarak işaretle
+        if (!navigator.onLine) {
+            _markPendingSync();
+            setSyncStatus('error');
+            return;
+        }
+
+        _markPendingSync(); // Sync tamamlanana kadar işaretli kalsın
         clearTimeout(syncTimeout);
         syncTimeout = setTimeout(async () => {
             if (window.AuthModule && typeof window.AuthModule.syncNow === 'function') {
-                await window.AuthModule.syncNow();
+                try {
+                    await window.AuthModule.syncNow();
+                    _clearPendingSync(); // Başarılı → bayrağı kaldır
+                } catch(e) {
+                    console.warn('[YDT Sync] saveToFirebase hatası:', e.message);
+                    // Bayrak kalır — online event tetiklenince tekrar denenecek
+                }
             }
         }, 800);
     }
@@ -2419,13 +2520,14 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
     // ════════════════════════════════════════════════════
     const { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
         = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js");
-    const { getFirestore, doc, getDoc, setDoc }
+    const { getFirestore, doc, getDoc, setDoc, collection, getDocs, deleteDoc, writeBatch }
         = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
 
     const auth = getAuth(firebaseApp);
     const fsdb = getFirestore(firebaseApp);
 
     let authTimerInterval = null;
+    let authSaveInterval  = null;
 
     function _authSyncBar(state, text) {
         const bar = document.getElementById('auth-sync-bar');
@@ -2537,62 +2639,97 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
     async function _loadUserData(uid) {
         try {
             _authSyncBar('syncing', 'Veriler yükleniyor…');
-            // Önce sıfırla — önceki kullanıcının verisi kalmasın
             window.stats   = { totalAnswers: 0, correctAnswers: 0, totalMinutes: 0 };
             window.allData = {};
             _updateAuthStats();
+
+            const _lsSet = (k, v) => { try { if (v !== null && v !== undefined) localStorage.setItem(k, JSON.stringify(v)); } catch(e){} };
+
+            // ── Ana döküman ────────────────────────────────────────────────
             const snap = await getDoc(doc(fsdb, 'users', uid));
             if (snap.exists()) {
                 const data = snap.data();
-
-                // ── Temel veriler ──
-                if (data.allData) { window.allData = data.allData; localStorage.setItem(`ydt_${uid}_all_data`, JSON.stringify(window.allData)); }
                 if (data.stats)   { window.stats = { ...data.stats }; if (isNaN(stats.totalMinutes)) stats.totalMinutes = 0; localStorage.setItem(`ydt_${uid}_stats`, JSON.stringify(window.stats)); }
-
-                // ── API anahtarları ──
-                ['ydt_gemini_api_key','ydt_groq_api_key','ydt_openrouter_api_key','ydt_mistral_api_key'].forEach(k => {
-                    if (data[k]) localStorage.setItem(k, data[k]);
-                });
-
-                // ── Grammar & performans ──
-                const _lsSet = (k, v) => { try { if (v !== null && v !== undefined) localStorage.setItem(k, JSON.stringify(v)); } catch(e){} };
                 if (data.grScores)  { _lsSet('ydt_gr_scores', data.grScores); _lsSet('ydt_grammar_scores', data.grScores); }
                 if (data.perfHist)  _lsSet('ydt_perf_hist', data.perfHist);
                 if (data.badges)    { _lsSet('ydt_badges', data.badges); window.badges = data.badges; }
                 if (data.profile)   { _lsSet('ydt_profile', data.profile); window.userProfile = data.profile; }
                 if (data.streak)    localStorage.setItem('ydt_streak',   String(data.streak));
                 if (data.lastDay)   localStorage.setItem('ydt_last_day', data.lastDay);
-
-                // ── ydtai istatistikleri ──
                 if (data.ydtai_tot) localStorage.setItem('ydtai_tot', String(data.ydtai_tot));
                 if (data.ydtai_cor) localStorage.setItem('ydtai_cor', String(data.ydtai_cor));
                 if (data.ydtai_wrg) localStorage.setItem('ydtai_wrg', String(data.ydtai_wrg));
-
-                // ── AI arşivleri ──
-                if (data.aiArsiv)        { window.aiArsiv        = data.aiArsiv;        _lsSet('ydt_ai_arsiv',        data.aiArsiv); }
-                if (data.aiPasajArsiv)   { window.aiPasajArsiv   = data.aiPasajArsiv;   _lsSet('ydt_ai_pasaj_arsiv',  data.aiPasajArsiv); }
-                if (data.aiGramerArsiv)  { window.aiGramerArsiv  = data.aiGramerArsiv;  _lsSet('ydt_gramer_arsiv',    data.aiGramerArsiv); }
-                if (data.aiClozeArsiv)   { window.aiClozeArsiv   = data.aiClozeArsiv;   _lsSet('ydt_cloze_arsiv',     data.aiClozeArsiv); }
-                if (data.aiYakinArsiv)   { window.aiYakinArsiv   = data.aiYakinArsiv;   _lsSet('ydt_yakin_arsiv',     data.aiYakinArsiv); }
-                if (data.aiDiyalogArsiv) { window.aiDiyalogArsiv = data.aiDiyalogArsiv; _lsSet('ydt_diyalog_arsiv',   data.aiDiyalogArsiv); }
-                if (data.aiDurumArsiv)   { window.aiDurumArsiv   = data.aiDurumArsiv;   _lsSet('ydt_durum_arsiv',     data.aiDurumArsiv); }
-                if (data.aiParaComArsiv) { window.aiParaComArsiv = data.aiParaComArsiv; _lsSet('ydt_paracom_arsiv',   data.aiParaComArsiv); }
-                if (data.aiParaBozArsiv) { window.aiParaBozArsiv = data.aiParaBozArsiv; _lsSet('ydt_paraboz_arsiv',   data.aiParaBozArsiv); }
-
-                // ── Paragraf verileri ──
-                if (data.paragrafSorular) { window.paragrafSorular = data.paragrafSorular; _lsSet('ydt_paragraf_sorular', data.paragrafSorular); }
-                if (data.paragraflar)     { window.paragraflar     = data.paragraflar;     _lsSet('ydt_paragraflar',      data.paragraflar); }
-
-                // ── Soru bankaları ──
-                ['paragraf','gramer','cloze','yakin','diyalog','paratam','durum','parabut'].forEach(cat => {
-                    const key = `bank_${cat}`;
-                    if (data[key] && data[key].length) {
-                        localStorage.setItem(`ydt_bank_${cat}`, JSON.stringify(data[key]));
-                    }
+                ['ydt_gemini_api_key','ydt_groq_api_key','ydt_openrouter_api_key','ydt_mistral_api_key'].forEach(k => {
+                    if (data[k]) localStorage.setItem(k, data[k]);
                 });
             }
 
-            // Firestore'da stats yoksa localStorage'dan al
+            // ── Kelime listeleri — subcollection ────────────────────────────
+            try {
+                const listsSnap = await getDocs(collection(fsdb, 'users', uid, 'lists'));
+                if (!listsSnap.empty) {
+                    listsSnap.forEach(listDoc => {
+                        const d = listDoc.data();
+                        const name = d.displayName || listDoc.id;
+                        if (Array.isArray(d.words)) window.allData[name] = d.words;
+                    });
+                    _purgeAllDataLegacyLists(window.allData);
+                    localStorage.setItem(`ydt_${uid}_all_data`, JSON.stringify(window.allData));
+                    console.info(`[load] ${Object.keys(window.allData).length} liste yüklendi`);
+                } else {
+                    // Subcollection boş — eski format fallback
+                    const raw = localStorage.getItem(`ydt_${uid}_all_data`);
+                    if (raw) { try { window.allData = JSON.parse(raw); _purgeAllDataLegacyLists(window.allData); } catch(e){} }
+                }
+            } catch(e) {
+                console.warn('[load] Liste subcollection hatası:', e.message);
+                const raw = localStorage.getItem(`ydt_${uid}_all_data`);
+                if (raw) { try { window.allData = JSON.parse(raw); } catch(ex){} }
+            }
+
+            // ── AI Arşivleri — subcollection ────────────────────────────────
+            try {
+                const arsivMap = {
+                    kelime:'ydt_ai_arsiv', pasaj:'ydt_ai_pasaj_arsiv', gramer:'ydt_gramer_arsiv',
+                    cloze:'ydt_cloze_arsiv', yakin:'ydt_yakin_arsiv', diyalog:'ydt_diyalog_arsiv',
+                    durum:'ydt_durum_arsiv', paracom:'ydt_paracom_arsiv', paraboz:'ydt_paraboz_arsiv'
+                };
+                const winMap = {
+                    kelime:'aiArsiv', pasaj:'aiPasajArsiv', gramer:'aiGramerArsiv',
+                    cloze:'aiClozeArsiv', yakin:'aiYakinArsiv', diyalog:'aiDiyalogArsiv',
+                    durum:'aiDurumArsiv', paracom:'aiParaComArsiv', paraboz:'aiParaBozArsiv'
+                };
+                const arsivSnap = await getDocs(collection(fsdb, 'users', uid, 'arsiv'));
+                arsivSnap.forEach(d => {
+                    const tip = d.id;
+                    const items = d.data().items || [];
+                    if (arsivMap[tip]) _lsSet(arsivMap[tip], items);
+                    if (winMap[tip])   window[winMap[tip]] = items;
+                });
+            } catch(e) { console.warn('[load] Arşiv subcollection hatası:', e.message); }
+
+            // ── Paragraf & Sorular — subcollection ──────────────────────────
+            try {
+                const contentSnap = await getDocs(collection(fsdb, 'users', uid, 'content'));
+                contentSnap.forEach(d => {
+                    const id = d.id;
+                    if (id === 'paragraflar') {
+                        const items = d.data().items || [];
+                        window.paragraflar = items;
+                        _lsSet('ydt_paragraflar', items);
+                    } else if (id === 'paragrafSorular') {
+                        const data2 = d.data().data || {};
+                        window.paragrafSorular = data2;
+                        _lsSet('ydt_paragraf_sorular', data2);
+                    } else if (id.startsWith('bank_')) {
+                        const items = d.data().items || [];
+                        const cat = id.replace('bank_','');
+                        localStorage.setItem(`ydt_bank_${cat}`, JSON.stringify(items));
+                    }
+                });
+            } catch(e) { console.warn('[load] Content subcollection hatası:', e.message); }
+
+            // ── Stats fallback ───────────────────────────────────────────────
             if (!stats.totalAnswers && !stats.totalMinutes) {
                 const rawST = localStorage.getItem(`ydt_${uid}_stats`) || localStorage.getItem('ydt_stats');
                 if (rawST) { try { const s = JSON.parse(rawST); if (s) { window.stats = s; if (isNaN(stats.totalMinutes)) stats.totalMinutes = 0; } } catch(e){} }
@@ -2604,6 +2741,7 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
             _updateAuthStats();
             _authSyncBar('synced', 'Veriler yüklendi ✓');
             setSyncStatus('ok');
+
         } catch(e) {
             console.warn('Firestore yükleme hatası:', e);
             _authSyncBar('synced', 'Yerel veriler kullanılıyor');
@@ -2611,27 +2749,23 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
         }
 
         // ── Paylaşımlı (admin) içerikleri yükle ──────────────────────────
-        // Admin'in eklediği paragraflar shared/content doc'unda tutulur.
-        // Her kullanıcı login olduğunda kendi paragraflarına merge edilir.
         try {
-            const _lsSet = (k, v) => { try { if (v !== null && v !== undefined) localStorage.setItem(k, JSON.stringify(v)); } catch(e){} };
+            const _lsSet2 = (k, v) => { try { if (v !== null && v !== undefined) localStorage.setItem(k, JSON.stringify(v)); } catch(e){} };
             const sharedSnap = await getDoc(doc(fsdb, 'shared', 'content'));
             if (sharedSnap.exists()) {
                 const sharedData = sharedSnap.data();
                 if (Array.isArray(sharedData.paragraflar) && sharedData.paragraflar.length > 0) {
                     const sharedPara = sharedData.paragraflar;
                     const current = window.paragraflar || [];
-                    // Başlığa göre deduplicate: shared olanlar her zaman taban, üstüne kullanıcının kişisel eklemeleri
                     const sharedTitles = new Set(sharedPara.map(p => p.baslik));
                     const personalExtra = current.filter(p => !sharedTitles.has(p.baslik));
                     window.paragraflar = [...sharedPara, ...personalExtra];
-                    _lsSet('ydt_paragraflar', window.paragraflar);
+                    _lsSet2('ydt_paragraflar', window.paragraflar);
                     console.log(`[shared] ${sharedPara.length} paylaşımlı paragraf yüklendi, ${personalExtra.length} kişisel ek`);
                 }
-                // paragrafSorular da paylaşımlıysa merge et
                 if (sharedData.paragrafSorular && typeof sharedData.paragrafSorular === 'object') {
                     window.paragrafSorular = { ...sharedData.paragrafSorular, ...(window.paragrafSorular || {}) };
-                    _lsSet('ydt_paragraf_sorular', window.paragrafSorular);
+                    _lsSet2('ydt_paragraf_sorular', window.paragrafSorular);
                 }
                 if (typeof window._populateParagrafListesi === 'function') window._populateParagrafListesi();
             }
@@ -2656,76 +2790,89 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
             _authSyncBar('syncing', 'Kaydediliyor…');
             setSyncStatus('syncing');
 
-            // API anahtarları
+            const _lsGet = (k) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch(e){ return null; } };
+
+            // ── Küçük alanlar — ana döküman (users/{uid}) ──────────────────
             const apiKeyData = {};
             ['ydt_gemini_api_key','ydt_groq_api_key','ydt_openrouter_api_key','ydt_mistral_api_key'].forEach(k => {
                 const v = localStorage.getItem(k);
                 if (v) apiKeyData[k] = v;
             });
-
-            // Soru bankaları (localStorage'dan oku — admin upload ile yazılır)
-            const _lsGet = (k) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch(e){ return null; } };
-            const bankData = {};
-            ['paragraf','gramer','cloze','yakin','diyalog','paratam','durum','parabut'].forEach(cat => {
-                const v = _lsGet(`ydt_bank_${cat}`);
-                if (v && v.length) bankData[`bank_${cat}`] = v;
-            });
-
-            // Grammar & performans skorları
-            const grScores      = _lsGet('ydt_gr_scores')      || _lsGet('ydt_grammar_scores') || {};
-            const perfHist      = _lsGet('ydt_perf_hist')       || [];
-            const badges        = _lsGet('ydt_badges')          || [];
-            const profile       = _lsGet('ydt_profile')         || {};
-            const streak        = parseInt(localStorage.getItem('ydt_streak') || '0');
-            const lastDay       = localStorage.getItem('ydt_last_day') || '';
-
-            // AI arşivleri
-            const aiArsivData = {
-                aiArsiv:       window.aiArsiv        || _lsGet('ydt_ai_arsiv')       || [],
-                aiPasajArsiv:  window.aiPasajArsiv   || _lsGet('ydt_ai_pasaj_arsiv') || [],
-                aiGramerArsiv: window.aiGramerArsiv  || _lsGet('ydt_gramer_arsiv')   || [],
-                aiClozeArsiv:  window.aiClozeArsiv   || _lsGet('ydt_cloze_arsiv')    || [],
-                aiYakinArsiv:  window.aiYakinArsiv   || _lsGet('ydt_yakin_arsiv')    || [],
-                aiDiyalogArsiv:window.aiDiyalogArsiv || _lsGet('ydt_diyalog_arsiv')  || [],
-                aiDurumArsiv:  window.aiDurumArsiv   || _lsGet('ydt_durum_arsiv')    || [],
-                aiParaComArsiv:window.aiParaComArsiv || _lsGet('ydt_paracom_arsiv')  || [],
-                aiParaBozArsiv:window.aiParaBozArsiv || _lsGet('ydt_paraboz_arsiv')  || [],
-            };
-
-            // paragrafSorular & paragraflar
-            const paragrafSorularData = window.paragrafSorular || _lsGet('ydt_paragraf_sorular') || {};
-            const paragraflarData     = window.paragraflar     || _lsGet('ydt_paragraflar')      || [];
-
-            // ydtai istatistikleri
+            const grScores = _lsGet('ydt_gr_scores') || _lsGet('ydt_grammar_scores') || {};
+            const perfHist = _lsGet('ydt_perf_hist') || [];
+            const badges   = _lsGet('ydt_badges')    || [];
+            const profile  = _lsGet('ydt_profile')   || {};
+            const streak   = parseInt(localStorage.getItem('ydt_streak')   || '0');
+            const lastDay  = localStorage.getItem('ydt_last_day') || '';
             const ydtaiStats = {
                 ydtai_tot: parseInt(localStorage.getItem('ydtai_tot') || '0'),
                 ydtai_cor: parseInt(localStorage.getItem('ydtai_cor') || '0'),
                 ydtai_wrg: parseInt(localStorage.getItem('ydtai_wrg') || '0'),
             };
 
-            const cleanAllData = _fsCleanObj(typeof window.allData !== 'undefined' ? allData : {});
-
+            // Ana döküman — sadece küçük alanlar
             await setDoc(doc(fsdb, 'users', uid), {
-                stats:           typeof window.stats !== 'undefined' ? stats : {},
-                allData:         cleanAllData,
-                updatedAt:       new Date().toISOString(),
-                grScores,
-                perfHist,
-                badges,
-                profile,
-                streak,
-                lastDay,
-                paragrafSorular: paragrafSorularData,
-                paragraflar:     paragraflarData,
-                ...aiArsivData,
-                ...bankData,
+                stats:     typeof window.stats !== 'undefined' ? stats : {},
+                grScores, perfHist, badges, profile, streak, lastDay,
+                updatedAt: new Date().toISOString(),
                 ...ydtaiStats,
                 ...apiKeyData
             }, { merge: true });
 
-            // ── Admin ise paylaşımlı içeriği de güncelle ──────────────────
-            // Tüm kullanıcıların görebileceği shared/content doc'una yaz.
-            const ADMIN_EMAIL_SYNC = 'stasalan@gmail.com';
+            // ── Kelime listeleri — subcollection: users/{uid}/lists/{listAdı} ──
+            const currentAllData = typeof window.allData !== 'undefined' ? allData : {};
+            const batch = writeBatch(fsdb);
+            Object.keys(currentAllData).forEach(listName => {
+                const words = currentAllData[listName];
+                if (!Array.isArray(words) || words.length === 0) return;
+                const safeKey = _fsCleanKey(listName);
+                const listRef = doc(fsdb, 'users', uid, 'lists', safeKey);
+                batch.set(listRef, { displayName: listName, words: words, updatedAt: new Date().toISOString() });
+            });
+            await batch.commit();
+
+            // ── AI Arşivleri — subcollection: users/{uid}/arsiv/{tip} ──
+            const arsivMap = {
+                kelime:  window.aiArsiv        || _lsGet('ydt_ai_arsiv')       || [],
+                pasaj:   window.aiPasajArsiv   || _lsGet('ydt_ai_pasaj_arsiv') || [],
+                gramer:  window.aiGramerArsiv  || _lsGet('ydt_gramer_arsiv')   || [],
+                cloze:   window.aiClozeArsiv   || _lsGet('ydt_cloze_arsiv')    || [],
+                yakin:   window.aiYakinArsiv   || _lsGet('ydt_yakin_arsiv')    || [],
+                diyalog: window.aiDiyalogArsiv || _lsGet('ydt_diyalog_arsiv')  || [],
+                durum:   window.aiDurumArsiv   || _lsGet('ydt_durum_arsiv')    || [],
+                paracom: window.aiParaComArsiv || _lsGet('ydt_paracom_arsiv')  || [],
+                paraboz: window.aiParaBozArsiv || _lsGet('ydt_paraboz_arsiv')  || [],
+            };
+            const arsivBatch = writeBatch(fsdb);
+            Object.entries(arsivMap).forEach(([tip, arr]) => {
+                arsivBatch.set(doc(fsdb, 'users', uid, 'arsiv', tip),
+                    { items: arr, updatedAt: new Date().toISOString() });
+            });
+            await arsivBatch.commit();
+
+            // ── Paragraf & Sorular — subcollection: users/{uid}/content/{tip} ──
+            const paragraflarData     = window.paragraflar     || _lsGet('ydt_paragraflar')      || [];
+            const paragrafSorularData = window.paragrafSorular || _lsGet('ydt_paragraf_sorular') || {};
+            const contentBatch = writeBatch(fsdb);
+            contentBatch.set(doc(fsdb, 'users', uid, 'content', 'paragraflar'),
+                { items: paragraflarData, updatedAt: new Date().toISOString() });
+            contentBatch.set(doc(fsdb, 'users', uid, 'content', 'paragrafSorular'),
+                { data: paragrafSorularData, updatedAt: new Date().toISOString() });
+            await contentBatch.commit();
+
+            // ── Soru Bankaları — subcollection: users/{uid}/content/bank_{cat} ──
+            const bankBatch = writeBatch(fsdb);
+            ['paragraf','gramer','cloze','yakin','diyalog','paratam','durum','parabut'].forEach(cat => {
+                const v = _lsGet(`ydt_bank_${cat}`);
+                if (v && v.length) {
+                    bankBatch.set(doc(fsdb, 'users', uid, 'content', `bank_${cat}`),
+                        { items: v, updatedAt: new Date().toISOString() });
+                }
+            });
+            await bankBatch.commit();
+
+            // ── Admin: shared/content güncelle ───────────────────────────────
+            const ADMIN_EMAIL_SYNC = window.ADMIN_EMAIL || 'stasalan@gmail.com';
             if (window._currentUser?.email === ADMIN_EMAIL_SYNC && paragraflarData.length > 0) {
                 try {
                     await setDoc(doc(fsdb, 'shared', 'content'), {
@@ -2742,8 +2889,8 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
 
             _authSyncBar('synced', 'Kaydedildi ✓');
             setSyncStatus('ok');
-            localStorage.setItem(`ydt_${uid}_stats`,    JSON.stringify(window.stats));
-            localStorage.setItem(`ydt_${uid}_all_data`, JSON.stringify(window.allData));
+            localStorage.setItem(`ydt_${uid}_stats`,    JSON.stringify(window.stats || {}));
+            localStorage.setItem(`ydt_${uid}_all_data`, JSON.stringify(window.allData || {}));
         } catch(e) {
             console.warn('Firestore kayıt hatası:', e);
             setSyncStatus('idle');
@@ -2808,15 +2955,16 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
 
     async function _authSignOut() {
         if (authTimerInterval) { clearInterval(authTimerInterval); authTimerInterval = null; }
+        if (authSaveInterval)  { clearInterval(authSaveInterval);  authSaveInterval  = null; }
         const user = auth.currentUser;
         if (user) await _saveUserData(user.uid);
         await signOut(auth);
         _showLoginOverlay();
     }
 
-    const ADMIN_EMAIL = 'stasalan@gmail.com';
+    window.ADMIN_EMAIL = 'stasalan@gmail.com';
     function _updateAdminVisibility(email) {
-        const isAdmin = email === ADMIN_EMAIL;
+        const isAdmin = email === window.ADMIN_EMAIL;
         ['sb-admin','di-admin'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.style.display = isAdmin ? '' : 'none';
@@ -2848,8 +2996,10 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
                     }
                 }, 60000);
             }
-            setInterval(() => _saveUserData(user.uid), 5 * 60 * 1000);
-            window.addEventListener('beforeunload', () => _saveUserData(user.uid));
+            if (!authSaveInterval) {
+                authSaveInterval = setInterval(() => _saveUserData(user.uid), 5 * 60 * 1000);
+                window.addEventListener('beforeunload', () => _saveUserData(user.uid), { once: true });
+            }
         } else {
             // Çıkışta da sıfırla
             window.stats   = { totalAnswers: 0, correctAnswers: 0, totalMinutes: 0 };
@@ -2895,6 +3045,8 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
 <script src="js/quiz.js"></script>
 <script src="js/study.js"></script>
 <script src="js/games.js"></script>
+<!-- rss_paragraf.js, ai-daily.js'den önce yüklenmeli: _analyzeWithAI, _toPassageSync bağımlılıkları -->
+<script src="rss_paragraf.js"></script>
 <script src="js/ai-daily.js"></script>
 <script src="js/aig.js"></script>
 <script src="js/profile.js"></script>
@@ -2911,7 +3063,6 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
 <script src="adjadv.js"></script>
 <script src="tagquant.js"></script>
 <script src="speaking.js"></script>
-<script src="rss_paragraf.js"></script>
 <script src="kids.js"></script>
 <script src="onboarding.js"></script>
 
@@ -3016,7 +3167,6 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
 <script>
 /* ── Günün Görevi CTA ── */
 function initDashToday() {
-    // allData'nın yüklenmiş olduğundan emin ol
     if (typeof getUserKey === 'function') {
         const raw = localStorage.getItem(getUserKey('all_data'));
         if (raw) { try { allData = JSON.parse(raw); } catch(e) {} }
@@ -3026,14 +3176,21 @@ function initDashToday() {
     const allKeys = (typeof allData !== 'undefined') ? Object.keys(allData) : [];
     const totalW  = allKeys.reduce((s,k) => s + (allData[k]||[]).length, 0);
 
-    const titleEl  = document.getElementById('dash-today-title');
-    const metaEl   = document.getElementById('dash-today-meta');
-    const iconEl   = document.getElementById('dash-today-icon');
-    const ctaLabel = document.getElementById('dash-today-cta-label');
+    const titleEl    = document.getElementById('dash-today-title');
+    const metaEl     = document.getElementById('dash-today-meta');
+    const iconEl     = document.getElementById('dash-today-icon');
+    const ctaLabel   = document.getElementById('dash-today-cta-label');
+    const toggleBtn  = document.getElementById('dash-lists-toggle');
+    const toggleLbl  = document.getElementById('dash-lists-toggle-label');
+    const dropdown   = document.getElementById('dash-lists-dropdown');
     if (!titleEl) return;
 
-    const hour   = new Date().getHours();
-    const greet  = hour < 12 ? 'Günaydın 🌅' : hour < 18 ? 'İyi günler ☀️' : 'İyi akşamlar 🌙';
+    const hour  = new Date().getHours();
+    const greet = hour < 12 ? 'Günaydın 🌅' : hour < 18 ? 'İyi günler ☀️' : 'İyi akşamlar 🌙';
+
+    // Reset dropdown
+    if (dropdown) { dropdown.innerHTML = ''; dropdown.style.display = 'none'; }
+    if (toggleBtn) toggleBtn.style.display = 'none';
 
     if (sm2Due > 0) {
         titleEl.innerHTML    = `<strong>${sm2Due}</strong> kelime tekrar seni bekliyor`;
@@ -3043,7 +3200,7 @@ function initDashToday() {
         window._dashCTAFn   = () => (typeof startSM2Review === 'function') && startSM2Review();
     } else if (totalW === 0) {
         titleEl.innerHTML    = 'YDT Starter Pack\'i <strong>yükle</strong>';
-        metaEl.textContent   = '500 hazır YDT kelimesiyle hemen başla';
+        metaEl.textContent   = '1300+ hazır kelimeyle hemen başla';
         iconEl.textContent   = '🚀';
         ctaLabel.textContent = 'Starter Pack Yükle';
         window._dashCTAFn   = () => {
@@ -3056,14 +3213,39 @@ function initDashToday() {
             }
         };
     } else {
-        const listName       = allKeys[0] || '';
-        const count          = allData[listName] ? allData[listName].length : totalW;
-        titleEl.innerHTML    = `${greet} — <strong>${count}</strong> kelime seni bekliyor`;
-        metaEl.textContent   = listName ? `📚 ${listName}` : 'Aktif liste';
+        titleEl.innerHTML    = `${greet} — <strong>${totalW}</strong> kelime seni bekliyor`;
+        metaEl.textContent   = '';
         iconEl.textContent   = '📖';
         ctaLabel.textContent = 'Öğrenmeye Başla';
         window._dashCTAFn   = () => (typeof startStudy === 'function') && startStudy();
+
+        // Chip'leri dropdown içine yaz
+        if (dropdown && allKeys.length > 0) {
+            const chipsHtml = allKeys.map(k => {
+                const cnt = (allData[k] || []).length;
+                const firstChar = k.trim().charAt(0);
+                const hasEmoji  = /\p{Emoji}/u.test(firstChar);
+                const label     = hasEmoji ? k : `📚 ${k}`;
+                return `<span class="dash-list-chip">${label} <b>${cnt}</b></span>`;
+            }).join('');
+            dropdown.innerHTML = `<div class="dash-list-chips">${chipsHtml}</div>`;
+        }
+
+        // Toggle butonu göster: "X liste ▾"
+        if (toggleBtn && toggleLbl) {
+            toggleLbl.textContent = `📚 ${allKeys.length} liste`;
+            toggleBtn.style.display = 'inline-flex';
+        }
     }
+}
+
+function toggleDashLists() {
+    const dropdown = document.getElementById('dash-lists-dropdown');
+    const chev     = document.getElementById('dash-lists-chev');
+    if (!dropdown) return;
+    const open = dropdown.style.display !== 'none';
+    dropdown.style.display = open ? 'none' : 'block';
+    if (chev) chev.style.transform = open ? '' : 'rotate(180deg)';
 }
 
 function dashTodayCTA() {
@@ -3144,7 +3326,79 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll(sel).forEach(function (btn) {
         btn.addEventListener('click', hideFullScreenPages);
     });
+
+    // ── data-nav butonları için global click handler ─────────────────────
+    // sb-admin ve diğer data-nav="xxx-page" butonlarını çalıştırır
+    // onclick olmayan tüm data-nav butonlarını kapsar (event delegation)
+    document.addEventListener('click', function (e) {
+        var btn = e.target.closest('[data-nav]');
+        if (!btn) return;
+        // Kendi onclick'i varsa dokunma — o zaten çalışır
+        if (btn.hasAttribute('onclick')) return;
+        var pageId = btn.getAttribute('data-nav');
+        if (!pageId) return;
+        e.preventDefault();
+        if (typeof navTo === 'function') {
+            navTo(pageId);
+        } else if (typeof showPage === 'function') {
+            showPage(pageId);
+        }
+    });
 });
+
+// ── Eski Starter Pack / sistem listelerini allData'dan temizle ──
+// Kullanıcının kendi oluşturduğu özel listeler KORUNUR
+// Sadece bilinen eski sistem listeleri ve DEFAULT_VOCAB ile değiştirilen listeler çıkarılır
+function _purgeAllDataLegacyLists(dataObj) {
+    if (!dataObj || typeof dataObj !== 'object') return;
+
+    // YDT Master Pack'taki GÜNCEL liste adları — bunlar KORUNUR
+    const VALID_STARTER_LISTS = new Set([
+        '🟢 A2 Temel', '🔵 B1 Orta', '🟡 B2 Orta-İleri', '🔴 C1 İleri', '🟣 C2 Üst-İleri'
+    ]);
+
+    // Bilinen eski sistem listeleri — silinir
+    const LEGACY_EXACT = new Set([
+        'Genel Kelimeler', 'Örnek Liste', 'kidsPlayer', 'paragrafSorular',
+        'aiArsiv', 'Mart V2', 'Mart V1', 'Şubat V2', 'Şubat V1',
+        'Liste 1', 'Liste 2', 'Liste 3', 'Liste 4', 'Liste 5',
+        'YDT A1', 'YDT A2', 'YDT B1', 'YDT B2', 'YDT C1',
+        'A2 Temel', 'B1 Orta', 'B2 Orta-İleri', 'C1 İleri', // emoji'siz eski versiyonlar
+    ]);
+
+    Object.keys(dataObj).forEach(key => {
+        const isLegacyExact = LEGACY_EXACT.has(key);
+        // "Liste X - N Kelime" gibi pattern
+        const isLegacyPattern = /^Liste\s+\d+(\s*-|\s+\d)/.test(key);
+        // Bilinen sistem anahtar kelimeleri (array olmayan veri yanlışlıkla girmiş)
+        const isSystemKey = ['paragrafSorular','aiArsiv','kidsPlayer'].includes(key);
+        // Eski emoji'siz starter pack versiyonları
+        const isOldStarter = !VALID_STARTER_LISTS.has(key) && (
+            isLegacyExact || isLegacyPattern || isSystemKey
+        );
+
+        if (isOldStarter) {
+            delete dataObj[key];
+            console.info(`[purge] Eski liste silindi: "${key}"`);
+        }
+    });
+
+    // DEFAULT_VOCAB listelerini eksikse ekle
+    if (typeof DEFAULT_VOCAB !== 'undefined') {
+        Object.keys(DEFAULT_VOCAB).forEach(k => {
+            if (!dataObj[k]) {
+                dataObj[k] = DEFAULT_VOCAB[k];
+                console.info(`[purge] Yeni liste eklendi: "${k}"`);
+            }
+        });
+    } else if (typeof YDT_STARTER_PACK !== 'undefined') {
+        Object.keys(YDT_STARTER_PACK).forEach(k => {
+            if (!dataObj[k]) {
+                dataObj[k] = YDT_STARTER_PACK[k];
+            }
+        });
+    }
+}
 
 function ydtSignOut() {
     if (window.AuthModule && typeof window.AuthModule.authSignOut === 'function') {
@@ -3168,3 +3422,8 @@ function ydtSignOut() {
         <button class="empty-state-cta btn" style="display:none;"></button>
     </div>
 </template>
+<style>
+.dash-list-chips{display:flex;flex-wrap:wrap;gap:5px;}
+.dash-list-chip{display:inline-flex;align-items:center;gap:4px;font-size:.72rem;background:rgba(0,0,0,.06);border-radius:20px;padding:3px 10px;color:var(--ink2,#555);white-space:nowrap;}
+.dash-list-chip b{color:var(--color-primary,#e63946);font-weight:800;}
+</style>

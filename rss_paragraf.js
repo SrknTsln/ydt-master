@@ -39,11 +39,11 @@
 //  └─────────────────────────────────────────────────────────────┘
 // ════════════════════════════════════════════════════════════════
 
-/* ── Admin kontrolü — dosyanın en başında tanımla (render patch'ten önce) ── */
-const RSS_ADMIN_EMAIL = 'stasalan@gmail.com';
+/* ── Admin kontrolü — Worker tarafında yapılır, client'ta e-posta saklanmaz ── */
 window._isAdmin = function() {
-    const email = window._currentUser?.email || '';
-    return email === RSS_ADMIN_EMAIL;
+    // Senkron UI kararları için _adminVerified flag'ini kullan
+    // adminCheckAccess() Worker'dan async onayladıktan sonra bu flag set edilir
+    return window._adminVerified === true;
 };
 
 
@@ -54,7 +54,7 @@ const RSS_SOURCES_SCIENCE = [
     { name: 'The Guardian',    url: 'https://www.theguardian.com/science/rss',                       icon: '🧪', cat: 'science' },
     { name: 'NASA News',       url: 'https://www.nasa.gov/rss/dyn/breaking_news.rss',                icon: '🚀', cat: 'science' },
     { name: 'NPR Science',     url: 'https://feeds.npr.org/1007/rss.xml',                            icon: '📡', cat: 'science' },
-    { name: 'Sci. American',   url: 'https://rss.sciam.com/ScientificAmerican-Global',               icon: '🔬', cat: 'science' },
+    { name: 'New Scientist',   url: 'https://www.newscientist.com/feed/home/',                       icon: '🔬', cat: 'science' },
 ];
 const RSS_SOURCES_TECH = [
     { name: 'MIT Tech Review', url: 'https://www.technologyreview.com/stories.rss',                  icon: '🤖', cat: 'tech' },
@@ -82,10 +82,8 @@ const WORKER_URL = 'https://autumn-hill-be24ydt-master.stasalan.workers.dev';
 // Worker hazır mı? (URL güncellenmemişse eski proxy'lere fallback)
 const _workerReady = WORKER_URL && !WORKER_URL.includes('KULLANICI');
 
-// Eski yedek proxy'ler (Worker çalışmadığında fallback)
-const RSS_API_KEY = 'vsl1eq3auurlhgourjr8rznm6q7l8zxy0pkhwnxo';
+// Yedek proxy'ler (Worker çalışmadığında fallback — API key kaldırıldı)
 const RSS_PROXIES = [
-    u => `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(u)}&api_key=vsl1eq3auurlhgourjr8rznm6q7l8zxy0pkhwnxo&count=10`,
     u => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,
     u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
     u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`
@@ -93,11 +91,11 @@ const RSS_PROXIES = [
 
 /* ── Yardımcılar ────────────────────────────────────────────── */
 function _rssToday() { return new Date().toISOString().slice(0, 10); }
-// Her 3 saatte bir farklı cache slot → içerik taze kalır
+// Her 1 saatte bir farklı cache slot → içerik taze kalır
 function _rssCacheSlot() {
     const now  = new Date();
-    const slot = Math.floor(now.getHours() / 3);
-    return `${_rssToday()}_s${slot}`;
+    // Saatlik slot — yeni haber her saat (eskiden 3 saatti)
+    return `${_rssToday()}_h${now.getHours()}`;
 }
 
 function _parseXML(xmlStr) {
@@ -149,82 +147,86 @@ function _parseRSS2JSON(data) {
 
 /* ── Tek kaynaktan sıralı proxy ile çek ─────────────────────── */
 async function _fetchOneSource(source) {
+    try {
 
-    // 1. ÖNCELİK: Kendi Cloudflare Worker'ı — limitsiz, hızlı, güvenilir
-    if (_workerReady) {
-        try {
-            const workerUrl = `${WORKER_URL}/rss?url=${encodeURIComponent(source.url)}`;
-            const res = await fetch(workerUrl, { signal: AbortSignal.timeout(8000) });
-            if (res.ok) {
-                const xml = await res.text();
+        // 1. ÖNCELİK: Kendi Cloudflare Worker'ı — limitsiz, hızlı, güvenilir
+        if (_workerReady) {
+            try {
+                const workerUrl = `${WORKER_URL}/rss?url=${encodeURIComponent(source.url)}`;
+                const res = await fetch(workerUrl, { signal: AbortSignal.timeout(8000) });
+                if (res.ok) {
+                    const xml = await res.text();
+                    if (xml && xml.includes('<item')) {
+                        const items = _parseXML(xml);
+                        if (items.length) {
+                            console.log(`[RSS ✅] ${source.name} → Worker (${items.length} item)`);
+                            return { source, items };
+                        }
+                    }
+                }
+            } catch(e) {
+                console.warn(`[RSS ⚠️] ${source.name} Worker timeout, fallback deneniyor…`);
+            }
+        }
+
+        // 2. FALLBACK: Ücretsiz proxy'ler paralel (Worker yoksa veya başarısız olursa)
+        const freeProxies = [
+            { make: u => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`, mode: 'json' },
+            { make: u => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,          mode: 'text' },
+            { make: u => `https://api.codetabs.com/v1/proxy?url=${encodeURIComponent(u)}`, mode: 'text' },
+        ];
+        const freeTries = freeProxies.map(async ({ make, mode }) => {
+            try {
+                const res = await fetch(make(source.url), { signal: AbortSignal.timeout(6000) });
+                if (!res.ok) return null;
+                let xml;
+                if (mode === 'json') {
+                    const data = await res.json();
+                    xml = data.contents || null;
+                } else {
+                    xml = await res.text();
+                }
                 if (xml && xml.includes('<item')) {
                     const items = _parseXML(xml);
                     if (items.length) {
-                        console.log(`[RSS ✅] ${source.name} → Worker (${items.length} item)`);
+                        console.log(`[RSS ✅] ${source.name} → free proxy (${items.length} item)`);
                         return { source, items };
                     }
                 }
+            } catch(e) { console.debug("[RSS proxy] fetch hatası, kaynak atlandı:", e.message); }
+            return null;
+        });
+        try {
+            const winner = await Promise.any(freeTries);
+            if (winner) return winner;
+        } catch(_) { console.debug("[RSS] Tüm proxy'ler başarısız, fallback'e geçiliyor"); }
+
+        // 3. SON FALLBACK: rss2json (API key'siz ücretsiz tier)
+        try {
+            const url = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(source.url)}&count=10`;
+            const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
+            if (res.ok) {
+                const data = await res.json();
+                if (data.status === 'ok' && data.items?.length) {
+                    const items = _parseRSS2JSON(data);
+                    if (items.length) {
+                        console.log(`[RSS ✅] ${source.name} → rss2json fallback (${items.length} item)`);
+                        return { source, items };
+                    }
+                }
+                if (data.status === 'error') {
+                    console.warn(`[RSS ⚠️] ${source.name} rss2json: ${data.message}`);
+                }
             }
         } catch(e) {
-            console.warn(`[RSS ⚠️] ${source.name} Worker timeout, fallback deneniyor…`);
+            console.warn(`[RSS ⚠️] ${source.name} rss2json timeout`);
         }
-    }
 
-    // 2. FALLBACK: Ücretsiz proxy'ler paralel (Worker yoksa veya başarısız olursa)
-    const freeProxies = [
-        { make: u => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`, mode: 'json' },
-        { make: u => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,          mode: 'text' },
-        { make: u => `https://api.codetabs.com/v1/proxy?url=${encodeURIComponent(u)}`, mode: 'text' },
-    ];
-    const freeTries = freeProxies.map(async ({ make, mode }) => {
-        try {
-            const res = await fetch(make(source.url), { signal: AbortSignal.timeout(6000) });
-            if (!res.ok) return null;
-            let xml;
-            if (mode === 'json') {
-                const data = await res.json();
-                xml = data.contents || null;
-            } else {
-                xml = await res.text();
-            }
-            if (xml && xml.includes('<item')) {
-                const items = _parseXML(xml);
-                if (items.length) {
-                    console.log(`[RSS ✅] ${source.name} → free proxy (${items.length} item)`);
-                    return { source, items };
-                }
-            }
-        } catch(e) {}
+        console.warn(`[RSS ❌] ${source.name} — tüm proxy'ler başarısız`);
         return null;
-    });
-    try {
-        const winner = await Promise.any(freeTries);
-        if (winner) return winner;
-    } catch(_) {}
-
-    // 3. SON FALLBACK: rss2json API key
-    try {
-        const url = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(source.url)}&api_key=${RSS_API_KEY}&count=10`;
-        const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
-        if (res.ok) {
-            const data = await res.json();
-            if (data.status === 'ok' && data.items?.length) {
-                const items = _parseRSS2JSON(data);
-                if (items.length) {
-                    console.log(`[RSS ✅] ${source.name} → rss2json fallback (${items.length} item)`);
-                    return { source, items };
-                }
-            }
-            if (data.status === 'error') {
-                console.warn(`[RSS ⚠️] ${source.name} rss2json: ${data.message}`);
-            }
-        }
     } catch(e) {
-        console.warn(`[RSS ⚠️] ${source.name} rss2json timeout`);
+        console.error("[_fetchOneSource] Hata:", e.message || e);
     }
-
-    console.warn(`[RSS ❌] ${source.name} — tüm proxy'ler başarısız`);
-    return null;
 }
 
 /* ── İngilizce metin kontrolü ───────────────────────────────── */
@@ -239,79 +241,95 @@ function _isEnglish(text) {
 
 /* ── Tüm kaynaklardan paralel çek → count kadar makale ─────── */
 async function _fetchAllRSS(count) {
-    // Kategori sırası: Bilim → Teknoloji → Oyun
-    // Her kategoriden paralel çek, önce bilim doldur, yer kalırsa diğerlerinden ekle
-    const SCIENCE_SLOTS = 12; // 20'nin %60'ı bilim
-    const TECH_SLOTS    = 5;  // %25 teknoloji
-    const GAMING_SLOTS  = 3;  // %15 oyun (kalan)
+    try {
+        // Kategori sırası: Bilim → Teknoloji → Oyun
+        // Her kategoriden paralel çek, önce bilim doldur, yer kalırsa diğerlerinden ekle
+        const SCIENCE_SLOTS = 12; // 20'nin %60'ı bilim
+        const TECH_SLOTS    = 5;  // %25 teknoloji
+        const GAMING_SLOTS  = 3;  // %15 oyun (kalan)
 
-    function _pickFromResults(results, maxPerSource) {
-        const articles = [];
-        for (const r of results) {
-            if (r.status !== 'fulfilled' || !r.value) continue;
-            const { source, items } = r.value;
-            const sorted = [...items]
-                .filter(i => _isEnglish(i.description + ' ' + (i.content||'')))
-                .sort((a, b) =>
-                    (b.description + (b.content||'')).length - (a.description + (a.content||'')).length
-                );
-            sorted.slice(0, maxPerSource).forEach(pick => {
-                if (pick) articles.push({ ...pick, sourceName: source.name, sourceIcon: source.icon, _cat: source.cat });
-            });
+        function _pickFromResults(results, maxPerSource) {
+            const articles = [];
+            for (const r of results) {
+                if (r.status !== 'fulfilled' || !r.value) continue;
+                const { source, items } = r.value;
+                const sorted = [...items]
+                    .filter(i => _isEnglish(i.description + ' ' + (i.content||'')))
+                    .sort((a, b) => {
+                        // En yeni haber önce
+                        const da = a.pubDate ? new Date(a.pubDate).getTime() : 0;
+                        const db = b.pubDate ? new Date(b.pubDate).getTime() : 0;
+                        if (db !== da) return db - da;
+                        // Tarih eşitse daha zengin içerik
+                        return (b.description + (b.content||'')).length - (a.description + (a.content||'')).length;
+                    });
+                sorted.slice(0, maxPerSource).forEach(pick => {
+                    if (pick) articles.push({ ...pick, sourceName: source.name, sourceIcon: source.icon, _cat: source.cat });
+                });
+            }
+            // Kategori içinde karıştır
+            for (let i = articles.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [articles[i], articles[j]] = [articles[j], articles[i]];
+            }
+            return articles;
         }
-        // Kategori içinde karıştır
-        for (let i = articles.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [articles[i], articles[j]] = [articles[j], articles[i]];
-        }
-        return articles;
-    }
 
-    // Tüm kategorileri paralel çek
-    const [sciRes, techRes, gameRes] = await Promise.all([
-        Promise.allSettled(RSS_SOURCES_SCIENCE.map(_fetchOneSource)),
-        Promise.allSettled(RSS_SOURCES_TECH.map(_fetchOneSource)),
-        Promise.allSettled(RSS_SOURCES_GAMING.map(_fetchOneSource)),
-    ]);
+        // Tüm kategorileri paralel çek
+        const [sciRes, techRes, gameRes] = await Promise.all([
+            Promise.allSettled(RSS_SOURCES_SCIENCE.map(_fetchOneSource)),
+            Promise.allSettled(RSS_SOURCES_TECH.map(_fetchOneSource)),
+            Promise.allSettled(RSS_SOURCES_GAMING.map(_fetchOneSource)),
+        ]);
 
-    const sciArticles  = _pickFromResults(sciRes,  2);
-    const techArticles = _pickFromResults(techRes, 2);
-    const gameArticles = _pickFromResults(gameRes, 2);
+        const sciArticles  = _pickFromResults(sciRes,  2);
+        const techArticles = _pickFromResults(techRes, 2);
+        const gameArticles = _pickFromResults(gameRes, 2);
 
-    // Önce bilim slotlarını doldur, yer kalırsa teknoloji, sonra oyun
-    let articles = [
-        ...sciArticles.slice(0, SCIENCE_SLOTS),
-        ...techArticles.slice(0, TECH_SLOTS),
-        ...gameArticles.slice(0, GAMING_SLOTS),
-    ];
-
-    // Bilim yetmediyse teknoloji/oyundan tamamla
-    if (articles.length < count) {
-        const extra = [
-            ...sciArticles.slice(SCIENCE_SLOTS),
-            ...techArticles.slice(TECH_SLOTS),
-            ...gameArticles.slice(GAMING_SLOTS),
+        // Önce bilim slotlarını doldur, yer kalırsa teknoloji, sonra oyun
+        let articles = [
+            ...sciArticles.slice(0, SCIENCE_SLOTS),
+            ...techArticles.slice(0, TECH_SLOTS),
+            ...gameArticles.slice(0, GAMING_SLOTS),
         ];
-        articles = [...articles, ...extra].slice(0, count);
-    }
 
-    console.log(`[RSS] Toplam: ${articles.length} makale — Bilim: ${articles.filter(a=>a._cat==='science').length} · Teknoloji: ${articles.filter(a=>a._cat==='tech').length} · Oyun: ${articles.filter(a=>a._cat==='gaming').length}`);
-    return articles.slice(0, count);
+        // Bilim yetmediyse teknoloji/oyundan tamamla
+        if (articles.length < count) {
+            const extra = [
+                ...sciArticles.slice(SCIENCE_SLOTS),
+                ...techArticles.slice(TECH_SLOTS),
+                ...gameArticles.slice(GAMING_SLOTS),
+            ];
+            articles = [...articles, ...extra].slice(0, count);
+        }
+
+        console.log(`[RSS] Toplam: ${articles.length} makale — Bilim: ${articles.filter(a=>a._cat==='science').length} · Teknoloji: ${articles.filter(a=>a._cat==='tech').length} · Oyun: ${articles.filter(a=>a._cat==='gaming').length}`);
+        return articles.slice(0, count);
+    } catch(e) {
+        console.error("[_fetchAllRSS] Hata:", e.message || e);
+    }
 }
 
 /* ── Ham metni temizle ──────────────────────────────────────── */
 function _cleanText(article) {
-    // description + content birleştir — daha uzun metin için
-    const raw = [article.description, article.content]
-        .filter(Boolean)
-        .join(' ')
-        .replace(/<[^>]+>/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
+    // description + content birleştir — önce content'i tercih et (genellikle daha uzun)
+    const desc = (article.description || '').replace(/<[^>]+>/g, ' ').trim();
+    const cont = (article.content    || '').replace(/<[^>]+>/g, ' ').trim();
+
+    // İkisini de birleştir; description çok kısaysa content'i öne al
+    let raw;
+    if (cont.length > desc.length * 1.5 && cont.length > 200) {
+        // content belirgin şekilde daha uzunsa onu kullan, desc'i sona ekle
+        raw = cont + (desc && desc !== cont ? ' ' + desc : '');
+    } else {
+        raw = [desc, cont].filter(Boolean).join(' ');
+    }
+
+    raw = raw.replace(/\s+/g, ' ').trim();
 
     let t = raw;
     // Çok kısaysa başlığı öne ekle
-    if (t.length < 120) t = article.title + '. ' + t;
+    if (t.length < 120) t = (article.title || '') + '. ' + t;
 
     // Cümleleri say — 4'e ulaşana kadar kırpma
     const sentences = t.match(/[^.!?]+[.!?]+/g) || [];
@@ -416,79 +434,98 @@ function _vocabFallback(text) {
     return { level, levelNote: 'Otomatik analiz', vocabulary: vocab };
 }
 
-/* ── Batch AI analizi: tüm makaleler tek prompt ────────────── */
+/* ── Batch AI analizi: makaleler 8'lik gruplarda işlenir ─────── */
 async function _batchAnalyzeWithAI(articles) {
-    // Her makale için kısa metin özeti hazırla (token tasarrufu)
-    const items = articles.map((a, i) => ({
-        i,
-        title: a._title || a.title || '',
-        snippet: (a._text || a.text || '').slice(0, 300)
-    }));
-
-    const prompt =
-`You are an English teacher analyzing passages for Turkish YDT exam students.
-Analyze ALL ${items.length} passages below and return ONLY a JSON array (no markdown).
-
-${items.map(it => `[${it.i}] Title: "${it.title}"\nText: "${it.snippet}"`).join('\n\n')}
-
-Return ONLY this JSON array (length must equal ${items.length}):
-[{"level":"B2","levelNote":"Kısa Türkçe not","vocabulary":{"word":"Türkçe karşılık"}}, ...]
-
-Rules per item:
-- level: A2/B1/B2/C1/C2
-- levelNote: max 6 Turkish words
-- vocabulary: 6-8 hardest words from the text with Turkish translations`;
-
     try {
         if (typeof aiCall !== 'function') throw new Error('aiCall yok');
-        const result = await Promise.race([
-            aiCall(prompt),
-            new Promise((_, rej) => setTimeout(() => rej(new Error('batch_timeout')), 15000))
-        ]);
-        // result should be array
-        if (Array.isArray(result) && result.length === articles.length) return result;
-        // If returned as object with array inside
-        const arr = Array.isArray(result) ? result : (result?.items || result?.data || null);
-        if (Array.isArray(arr) && arr.length > 0) return arr;
-        throw new Error('Beklenmeyen yanıt formatı');
-    } catch(err) {
-        console.warn('[rss_paragraf] Batch AI analizi başarısız:', err.message, '— fallback kullanılıyor');
-        return null; // caller will use fallback
+
+        const CHUNK = 8; // 8 makale / istek — timeout riski azalır
+        const allResults = [];
+
+        for (let start = 0; start < articles.length; start += CHUNK) {
+            const chunk = articles.slice(start, start + CHUNK);
+            const items = chunk.map((a, i) => ({
+                i: start + i,
+                title:   (a._title || a.title || '').slice(0, 80),
+                snippet: (a._text  || a.text  || '').slice(0, 250) // daha kısa snippet
+            }));
+
+            const prompt =
+`You are an English teacher for Turkish YDT students.
+Analyze the ${items.length} passages below. Return ONLY a JSON array, no markdown.
+
+${items.map(it => `[${it.i}] "${it.title}"\n${it.snippet}`).join('\n\n')}
+
+JSON array (exactly ${items.length} items):
+[{"level":"B2","levelNote":"max 6 Turkish words","vocabulary":{"word":"Turkish"}}, ...]
+- level: A2/B1/B2/C1/C2  - vocabulary: 5-6 hardest words`;
+
+            try {
+                const result = await Promise.race([
+                    aiCall(prompt),
+                    new Promise((_, rej) => setTimeout(() => rej(new Error('batch_timeout')), 25000))
+                ]);
+                const arr = Array.isArray(result) ? result
+                           : (result?.items || result?.data || null);
+                if (Array.isArray(arr) && arr.length > 0) {
+                    allResults.push(...arr);
+                } else {
+                    return null; // bu chunk başarısız → fallback'e geç
+                }
+            } catch(chunkErr) {
+                console.warn(`[rss_paragraf] Batch chunk ${start}-${start+CHUNK} başarısız:`, chunkErr.message);
+                return null;
+            }
+        }
+
+        return allResults.length === articles.length ? allResults : null;
+
+    } catch(e) {
+        console.error("[_batchAnalyzeWithAI] Hata:", e.message || e);
     }
 }
 
 /* ── AI: tek makale analizi (5 sn timeout ile) ──────────────── */
 async function _analyzeWithAI(text, title) {
-    const prompt =
-`You are an expert English teacher for Turkish YDT exam students.
-Analyze this passage and return ONLY valid JSON (no markdown).
-
-Title: "${title}"
-Text: "${text.slice(0, 400)}"
-
-Return exactly: {"level":"C1","levelNote":"Akademik söz varlığı yoğun","vocabulary":{"english_word":"Türkçe karşılık"}}
-
-Rules:
-- level: A2/B1/B2/C1/C2
-- levelNote: max 6 Turkish words
-- vocabulary: 6-8 hardest words FROM the text with accurate Turkish translations`;
     try {
-        if (typeof aiCall === 'function') {
-            return await Promise.race([
-                aiCall(prompt),
-                new Promise((_, rej) => setTimeout(() => rej(new Error('single_timeout')), 7000))
-            ]);
-        }
-    } catch(_) {}
-    return _vocabFallback(text);
+        const prompt =
+    `You are an expert English teacher for Turkish YDT exam students.
+    Analyze this passage and return ONLY valid JSON (no markdown).
+
+    Title: "${title}"
+    Text: "${text.slice(0, 400)}"
+
+    Return exactly: {"level":"C1","levelNote":"Akademik söz varlığı yoğun","vocabulary":{"english_word":"Türkçe karşılık"}}
+
+    Rules:
+    - level: A2/B1/B2/C1/C2
+    - levelNote: max 6 Turkish words
+    - vocabulary: 6-8 hardest words FROM the text with accurate Turkish translations`;
+        try {
+            if (typeof aiCall === 'function') {
+                return await Promise.race([
+                    aiCall(prompt),
+                    new Promise((_, rej) => setTimeout(() => rej(new Error('single_timeout')), 7000))
+                ]);
+            }
+        } catch(_) { console.debug("[RSS AI] Tekil analiz zaman aşımı, vocab fallback"); }
+        return _vocabFallback(text);
+    } catch(e) {
+        console.error("[_analyzeWithAI] Hata:", e.message || e);
+    }
 }
 
 /* ── Makaleyi passage nesnesine dönüştür (AI olmadan da çalışır) */
 function _toPassageSync(article, aiData) {
-    const text = typeof article._text === 'string' ? article._text : _cleanText(article);
+    // _text her zaman bu article'a ait — farklı article'dan gelmesini engelle
+    const text = typeof article._text === 'string' && article._text.length > 0
+        ? article._text
+        : _cleanText(article);
+    // Başlık mutlaka bu article'dan gelsin
+    const title = (article.title || '').trim();
     const data = aiData || _vocabFallback(text);
     return {
-        title:      article.title,
+        title,
         topic:      article.sourceName,
         text,
         vocabulary: data.vocabulary || {},
@@ -505,10 +542,14 @@ function _toPassageSync(article, aiData) {
 
 /* ── Makaleyi passage nesnesine dönüştür (eski API uyumu) ───── */
 async function _toPassage(article) {
-    const text   = _cleanText(article);
-    article._text = text; // cache for sync usage
-    const aiData = await _analyzeWithAI(text, article.title);
-    return _toPassageSync(article, aiData);
+    try {
+        const text   = _cleanText(article);
+        article._text = text; // cache for sync usage
+        const aiData = await _analyzeWithAI(text, article.title);
+        return _toPassageSync(article, aiData);
+    } catch(e) {
+        console.error("[_toPassage] Hata:", e.message || e);
+    }
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -525,7 +566,7 @@ async function _syncRSSToFirebase(passages) {
         try {
             const snap = await get(ref(window.db, `ydt_users/${uid}/rssArsiv`));
             if (snap.exists()) existing = snap.val() || [];
-        } catch(_) {}
+        } catch(_) { console.debug("[RSS] Firebase arsiv okuma hatası, boş başlatılıyor"); }
         const merged = [...passages];
         existing.forEach(p => { if (!merged.some(m => m.title === p.title)) merged.push(p); });
         if (merged.length > 300) merged.length = 300;
@@ -585,11 +626,19 @@ async function _loadRSSFromFirebase() {
 
 /* ── localStorage'a yaz ─────────────────────────────────────── */
 function _saveToLS(passages) {
-    const uid      = window._currentUser?.uid || 'guest';
-    localStorage.setItem(`ydt_rss_cache_${_rssCacheSlot()}`, JSON.stringify(passages));
+    const uid      = window._currentUser?.uid || getDeviceId();
+    (window.YDT?.lsSet || localStorage.setItem.bind(localStorage))(`ydt_rss_cache_${_rssCacheSlot()}`, JSON.stringify(passages));
     let arsiv = [];
-    try { arsiv = JSON.parse(localStorage.getItem(`ydt_${uid}_rss_arsiv`) || '[]'); } catch(_) {}
-    passages.forEach(p => { if (!arsiv.some(a => a.title === p.title)) arsiv.unshift({ ...p, savedAt: Date.now() }); });
+    try { arsiv = JSON.parse(localStorage.getItem(`ydt_${uid}_rss_arsiv`) || '[]'); } catch(_) { console.warn('[RSS] arsiv parse hatası, sıfırlandı'); }
+    passages.forEach(p => {
+        // Duplicate kontrolü: aynı link VEYA (aynı başlık + aynı gün)
+        const today = new Date().toISOString().slice(0, 10);
+        const isDup = arsiv.some(a =>
+            a.link === p.link ||
+            (a.title === p.title && (a.savedAt || 0) > Date.now() - 86400000)
+        );
+        if (!isDup) arsiv.unshift({ ...p, savedAt: Date.now() });
+    });
     if (arsiv.length > 300) arsiv.length = 300;
     localStorage.setItem(`ydt_${uid}_rss_arsiv`, JSON.stringify(arsiv));
 }
@@ -598,132 +647,136 @@ function _saveToLS(passages) {
    ANA FONKSİYON — motor.js generateAIDailyParagraflar override
    ══════════════════════════════════════════════════════════════ */
 async function generateAIDailyParagraflar(force) {
-    const todayKey   = _rssToday();
-    const cacheKey   = `ydt_rss_cache_${_rssCacheSlot()}`;
-    const listEl     = document.getElementById('ai-daily-paragraf-list');
-    const badgeEl    = document.getElementById('ai-daily-date-badge');
-    const refreshBtn = document.getElementById('ai-daily-refresh-btn');
-
-    if (badgeEl) {
-        const [y, m, d] = todayKey.split('-');
-        badgeEl.textContent = `${d}.${m}.${y}`;
-    }
-
-    // Force modunda eski cache'i sil
-    if (force) localStorage.removeItem(cacheKey);
-
-    // Cache varsa hemen göster
-    if (!force) {
-        const cached = localStorage.getItem(cacheKey);
-        if (cached) {
-            try {
-                const p = JSON.parse(cached);
-                if (p && p.length >= 1) {
-                    if (listEl && listEl.style.display === 'none') listEl.style.display = 'grid';
-                    renderAIDailyParagraflar(p, listEl);
-                    return;
-                }
-            } catch(_) {}
-        }
-    }
-
-    if (!listEl) return;
-    listEl.style.display = 'grid';
-
-    // Yenile butonu — loading state
-    if (refreshBtn) {
-        refreshBtn.disabled = true;
-        refreshBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 13 13" fill="none" style="animation:spin .7s linear infinite;display:inline-block"><path d="M11.5 2A6 6 0 1 0 12 6.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M8.5 2H11.5V5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg> Yükleniyor\u2026`;
-    }
-    const _resetBtn = () => {
-        if (!refreshBtn) return;
-        refreshBtn.disabled = false;
-        refreshBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M11.5 2A6 6 0 1 0 12 6.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M8.5 2H11.5V5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg> Yenile`;
-    };
-
-    // Loading UI
-    listEl.innerHTML = `
-      <div style="grid-column:1/-1;text-align:center;padding:28px 16px;">
-        <div style="font-size:2rem;margin-bottom:8px;">📰</div>
-        <div style="font-weight:800;color:var(--ink);font-size:.9rem;margin-bottom:4px;">Günlük 25 haber yükleniyor\u2026</div>
-        <div style="font-size:.75rem;color:var(--ink3);margin-bottom:10px;">Bilim · Teknoloji · Oyun kaynakları taranıyor</div>
-        <div style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap;">
-          ${RSS_SOURCES.map(s => `<span style="background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:3px 9px;font-size:.65rem;font-weight:700;">${s.icon} ${s.name}</span>`).join('')}
-        </div>
-      </div>`;
-
-    let passages = [];
-
     try {
-        // RSS çek — 30 pasaj için daha fazla aday
-        const articles = await Promise.race([
-            _fetchAllRSS(40),
-            new Promise(res => setTimeout(() => res([]), 20000))  // 20 sn — 16 kaynak paralel
-        ]);
+        const todayKey   = _rssToday();
+        const cacheKey   = `ydt_rss_cache_${_rssCacheSlot()}`;
+        const listEl     = document.getElementById('ai-daily-paragraf-list');
+        const badgeEl    = document.getElementById('ai-daily-date-badge');
+        const refreshBtn = document.getElementById('ai-daily-refresh-btn');
 
-        if (articles && articles.length > 0) {
-            listEl.innerHTML = `
-              <div style="grid-column:1/-1;text-align:center;padding:20px 16px;">
-                <div style="font-size:1.4rem;margin-bottom:6px;">🤖</div>
-                <div style="font-weight:800;color:var(--ink);font-size:.85rem;">Pasajlar hazırlanıyor\u2026</div>
-                <div style="font-size:.72rem;color:var(--ink3);margin-top:4px;">${articles.length} makale bulundu, analiz ediliyor</div>
-              </div>`;
-
-            // 1. Önce tüm metinleri temizle (senkron, hızlı)
-            articles.forEach(a => { a._text = _cleanText(a); });
-
-            // 2. Batch AI analizi dene (tek istek, 15 sn timeout)
-            let batchResults = null;
-            try {
-                batchResults = await _batchAnalyzeWithAI(articles);
-            } catch(_) { batchResults = null; }
-
-            // 3. Batch başarısızsa: sadece ilk 5 makale için bireysel AI, geri kalan fallback
-            if (!batchResults) {
-                const MAX_AI = 5;
-                const aiSlice = articles.slice(0, MAX_AI);
-                const aiResults = await Promise.allSettled(
-                    aiSlice.map(a => Promise.race([
-                        _analyzeWithAI(a._text, a.title),
-                        new Promise(res => setTimeout(() => res(null), 5000))
-                    ]))
-                );
-                batchResults = articles.map((_, i) => {
-                    if (i < MAX_AI) {
-                        const r = aiResults[i];
-                        return (r && r.status === 'fulfilled' && r.value) ? r.value : null;
-                    }
-                    return null;
-                });
-            }
-
-            // 4. Pasajları oluştur (AI verisi varsa kullan, yoksa akıllı fallback)
-            passages = articles
-                .map((a, i) => {
-                    const aiData = (batchResults && batchResults[i]) ? batchResults[i] : null;
-                    return _toPassageSync(a, aiData);
-                })
-                .filter(p => p && p.text && _hasMinSentences(p.text, 4))
-                .slice(0, 30);  // Günlük max 30
+        if (badgeEl) {
+            const [y, m, d] = todayKey.split('-');
+            badgeEl.textContent = `${d}.${m}.${y}`;
         }
-    } catch(err) {
-        console.warn('[rss_paragraf] fetch hatası:', err.message);
-    }
 
-    // Eksik slotları statik ile tamamla (30'a çıkar)
-    const staticPool = _getStaticPassages();
-    let si = 0;
-    while (passages.length < 30 && si < staticPool.length) {
-        const fill = staticPool[si++];
-        if (!passages.some(p => p.title === fill.title)) passages.push(fill);
-    }
-    if (!passages.length) passages = staticPool.slice(0, 30);
+        // Force modunda eski cache'i sil
+        if (force) localStorage.removeItem(cacheKey);
 
-    // Kaydet ve render
-    _saveToLS(passages);
-    _syncRSSToFirebase(passages);
-    renderAIDailyParagraflar(passages, listEl);
-    _resetBtn();
+        // Cache varsa hemen göster
+        if (!force) {
+            const cached = localStorage.getItem(cacheKey);
+            if (cached) {
+                try {
+                    const p = JSON.parse(cached);
+                    if (p && p.length >= 1) {
+                        if (listEl && listEl.style.display === 'none') listEl.style.display = 'grid';
+                        renderAIDailyParagraflar(p, listEl);
+                        return;
+                    }
+                } catch(_) { console.debug("[RSS] Render hatası, atlanıyor"); }
+            }
+        }
+
+        if (!listEl) return;
+        listEl.style.display = 'grid';
+
+        // Yenile butonu — loading state
+        if (refreshBtn) {
+            refreshBtn.disabled = true;
+            refreshBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 13 13" fill="none" style="animation:spin .7s linear infinite;display:inline-block"><path d="M11.5 2A6 6 0 1 0 12 6.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M8.5 2H11.5V5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg> Yükleniyor\u2026`;
+        }
+        const _resetBtn = () => {
+            if (!refreshBtn) return;
+            refreshBtn.disabled = false;
+            refreshBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M11.5 2A6 6 0 1 0 12 6.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M8.5 2H11.5V5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg> Yenile`;
+        };
+
+        // Loading UI
+        listEl.innerHTML = `
+          <div style="grid-column:1/-1;text-align:center;padding:28px 16px;">
+            <div style="font-size:2rem;margin-bottom:8px;">📰</div>
+            <div style="font-weight:800;color:var(--ink);font-size:.9rem;margin-bottom:4px;">Günlük 25 haber yükleniyor\u2026</div>
+            <div style="font-size:.75rem;color:var(--ink3);margin-bottom:10px;">Bilim · Teknoloji · Oyun kaynakları taranıyor</div>
+            <div style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap;">
+              ${RSS_SOURCES.map(s => `<span style="background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:3px 9px;font-size:.65rem;font-weight:700;">${s.icon} ${s.name}</span>`).join('')}
+            </div>
+          </div>`;
+
+        let passages = [];
+
+        try {
+            // RSS çek — 30 pasaj için daha fazla aday
+            const articles = await Promise.race([
+                _fetchAllRSS(40),
+                new Promise(res => setTimeout(() => res([]), 20000))  // 20 sn — 16 kaynak paralel
+            ]);
+
+            if (articles && articles.length > 0) {
+                listEl.innerHTML = `
+                  <div style="grid-column:1/-1;text-align:center;padding:20px 16px;">
+                    <div style="font-size:1.4rem;margin-bottom:6px;">🤖</div>
+                    <div style="font-weight:800;color:var(--ink);font-size:.85rem;">Pasajlar hazırlanıyor\u2026</div>
+                    <div style="font-size:.72rem;color:var(--ink3);margin-top:4px;">${articles.length} makale bulundu, analiz ediliyor</div>
+                  </div>`;
+
+                // 1. Önce tüm metinleri temizle (senkron, hızlı)
+                articles.forEach(a => { a._text = _cleanText(a); });
+
+                // 2. Batch AI analizi dene (tek istek, 15 sn timeout)
+                let batchResults = null;
+                try {
+                    batchResults = await _batchAnalyzeWithAI(articles);
+                } catch(_) { batchResults = null; }
+
+                // 3. Batch başarısızsa: sadece ilk 5 makale için bireysel AI, geri kalan fallback
+                if (!batchResults) {
+                    const MAX_AI = 5;
+                    const aiSlice = articles.slice(0, MAX_AI);
+                    const aiResults = await Promise.allSettled(
+                        aiSlice.map(a => Promise.race([
+                            _analyzeWithAI(a._text, a.title),
+                            new Promise(res => setTimeout(() => res(null), 5000))
+                        ]))
+                    );
+                    batchResults = articles.map((_, i) => {
+                        if (i < MAX_AI) {
+                            const r = aiResults[i];
+                            return (r && r.status === 'fulfilled' && r.value) ? r.value : null;
+                        }
+                        return null;
+                    });
+                }
+
+                // 4. Pasajları oluştur (AI verisi varsa kullan, yoksa akıllı fallback)
+                passages = articles
+                    .map((a, i) => {
+                        const aiData = (batchResults && batchResults[i]) ? batchResults[i] : null;
+                        return _toPassageSync(a, aiData);
+                    })
+                    .filter(p => p && p.text && _hasMinSentences(p.text, 4))
+                    .slice(0, 30);  // Günlük max 30
+            }
+        } catch(err) {
+            console.warn('[rss_paragraf] fetch hatası:', err.message);
+        }
+
+        // Eksik slotları statik ile tamamla (30'a çıkar)
+        const staticPool = _getStaticPassages();
+        let si = 0;
+        while (passages.length < 30 && si < staticPool.length) {
+            const fill = staticPool[si++];
+            if (!passages.some(p => p.title === fill.title)) passages.push(fill);
+        }
+        if (!passages.length) passages = staticPool.slice(0, 30);
+
+        // Kaydet ve render
+        _saveToLS(passages);
+        _syncRSSToFirebase(passages);
+        renderAIDailyParagraflar(passages, listEl);
+        _resetBtn();
+    } catch(e) {
+        console.error("[generateAIDailyParagraflar] Hata:", e.message || e);
+    }
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -815,7 +868,7 @@ async function _syncParagraflarToFirebase() {
         if (arsiv.length > 0) {
             await set(ref(window.db, `ydt_users/${uid}/rssArsiv`), arsiv.slice(0, 300));
         }
-    } catch(_) {}
+    } catch(_) { console.warn("[RSS] Firebase arsiv sync hatası"); }
 }
 
 /* ── Tab label ──────────────────────────────────────────────── */
@@ -871,7 +924,7 @@ function _getStaticPassages() {
         },
         {
             title: 'The Hidden Intelligence of Forest Networks',
-            sourceName: 'Sci. American', sourceIcon: '🔬', _fromRSS: true,
+            sourceName: 'New Scientist', sourceIcon: '🔬', _fromRSS: true,
             level: 'C1', levelNote: 'Botanik ve ekoloji terminolojisi',
             text: 'Research into mycorrhizal networks — the vast webs of fungal filaments connecting tree root systems beneath forest floors — has fundamentally altered our understanding of how forests function as collective organisms. Pioneering work by ecologist Suzanne Simard demonstrated that mature trees, often called "mother trees," actively distribute carbon and nutrients through these subterranean highways to seedlings under stress. This reciprocal exchange suggests that forests possess a form of distributed intelligence, prioritising the survival of the broader community over individual competition. Critics argue that attributing intentionality to plant behaviour risks anthropomorphising biological processes, yet the adaptive complexity of these networks continues to challenge reductive models of plant life.',
             vocabulary: { mycorrhizal:'mikorizal', filaments:'iplikçikler', subterranean:'yeraltı', reciprocal:'karşılıklı', distributed:'dağıtık', prioritising:'önceliklendirmek', anthropomorphising:'insanileştirmek', adaptive:'uyarlanabilir', reductive:'indirgemeci', pioneering:'öncü' },
@@ -903,5 +956,11 @@ window.generateAIDailyParagraflar = generateAIDailyParagraflar;
 window.RSS_SOURCES                 = RSS_SOURCES;
 window._syncRSSToFirebase          = _syncRSSToFirebase;
 window._loadRSSFromFirebase        = _loadRSSFromFirebase;
+// ai-daily.js bağımlılıkları — yükleme sırasından bağımsız güvenli erişim
+window._analyzeWithAI              = _analyzeWithAI;
+window._toPassageSync              = _toPassageSync;
+window._cleanText                  = _cleanText;
+window._hasMinSentences            = _hasMinSentences;
+window._vocabFallback              = _vocabFallback;
 
 console.log('[rss_paragraf.js v4.7] ✅ 16 kaynak · Bilim→Teknoloji→Oyun önceliği · free proxy önce · rss2json fallback · max 25/gün');

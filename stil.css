@@ -249,7 +249,14 @@ body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:var(--bg);d
     }
     .mob-logo{flex:1;font-size:.92rem;font-weight:900;color:var(--ink);}
     .mob-logo em{color:var(--color-primary);font-style:normal;}
-    .mob-sync{display:flex;align-items:center;gap:5px;font-size:.6rem;font-weight:600;color:var(--ink3);}
+    .mob-sync{display:flex;align-items:center;gap:5px;font-size:.6rem;font-weight:600;color:var(--ink3);margin-left:auto;}
+    .mob-topbar-theme-btn{
+        flex-shrink:0;width:36px;height:36px;border-radius:10px;
+        border:1.5px solid var(--border);background:var(--bg,#f4f4f8);
+        font-size:1rem;cursor:pointer;display:flex;align-items:center;
+        justify-content:center;-webkit-tap-highlight-color:transparent;transition:background .18s;
+    }
+    .mob-topbar-theme-btn:active{opacity:.7;}
     .mob-burger{
         width:44px;height:44px;flex-shrink:0;background:none;border:none;
         cursor:pointer;display:flex;flex-direction:column;
@@ -3427,6 +3434,7 @@ select:focus,input:focus,textarea:focus{border-color:var(--color-focus);}
    ══════════════════════════ */
 .rh2-tabbar {
     display: flex; align-items: center; gap: 6px;
+    justify-content: center;
     background: white;
     border: 1.5px solid #e8eaf0;
     border-radius: 14px;
@@ -3610,16 +3618,49 @@ select:focus,input:focus,textarea:focus{border-color:var(--color-focus);}
 .rh2-empty-title { font-size: .9rem; font-weight: 800; color: var(--clr-bg-deep); }
 .rh2-empty-sub { font-size: .76rem; color: var(--clr-text-muted); }
 
-/* Mobil */
+/* Mobil AI Üret shortcut — tabbar altında, sadece mobilde görünür */
+.rh2-mob-generate-btn {
+    display: none;
+}
 @media (max-width: 699px) {
-    .rh2-hero { padding: 24px 18px 20px; border-radius: 16px; }
+    .rh2-mob-generate-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        padding: 11px 16px;
+        margin-bottom: 14px;
+        border-radius: 12px;
+        border: 1.5px solid #c4b5fd;
+        background: linear-gradient(135deg, #ede9fe, #f5f3ff);
+        color: #5b21b6;
+        font-size: .82rem;
+        font-weight: 800;
+        font-family: inherit;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition: background .15s;
+    }
+    .rh2-mob-generate-btn:active {
+        background: #ddd6fe;
+    }
+}
     .rh2-hero-title { font-size: 1.6rem; }
     .rh2-hero-stats { padding: 10px 14px; }
     .rh2-hstat { padding: 0 12px; }
     .rh2-hstat-val { font-size: 1.2rem; }
     .rh2-grid { grid-template-columns: 1fr; }
-    .rh2-tabbar { padding: 4px 6px; }
-    .rh2-tab { font-size: .74rem; padding: 8px 12px; }
+    .rh2-tabbar {
+        padding: 4px 6px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        flex-wrap: nowrap;
+        scrollbar-width: none;
+        justify-content: flex-start;
+    }
+    .rh2-tabbar::-webkit-scrollbar { display: none; }
+    .rh2-tab { font-size: .74rem; padding: 8px 10px; flex-shrink: 0; }
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -5186,7 +5227,25 @@ body:has(#kids-page:not(.hidden)) .kw-world-bg { opacity: 1; }
     transition: transform .3s cubic-bezier(.34,1.56,.64,1), opacity .2s;
 }
 @media (max-width: 699px) {
-    .qz-feedback { left: 0; bottom: 60px; padding: 14px 16px 18px; border-radius: 16px 16px 0 0; }
+    .qz-feedback {
+        position: relative;
+        left: auto; right: auto; bottom: auto;
+        border-radius: 16px 16px 0 0;
+        padding: 14px 16px 20px;
+        box-shadow: 0 -4px 20px rgba(0,0,0,.12);
+        flex-shrink: 0;
+        transform: none !important;
+        transition: opacity .2s, max-height .3s cubic-bezier(.4,0,.2,1);
+        max-height: 300px;
+        overflow: hidden;
+    }
+    .qz-feedback-hidden {
+        max-height: 0 !important;
+        padding: 0 !important;
+        opacity: 0 !important;
+        pointer-events: none;
+    }
+    .qz-body { padding-bottom: 16px; }
 }
 .qz-feedback-hidden {
     transform: translateY(110%) !important;
@@ -5981,6 +6040,37 @@ body:has(#kids-page:not(.hidden)) .kw-world-bg { opacity: 1; }
     font-size: .74rem;
     color: var(--ink3);
     font-weight: 500;
+}
+
+/* Listeler toggle butonu */
+.dash-lists-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 8px;
+    padding: 4px 12px 4px 10px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: var(--bg, #f4f4f8);
+    font-size: .72rem;
+    font-weight: 700;
+    color: var(--ink2);
+    cursor: pointer;
+    font-family: inherit;
+    transition: background .15s;
+    -webkit-tap-highlight-color: transparent;
+}
+.dash-lists-toggle:hover { background: var(--color-primary-soft); border-color: var(--color-primary); color: var(--color-primary); }
+.dash-lists-chev { transition: transform .2s; flex-shrink: 0; }
+
+/* Açılır chip listesi */
+.dash-lists-dropdown {
+    margin-top: 8px;
+    animation: dashDropIn .2s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes dashDropIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 .dash-today-icon {
     font-size: 2rem;
@@ -6904,45 +6994,7 @@ body:has(#kids-page:not(.hidden)) .kw-world-bg { opacity: 1; }
    MOBİL YÜZEN TEMA FAB
    Sadece mobilde görünür, bottom-nav üstünde sağ alt köşe
    ════════════════════════════════════════════════════════ */
-.mob-theme-fab {
-    display: none; /* desktop'ta gizli — sidebar toggle kullanılıyor */
-}
-
-@media (max-width: 699px) {
-    .mob-theme-fab {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        position: fixed;
-        right: 16px;
-        bottom: calc(var(--bnav-h, 60px) + 12px);
-        width: 42px;
-        height: 42px;
-        border-radius: 50%;
-        border: 1.5px solid var(--border);
-        background: var(--white);
-        box-shadow: 0 4px 16px rgba(0,0,0,.14), 0 1px 4px rgba(0,0,0,.08);
-        font-size: 1.1rem;
-        cursor: pointer;
-        z-index: var(--z-floating);
-        transition: transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s;
-        -webkit-tap-highlight-color: transparent;
-    }
-    .mob-theme-fab:active {
-        transform: scale(.88);
-        box-shadow: 0 2px 8px rgba(0,0,0,.12);
-    }
-    /* safe area için iPhone X+ */
-    .mob-theme-fab {
-        bottom: calc(var(--bnav-h, 60px) + 12px + env(safe-area-inset-bottom, 0px));
-    }
-}
-
-[data-theme="dark"] .mob-theme-fab,
-[data-theme="light"] .mob-theme-fab {
-    background: var(--white);
-    border-color: var(--border);
-}
+.mob-theme-fab { display: none !important; }
 
 /* ═══════════════════════════════════════════════════════════════
    KİŞİSEL KELİME YÖNETİCİSİ — Profil sayfası içi modül
