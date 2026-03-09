@@ -4,6 +4,25 @@ function safeJsonParse(str, fallback = null) {
     try { return JSON.parse(str); } catch(e) { return fallback; }
 }
 
+// ── XSS Koruması: AI açıklama çıktısını sanitize et ──────────────
+// Sadece güvenli tag'lere (b, strong, em, br) izin ver, diğer HTML'i escape et
+function _sanitizeExplanation(html) {
+    if (!html) return '';
+    const tmp = document.createElement('div');
+    tmp.textContent = html; // tüm HTML'i önce escape et
+    // Sadece whitelist'teki tag'leri geri aç
+    return tmp.innerHTML
+        .replace(/&lt;b&gt;/g,        '<b>')
+        .replace(/&lt;\/b&gt;/g,      '</b>')
+        .replace(/&lt;strong&gt;/g,   '<strong>')
+        .replace(/&lt;\/strong&gt;/g, '</strong>')
+        .replace(/&lt;em&gt;/g,       '<em>')
+        .replace(/&lt;\/em&gt;/g,     '</em>')
+        .replace(/&lt;br&gt;/g,       '<br>')
+        .replace(/&lt;br \/&gt;/g,    '<br>')
+        .replace(/&lt;br\/&gt;/g,     '<br>');
+}
+
 // ── AI YDT Sınav Modu + SM2 Badge — motor.js'den ayrıştırıldı
 // Bağımlılıklar: motor.js (global state)
 
@@ -318,10 +337,10 @@ function renderAIPageQuestion(qData) {
         optsContainer.appendChild(btn);
     }
 
-    // Açıklama hazırla ama gizle
+    // Açıklama hazırla ama gizle — AI çıktısı sanitize edilir (XSS koruması)
     const expDiv = document.getElementById('ai-explanation');
     expDiv.style.display = 'none';
-    expDiv.innerHTML = `<div class="aiq-exp-header">💡 Çözüm ve Çeviri</div>${qData.explanation}`;
+    expDiv.innerHTML = `<div class="aiq-exp-header">💡 Çözüm ve Çeviri</div>${_sanitizeExplanation(qData.explanation)}`;
 }
 
 function checkAIPageAnswer(btn, selectedKey, qData) {
@@ -465,3 +484,6 @@ window.aiGramerArsiv = (function() {
 })();
 window._arsivGroupPage     = window._arsivGroupPage     || 1; // 10'luk sayfa
 // → js/bank.js (ayrı dosyaya taşındı)
+
+// ── Window Exports (defer uyumluluğu) ────────────────────────────
+window.showAIArsiv = showAIArsiv;

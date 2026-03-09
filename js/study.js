@@ -29,9 +29,24 @@ function startStudy() {
 }
 
 function startStudyFromNav() {
-    currentActiveList = document.getElementById('list-selector').value;
-    if (!currentActiveList || !allData[currentActiveList] || !allData[currentActiveList].length) {
-        navTo('index-page'); return;
+    // list-selector değerini al; boş/geçersizse currentActiveList veya ilk geçerli key'e düş
+    const selEl = document.getElementById('list-selector');
+    const selVal = selEl ? selEl.value : '';
+    if (selVal && Array.isArray(allData[selVal]) && allData[selVal].length) {
+        currentActiveList = selVal;
+    } else if (currentActiveList && Array.isArray(allData[currentActiveList]) && allData[currentActiveList].length) {
+        // currentActiveList geçerli, kullan
+    } else {
+        // allData'dan ilk geçerli array key'i bul
+        const firstKey = Object.keys(allData || {}).find(k => Array.isArray(allData[k]) && allData[k].length);
+        if (firstKey) {
+            currentActiveList = firstKey;
+            if (selEl) selEl.value = firstKey;
+        } else {
+            if (typeof _showAppToast === 'function') _showAppToast('Önce bir kelime listesi yükleyin.');
+            navTo('index-page');
+            return;
+        }
     }
     startStudy();
 }
@@ -471,3 +486,12 @@ function restartStudyAgainOnly() {
 
 
 // ══════════════════════════════════════════════
+
+// ── Window Exports (defer uyumluluğu) ────────────────────────────
+window.generateStudySentences  = generateStudySentences;
+window.prevStudy               = typeof prevStudy !== 'undefined' ? prevStudy : null;
+window.restartStudy            = restartStudy;
+window.restartStudyAgainOnly   = restartStudyAgainOnly;
+window.startStudyFromNav       = startStudyFromNav;
+window.studyMarkAgain          = studyMarkAgain;
+window.studyMarkKnown          = studyMarkKnown;

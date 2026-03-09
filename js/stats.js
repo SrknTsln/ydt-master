@@ -200,3 +200,6 @@ function showStatsPage() {
 
 // ══════════════════════════════════════════════
 // → js/quiz.js (ayrı dosyaya taşındı)
+
+// ── Window Exports (defer uyumluluğu) ────────────────────────────
+window.showStatsPage = showStatsPage;

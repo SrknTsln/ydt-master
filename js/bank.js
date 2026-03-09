@@ -709,3 +709,9 @@ function mobRun(fn) {
     }
 })();
 // ══════════════════════════════════════════════
+
+// ── Window Exports (defer uyumluluğu) ────────────────────────────
+window.mobCloseDrawer  = mobCloseDrawer;
+window.mobGoTo         = mobGoTo;
+window.mobRun          = mobRun;
+window.mobToggleDrawer = mobToggleDrawer;

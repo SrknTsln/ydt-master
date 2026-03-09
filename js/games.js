@@ -1,3 +1,4 @@
+
 // ALIŞTIRMALAR SAYFASI
 // ══════════════════════════════════════════════
 function showExercisePage() {
@@ -24,27 +25,11 @@ function showExercisePage() {
 /* ── Oyun Merkezi Ana Nesnesi ── */
 const GM = (() => {
 
-// ── Touch gecikme düzeltmesi: tüm oyun butonları için 300ms tap delay kaldır ──
-(function _injectTouchCSS(){
-    if (document.getElementById('gm-touch-css')) return;
-    const s = document.createElement('style');
-    s.id = 'gm-touch-css';
-    s.textContent = [
-        '.gm-ans-btn,.gm-chip,.gm-hg-key,.gm-mem-card,',
-        '.gm-game-card,.gm-ag-tile,.gm-ag-slot,.gm-back-btn,',
-        '.gm-btn-pri,.gm-btn-sec,.gm-sp-listen-btn {',
-        '  touch-action:manipulation;',
-        '  -webkit-tap-highlight-color:transparent;',
-        '}',
-        '.gm-ans-btn,.gm-chip,.gm-ag-tile{user-select:none;-webkit-user-select:none;}',
-    ].join('\n');
-    document.head.appendChild(s);
-})();
-
 // ══════════════════════════════════════════════════════
 // YARDIMCI FONKSİYONLAR
 // ══════════════════════════════════════════════════════
-// shuffle() ve pick() → utils.js'de tanımlı (global)
+function shuffle(a){ a=[...a]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+function pick(a,n){ return shuffle(a).slice(0,n); }
 function rand(a){ return a[Math.floor(Math.random()*a.length)]; }
 function $id(id){ return document.getElementById(id); }
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -109,21 +94,7 @@ function gmToast(msg,type='ok',dur=1800){
 // ══════════════════════════════════════════════════════
 // OYUN MERKEZİ ANA SAYFA
 // ══════════════════════════════════════════════════════
-// ── Tüm oyun interval/state'lerini temizle (memory leak önleme) ──
-function _cleanupAllGames() {
-    // Memory Flip
-    if (_mem.tmr)   { clearInterval(_mem.tmr);   _mem.tmr   = null; }
-    // Rainfall
-    if (_rf.loop)   { clearInterval(_rf.loop);   _rf.loop   = null; }
-    if (_rf.spawnI) { clearInterval(_rf.spawnI); _rf.spawnI = null; }
-    _rf.active = false;
-    // Flash Race
-    if (_fr.tmr)    { clearInterval(_fr.tmr);    _fr.tmr    = null; }
-    clearTimeout(window._toastTimer);
-}
-
 function showGamesPage(){
-    _cleanupAllGames(); // Önceki oyundan kalan interval'ları temizle
     const pg=$id('games-page');
     if(pg){
         // container class masaüstünde max-width kısıtlıyor — kaldır
@@ -221,7 +192,6 @@ function gameShell(title, icon, color, extra=''){
 }
 
 function _back(){
-    _cleanupAllGames(); // Menüye dönünce tüm interval'ları temizle
     if(typeof exitModule==='function') exitModule();
     else showGamesPage();
 }
@@ -269,7 +239,7 @@ function startMemory(listName){
         cards.push({id:i*2+1,pairId:i,type:'tr',text:w.tr});
     });
     _mem.cards=shuffle(cards); _mem.fl=[]; _mem.mc=0; _mem.mv=0; _mem.lk=false; _mem.sec=0;
-    clearInterval(_mem.tmr); _mem.tmr=null;
+    clearInterval(_mem.tmr);
     _mem.tmr=setInterval(()=>{
         _mem.sec++;
         const m=Math.floor(_mem.sec/60), s=String(_mem.sec%60).padStart(2,'0');
@@ -285,9 +255,7 @@ function startMemory(listName){
         const el=document.createElement('div');
         el.className='gm-mem-card';
         el.innerHTML=`<div class="gm-mc-inner"><div class="gm-mc-front">❓</div><div class="gm-mc-back gm-mc-${card.type}">${esc(card.text)}</div></div>`;
-        el.onclick = ()=>_memClick(i);
-        // Touch desteği — mobilde 300ms click gecikmesini atla
-        el.addEventListener('touchstart', (e)=>{ e.preventDefault(); _memClick(i); }, { passive:false });
+        el.onclick=()=>_memClick(i);
         area.appendChild(el);
     });
 }
@@ -408,8 +376,7 @@ function _rfCheck(){
 }
 function _rfEnd(){
     _rf.active=false;
-    clearInterval(_rf.loop);  _rf.loop=null;
-    clearInterval(_rf.spawnI); _rf.spawnI=null;
+    clearInterval(_rf.loop); clearInterval(_rf.spawnI);
     const xp=_rf.score*3;
     showResult({correct:_rf.score,total:_rf.score+_rf.lives<0?_rf.score:_rf.score+3,xp,onReplay:`GM.start('rainfall')`});
 }
@@ -1021,7 +988,7 @@ function _spCheck(){
 // ══════════════════════════════════════════════════════
 return {
     showGamesPage, start, renderHub,
-    _tag, _reload, _back, _cleanupAllGames,
+    _tag, _reload, _back,
     // Memory
     _memClick,
     // Anagram
@@ -1047,3 +1014,7 @@ return {
 function showGamesPage(){ GM.showGamesPage(); }
 function startMemoryGame(listName){ window._gmCurrentList=listName||window._gmCurrentList; GM.start('memory'); }
 function exitMemoryGame(){ GM._back(); }
+
+// ── Window Exports (defer uyumluluğu) ────────────────────────────
+window.showExercisePage = showExercisePage;
+window.showGamesPage    = showGamesPage;

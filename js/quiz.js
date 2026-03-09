@@ -25,7 +25,8 @@ let _qzCurrentWord = null; // quiz modülüne özgü, motor.js global'inden bağ
 
 function _qzInitSession() {
     const pool = allData[currentActiveList];
-    if (!pool || pool.length < 4) return;
+    // pool array değilse (undefined, object, string) — güvenli çık
+    if (!pool || !Array.isArray(pool) || pool.length < 4) return;
 
     // Önce unique kelimeler, sonra ağırlıklı kopyalar ekle
     // Tekrarları önlemek için Set kulllan — aynı kelime birden fazla kez gelmemeli
@@ -731,3 +732,7 @@ function _qzShowResult() {
 }
 
 // ══════════════════════════════════════════════
+
+// ── Window Exports (defer uyumluluğu) ────────────────────────────
+window.startQuiz    = startQuiz;
+window.nextQuestion = nextQuestion;

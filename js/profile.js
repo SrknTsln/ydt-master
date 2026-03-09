@@ -4,6 +4,26 @@
 // 👤 PROFİL SAYFASI
 // ══════════════════════════════════════════════
 function showProfilPage() {
+    // Hero state — misafir/auth güncel yansıtsın
+    const heroAuth  = document.getElementById('profil-hero-auth');
+    const heroGuest = document.getElementById('profil-hero-guest');
+    if (window._currentUser) {
+        if (heroAuth)  heroAuth.style.display  = 'block';
+        if (heroGuest) heroGuest.style.display = 'none';
+    } else {
+        if (heroAuth)  heroAuth.style.display  = 'none';
+        if (heroGuest) heroGuest.style.display = 'block';
+        // Giriş butonunu bağla
+        const btn = document.getElementById('profil-guest-signin-btn');
+        if (btn && !btn._bound) {
+            btn._bound = true;
+            btn.addEventListener('click', () => {
+                if (window.AuthModule && typeof window.AuthModule.authSignIn === 'function') {
+                    window.AuthModule.authSignIn();
+                }
+            });
+        }
+    }
     // UKM listelerini yenile
     if (typeof ukmRefresh === 'function') {
         ukmRefresh();
@@ -368,3 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // paragraflar is declared globally in paragraf.js — do not redeclare here
 // window.paragraflar is initialized in paragraf.js
 
+
+// ── Window Exports (defer uyumluluğu) ────────────────────────────
+window.saveProfilInfo = saveProfilInfo;
+window.selectAvatar   = selectAvatar;

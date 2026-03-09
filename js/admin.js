@@ -5,7 +5,8 @@ function safeJsonParse(str, fallback = null) {
 }
 
 // ── Admin paneli — motor.js'den ayrıştırıldı
-// Bağımlılıklar: motor.js (global state: allData, stats, paragraflar)
+// Bağımlılıklar: motor.js (global state: window.allData, stats, paragraflar)
+// Not: defer scope'ta bare `window.allData` = window.allData, `window.currentActiveList` = window.currentActiveList
 
 // 🔐 YÖNETİM PANELİ — Worker üzerinden admin kontrolü
 // Admin e-postası client-side kodda tutulmaz — Worker env'den kontrol edilir
@@ -14,28 +15,21 @@ function safeJsonParse(str, fallback = null) {
 async function adminCheckAccess() {
     const denied  = document.getElementById('admin-access-denied');
     const content = document.getElementById('admin-panel-content');
-    const user = (window.AuthModule && window._currentUser) ? window._currentUser : null;
-    const email = user ? user.email : null;
+    const user = window._currentUser || null;
 
-    if (!email) {
+    if (!user) {
         if (denied)  denied.style.display  = 'flex';
         if (content) content.style.display = 'none';
         return;
     }
 
-    // Admin kontrolü Cloudflare Worker'a taşındı — e-posta client'ta saklanmaz
+    // Admin kontrolü: Firebase custom claim (admin: true)
+    // Bu değer sunucu tarafında set edilir — client'ta sahtelenebilir değil
     try {
-        const workerUrl = (typeof window._AI_WORKER_URL !== 'undefined')
-            ? window._AI_WORKER_URL
-            : 'https://autumn-hill-be24ydt-master.stasalan.workers.dev';
-        const res = await fetch(`${workerUrl}/admin/check`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email })
-        });
-        const data = await res.json();
-        if (data && data.isAdmin === true) {
-            window._adminVerified = true;  // rss_paragraf.js _isAdmin() için
+        const tokenResult = await user.getIdTokenResult();
+        const isAdmin = tokenResult.claims.admin === true;
+        if (isAdmin) {
+            window._adminVerified = true;
             if (denied)  denied.style.display  = 'none';
             if (content) content.style.display = 'flex';
             content.style.flexDirection = 'column';
@@ -45,7 +39,7 @@ async function adminCheckAccess() {
             if (content) content.style.display = 'none';
         }
     } catch(e) {
-        console.error('[adminCheckAccess] Worker hatası:', e.message);
+        console.error('[adminCheckAccess] Token kontrol hatası:', e.message);
         if (denied)  denied.style.display  = 'flex';
         if (content) content.style.display = 'none';
     }
@@ -55,7 +49,7 @@ function adminUnlockPanel() {
     // Panel içeriğini yükle
     renderAdminParagrafListe();
     const sel = document.getElementById('ai-gen-target-list');
-    if (sel) { sel.innerHTML = ''; Object.keys(allData).forEach(n => sel.add(new Option(n, n))); }
+    if (sel) { sel.innerHTML = ''; Object.keys(window.allData).forEach(n => sel.add(new Option(n, n))); }
     adminUpdateBankCounts();
     updateCascadeStatus(); // API key kayıtlı ibarelerini güncelle
     admSwitchTab('api');
@@ -72,7 +66,7 @@ function admSwitchTab(tabId) {
     // AI tab: listeyi güncelle
     if (tabId === 'ai') {
         const sel = document.getElementById('ai-gen-target-list');
-        if (sel) { sel.innerHTML = ''; Object.keys(allData).forEach(n => sel.add(new Option(n, n))); }
+        if (sel) { sel.innerHTML = ''; Object.keys(window.allData).forEach(n => sel.add(new Option(n, n))); }
         const empty = document.getElementById('ai-gen-empty');
         const prev  = document.getElementById('ai-gen-preview');
         if (empty && prev && prev.style.display === 'none') empty.style.display = 'block';
@@ -81,6 +75,24 @@ function admSwitchTab(tabId) {
     if (tabId === 'bank') {
         adminUpdateBankCounts();
         admLoadUserCount();
+    }
+    // Paragraf tab: selector + sayaçları doldur
+    if (tabId === 'paragraf') {
+        _admPopulateParaSelector();
+        _admRefreshShareCounters();
+    }
+    // Kelimeler tab: share-list-selector + sayaçları doldur
+    if (tabId === 'words') {
+        const sel = document.getElementById('share-list-selector');
+        if (sel) {
+            while (sel.options.length > 1) sel.remove(1);
+            Object.keys(window.allData || {}).forEach(name => {
+                const opt = document.createElement('option');
+                opt.value = name; opt.textContent = name;
+                sel.appendChild(opt);
+            });
+        }
+        _admRefreshShareCounters();
     }
 }
 
@@ -313,9 +325,25 @@ function adminUpdateBankCounts() {
 }
 
 function startQuizFromNav() {
-    currentActiveList = document.getElementById('list-selector').value;
-    if (!currentActiveList || !allData[currentActiveList] || allData[currentActiveList].length < 4) {
-        navTo('index-page'); return;
+    // list-selector değerini al; boş/geçersizse window.currentActiveList veya ilk geçerli key'e düş
+    const selEl = document.getElementById('list-selector');
+    const selVal = selEl ? selEl.value : '';
+    if (selVal && Array.isArray(( window.allData || {} )[selVal]) && ( window.allData || {} )[selVal].length >= 4) {
+        window.currentActiveList = selVal;
+    } else if (window.currentActiveList && Array.isArray(( window.allData || {} )[window.currentActiveList]) && ( window.allData || {} )[window.currentActiveList].length >= 4) {
+        // window.currentActiveList geçerli, kullan
+        if (selEl) selEl.value = window.currentActiveList;
+    } else {
+        // window.allData'dan ilk ≥4 kelimeli liste bul
+        const firstKey = Object.keys(window.allData || {}).find(k => Array.isArray(( window.allData || {} )[k]) && ( window.allData || {} )[k].length >= 4);
+        if (firstKey) {
+            window.currentActiveList = firstKey;
+            if (selEl) selEl.value = firstKey;
+        } else {
+            if (typeof _showAppToast === 'function') _showAppToast('Quiz için en az 4 kelimeli liste gerekli.');
+            navTo('index-page');
+            return;
+        }
     }
     startModule();
     showPage('quiz-page');
@@ -331,3 +359,229 @@ function showExerciseNav(mode) {
 }
 
 // ══════════════════════════════════════════════
+
+// ════════════════════════════════════════════════════════════════
+// PAYLAŞIM FONKSİYONLARI — admin → shared/content (Firestore)
+// ════════════════════════════════════════════════════════════════
+
+/**
+ * _admSetShareStatus — paylaşım kartlarındaki durum mesajını yönetir.
+ * @param {'words'|'para'} type
+ * @param {'loading'|'ok'|'error'|'idle'} state
+ * @param {string} [msg]
+ */
+function _admSetShareStatus(type, state, msg) {
+    const idMap = {
+        words: { btn: 'adm-share-btn',      status: 'adm-share-status'      },
+        para:  { btn: 'adm-share-para-btn', status: 'adm-share-para-status' },
+    };
+    const ids = idMap[type];
+    if (!ids) return;
+
+    const btn    = document.getElementById(ids.btn);
+    const status = document.getElementById(ids.status);
+
+    if (btn) btn.disabled = state === 'loading';
+
+    if (!status) return;
+    const colorMap = { loading: '#f59e0b', ok: '#22c55e', error: '#e63946', idle: 'var(--ink3)' };
+    status.style.color = colorMap[state] || 'var(--ink3)';
+    status.textContent = msg || '';
+}
+
+/**
+ * _admRefreshShareCounters — her iki tip için yerel ve Firestore sayılarını günceller.
+ * Paragraf tabı açıldığında otomatik çağrılır.
+ */
+async function _admRefreshShareCounters() {
+    // ── Kelimeler: Yerel ──────────────────────────────────────────
+    const localListCount = Object.keys(window.allData || {}).filter(k => Array.isArray((window.allData || {})[k])).length;
+    const elWordsLocal   = document.getElementById('adm-words-local-count');
+    if (elWordsLocal) elWordsLocal.textContent = localListCount;
+
+    // ── Paragraflar: Yerel ────────────────────────────────────────
+    const localParaCount = Array.isArray(window.paragraflar) ? window.paragraflar.length : 0;
+    const elParaLocal    = document.getElementById('adm-para-local-count');
+    if (elParaLocal) elParaLocal.textContent = localParaCount;
+
+    // ── Her iki Paylaşılmış sayaç: Firestore'dan tek sorguda ──────
+    try {
+        if (!window._fsdb || !window._doc || !window._getDoc) return;
+        const snap = await window._getDoc(window._doc(window._fsdb, 'shared', 'content'));
+        if (!snap.exists()) return;
+        const d = snap.data();
+
+        // Kelime listeleri
+        const sharedListCount = d.sharedLists ? Object.keys(d.sharedLists).length : 0;
+        const elWordsShared   = document.getElementById('adm-words-shared-count');
+        if (elWordsShared) elWordsShared.textContent = sharedListCount;
+
+        // Pasajlar
+        const sharedParaCount = Array.isArray(d.paragraflar) ? d.paragraflar.length : 0;
+        const elParaShared    = document.getElementById('adm-para-shared-count');
+        if (elParaShared) elParaShared.textContent = sharedParaCount;
+    } catch(e) {
+        console.warn('[adm-share] Firestore sayaç sorgusu başarısız:', e.message);
+    }
+}
+
+/**
+ * adminShareLists — seçili (veya tüm) kelime listelerini shared/content'e yazar.
+ * Kelimeler tabındaki "☁️ Firestore'a Yükle" butonuna bağlı.
+ */
+async function adminShareLists() {
+    if (!(await adminCheckAccess())) return;
+
+    const selector = document.getElementById('share-list-selector');
+    const note     = document.getElementById('adm-share-note');
+    const selected = selector ? selector.value : '__ALL__';
+    const data     = window.allData || {};
+
+    // Paylaşılacak listeleri belirle
+    let toShare = {};
+    if (selected === '__ALL__') {
+        Object.entries(data).forEach(([k, v]) => { if (Array.isArray(v) && v.length > 0) toShare[k] = v; });
+    } else if (Array.isArray(data[selected]) && data[selected].length > 0) {
+        toShare[selected] = data[selected];
+    }
+
+    const listCount = Object.keys(toShare).length;
+    const wordCount = Object.values(toShare).reduce((s, v) => s + v.length, 0);
+
+    if (listCount === 0) {
+        _admSetShareStatus('words', 'error', '⚠️ Paylaşılacak kelime listesi bulunamadı.');
+        return;
+    }
+
+    _admSetShareStatus('words', 'loading', '⏳ Yükleniyor...');
+    if (note) note.textContent = `${listCount} liste · ${wordCount} kelime paylaşılıyor...`;
+
+    try {
+        await window._setDoc(
+            window._doc(window._fsdb, 'shared', 'content'),
+            {
+                sharedLists: toShare,
+                sharedListsUpdatedAt: new Date().toISOString(),
+                sharedListsUpdatedBy: window._currentUser?.uid || 'admin',
+            },
+            { merge: true }
+        );
+        _admSetShareStatus('words', 'ok', `✅ ${listCount} liste (${wordCount} kelime) paylaşıldı.`);
+        if (note) note.textContent = '';
+        // Sayaçları güncelle
+        const elShared = document.getElementById('adm-words-shared-count');
+        if (elShared) elShared.textContent = listCount;
+    } catch(e) {
+        console.error('[adm-share] Kelime listesi paylaşım hatası:', e.message);
+        _admSetShareStatus('words', 'error', '❌ Firestore yazma hatası: ' + (e.message || 'bilinmiyor'));
+    }
+}
+
+/**
+ * adminShareParagraflar — seçili (veya tüm) pasajları shared/content'e yazar.
+ * Paragraf tabındaki "☁️ Firestore'a Yükle" butonuna bağlı.
+ * Yazma tamamlandığında login overlay'deki lo-stat-pasaj sayacı canlı olarak güncellenir.
+ */
+async function adminShareParagraflar() {
+    if (!(await adminCheckAccess())) return;
+
+    const selector   = document.getElementById('share-para-selector');
+    const note       = document.getElementById('adm-share-para-note');
+    const selected   = selector ? selector.value : '__ALL__';
+    const allParalar = Array.isArray(window.paragraflar) ? window.paragraflar : [];
+
+    if (allParalar.length === 0) {
+        _admSetShareStatus('para', 'error', '⚠️ Paylaşılacak pasaj bulunamadı.');
+        return;
+    }
+
+    // Paylaşılacak pasajları belirle
+    let toShare = [];
+    if (selected === '__ALL__') {
+        toShare = allParalar;
+    } else {
+        const found = allParalar.find(p => p.baslik === selected);
+        if (found) toShare = [found];
+    }
+
+    if (toShare.length === 0) {
+        _admSetShareStatus('para', 'error', '⚠️ Seçili pasaj bulunamadı.');
+        return;
+    }
+
+    _admSetShareStatus('para', 'loading', '⏳ Yükleniyor...');
+    if (note) note.textContent = `${toShare.length} pasaj Firestore'a yazılıyor...`;
+
+    // paragrafSorular: mevcut window değeri — merge ile korunur
+    const sorularData = (typeof window.paragrafSorular === 'object' && window.paragrafSorular)
+        ? window.paragrafSorular : {};
+
+    try {
+        await window._setDoc(
+            window._doc(window._fsdb, 'shared', 'content'),
+            {
+                paragraflar:           toShare,
+                paragrafSorular:       sorularData,
+                updatedAt:             new Date().toISOString(),
+                updatedBy:             window._currentUser?.uid || 'admin',
+            },
+            { merge: true }
+        );
+
+        const count = toShare.length;
+        _admSetShareStatus('para', 'ok', `✅ ${count} pasaj başarıyla paylaşıldı.`);
+        if (note) note.textContent = '';
+
+        // ── Sayaçları canlı güncelle ─────────────────────────────────
+        const elParaShared = document.getElementById('adm-para-shared-count');
+        if (elParaShared) elParaShared.textContent = count;
+
+        // Login overlay'deki lo-stat-pasaj — sayfa açıksa anında güncelle
+        const loStat = document.getElementById('lo-stat-pasaj');
+        if (loStat) loStat.textContent = count;
+
+    } catch(e) {
+        console.error('[adm-share] Pasaj paylaşım hatası:', e.message);
+        _admSetShareStatus('para', 'error', '❌ Firestore yazma hatası: ' + (e.message || 'bilinmiyor'));
+    }
+}
+
+/**
+ * _admPopulateParaSelector — share-para-selector'ı mevcut paragraflarla doldurur.
+ * admSwitchTab('paragraf') çağrısından tetiklenir.
+ */
+function _admPopulateParaSelector() {
+    const sel = document.getElementById('share-para-selector');
+    if (!sel) return;
+
+    // Mevcut dinamik seçenekleri temizle (ilk __ALL__ option'ı koru)
+    while (sel.options.length > 1) sel.remove(1);
+
+    const paralar = Array.isArray(window.paragraflar) ? window.paragraflar : [];
+    paralar.forEach(p => {
+        if (!p || !p.baslik) return;
+        const opt = document.createElement('option');
+        opt.value       = p.baslik;
+        opt.textContent = p.baslik.length > 52 ? p.baslik.slice(0, 52) + '…' : p.baslik;
+        sel.appendChild(opt);
+    });
+}
+
+// ════════════════════════════════════════════════════════════════
+// WINDOW EXPORTS — defer yükleme için tüm public fonksiyonlar
+// onclick="fnName()" çağrılarının global scope'ta bulunabilmesi
+// için her public fonksiyon window'a bağlanmalıdır.
+// ════════════════════════════════════════════════════════════════
+window.adminCheckAccess       = adminCheckAccess;
+window.adminUnlockPanel       = adminUnlockPanel;
+window.admSwitchTab           = admSwitchTab;
+window.adminClearArsiv        = adminClearArsiv;
+window.admLoadUserCount       = admLoadUserCount;
+window.admBankUpload          = admBankUpload;
+window.admBankGetCount        = admBankGetCount;
+window.adminUpdateBankCounts  = adminUpdateBankCounts;
+window.startQuizFromNav       = startQuizFromNav;
+window.showExerciseNav        = showExerciseNav;
+window.adminShareLists        = adminShareLists;
+window.adminShareParagraflar  = adminShareParagraflar;
+

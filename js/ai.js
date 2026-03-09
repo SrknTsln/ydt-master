@@ -1,9 +1,3 @@
-// JSON güvenli parse — bozuk veri, tarayıcı eklentisi veya AI hatası uygulamayı çökertemez
-function safeJsonParse(str, fallback = null) {
-    if (str == null) return fallback;
-    try { return JSON.parse(str); } catch(e) { return fallback; }
-}
-
 // XSS koruma yardımcısı
 function _esc(s) {
     if (s == null) return '';
@@ -26,48 +20,39 @@ function isQuotaError(msg) {
            m.includes('limit exceeded') || m.includes('overloaded');
 }
 
-// ── Toast Kuyruğu — birden fazla işlem aynı anda tamamlandığında üst üste binmeyi önler
-const _toastQueue  = [];
-let   _toastActive = false;
-const TOAST_MAX_QUEUE = 3;   // Daha fazlası düşer (flood koruması)
+/**
+ * isPermanentError — ağ erişim hatası veya provider yükleme hatası.
+ * Bu hatalarda 1 saniyelik bekleme anlamsız; anında next provider'a geç.
+ */
+function isPermanentError(msg) {
+    const m = (msg || '').toLowerCase();
+    return m.includes('failed to fetch') ||
+           m.includes('networkerror') ||
+           m.includes('network request failed') ||
+           m.includes('puter_not_loaded') ||
+           m.includes('load_timeout') ||
+           m.includes('fetch') && m.includes('error');
+}
 
-function _toastNext() {
-    if (_toastQueue.length === 0) { _toastActive = false; return; }
-    _toastActive = true;
-    const { msg, type, duration } = _toastQueue.shift();
+/** Puter session cache — bir kez başarısız olduysa tekrar deneme */
+const _providerFailCache = new Set();
 
+// Ekranda küçük durum tostu göster
+function showAIToast(msg, type = 'info', duration) {
     let t = document.getElementById('ai-cascade-toast');
-    if (t) { t.classList.remove('show'); t.remove(); }
-
+    if (t) t.remove();
     t = document.createElement('div');
-    t.id        = 'ai-cascade-toast';
+    t.id = 'ai-cascade-toast';
     t.className = `ai-cascade-toast ai-toast-${type}`;
     t.innerHTML = msg;
     document.body.appendChild(t);
     requestAnimationFrame(() => t.classList.add('show'));
-
-    const ms = duration || (type === 'warn' ? 5000 : type === 'error' ? 7000 : 2400);
     clearTimeout(window._toastTimer);
+    const ms = duration || (type === 'warn' ? 5000 : type === 'error' ? 7000 : 2400);
     window._toastTimer = setTimeout(() => {
         t.classList.remove('show');
-        setTimeout(() => {
-            if (t && t.parentNode) t.remove();
-            _toastNext(); // Sıradaki toast'ı göster
-        }, 350);
+        setTimeout(() => t && t.remove(), 350);
     }, ms);
-}
-
-// Ekranda küçük durum tostu göster (kuyruklu)
-function showAIToast(msg, type = 'info', duration) {
-    // Kuyruğa ekle — doluysa (flood) en eski düşer
-    if (_toastQueue.length >= TOAST_MAX_QUEUE) {
-        _toastQueue.shift(); // En eski mesajı at
-    }
-    _toastQueue.push({ msg, type, duration });
-    // Aktif toast yoksa hemen başlat
-    if (!_toastActive) {
-        _toastNext();
-    }
 }
 
 // ── AI Worker URL (RSS proxy ile aynı Worker) ────────────────────
@@ -104,30 +89,45 @@ const AI_PROVIDERS = [
         keyHint: null,
         keyLink: null,
         async call(prompt) {
-            // Puter defer ile yüklendiğinden hazır olana kadar bekle (max 5sn)
+            // Puter bu session'da daha önce başarısız olduysa anında skip et
+            if (_providerFailCache.has('puter')) {
+                throw new Error('puter_not_loaded');
+            }
+            // Puter defer ile yüklendiğinden hazır olana kadar bekle (max 3sn)
             if (typeof puter === 'undefined' || !puter?.ai?.chat) {
                 await new Promise((resolve, reject) => {
                     const start = Date.now();
                     const check = () => {
                         if (typeof puter !== 'undefined' && puter?.ai?.chat) return resolve();
-                        if (Date.now() - start > 5000) return reject(new Error('puter_not_loaded'));
+                        if (Date.now() - start > 3000) {
+                            _providerFailCache.add('puter');
+                            return reject(new Error('puter_not_loaded'));
+                        }
                         setTimeout(check, 200);
                     };
                     check();
                 });
             }
-            const resp = await puter.ai.chat(
-                [{ role: 'system', content: 'You must respond with valid JSON only. No markdown, no explanation.' },
-                 { role: 'user',   content: prompt }],
-                { model: 'gpt-4o-mini' }
-            );
-            const content = resp?.message?.content;
-            const raw = Array.isArray(content) ? (content[0]?.text || '') :
-                        (typeof content === 'string' ? content :
-                        (typeof resp === 'string' ? resp : ''));
-            const match = raw.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
-            if (!match) throw new Error('Puter: JSON bulunamadı → ' + raw.slice(0, 60));
-            return JSON.parse(match[0]);
+            try {
+                const resp = await puter.ai.chat(
+                    [{ role: 'system', content: 'You must respond with valid JSON only. No markdown, no explanation.' },
+                     { role: 'user',   content: prompt }],
+                    { model: 'gpt-4o-mini' }
+                );
+                const content = resp?.message?.content;
+                const raw = Array.isArray(content) ? (content[0]?.text || '') :
+                            (typeof content === 'string' ? content :
+                            (typeof resp === 'string' ? resp : ''));
+                const match = raw.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
+                if (!match) throw new Error('Puter: JSON bulunamadı → ' + raw.slice(0, 60));
+                return JSON.parse(match[0]);
+            } catch(e) {
+                // Ağ hatası → kalıcı olarak devre dışı bırak, anında skip
+                if (isPermanentError(e.message) || e.name === 'TypeError') {
+                    _providerFailCache.add('puter');
+                }
+                throw e;
+            }
         }
     },
     {
@@ -175,30 +175,11 @@ const AI_PROVIDERS = [
 
 // Ana cascade çağrısı — tüm provider'ları sırayla dener
 // Artık localStorage'da anahtar aranmıyor — Worker env'den sağlar
-// ── AI Rate Limiting: aynı anda birden fazla paralel çağrıyı önle ──────
-const _aiCallQueue = { inFlight: 0, lastCallMs: 0 };
-const AI_RATE_LIMIT_MS = 800;  // Ardışık çağrılar arası minimum ms
-const AI_MAX_PARALLEL  = 3;    // Maksimum eşzamanlı çağrı
-
 async function aiCall(prompt) {
-    // Rate limit kontrolü
-    const now = Date.now();
-    const msSinceLast = now - _aiCallQueue.lastCallMs;
-    if (_aiCallQueue.inFlight >= AI_MAX_PARALLEL) {
-        throw new Error('Çok fazla eşzamanlı AI isteği. Lütfen bekleyin.');
-    }
-    if (msSinceLast < AI_RATE_LIMIT_MS && _aiCallQueue.inFlight > 0) {
-        // Çok hızlı ardışık çağrı — kısa bekle
-        await new Promise(r => setTimeout(r, AI_RATE_LIMIT_MS - msSinceLast));
-    }
-    _aiCallQueue.inFlight++;
-    _aiCallQueue.lastCallMs = Date.now();
-
     // Tüm provider'lar Worker üzerinden aktif (Puter.js önce, sonra Worker proxy'ler)
     const available = AI_PROVIDERS; // hepsi her zaman denenir
 
     if (!available.length) {
-        _aiCallQueue.inFlight--;
         alert('AI özelliği şu an kullanılamıyor.');
         throw new Error('no_api_key');
     }
@@ -224,22 +205,25 @@ async function aiCall(prompt) {
                 const t = document.getElementById('ai-cascade-toast');
                 if (t) { t.classList.remove('show'); setTimeout(() => t.remove(), 350); }
             }
-            _aiCallQueue.inFlight--;
             return result;
 
         } catch (err) {
             lastErr = err;
-            const isQuota = isQuotaError(err.message);
-            console.warn(`[AI Cascade] ❌ ${p.name} ${isQuota ? 'KOTA DOLDU' : 'HATA'}: ${err.message}`);
+            const isQuota   = isQuotaError(err.message);
+            const isPermanent = isPermanentError(err.message) || err.name === 'TypeError';
+            console.warn(`[AI Cascade] ❌ ${p.name} ${isQuota ? 'KOTA DOLDU' : isPermanent ? 'ERİŞİLEMİYOR' : 'HATA'}: ${err.message}`);
 
             if (!isLast) {
                 const next = available[i + 1];
-                const reason = isQuota ? 'kotası doldu ⛔' : 'hata verdi ❌';
+                const reason = isQuota     ? 'kotası doldu ⛔'
+                             : isPermanent ? 'erişilemiyor 🔌'
+                             : 'hata verdi ❌';
                 showAIToast(
                     `${p.icon} ${p.name} ${reason} — ${next.icon} ${next.name} deneniyor...`,
                     'warn'
                 );
-                await new Promise(r => setTimeout(r, 1000));
+                // Permanent hatalarda bekleme yok — anında next provider
+                if (!isPermanent) await new Promise(r => setTimeout(r, 1000));
             } else {
                 const tip = available.length === 1
                     ? ' (Yönetim→🔑 bölümünden ek servis ekleyin)'
@@ -248,7 +232,6 @@ async function aiCall(prompt) {
             }
         }
     }
-    _aiCallQueue.inFlight--;
     throw lastErr || new Error('all_failed');
 }
 
@@ -688,3 +671,12 @@ function showParagrafOku(index) {
     }, 100);
 }
 // ══════════════════════════════════════════════
+
+// ── Window Exports (defer uyumluluğu) ────────────────────────────
+window.aiCall               = aiCall;
+window.geminiCall           = geminiCall;
+window.generateYDTQuestions = generateYDTQuestions;
+window.checkYDTAnswer       = checkYDTAnswer;
+window.analyzeGrammarXRay   = analyzeGrammarXRay;
+window.showParagrafOku      = showParagrafOku;
+window.detectDifficulty     = detectDifficulty;

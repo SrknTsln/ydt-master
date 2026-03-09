@@ -750,3 +750,21 @@ function exitContext() {
 }
 
 // ══════════════════════════════════════════════
+
+// ── Window Exports (defer uyumluluğu) ────────────────────────────
+window.ctxCheck          = ctxCheck;
+window.ctxNext           = ctxNext;
+window.ctxRegenSentence  = ctxRegenSentence;
+window.exitContext        = exitContext;
+window.exitSM2           = exitSM2;
+window.exitTyping         = exitTyping;
+window.rateSM2           = typeof rateSM2 !== 'undefined' ? rateSM2 : null;
+window.showSM2Answer     = showSM2Answer;
+window.startContextMode  = startContextMode;
+window.startSM2Review    = startSM2Review;
+window.startTypingQuiz   = startTypingQuiz;
+window.twCheck           = twCheck;
+window.twNext            = twNext;
+window.twSkip            = twSkip;
+window.twSpeak           = twSpeak;
+window.twToggleHelp      = twToggleHelp;

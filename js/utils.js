@@ -20,12 +20,15 @@ function _showAppToast(msg, type = 'warn') {
         showAIToast(msg, type);
     } else {
         // Fallback: ai.js henüz yüklenmediyse (edge case)
-        console.warn('[YDT Toast]', msg);
+        if (window.YDT) window.YDT.log.warn('[Toast]', msg);
+        else console.warn('[YDT Toast]', msg);
     }
 }
 
 // ════════════════════════════════════════════════════════
 // PATCH: Bottom nav tab'larını aktif sayfa ile senkronize et
+// Lazy pattern: motor.js defer ile sonradan yükleniyor olabilir.
+// DOMContentLoaded'da patch uygula — o noktada setNavActive kesinlikle tanımlı.
 // ════════════════════════════════════════════════════════
 (function _patchBottomNavSync() {
     const BN_MAP = {
@@ -39,18 +42,41 @@ function _showAppToast(msg, type = 'warn') {
         'context-page':        'bn-exercise',
         'sm2-page':            'bn-exercise',
     };
-    const _origSetNavActive = window.setNavActive || setNavActive;
-    function _patchedSetNavActive(pageId) {
-        _origSetNavActive(pageId);
-        // Bottom nav aktif state
-        document.querySelectorAll('.mob-tab').forEach(t => t.classList.remove('active'));
-        const bnId = BN_MAP[pageId];
-        if (bnId) {
-            const btn = document.getElementById(bnId);
-            if (btn) btn.classList.add('active');
+
+    let _patchAttempts = 0;
+    const _PATCH_MAX_ATTEMPTS = 60; // 60 × 50ms = 3 saniye timeout
+
+    function _applyPatch() {
+        // window.setNavActive bu noktada motor.js tarafından tanımlanmış olmalı
+        if (typeof window.setNavActive !== 'function') {
+            _patchAttempts++;
+            if (_patchAttempts >= _PATCH_MAX_ATTEMPTS) {
+                // motor.js yüklenemedi veya setNavActive tanımsız — sessizce çık
+                console.warn('[YDT] _applyPatch: setNavActive tanımsız, max retry aşıldı. motor.js yüklendi mi?');
+                return;
+            }
+            setTimeout(_applyPatch, 50);
+            return;
         }
+        const _orig = window.setNavActive;
+        window.setNavActive = function _patchedSetNavActive(pageId) {
+            _orig(pageId);
+            document.querySelectorAll('.mob-tab').forEach(t => t.classList.remove('active'));
+            const bnId = BN_MAP[pageId];
+            if (bnId) {
+                const btn = document.getElementById(bnId);
+                if (btn) btn.classList.add('active');
+            }
+        };
     }
-    window.setNavActive = _patchedSetNavActive;
+
+    // defer script'ler DOMContentLoaded'dan önce tamamlanır —
+    // ama sıra garantisi için readyState kontrolü yapıyoruz.
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', _applyPatch);
+    } else {
+        _applyPatch();
+    }
 })();
 
 // ══════════════════════════════════════════════
@@ -288,7 +314,7 @@ function _ukmGetQuota() {
             const q = JSON.parse(raw);
             if (q.date === _ukmToday()) return q;
         }
-    } catch(e) { console.debug("[UKM] quota read hatası, sıfırlandı"); }
+    } catch(e) { log.debug("[UKM] quota read hatası, sıfırlandı"); }
     return { date: _ukmToday(), listsCreated: 0 };
 }
 
@@ -749,6 +775,17 @@ function speakWord(word, btn = null) {
     if (window.YDT) return; // Zaten var
     window.YDT = {
         version: '4.7',
+
+        // ── Production-Aware Logger ────────────────────────────────────────
+        // isDev: localhost / 127.0.0.1 ortamında debug logları görünür.
+        // Production'da log.debug sessizdir; log.warn ve log.error her zaman aktif.
+        isDev: location.hostname === 'localhost' || location.hostname === '127.0.0.1',
+        log: {
+            debug: function() { if (window.YDT.isDev) console.log.apply(console, ['[YDT]'].concat(Array.from(arguments))); },
+            warn:  function() { console.warn.apply(console,  ['[YDT]'].concat(Array.from(arguments))); },
+            error: function() { console.error.apply(console, ['[YDT]'].concat(Array.from(arguments))); },
+        },
+
         // ── Merkezi localStorage yardımcıları ──────────────────────────
         /**
          * Güvenli localStorage.setItem — QuotaExceededError yakalar
@@ -762,19 +799,19 @@ function speakWord(word, btn = null) {
                 return true;
             } catch (e) {
                 if (e.name === 'QuotaExceededError' || e.code === 22) {
-                    console.warn('[YDT] localStorage dolu — temizleniyor…', key);
+                    log.warn('[YDT] localStorage dolu — temizleniyor…', key);
                     _lsPurgeOldCache(); // En eski RSS cache'lerini sil
                     try {
                         localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
                         return true;
                     } catch (e2) {
-                        console.error('[YDT] localStorage kurtarma başarısız:', key, e2.message);
+                        log.error('[YDT] localStorage kurtarma başarısız:', key, e2.message);
                         if (typeof showAIToast === 'function') {
                             showAIToast('💾 Depolama alanı doldu. Eski veriler temizlendi.', 'warn');
                         }
                     }
                 } else {
-                    console.error('[YDT] localStorage.setItem hatası:', key, e.message);
+                    log.error('[YDT] localStorage.setItem hatası:', key, e.message);
                 }
                 return false;
             }
@@ -824,7 +861,10 @@ function speakWord(word, btn = null) {
     window._lsSet = window.YDT.lsSet.bind(window.YDT);
     window._lsGet = window.YDT.lsGet.bind(window.YDT);
 
-    console.log('[YDT Namespace] ✅ v4.7 yüklendi — YDT.lsSet / YDT.lsGet / YDT.canAICall hazır');
+    // ── Global log alias — tüm dosyalarda log.debug / log.warn / log.error
+    window.log = window.YDT.log;
+
+    window.YDT.log.debug('[YDT Namespace] ✅ v4.7 yüklendi — YDT.lsSet / YDT.lsGet / YDT.canAICall / YDT.log hazır');
 })();
 
 // ── localStorage QuotaExceededError temizleyici ────────────────────────
@@ -841,8 +881,19 @@ function _lsPurgeOldCache() {
         // En eski yarısını sil (tarih yoksa doğrusal sırayla)
         rssKeys.sort();
         rssKeys.slice(0, Math.max(1, Math.floor(rssKeys.length / 2))).forEach(k => {
-            try { localStorage.removeItem(k); } catch (_) { console.debug('[YDT] removeItem hatası:', k); }
+            try { localStorage.removeItem(k); } catch (_) { log.debug('[YDT] removeItem hatası:', k); }
         });
-        console.log(`[YDT] localStorage temizlendi: ${rssKeys.length} cache slot → ${Math.ceil(rssKeys.length / 2)} kaldı`);
-    } catch (_) { console.warn('[YDT] Purge genel hata'); }
+        log.debug(`[YDT] localStorage temizlendi: ${rssKeys.length} cache slot → ${Math.ceil(rssKeys.length / 2)} kaldı`);
+    } catch (_) { log.warn('[YDT] Purge genel hata'); }
 }
+
+// ── Window Exports (defer uyumluluğu) ────────────────────────────
+window.goToMyWords    = goToMyWords;
+window.speakWord      = speakWord;
+window.toggleTheme    = toggleTheme;
+window.ukmAddManual   = ukmAddManual;
+window.ukmClearPreview = ukmClearPreview;
+window.ukmConfirmAdd  = ukmConfirmAdd;
+window.ukmCreateList  = ukmCreateList;
+window.ukmFetchAI     = ukmFetchAI;
+window.ukmTab         = ukmTab;

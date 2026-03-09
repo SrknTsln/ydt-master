@@ -4,6 +4,22 @@ function safeJsonParse(str, fallback = null) {
     try { return JSON.parse(str); } catch(e) { return fallback; }
 }
 
+// ── DOM Cache (ai-daily.js) — motor.js yüklüyse paylaşılan $id kullan ─────
+// motor.js'den önce yüklenmesi durumuna karşı guard
+const _aidDomCache = new Map();
+function _aid$id(id) {
+    // motor.js'nin $id fonksiyonu varsa onu kullan (tek cache havuzu)
+    if (typeof $id === 'function') return $id(id);
+    if (_aidDomCache.has(id)) {
+        const cached = _aidDomCache.get(id);
+        if (cached && document.contains(cached)) return cached;
+        _aidDomCache.delete(id);
+    }
+    const el = document.getElementById(id);
+    if (el) _aidDomCache.set(id, el);
+    return el;
+}
+
 // ── Rozet Sistemi + Isı Haritası + AI Günlük Paragraflar + Çeviri Modu — motor.js'den ayrıştırıldı
 // Bağımlılıklar: motor.js (global state: allData, stats)
 
@@ -468,30 +484,32 @@ function renderAIDailyParagraflar(passages, listEl) {
         const preview    = sentences.slice(0, 2).join(' ').trim() || p.text.slice(0, 140) + '…';
         const arşivde    = isAIPasajArşivde(p.title);
 
-        return `<div class="rh2-card" id="ai-card-${i}">
+        return `<div class="rh2-card" id="ai-card-${i}" onclick="openAIDailyParagraf(${i})">
             <div class="rh2-card-accent rh2-card-accent-ai"></div>
-            <div class="rh2-card-body" onclick="openAIDailyParagraf(${i})" style="cursor:pointer;">
+            <div class="rh2-card-body">
                 <div class="rh2-card-header">
                     <div class="rh2-card-icon rh2-card-icon-ai">${icons[i % icons.length]}</div>
                     <div class="rh2-card-titlemeta">
                         <div class="rh2-card-title">${p.title}</div>
-                        <div class="rh2-card-timing">⏱ ${readMin} dk · ${totalWords} kelime · ${sentences.length} cümle</div>
                     </div>
+                </div>
+                <div class="rh2-card-statband">
+                    <div class="rh2-sband-cell"><span class="rh2-sband-ico">⏱</span><span class="rh2-sband-num">${readMin} dk</span></div>
+                    <div class="rh2-sband-div"></div>
+                    <div class="rh2-sband-cell"><span class="rh2-sband-ico">📝</span><span class="rh2-sband-num">${totalWords}</span><span class="rh2-sband-lbl">KELİME</span></div>
+                    <div class="rh2-sband-div"></div>
+                    <div class="rh2-sband-cell"><span class="rh2-sband-ico">💬</span><span class="rh2-sband-num">${sentences.length}</span><span class="rh2-sband-lbl">CÜMLE</span></div>
+                    <div class="rh2-sband-div"></div>
+                    <div class="rh2-sband-cell rh2-sband-max"><span class="rh2-sband-maxlbl">MAX:</span><span class="rh2-sband-maxnum">${vocCount}</span><span class="rh2-sband-maxsub">KELİME</span></div>
                 </div>
                 <div class="rh2-card-preview">${preview}</div>
                 <div class="rh2-card-footer">
                     ${vocCount > 0 ? `<span class="rh2-pill rh2-pill-word">📖 ${vocCount} kelime</span>` : ''}
-                    <span class="rh2-pill rh2-pill-ai">🤖 AI Üretim</span>
+                    <span class="rh2-pill rh2-pill-ai">🤖 AI</span>
                     ${vocPills}
+                    <button class="rh2-card-save-btn ${arşivde?'saved':''}" id="ai-save-btn-${i}" onclick="event.stopPropagation();_saveAIPasaj(${i})">${arşivde?'✅ Arşivde':'🗂 Arşivle'}</button>
                 </div>
             </div>
-            <button class="rh2-card-save-btn ${arşivde ? 'saved' : ''}" 
-                    id="ai-save-btn-${i}"
-                    onclick="event.stopPropagation(); _saveAIPasaj(${i})"
-                    title="${arşivde ? 'Arşivde' : 'Yüklü Pasajlara Ekle'}"
-                    style="position:absolute;bottom:14px;right:14px;">
-                ${arşivde ? '✅ Arşivde' : '📥 Arşive Ekle'}
-            </button>
         </div>`;
     };
 
@@ -506,7 +524,7 @@ function _saveAIPasaj(index) {
     const p = passages[index];
 
     const saved = saveAIPasajToArsiv(p);
-    const btn   = document.getElementById(`ai-save-btn-${index}`);
+    const btn   = _aid$id(`ai-save-btn-${index}`);
 
     if (!saved) {
         if (btn) { btn.textContent = '✅ Arşivde'; btn.classList.add('saved'); }
@@ -548,7 +566,7 @@ async function openAIDailyParagraf(index) {
     // Lazy AI analizi — henüz analiz edilmediyse şimdi yap
     if (p._needsAI && p._articleRef) {
         // Kart üzerinde yükleniyor göstergesi
-        const card = document.getElementById(`ai-card-${index}`);
+        const card = _aid$id(`ai-card-${index}`);
         const footer = card?.querySelector('.rh2-card-footer');
         if (footer) footer.innerHTML = `<span class="rh2-pill rh2-pill-ai" style="animation:pulse 1s infinite">🤖 Analiz ediliyor...</span>`;
 
@@ -587,10 +605,23 @@ async function openAIDailyParagraf(index) {
     }
 
     // Build a temporary paragraf object and show it
+    // Vocabulary normalize + placeholder key temizle + translation cache onceden doldur
+    const rawVoc = p.vocabulary || {};
+    const PLACEHOLDER_KEYS = new Set(['word','english_word','english','turkish','tr','key','vocab','term','placeholder']);
+    const normalizedVoc = {};
+    for (const [eng, tr] of Object.entries(rawVoc)) {
+        const k = eng.trim().toLowerCase();
+        // Placeholder key'leri atla
+        if (PLACEHOLDER_KEYS.has(k)) continue;
+        if (k.length <= 2) continue;
+        normalizedVoc[k]          = tr;
+        normalizedVoc[eng.trim()] = tr;
+        if (!_translationCache[k]) _translationCache[k] = tr;
+    }
     const tempP = {
-        baslik: p.title,
-        metin: p.text,
-        kelimeler: p.vocabulary || {}
+        baslik:    p.title,
+        metin:     p.text,
+        kelimeler: normalizedVoc
     };
 
     // Push to paragraflar temporarily if not exists
@@ -650,76 +681,50 @@ window.goToPasajOku = goToPasajOku;
 window.aiDailyGenerateParagraflar = aiDailyGenerateParagraflar;
 window.openAIDailyParagraf = openAIDailyParagraf;
 
-// ══════════════════════════════════════════════
-// 🌐 ÇEVİRİ MODU (Hover any word)
-// ══════════════════════════════════════════════
-let _translateModeOn = false;
+// =====================================================================
+// KELIME HOVER SISTEMI — Her zaman aktif, toggle yok
+// c1-word : vocabulary kelimesi — data-tr aninda mevcut, CSS tooltip
+// w-span  : diger kelimeler    — JS tooltip + AI fetch
+// =====================================================================
 let _translateTooltip = null;
-let _translateBound = false;
+let _translateBound   = false;
+let _hoverTimer       = null;
+const _translationCache = {};
 
-function toggleTranslateMode() {
-    _translateModeOn = !_translateModeOn;
-    const btn = $id('translate-mode-btn');
-    const metinEl = $id('p-oku-metin');
-    if (!btn || !metinEl) return;
+/* Tooltip DOM elemanini bir kez olustur */
+function _ensureTooltip() {
+    if (_translateTooltip) return;
+    _translateTooltip = document.createElement('div');
+    _translateTooltip.id = 'translate-hover-tip';
+    _translateTooltip.style.cssText = 'position:fixed;background:#1e293b;color:#fff;'
+        + 'padding:6px 14px;border-radius:10px;font-size:.82rem;font-weight:700;'
+        + 'pointer-events:none;z-index:99999;opacity:0;transition:opacity 0.15s;'
+        + 'box-shadow:0 4px 20px rgba(0,0,0,.35);max-width:260px;'
+        + 'white-space:normal;text-align:center;display:none';
+    document.body.appendChild(_translateTooltip);
+}
 
-    if (_translateModeOn) {
-        btn.innerHTML = '🌐 Çeviri Modu: <span style="color:#10b981;">Açık</span>';
-        btn.style.borderColor = '#10b981';
-        btn.style.background = '#d1fae5';
-        btn.style.color = '#059669';
-        metinEl.style.cursor = 'crosshair';
-        if (!_translateBound) {
-            metinEl.addEventListener('mouseover', _onWordHover);
-            metinEl.addEventListener('mouseout', _onWordOut);
-            metinEl.addEventListener('click', _onWordClick);
-            _translateBound = true;
-        }
-        // Create tooltip
-        if (!_translateTooltip) {
-            _translateTooltip = document.createElement('div');
-            _translateTooltip.id = 'translate-hover-tip';
-            _translateTooltip.style.cssText = 'position:fixed;background:#1e293b;color:#fff;padding:6px 13px;border-radius:9px;font-size:.8rem;font-weight:700;pointer-events:none;z-index:99999;opacity:0;transition:opacity 0.15s;box-shadow:0 4px 16px rgba(0,0,0,.3);max-width:260px;white-space:normal;text-align:center;display:none;';
-            document.body.appendChild(_translateTooltip);
-        }
-    } else {
-        btn.innerHTML = '🌐 Çeviri Modu: Kapalı';
-        btn.style.borderColor = 'var(--border)';
-        btn.style.background = 'var(--white)';
-        btn.style.color = 'var(--ink3)';
-        metinEl.style.cursor = '';
-        if (_translateTooltip) { _translateTooltip.style.opacity = '0'; _translateTooltip.style.display = 'none'; }
+/* p-oku-metin uzerine listener'lari bir kez bagla */
+function _bindWordHoverListeners(metinEl) {
+    _ensureTooltip();
+    if (_translateBound) return;
+    metinEl.addEventListener('mouseover', _onWordHover);
+    metinEl.addEventListener('mouseout',  _onWordOut);
+    metinEl.addEventListener('click',     _onWordClick);
+    _translateBound = true;
+}
+
+function _onWordHover(e) {
+    clearTimeout(_hoverTimer);
+    const el = e.target;
+    // Sadece c1-word: vocabulary kelimesi — data-tr aninda mevcut
+    if (el.classList.contains('c1-word')) {
+        const tr = el.dataset.tr;
+        if (tr) _showTranslateTip(el.dataset.word || el.textContent.trim(), e.clientX, e.clientY, false, tr);
     }
 }
 
-function _getWordFromEvent(e) {
-    const el = e.target;
-    if (el.classList.contains('c1-word')) return el.dataset.tr || null;
-    if (el.classList.contains('p-sentence') || el === $id('p-oku-metin')) return null;
-    return null;
-}
-
-let _hoverTimer = null;
-function _onWordHover(e) {
-    if (!_translateModeOn) return;
-    clearTimeout(_hoverTimer);
-    const el = e.target;
-    
-    // For c1-words, tooltip already shows via CSS - skip
-    if (el.classList.contains('c1-word')) return;
-
-    // For other text nodes, we need to detect the word under cursor
-    // We'll use the selection/caretPosition approach
-    _hoverTimer = setTimeout(() => {
-        const word = _getWordAtPoint(e.clientX, e.clientY);
-        if (word && word.length > 2 && /^[a-zA-Z]+$/.test(word)) {
-            _showTranslateTip(word, e.clientX, e.clientY);
-        }
-    }, 300);
-}
-
 function _onWordOut(e) {
-    if (!_translateModeOn) return;
     clearTimeout(_hoverTimer);
     if (_translateTooltip) {
         _translateTooltip.style.opacity = '0';
@@ -728,76 +733,70 @@ function _onWordOut(e) {
 }
 
 function _onWordClick(e) {
-    if (!_translateModeOn) return;
     const el = e.target;
-    if (el.classList.contains('c1-word')) return; // already handled
+    // Sadece c1-word tiklama: tooltip'i pinle
+    if (el.classList.contains('c1-word')) {
+        const tr = el.dataset.tr;
+        if (tr) _showTranslateTip(el.dataset.word || el.textContent.trim(), e.clientX, e.clientY, true, tr);
+        return;
+    }
+    // p-sentence: Grammar X-Ray devralir — tooltip kapat
     if (el.classList.contains('p-sentence')) {
-        // Don't intercept grammar x-ray unless translate mode
-        e.stopPropagation();
-    }
-    const word = _getWordAtPoint(e.clientX, e.clientY);
-    if (word && word.length > 2 && /^[a-zA-Z]+$/.test(word)) {
-        _showTranslateTip(word, e.clientX, e.clientY, true);
-        _fetchWordTranslation(word);
+        if (_translateTooltip) { _translateTooltip.style.opacity = '0'; _translateTooltip.style.display = 'none'; }
     }
 }
 
-function _getWordAtPoint(x, y) {
-    try {
-        let range;
-        if (document.caretPositionFromPoint) {
-            const pos = document.caretPositionFromPoint(x, y);
-            if (!pos) return null;
-            range = document.createRange();
-            range.setStart(pos.offsetNode, pos.offset);
-        } else if (document.caretRangeFromPoint) {
-            range = document.caretRangeFromPoint(x, y);
-        }
-        if (!range) return null;
-        range.expand('word');
-        return range.toString().trim().replace(/[^a-zA-Z'-]/g, '');
-    } catch(e) { return null; }
-}
-
-const _translationCache = {};
-function _showTranslateTip(word, x, y, pinned) {
+function _showTranslateTip(word, x, y, pinned, knownTr) {
+    _ensureTooltip();
     if (!_translateTooltip) return;
-    const cached = _translationCache[word.toLowerCase()];
-    const p = paragraflar[currentParagrafIndex];
-    const vocTr = p && p.kelimeler && p.kelimeler[word.toLowerCase()];
-    
-    const displayTr = vocTr || cached || '⏳ çeviriliyor...';
-    _translateTooltip.innerHTML = `<span style="color:#94a3b8;font-size:.68rem;font-weight:600;">TR</span><br>${displayTr}`;
+    const key    = (word || '').toLowerCase();
+    const p      = paragraflar[currentParagrafIndex];
+    const vocTr  = p && p.kelimeler ? (p.kelimeler[key] || p.kelimeler[word]) : null;
+    const cached = _translationCache[key];
+    const display = knownTr || vocTr || cached || null;
+    _translateTooltip.innerHTML = display
+        ? '<span style="color:#94a3b8;font-size:.68rem;font-weight:600;letter-spacing:.04em;">TR</span><br>' + display
+        : '<span style="color:#94a3b8;font-size:.68rem;">ceviriliyor...</span>';
     _translateTooltip.style.display = 'block';
-    _translateTooltip.style.left = Math.min(x + 10, window.innerWidth - 200) + 'px';
-    _translateTooltip.style.top = Math.max(y - 50, 8) + 'px';
+    _translateTooltip.style.left    = Math.min(x + 12, window.innerWidth - 220) + 'px';
+    _translateTooltip.style.top     = Math.max(y - 56, 8) + 'px';
     _translateTooltip.style.opacity = '1';
+    if (!display) _fetchWordTranslation(word);
 }
 
 async function _fetchWordTranslation(word) {
-    const key = word.toLowerCase();
-    if (_translationCache[key]) return;
-    // Check vocab first
-    const p = paragraflar[currentParagrafIndex];
-    if (p && p.kelimeler && p.kelimeler[key]) {
-        _translationCache[key] = p.kelimeler[key];
-        return;
-    }
-    // Use AI if available
-    _translationCache[key] = '⏳';
+    const key = (word || '').toLowerCase();
+    if (_translationCache[key] && _translationCache[key] !== 'ceviriliyor...') return;
+    const p     = paragraflar[currentParagrafIndex];
+    const vocTr = p && p.kelimeler ? (p.kelimeler[key] || p.kelimeler[word]) : null;
+    if (vocTr) { _translationCache[key] = vocTr; _updateTooltipIfShowing(key); return; }
+    if (typeof aiCall !== 'function') { _translationCache[key] = '-'; return; }
+    _translationCache[key] = 'ceviriliyor...';
     try {
-        const result = await aiCall(`Translate "${word}" to Turkish. Reply ONLY with JSON: {"tr":"Turkish meaning (max 3 words)"}`);
-        _translationCache[key] = (result.tr || '—').trim();
-        // Update tooltip if still showing
-        if (_translateTooltip && _translateTooltip.style.opacity === '1') {
-            const tipContent = _translateTooltip.innerHTML;
-            if (tipContent.includes('⏳')) {
-                _translateTooltip.innerHTML = `<span style="color:#94a3b8;font-size:.68rem;font-weight:600;">TR</span><br>${_translationCache[key]}`;
-            }
-        }
-    } catch(e) { _translationCache[key] = '—'; }
+        const result = await aiCall('Translate the English word "' + word + '" to Turkish. Reply ONLY with JSON: {"tr":"Turkish meaning (max 3 words)"}');
+        _translationCache[key] = (result && result.tr ? result.tr : '-').trim();
+    } catch(e) { _translationCache[key] = '-'; }
+    _updateTooltipIfShowing(key);
 }
 
+function _updateTooltipIfShowing(key) {
+    if (!_translateTooltip || _translateTooltip.style.opacity !== '1') return;
+    const tr = _translationCache[key];
+    if (tr && _translateTooltip.innerHTML.includes('ceviriliyor')) {
+        _translateTooltip.innerHTML = '<span style="color:#94a3b8;font-size:.68rem;font-weight:600;letter-spacing:.04em;">TR</span><br>' + tr;
+    }
+}
+
+/* Backward compat — buton varsa Acik goster */
+function toggleTranslateMode() {
+    const btn = $id('translate-mode-btn');
+    if (btn) {
+        btn.innerHTML = 'Ceviri: <span style="color:#10b981;font-weight:800;">Acik</span>';
+        btn.style.borderColor = '#10b981';
+        btn.style.background  = '#d1fae5';
+        btn.style.color       = '#059669';
+    }
+}
 window.toggleTranslateMode = toggleTranslateMode;
 
 
@@ -851,3 +850,6 @@ window.autoLoadParagrafPaketleri = autoLoadParagrafPaketleri;
 
 
 // ════════════════════════════════════════════════════════
+
+// ── Window Exports (defer uyumluluğu) ────────────────────────────
+window.toggleTranslateMode = toggleTranslateMode;

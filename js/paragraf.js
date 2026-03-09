@@ -1,5 +1,14 @@
 // ── Paragraf okuma — motor.js'den ayrıştırıldı
-// Bağımlılıklar: motor.js (global state: allData, stats, paragraflar)
+// Bağımlılıklar: motor.js (global state: allData, stats, window.paragraflar)
+
+// ── defer scope köprüsü ───────────────────────────────────────────
+// defer ile yüklenen bu dosyada `window.paragraflar` bare name erişimi
+// window.paragraflar'a yönlendirilir. Her kullanım noktasında
+// window.paragraflar okunur; set işlemleri de window'a yansır.
+// Bu yaklaşım Object.defineProperty'den daha güvenli — zaten
+// tanımlı property'leri bozmaz.
+/* global paragraflar: writable — window.paragraflar aliased */
+// eslint-disable-next-line no-unused-vars
 
 // 📄 PARAGRAF OKUMA — AI ÖZELLİKLERİ
 // ══════════════════════════════════════════════
@@ -9,7 +18,14 @@ let paragrafSentences    = [];  // Grammar X-Ray için cümle listesi
 // ── Paragraf Soruları Deposu ──────────────────────
 // Anahtar: sanitize(baslik)_metin_uzunlugu
 // window.paragrafSorular ile index.html'deki Firebase sync ile paylaşılır
-window.paragrafSorular = JSON.parse(localStorage.getItem('ydt_paragraf_sorular')) || {};
+try {
+    const _raw = localStorage.getItem('ydt_paragraf_sorular');
+    window.paragrafSorular = _raw ? JSON.parse(_raw) : {};
+} catch(e) {
+    console.warn('[paragraf.js] paragrafSorular parse hatası, sıfırlandı:', e.message);
+    window.paragrafSorular = {};
+    localStorage.removeItem('ydt_paragraf_sorular'); // bozuk veriyi temizle
+}
 
 // ── Mini Sözlük Render ──────────────────────────────
 function renderParagrafDict(filter) {
@@ -48,7 +64,7 @@ function paragrafKey(p) {
 
 // Kaydedilmiş soruları yükle ve göster
 function loadSavedQuestions(index) {
-    const p   = paragraflar[index];
+    const p   = window.paragraflar[index];
     const key = paragrafKey(p);
     const saved = window.paragrafSorular[key];
 
@@ -74,7 +90,7 @@ function loadSavedQuestions(index) {
 
 // Kayıtlı soruları sil
 function deleteSavedQuestions() {
-    const p   = paragraflar[currentParagrafIndex];
+    const p   = window.paragraflar[currentParagrafIndex];
     if (!p || !confirm('Bu paragrafın kaydedilmiş soruları silinsin mi?')) return;
     const key = paragrafKey(p);
     delete window.paragrafSorular[key];
@@ -185,11 +201,11 @@ function prevYDTSlide(prefix, total) {
 function renderAdminParagrafListe() {
     const kutu = document.getElementById('admin-paragraf-liste');
     if (!kutu) return;
-    if (!paragraflar.length) {
+    if (!window.paragraflar || !window.paragraflar.length) {
         kutu.innerHTML = '<p style="font-size:0.8rem;color:var(--ink3);margin-bottom:8px;">Henüz paragraf eklenmedi.</p>';
         return;
     }
-    kutu.innerHTML = paragraflar.map((p, i) => {
+    kutu.innerHTML = window.paragraflar.map((p, i) => {
         const key       = paragrafKey(p);
         const hasSorular = window.paragrafSorular && window.paragrafSorular[key] && (window.paragrafSorular[key].questions || []).length > 0;
         const soruCount  = hasSorular ? window.paragrafSorular[key].questions.length : 0;
@@ -209,7 +225,7 @@ function renderAdminParagrafListe() {
 }
 
 function deleteSorularFromAdmin(index) {
-    const p = paragraflar[index];
+    const p = window.paragraflar[index];
     if (!p || !confirm(`"${p.baslik}" paragrafının kaydedilmiş soruları silinsin mi?`)) return;
     const key = paragrafKey(p);
     delete window.paragrafSorular[key];
@@ -236,15 +252,14 @@ function addParagrafFromAdmin() {
 
     if (editIdx >= 0) {
         // Düzenleme modu
-        paragraflar[editIdx] = { baslik: title, metin: text, kelimeler: wordsObj };
+        window.paragraflar[editIdx] = { baslik: title, metin: text, kelimeler: wordsObj };
     } else {
         // Yeni ekleme
-        paragraflar.push({ baslik: title, metin: text, kelimeler: wordsObj });
+        window.paragraflar.push({ baslik: title, metin: text, kelimeler: wordsObj });
     }
 
     // localStorage + Firebase (shared/content admin sync _saveData içinde halleder)
-    localStorage.setItem('ydt_paragraflar', JSON.stringify(paragraflar));
-    window.paragraflar = paragraflar;
+    localStorage.setItem('ydt_paragraflar', JSON.stringify(window.paragraflar));
     window._saveData && window._saveData();
     cancelParagrafEdit();
     renderAdminParagrafListe();
@@ -252,7 +267,7 @@ function addParagrafFromAdmin() {
 }
 
 function editParagrafInAdmin(index) {
-    const p = paragraflar[index];
+    const p = window.paragraflar[index];
     document.getElementById('edit-paragraf-index').value = index;
     document.getElementById('new-p-title').value = p.baslik;
     document.getElementById('new-p-text').value  = p.metin;
@@ -266,10 +281,9 @@ function editParagrafInAdmin(index) {
 }
 
 function deleteParagrafFromAdmin(index) {
-    if (!confirm(`"${paragraflar[index].baslik}" silinsin mi?`)) return;
-    paragraflar.splice(index, 1);
-    localStorage.setItem('ydt_paragraflar', JSON.stringify(paragraflar));
-    window.paragraflar = paragraflar;
+    if (!confirm(`"${window.paragraflar[index].baslik}" silinsin mi?`)) return;
+    window.paragraflar.splice(index, 1);
+    localStorage.setItem('ydt_paragraflar', JSON.stringify(window.paragraflar));
     window._saveData && window._saveData();
     renderAdminParagrafListe();
 }
@@ -312,8 +326,16 @@ function _buildPasajKartHTML(p, realIndex) {
                 <div class="rh2-card-icon">${icon}</div>
                 <div class="rh2-card-titlemeta">
                     <div class="rh2-card-title">${stripNumPrefix(p.baslik)}</div>
-                    <div class="rh2-card-timing">⏱ ${readMin} dk · ${totalWords} kelime · ${sentences.length} cümle</div>
                 </div>
+            </div>
+            <div class="rh2-card-statband">
+                <div class="rh2-sband-cell"><span class="rh2-sband-ico">⏱</span><span class="rh2-sband-num">${readMin} dk</span></div>
+                <div class="rh2-sband-div"></div>
+                <div class="rh2-sband-cell"><span class="rh2-sband-ico">📝</span><span class="rh2-sband-num">${totalWords}</span><span class="rh2-sband-lbl">KELİME</span></div>
+                <div class="rh2-sband-div"></div>
+                <div class="rh2-sband-cell"><span class="rh2-sband-ico">💬</span><span class="rh2-sband-num">${sentences.length}</span><span class="rh2-sband-lbl">CÜMLE</span></div>
+                <div class="rh2-sband-div"></div>
+                <div class="rh2-sband-cell rh2-sband-max"><span class="rh2-sband-maxlbl">MAX:</span><span class="rh2-sband-maxnum">${wCount}</span><span class="rh2-sband-maxsub">KELİME</span></div>
             </div>
             ${preview ? `<div class="rh2-card-preview">${preview}</div>` : ''}
             <div class="rh2-card-footer">
@@ -321,9 +343,6 @@ function _buildPasajKartHTML(p, realIndex) {
                 ${qCount  > 0 ? `<span class="rh2-pill rh2-pill-quiz">🎯 ${qCount} soru</span>` : '<span class="rh2-pill rh2-pill-none">Soru yok</span>'}
             </div>
         </div>
-        <svg class="rh2-card-arrow" width="7" height="12" viewBox="0 0 7 12" fill="none">
-            <path d="M1 1l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
     </div>`;
 }
 
@@ -332,7 +351,7 @@ function _populateParagrafListesi(page) {
     if (!kutu) return;
     if (page !== undefined) _savedPage = page;
 
-    const total      = paragraflar.length;
+    const total      = window.paragraflar.length;
     const totalPages = Math.ceil(total / RH2_PAGE_SIZE) || 1;
     if (_savedPage >= totalPages) _savedPage = totalPages - 1;
     if (_savedPage < 0) _savedPage = 0;
@@ -352,7 +371,7 @@ function _populateParagrafListesi(page) {
 
         // Kartlar
         for (let i = startIdx; i < endIdx; i++) {
-            html += _buildPasajKartHTML(paragraflar[i], i);
+            html += _buildPasajKartHTML(window.paragraflar[i], i);
         }
 
         // Sayfalama kontrolü
@@ -389,11 +408,21 @@ function showParagrafListesi() {
     _populateParagrafListesi();
     if (typeof showPage === 'function') showPage('paragraf-liste-page');
     // Yüklü pasaj varsa saved tabını aç, yoksa AI tabını
-    const hasSaved = paragraflar && paragraflar.length > 0;
-    openReadingHub(hasSaved ? 'saved' : 'ai');
+    const hasSaved = window.paragraflar && window.paragraflar.length > 0;
+    // Misafir: Günlük Haber AI yerine doğrudan kayıtlı pasajlara yönlendir
+    const defaultTab = window._currentUser ? (hasSaved ? 'saved' : 'ai') : 'saved';
+    openReadingHub(defaultTab);
 }
 
 function openReadingHub(type) {
+    // 'ai' (Günlük Haber) ve 'generate' (AI Üret) misafire kapalı
+    if ((type === 'ai' || type === 'generate') && !window._currentUser) {
+        const label = type === 'ai' ? 'Günlük Haber AI' : 'AI ile Pasaj Üret';
+        if (typeof window._requireAuth === 'function') {
+            window._requireAuth(() => openReadingHub(type), label);
+        }
+        return;
+    }
     const aiList      = document.getElementById('ai-daily-paragraf-list');
     const savedList   = document.getElementById('paragraf-listesi-kutu');
     const generatePnl = document.getElementById('ai-generate-panel');
@@ -430,7 +459,7 @@ window.openReadingHub = openReadingHub;
 // ── Hero istatistiklerini güncelle (rh2-hero-stats) ──
 function _updateRh2HeroStats() {
     const pSorular = window.paragrafSorular || {};
-    const saved = paragraflar || [];
+    const saved = window.paragraflar || [];
     const aiPassages = window._aiDailyPassages || [];
     const allPassages = [...saved, ...aiPassages.map(p => ({ metin: p.text, kelimeler: p.vocabulary }))];
 
@@ -482,3 +511,8 @@ window._initPokuScrollProgress = _initPokuScrollProgress;
 window.closeReadingHub = closeReadingHub;
 
 // ══════════════════════════════════════════════
+
+// ── Window Exports (defer uyumluluğu) ────────────────────────────
+window.addParagrafFromAdmin = addParagrafFromAdmin;
+window.cancelParagrafEdit   = cancelParagrafEdit;
+window.showParagrafListesi  = showParagrafListesi;

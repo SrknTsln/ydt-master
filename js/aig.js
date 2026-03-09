@@ -22,7 +22,7 @@ const AIG_TOPICS = [
 let _aigSelectedTopic = null;
 let _aigGeneratedPassage = null;
 
-function _aigInitTopics() {
+async function _aigInitTopics() {
     const grid = document.getElementById('aig-topics-grid');
     if (!grid || grid.children.length > 0) return;
     grid.innerHTML = AIG_TOPICS.map((t, i) =>
@@ -31,7 +31,7 @@ function _aigInitTopics() {
         </button>`
     ).join('');
     // Kota bilgisini panel başına ekle (admin hariç)
-    if (!_isAdminUser()) {
+    if (!(await _isAdminUser())) {
         const quota = _aigGetQuota();
         const remaining = AIG_DAILY_LIMIT - quota.count;
         const subEl = document.querySelector('.aig-panel-sub');
@@ -72,18 +72,33 @@ function _aigGetQuota() {
     return { date: _ukmToday(), count: 0 };
 }
 function _aigSaveQuota(q) { localStorage.setItem(AIG_QUOTA_KEY(), JSON.stringify(q)); }
-function _isAdminUser() {
-    const email = window._currentUser?.email || '';
-    return email === ADMIN_EMAIL;
+// _isAdminUser: Firebase custom claim (admin:true) kontrolü
+async function _isAdminUser() {
+    const user = window._currentUser || (typeof firebase !== 'undefined' && firebase.auth?.().currentUser) || null;
+    if (!user) return false;
+    try {
+        const token = await user.getIdTokenResult();
+        return token.claims.admin === true;
+    } catch(e) {
+        console.warn('[aig] Admin claim kontrol hatası:', e.message);
+        return false;
+    }
 }
 
 async function aiGenerateParagraf(random = false) {
+    // Misafir erişim engeli — AI üretim giriş gerektirir
+    if (!window._currentUser) {
+        if (typeof window._requireAuth === 'function') {
+            window._requireAuth(() => aiGenerateParagraf(random), 'AI Pasaj Üretici');
+        }
+        return;
+    }
     const btn = document.getElementById('aig-gen-btn');
     const lblEl = document.getElementById('aig-gen-btn-label');
     const previewEl = document.getElementById('aig-preview');
 
     // ── Kota kontrolü (admin hariç 5/gün) ──
-    if (!_isAdminUser()) {
+    if (!(await _isAdminUser())) {
         const quota = _aigGetQuota();
         if (quota.count >= AIG_DAILY_LIMIT) {
             showAIToast(`Günlük ${AIG_DAILY_LIMIT} paragraf limitine ulaştınız. Yarın tekrar deneyin.`, 'warn');
@@ -150,7 +165,7 @@ Respond ONLY with valid JSON:
         };
 
         // Kota artır (admin hariç)
-        if (!_isAdminUser()) {
+        if (!(await _isAdminUser())) {
             const quota = _aigGetQuota();
             quota.count++;
             _aigSaveQuota(quota);
@@ -170,7 +185,7 @@ Respond ONLY with valid JSON:
     lblEl.textContent = '✨ Paragraf Oluştur';
 }
 
-function _aigRenderPreview(p) {
+async function _aigRenderPreview(p) {
     const previewEl = document.getElementById('aig-preview');
     if (!previewEl) return;
 
@@ -206,7 +221,7 @@ function _aigRenderPreview(p) {
         `<label class="aig-wl-chip"><input type="checkbox" class="aig-wl-check" value="${_esc(eng)}" data-tr="${_esc(tr)}" checked><span class="aig-wl-eng">${_esc(eng)}</span><span class="aig-wl-tr">${_esc(tr)}</span></label>`
     ).join('');
 
-    const isAdmin = _isAdminUser();
+    const isAdmin = await _isAdminUser();
     const quota   = _aigGetQuota();
     const remaining = AIG_DAILY_LIMIT - quota.count;
     const quotaHTML = !isAdmin ? `<div class="aig-quota-info">${remaining > 0 ? `<span style="color:var(--c-green)">✅ Bugün ${remaining} paragraf hakkın kaldı</span>` : `<span style="color:#dc2626">⚠️ Günlük limit doldu (${AIG_DAILY_LIMIT}/${AIG_DAILY_LIMIT})</span>`}</div>` : '';
@@ -326,8 +341,8 @@ function aigAddWordsToList() {
 }
 
 // ── Kota badge güncelle ──────────────────────────────────────
-function _aigUpdateQuotaBadge() {
-    if (_isAdminUser()) return;
+async function _aigUpdateQuotaBadge() {
+    if (await _isAdminUser()) return;
     const quota = _aigGetQuota();
     const remaining = AIG_DAILY_LIMIT - quota.count;
     const el = document.getElementById('aig-quota-info');
@@ -414,3 +429,6 @@ SADECE şu JSON formatını döndür:
         content.innerHTML = `<div style="color:var(--red);font-size:.84rem;padding:10px;">⚠ Analiz başarısız: ${e.message}</div>`;
     }
 }
+
+// ── Window Exports (defer uyumluluğu) ────────────────────────────
+window.aiGenerateParagraf = aiGenerateParagraf;

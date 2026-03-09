@@ -533,3 +533,9 @@ function forceSyncNow() {
 }
 
 // ══════════════════════════════════════════════
+window.loadListToTextarea = loadListToTextarea;
+window.createNewList      = createNewList;
+window.saveCurrentList    = saveCurrentList;
+window.deleteList         = deleteList;
+window.renameList         = renameList;
+window.forceSyncNow       = forceSyncNow;
