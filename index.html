@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://js.puter.com https://*.puter.com https://www.gstatic.com https://apis.google.com https://cdnjs.cloudflare.com https://cdn-cgi.cloudflare.com; connect-src 'self' https://autumn-hill-be24ydt-master.stasalan.workers.dev https://*.googleapis.com https://*.google.com https://apis.google.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://*.groq.com https://openrouter.ai https://api.mistral.ai https://api.anthropic.com https://generativelanguage.googleapis.com https://feeds.bbci.co.uk https://www.theguardian.com https://feeds.npr.org https://www.newscientist.com https://newscientist.com https://api.rss2json.com https://api.allorigins.win https://corsproxy.io https://api.codetabs.com https://oauth2.googleapis.com https://*.puter.com wss://*.puter.com; font-src 'self' https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https://*.googleusercontent.com https://lh3.googleusercontent.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com; object-src 'none';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://js.puter.com https://*.puter.com https://www.gstatic.com https://apis.google.com https://cdnjs.cloudflare.com https://cdn-cgi.cloudflare.com; connect-src 'self' https://autumn-hill-be24ydt-master.stasalan.workers.dev https://*.googleapis.com https://*.google.com https://apis.google.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://*.groq.com https://openrouter.ai https://api.mistral.ai https://api.anthropic.com https://generativelanguage.googleapis.com https://feeds.bbci.co.uk https://www.theguardian.com https://feeds.npr.org https://www.newscientist.com https://newscientist.com https://api.rss2json.com https://api.allorigins.win https://corsproxy.io https://api.codetabs.com https://oauth2.googleapis.com https://*.puter.com wss://*.puter.com; font-src 'self' https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https://*.googleusercontent.com https://lh3.googleusercontent.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com; object-src 'none';">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>YDT Master Pro — AI Destekli İngilizce</title>
@@ -18,18 +18,11 @@
     <link rel="stylesheet" href="games.css">
     <!-- Puter.js — API key gerektirmeyen ücretsiz AI (GPT-4o, Claude, Gemini 500+ model) -->
     <script src="https://js.puter.com/v2/"></script>
-    <!-- ── Tema flash önleyici: DOM boyandıktan önce data-theme set edilir ── -->
-    <script>
-    (function(){
-        var saved = localStorage.getItem('ydtTheme');
-        var sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        // Kayıtlı tercih varsa uygula, yoksa sistem tercihine göre explicit set et
-        var theme = saved || (sysDark ? 'dark' : 'light');
-        document.documentElement.setAttribute('data-theme', theme);
-        // İlk kez açılıyorsa localStorage'a da yaz
-        if (!saved) localStorage.setItem('ydtTheme', theme);
-    })();
-    </script>
+    <!-- ── Tema flash önleyici (FOUC prevention) ──────────────────────────────
+         ydt-theme.js: defer YOK — render öncesi çalışır, data-theme hemen set edilir.
+         CSP uyumlu: harici .js — 'unsafe-inline' gerektirmez.
+    ── -->
+    <script src="ydt-theme.js"></script>
 </head>
 <body>
 
@@ -40,7 +33,7 @@
 </div>
 
 <header class="mob-topbar">
-    <button class="mob-burger" id="mob-burger" onclick="mobToggleDrawer()">
+    <button class="mob-burger" id="mob-burger" data-action="mobToggleDrawer()">
         <span></span><span></span><span></span>
     </button>
     <div class="mob-serkan-logo">
@@ -59,12 +52,12 @@
         <div id="sync-dot-mob" style="width:7px;height:7px;border-radius:50%;background:var(--c-sync-idle);flex-shrink:0"></div>
         <span id="sync-lbl-mob">Yerel</span>
     </div>
-    <button class="mob-topbar-theme-btn" onclick="toggleTheme()" aria-label="Tema değiştir">
+    <button class="mob-topbar-theme-btn" data-action="toggleTheme()" aria-label="Tema değiştir">
         <span id="theme-icon">🌙</span>
     </button>
 </header>
 
-<div class="mob-drawer-overlay" id="mob-overlay" onclick="mobCloseDrawer()"></div>
+<div class="mob-drawer-overlay" id="mob-overlay" data-action="mobCloseDrawer()"></div>
 <div class="mob-drawer" id="mob-drawer">
     <div class="mob-drawer-head">
         <div class="serkan-logo" style="padding:4px 0 8px;">
@@ -89,15 +82,15 @@
     </div>
     <nav class="mob-drawer-nav" aria-label="Mobil menü">
         <div class="mob-drawer-sec">Ana Menü</div>
-        <button class="mob-drawer-btn active" id="di-home"     onclick="mobGoTo('index-page')">              <span aria-hidden="true" class="mob-d-icon">🏠</span> Ana Sayfa</button>
-        <button class="mob-drawer-btn"        id="di-ai-ydt"   onclick="_requireAuth(()=>mobRun(startAIQuizMode),'AI Vocabulary Test')">            <span aria-hidden="true" class="mob-d-icon">🤖</span> AI Vocabulary Test</button>
-        <button class="mob-drawer-btn"        id="di-paragraf" onclick="mobRun(showParagrafListesi)">         <span aria-hidden="true" class="mob-d-icon">📖</span> AI Reading</button>
-        <button class="mob-drawer-btn"        id="di-speaking" onclick="_requireAuth(()=>mobRun(()=>openSpeakingSection('overview')),'AI Konuşma Pratiği')"><span aria-hidden="true" class="mob-d-icon">🗣️</span> AI Konuşma Pratiği</button>
-        <button class="mob-drawer-btn"        id="di-study"    onclick="mobRun(startStudyFromNav)">          <span aria-hidden="true" class="mob-d-icon">📖</span> Kelime Öğren</button>
-        <button class="mob-drawer-btn"        id="di-quiz"     onclick="mobRun(startQuizFromNav)">           <span aria-hidden="true" class="mob-d-icon">🎯</span> Vocabulary Test</button>
+        <button class="mob-drawer-btn active" id="di-home"     data-action="mobGoTo('index-page')">              <span aria-hidden="true" class="mob-d-icon">🏠</span> Ana Sayfa</button>
+        <button class="mob-drawer-btn"        id="di-ai-ydt"   data-action="_requireAuth(()=>mobRun(startAIQuizMode),'AI Vocabulary Test')">            <span aria-hidden="true" class="mob-d-icon">🤖</span> AI Vocabulary Test</button>
+        <button class="mob-drawer-btn"        id="di-paragraf" data-action="mobRun(showParagrafListesi)">         <span aria-hidden="true" class="mob-d-icon">📖</span> AI Reading</button>
+        <button class="mob-drawer-btn"        id="di-speaking" data-action="_requireAuth(()=>mobRun(()=>openSpeakingSection('overview')),'AI Konuşma Pratiği')"><span aria-hidden="true" class="mob-d-icon">🗣️</span> AI Konuşma Pratiği</button>
+        <button class="mob-drawer-btn"        id="di-study"    data-action="mobRun(startStudyFromNav)">          <span aria-hidden="true" class="mob-d-icon">📖</span> Kelime Öğren</button>
+        <button class="mob-drawer-btn"        id="di-quiz"     data-action="mobRun(startQuizFromNav)">           <span aria-hidden="true" class="mob-d-icon">🎯</span> Vocabulary Test</button>
 
         <!-- Grammar — Speaking altında, Alıştırmalar üstünde -->
-        <button class="mob-grammar-toggle" id="di-grammar-toggle-main" onclick="mobToggleGrammarMain()" aria-expanded="false" aria-controls="di-grammar-list-main">
+        <button class="mob-grammar-toggle" id="di-grammar-toggle-main" data-action="mobToggleGrammarMain()" aria-expanded="false" aria-controls="di-grammar-list-main">
             <span aria-hidden="true" class="mob-d-icon">📐</span>
             <span class="mob-grammar-toggle-label">Grammar</span>
             <svg class="mob-grammar-chev" width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -105,35 +98,35 @@
             </svg>
         </button>
         <div class="mob-grammar-list" id="di-grammar-list-main" aria-hidden="true">
-            <button class="mob-drawer-btn mob-drawer-btn-sub" onclick="mobRun(()=>openGrammarSection('overview'))">    <span aria-hidden="true" class="mob-d-icon">⏱️</span> English Tenses</button>
-            <button class="mob-drawer-btn mob-drawer-btn-sub" onclick="mobRun(()=>openModalsSection('overview'))">     <span aria-hidden="true" class="mob-d-icon">⚡</span> Modals</button>
-            <button class="mob-drawer-btn mob-drawer-btn-sub" onclick="mobRun(()=>openPronounsSection('overview'))">   <span aria-hidden="true" class="mob-d-icon">👤</span> Pronouns</button>
-            <button class="mob-drawer-btn mob-drawer-btn-sub" onclick="mobRun(()=>openPassiveSection('overview'))">    <span aria-hidden="true" class="mob-d-icon">🔄</span> Active / Passive</button>
-            <button class="mob-drawer-btn mob-drawer-btn-sub" onclick="mobRun(()=>openConditionalsSection('overview'))"><span aria-hidden="true" class="mob-d-icon">🔀</span> Conditionals</button>
-            <button class="mob-drawer-btn mob-drawer-btn-sub" onclick="mobRun(()=>openRelativeSection('overview'))">   <span aria-hidden="true" class="mob-d-icon">🔗</span> Relative Clauses</button>
-            <button class="mob-drawer-btn mob-drawer-btn-sub" onclick="mobRun(()=>openNounSection('overview'))">       <span aria-hidden="true" class="mob-d-icon">💬</span> Noun Clauses</button>
-            <button class="mob-drawer-btn mob-drawer-btn-sub" onclick="mobRun(()=>openConjSection('overview'))">       <span aria-hidden="true" class="mob-d-icon">🌿</span> Adverbial Clauses</button>
-            <button class="mob-drawer-btn mob-drawer-btn-sub" onclick="mobRun(()=>openGerundSection('overview'))">     <span aria-hidden="true" class="mob-d-icon">📝</span> Gerunds &amp; Infinitives</button>
-            <button class="mob-drawer-btn mob-drawer-btn-sub" onclick="mobRun(()=>openAdjAdvSection('overview'))">     <span aria-hidden="true" class="mob-d-icon">🔵</span> Adjectives &amp; Adverbs</button>
-            <button class="mob-drawer-btn mob-drawer-btn-sub" onclick="mobRun(()=>openTagQuantSection('overview'))">   <span aria-hidden="true" class="mob-d-icon">❓</span> Tag Questions &amp; Quantifiers</button>
+            <button class="mob-drawer-btn mob-drawer-btn-sub" data-action="mobRun(()=>openGrammarSection('overview'))">    <span aria-hidden="true" class="mob-d-icon">⏱️</span> English Tenses</button>
+            <button class="mob-drawer-btn mob-drawer-btn-sub" data-action="mobRun(()=>openModalsSection('overview'))">     <span aria-hidden="true" class="mob-d-icon">⚡</span> Modals</button>
+            <button class="mob-drawer-btn mob-drawer-btn-sub" data-action="mobRun(()=>openPronounsSection('overview'))">   <span aria-hidden="true" class="mob-d-icon">👤</span> Pronouns</button>
+            <button class="mob-drawer-btn mob-drawer-btn-sub" data-action="mobRun(()=>openPassiveSection('overview'))">    <span aria-hidden="true" class="mob-d-icon">🔄</span> Active / Passive</button>
+            <button class="mob-drawer-btn mob-drawer-btn-sub" data-action="mobRun(()=>openConditionalsSection('overview'))"><span aria-hidden="true" class="mob-d-icon">🔀</span> Conditionals</button>
+            <button class="mob-drawer-btn mob-drawer-btn-sub" data-action="mobRun(()=>openRelativeSection('overview'))">   <span aria-hidden="true" class="mob-d-icon">🔗</span> Relative Clauses</button>
+            <button class="mob-drawer-btn mob-drawer-btn-sub" data-action="mobRun(()=>openNounSection('overview'))">       <span aria-hidden="true" class="mob-d-icon">💬</span> Noun Clauses</button>
+            <button class="mob-drawer-btn mob-drawer-btn-sub" data-action="mobRun(()=>openConjSection('overview'))">       <span aria-hidden="true" class="mob-d-icon">🌿</span> Adverbial Clauses</button>
+            <button class="mob-drawer-btn mob-drawer-btn-sub" data-action="mobRun(()=>openGerundSection('overview'))">     <span aria-hidden="true" class="mob-d-icon">📝</span> Gerunds &amp; Infinitives</button>
+            <button class="mob-drawer-btn mob-drawer-btn-sub" data-action="mobRun(()=>openAdjAdvSection('overview'))">     <span aria-hidden="true" class="mob-d-icon">🔵</span> Adjectives &amp; Adverbs</button>
+            <button class="mob-drawer-btn mob-drawer-btn-sub" data-action="mobRun(()=>openTagQuantSection('overview'))">   <span aria-hidden="true" class="mob-d-icon">❓</span> Tag Questions &amp; Quantifiers</button>
         </div>
 
         <div class="mob-drawer-sec" style="margin-top:4px;">Alıştırmalar</div>
-        <button class="mob-drawer-btn" id="di-typing"  onclick="mobRun(startTypingQuiz)">  <span aria-hidden="true" class="mob-d-icon">✍️</span> Yazarak Cevap</button>
-        <button class="mob-drawer-btn" id="di-context" onclick="mobRun(startContextMode)"> <span aria-hidden="true" class="mob-d-icon">📝</span> Bağlam Cümlesi</button>
-        <button class="mob-drawer-btn" id="di-sm2"     onclick="mobRun(startSM2Review)">   <span aria-hidden="true" class="mob-d-icon">🧠</span> SM-2 Tekrar <span class="mob-d-badge" id="di-sm2-badge" style="display:none"></span></button>
+        <button class="mob-drawer-btn" id="di-typing"  data-action="mobRun(startTypingQuiz)">  <span aria-hidden="true" class="mob-d-icon">✍️</span> Yazarak Cevap</button>
+        <button class="mob-drawer-btn" id="di-context" data-action="mobRun(startContextMode)"> <span aria-hidden="true" class="mob-d-icon">📝</span> Bağlam Cümlesi</button>
+        <button class="mob-drawer-btn" id="di-sm2"     data-action="mobRun(startSM2Review)">   <span aria-hidden="true" class="mob-d-icon">🧠</span> SM-2 Tekrar <span class="mob-d-badge" id="di-sm2-badge" style="display:none"></span></button>
 
         <!-- Secondary -->
         <div class="mob-drawer-secondary-divider"></div>
-        <button class="mob-drawer-btn mob-drawer-btn-sec" id="di-kids"  onclick="mobRun(KW.open)">       <span aria-hidden="true" class="mob-d-icon">🌍</span> Kids English</button>
-        <button class="mob-drawer-btn mob-drawer-btn-sec" id="di-games" onclick="mobRun(showGamesPage)"> <span aria-hidden="true" class="mob-d-icon">🎮</span> Oyunlar</button>
-        <button class="mob-drawer-btn mob-drawer-btn-sec" id="di-stats" onclick="mobRun(showStatsPage)"> <span aria-hidden="true" class="mob-d-icon">📊</span> İstatistik</button>
-        <button class="mob-drawer-btn mob-drawer-btn-sec" id="di-arsiv" onclick="mobRun(showAIArsiv)">   <span aria-hidden="true" class="mob-d-icon">🗃️</span> Soru Bankası</button>
+        <button class="mob-drawer-btn mob-drawer-btn-sec" id="di-kids"  data-action="mobRun(KW.open)">       <span aria-hidden="true" class="mob-d-icon">🌍</span> Kids English</button>
+        <button class="mob-drawer-btn mob-drawer-btn-sec" id="di-games" data-action="mobRun(showGamesPage)"> <span aria-hidden="true" class="mob-d-icon">🎮</span> Oyunlar</button>
+        <button class="mob-drawer-btn mob-drawer-btn-sec" id="di-stats" data-action="mobRun(showStatsPage)"> <span aria-hidden="true" class="mob-d-icon">📊</span> İstatistik</button>
+        <button class="mob-drawer-btn mob-drawer-btn-sec" id="di-arsiv" data-action="mobRun(showAIArsiv)">   <span aria-hidden="true" class="mob-d-icon">🗃️</span> Soru Bankası</button>
 
         <!-- Admin — en alt -->
         <div class="mob-drawer-admin-bar">
-            <button class="mob-drawer-btn mob-drawer-btn-sec" id="di-profil" onclick="mobGoTo('profil-page'); showProfilPage(); setTimeout(()=>window.AuthModule&&window.AuthModule.updateProfilWidgets(),100)" style="margin-bottom:4px;"><span aria-hidden="true" class="mob-d-icon">👤</span> Profil</button>
-            <button class="mob-drawer-btn mob-drawer-btn-admin" id="di-admin" onclick="mobGoTo('admin-page')" style="display:none;">
+            <button class="mob-drawer-btn mob-drawer-btn-sec" id="di-profil" data-action="mobGoTo('profil-page'); showProfilPage(); setTimeout(()=>window.AuthModule&&window.AuthModule.updateProfilWidgets(),100)" style="margin-bottom:4px;"><span aria-hidden="true" class="mob-d-icon">👤</span> Profil</button>
+            <button class="mob-drawer-btn mob-drawer-btn-admin" id="di-admin" data-action="mobGoTo('admin-page')" style="display:none;">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0;opacity:.55;margin-right:2px;">
                     <circle cx="7" cy="7" r="2.5" stroke="currentColor" stroke-width="1.4"/>
                     <path d="M7 1v1.5M7 11.5V13M1 7h1.5M11.5 7H13M2.93 2.93l1.06 1.06M10.01 10.01l1.06 1.06M2.93 11.07l1.06-1.06M10.01 3.99l1.06-1.06" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
@@ -146,10 +139,10 @@
 
 <nav class="mob-bottomnav" aria-label="Alt navigasyon">
     <button class="mob-tab active" id="bn-home"     data-nav="index-page">        <span aria-hidden="true" class="mob-tab-icon">🏠</span>Ana Sayfa</button>
-    <button class="mob-tab"        id="bn-study"    onclick="startStudyFromNav()">        <span aria-hidden="true" class="mob-tab-icon">📖</span>Öğren</button>
-    <button class="mob-tab"        id="bn-quiz"     onclick="startQuizFromNav()">         <span aria-hidden="true" class="mob-tab-icon">🎯</span>Vocab Test<span class="mob-tab-badge" id="bn-sm2-badge" style="display:none"></span></button>
-    <button class="mob-tab"        id="bn-stats"    onclick="showStatsPage()">            <span aria-hidden="true" class="mob-tab-icon">📊</span>İstatistik</button>
-    <button class="mob-tab"        id="bn-exercise" onclick="showExercisePage()">         <span aria-hidden="true" class="mob-tab-icon">✍️</span>Alıştır</button>
+    <button class="mob-tab"        id="bn-study"    data-action="startStudyFromNav()">        <span aria-hidden="true" class="mob-tab-icon">📖</span>Öğren</button>
+    <button class="mob-tab"        id="bn-quiz"     data-action="startQuizFromNav()">         <span aria-hidden="true" class="mob-tab-icon">🎯</span>Vocab Test<span class="mob-tab-badge" id="bn-sm2-badge" style="display:none"></span></button>
+    <button class="mob-tab"        id="bn-stats"    data-action="showStatsPage()">            <span aria-hidden="true" class="mob-tab-icon">📊</span>İstatistik</button>
+    <button class="mob-tab"        id="bn-exercise" data-action="showExercisePage()">         <span aria-hidden="true" class="mob-tab-icon">✍️</span>Alıştır</button>
 </nav>
 
 <aside class="desktop-sidebar" id="desktop-sidebar">
@@ -169,7 +162,7 @@
                 <div class="serkan-logo-sub">by Serkan Hoca</div>
             </div>
         </div>
-        <button class="sb-collapse-btn" id="sb-collapse-btn" onclick="sbToggleCollapse()" title="Daralt / Genişlet">
+        <button class="sb-collapse-btn" id="sb-collapse-btn" data-action="sbToggleCollapse()" title="Daralt / Genişlet">
             <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
                 <path d="M8.5 2L4 6.5l4.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
@@ -183,14 +176,14 @@
     <nav class="sb-nav sb-nav-primary" aria-label="Ana menü">
         <div class="sb-sec">Ana Menü</div>
         <button class="sb-btn active" id="sb-home" title="Ana Sayfa" data-nav="index-page">             <span aria-hidden="true" class="sb-icon">🏠</span> Ana Sayfa</button>
-        <button class="sb-btn"        id="sb-ai-ydt" title="AI Vocab Test" onclick="_requireAuth(startAIQuizMode,'AI Vocabulary Test')">               <span aria-hidden="true" class="sb-icon">🤖</span> AI Vocabulary Test</button>
-        <button class="sb-btn"        id="sb-paragraf" title="AI Reading" onclick="showParagrafListesi()">              <span aria-hidden="true" class="sb-icon">📖</span> AI Reading</button>
-        <button class="sb-btn"        id="sb-speaking" title="AI Konuşma Pratiği" onclick="_requireAuth(()=>openSpeakingSection('overview'),'AI Konuşma Pratiği')"> <span aria-hidden="true" class="sb-icon">🗣️</span> AI Konuşma Pratiği</button>
-        <button class="sb-btn"        id="sb-study" title="Kelime Öğren" onclick="startStudyFromNav()">             <span aria-hidden="true" class="sb-icon">📖</span> Kelime Öğren</button>
-        <button class="sb-btn"        id="sb-quiz" title="Vocabulary Test" onclick="startQuizFromNav()">              <span aria-hidden="true" class="sb-icon">🎯</span> Vocabulary Test</button>
+        <button class="sb-btn"        id="sb-ai-ydt" title="AI Vocab Test" data-action="_requireAuth(startAIQuizMode,'AI Vocabulary Test')">               <span aria-hidden="true" class="sb-icon">🤖</span> AI Vocabulary Test</button>
+        <button class="sb-btn"        id="sb-paragraf" title="AI Reading" data-action="showParagrafListesi()">              <span aria-hidden="true" class="sb-icon">📖</span> AI Reading</button>
+        <button class="sb-btn"        id="sb-speaking" title="AI Konuşma Pratiği" data-action="_requireAuth(()=>openSpeakingSection('overview'),'AI Konuşma Pratiği')"> <span aria-hidden="true" class="sb-icon">🗣️</span> AI Konuşma Pratiği</button>
+        <button class="sb-btn"        id="sb-study" title="Kelime Öğren" data-action="startStudyFromNav()">             <span aria-hidden="true" class="sb-icon">📖</span> Kelime Öğren</button>
+        <button class="sb-btn"        id="sb-quiz" title="Vocabulary Test" data-action="startQuizFromNav()">              <span aria-hidden="true" class="sb-icon">🎯</span> Vocabulary Test</button>
 
         <!-- Grammar — daraltılabilir grup (Ana Menü altında) -->
-        <button class="sb-grammar-toggle" id="sb-grammar-toggle-main" onclick="sbToggleGrammarMain()" aria-expanded="false" aria-controls="sb-grammar-list-main" style="margin-top:2px;">
+        <button class="sb-grammar-toggle" id="sb-grammar-toggle-main" data-action="sbToggleGrammarMain()" aria-expanded="false" aria-controls="sb-grammar-list-main" style="margin-top:2px;">
             <span aria-hidden="true" class="sb-icon">📐</span>
             <span class="sb-grammar-toggle-label">Grammar</span>
             <svg class="sb-grammar-chev" width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -198,42 +191,42 @@
             </svg>
         </button>
         <div class="sb-grammar-list" id="sb-grammar-list-main" aria-hidden="true">
-            <button class="sb-btn sb-btn-sub" id="sb-grammar-tenses-m"      onclick="openGrammarSection('overview')">    <span aria-hidden="true" class="sb-icon">⏱️</span> English Tenses</button>
-            <button class="sb-btn sb-btn-sub" id="sb-grammar-modals-m"       onclick="openModalsSection('overview')">     <span aria-hidden="true" class="sb-icon">⚡</span> Modals</button>
-            <button class="sb-btn sb-btn-sub" id="sb-grammar-pronouns-m"     onclick="openPronounsSection('overview')">   <span aria-hidden="true" class="sb-icon">👤</span> Pronouns</button>
-            <button class="sb-btn sb-btn-sub" id="sb-grammar-passive-m"      onclick="openPassiveSection('overview')">    <span aria-hidden="true" class="sb-icon">🔄</span> Active / Passive</button>
-            <button class="sb-btn sb-btn-sub" id="sb-grammar-conditionals-m" onclick="openConditionalsSection('overview')"><span aria-hidden="true" class="sb-icon">🔀</span> Conditionals</button>
-            <button class="sb-btn sb-btn-sub" id="sb-grammar-relative-m"     onclick="openRelativeSection('overview')">   <span aria-hidden="true" class="sb-icon">🔗</span> Relative Clauses</button>
-            <button class="sb-btn sb-btn-sub" id="sb-grammar-noun-m"         onclick="openNounSection('overview')">       <span aria-hidden="true" class="sb-icon">💬</span> Noun Clauses</button>
-            <button class="sb-btn sb-btn-sub" id="sb-grammar-conj-m"         onclick="openConjSection('overview')">       <span aria-hidden="true" class="sb-icon">🌿</span> Adverbial Clauses</button>
-            <button class="sb-btn sb-btn-sub" id="sb-grammar-gerund-m"       onclick="openGerundSection('overview')">     <span aria-hidden="true" class="sb-icon">📝</span> Gerunds &amp; Infinitives</button>
-            <button class="sb-btn sb-btn-sub" id="sb-grammar-adjadv-m"       onclick="openAdjAdvSection('overview')">     <span aria-hidden="true" class="sb-icon">🔵</span> Adjectives &amp; Adverbs</button>
-            <button class="sb-btn sb-btn-sub" id="sb-grammar-tagquant-m"     onclick="openTagQuantSection('overview')">   <span aria-hidden="true" class="sb-icon">❓</span> Tag Questions &amp; Quantifiers</button>
+            <button class="sb-btn sb-btn-sub" id="sb-grammar-tenses-m"      data-action="openGrammarSection('overview')">    <span aria-hidden="true" class="sb-icon">⏱️</span> English Tenses</button>
+            <button class="sb-btn sb-btn-sub" id="sb-grammar-modals-m"       data-action="openModalsSection('overview')">     <span aria-hidden="true" class="sb-icon">⚡</span> Modals</button>
+            <button class="sb-btn sb-btn-sub" id="sb-grammar-pronouns-m"     data-action="openPronounsSection('overview')">   <span aria-hidden="true" class="sb-icon">👤</span> Pronouns</button>
+            <button class="sb-btn sb-btn-sub" id="sb-grammar-passive-m"      data-action="openPassiveSection('overview')">    <span aria-hidden="true" class="sb-icon">🔄</span> Active / Passive</button>
+            <button class="sb-btn sb-btn-sub" id="sb-grammar-conditionals-m" data-action="openConditionalsSection('overview')"><span aria-hidden="true" class="sb-icon">🔀</span> Conditionals</button>
+            <button class="sb-btn sb-btn-sub" id="sb-grammar-relative-m"     data-action="openRelativeSection('overview')">   <span aria-hidden="true" class="sb-icon">🔗</span> Relative Clauses</button>
+            <button class="sb-btn sb-btn-sub" id="sb-grammar-noun-m"         data-action="openNounSection('overview')">       <span aria-hidden="true" class="sb-icon">💬</span> Noun Clauses</button>
+            <button class="sb-btn sb-btn-sub" id="sb-grammar-conj-m"         data-action="openConjSection('overview')">       <span aria-hidden="true" class="sb-icon">🌿</span> Adverbial Clauses</button>
+            <button class="sb-btn sb-btn-sub" id="sb-grammar-gerund-m"       data-action="openGerundSection('overview')">     <span aria-hidden="true" class="sb-icon">📝</span> Gerunds &amp; Infinitives</button>
+            <button class="sb-btn sb-btn-sub" id="sb-grammar-adjadv-m"       data-action="openAdjAdvSection('overview')">     <span aria-hidden="true" class="sb-icon">🔵</span> Adjectives &amp; Adverbs</button>
+            <button class="sb-btn sb-btn-sub" id="sb-grammar-tagquant-m"     data-action="openTagQuantSection('overview')">   <span aria-hidden="true" class="sb-icon">❓</span> Tag Questions &amp; Quantifiers</button>
         </div>
 
         <div class="sb-sec" style="margin-top:4px;">Alıştırmalar</div>
-        <button class="sb-btn"        id="sb-typing" title="Yazarak Cevap" onclick="showExerciseNav('typing')">  <span aria-hidden="true" class="sb-icon">✍️</span> Yazarak Cevap</button>
-        <button class="sb-btn"        id="sb-context" title="Bağlam Cümlesi" onclick="showExerciseNav('context')"> <span aria-hidden="true" class="sb-icon">📝</span> Bağlam Cümlesi</button>
-        <button class="sb-btn"        id="sb-sm2" title="SM-2 Tekrar" onclick="showExerciseNav('sm2')">     <span aria-hidden="true" class="sb-icon">🧠</span> SM-2 Tekrar <span class="sb-badge-pill" id="sb-sm2-badge" style="display:none"></span></button>
+        <button class="sb-btn"        id="sb-typing" title="Yazarak Cevap" data-action="showExerciseNav('typing')">  <span aria-hidden="true" class="sb-icon">✍️</span> Yazarak Cevap</button>
+        <button class="sb-btn"        id="sb-context" title="Bağlam Cümlesi" data-action="showExerciseNav('context')"> <span aria-hidden="true" class="sb-icon">📝</span> Bağlam Cümlesi</button>
+        <button class="sb-btn"        id="sb-sm2" title="SM-2 Tekrar" data-action="showExerciseNav('sm2')">     <span aria-hidden="true" class="sb-icon">🧠</span> SM-2 Tekrar <span class="sb-badge-pill" id="sb-sm2-badge" style="display:none"></span></button>
     </nav>
 
     <!-- ── SECONDARY NAV ── -->
     <div class="sb-secondary">
         <div class="sb-secondary-divider"></div>
         <nav class="sb-nav sb-nav-secondary" aria-label="İkincil menü">
-            <button class="sb-btn sb-btn-sec" id="sb-kids" title="Kids English" onclick="KW.open()">        <span aria-hidden="true" class="sb-icon">🌍</span> Kids English</button>
-            <button class="sb-btn sb-btn-sec" id="sb-games" title="Oyunlar" onclick="showGamesPage()">  <span aria-hidden="true" class="sb-icon">🎮</span> Oyunlar</button>
-            <button class="sb-btn sb-btn-sec" id="sb-stats" title="İstatistik" onclick="showStatsPage()">  <span aria-hidden="true" class="sb-icon">📊</span> İstatistik</button>
-            <button class="sb-btn sb-btn-sec" id="sb-arsiv" title="Soru Bankası" onclick="showAIArsiv()">    <span aria-hidden="true" class="sb-icon">🗃️</span> Soru Bankası <span class="sb-badge-pill" id="arsiv-badge" style="display:none"></span></button>
+            <button class="sb-btn sb-btn-sec" id="sb-kids" title="Kids English" data-action="KW.open()">        <span aria-hidden="true" class="sb-icon">🌍</span> Kids English</button>
+            <button class="sb-btn sb-btn-sec" id="sb-games" title="Oyunlar" data-action="showGamesPage()">  <span aria-hidden="true" class="sb-icon">🎮</span> Oyunlar</button>
+            <button class="sb-btn sb-btn-sec" id="sb-stats" title="İstatistik" data-action="showStatsPage()">  <span aria-hidden="true" class="sb-icon">📊</span> İstatistik</button>
+            <button class="sb-btn sb-btn-sec" id="sb-arsiv" title="Soru Bankası" data-action="showAIArsiv()">    <span aria-hidden="true" class="sb-icon">🗃️</span> Soru Bankası <span class="sb-badge-pill" id="arsiv-badge" style="display:none"></span></button>
         </nav>
         <div class="sb-admin-bar">
-            <button class="sb-btn sb-btn-sec" id="sb-theme-toggle" onclick="toggleTheme()" aria-label="Tema değiştir" title="Aydınlık / Karanlık mod">
+            <button class="sb-btn sb-btn-sec" id="sb-theme-toggle" data-action="toggleTheme()" aria-label="Tema değiştir" title="Aydınlık / Karanlık mod">
                 <span aria-hidden="true" class="sb-icon" id="sb-theme-icon">🌙</span> <span id="sb-theme-label">Karanlık Mod</span>
             </button>
-            <button class="sb-btn sb-btn-sec" id="sb-profil" title="Profil" onclick="navTo('profil-page'); showProfilPage(); setTimeout(()=>window.AuthModule&&window.AuthModule.updateProfilWidgets(),100)" style="margin-bottom:4px;">
+            <button class="sb-btn sb-btn-sec" id="sb-profil" title="Profil" data-action="navTo('profil-page'); showProfilPage(); setTimeout(()=>window.AuthModule&&window.AuthModule.updateProfilWidgets(),100)" style="margin-bottom:4px;">
                 <span aria-hidden="true" class="sb-icon">👤</span> Profil
             </button>
-            <button class="sb-btn sb-btn-admin" id="sb-admin" title="Yönetim" data-nav="admin-page" onclick="navToAdmin()" style="display:none;">
+            <button class="sb-btn sb-btn-admin" id="sb-admin" title="Yönetim" data-nav="admin-page" data-action="navToAdmin()" style="display:none;">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0;opacity:.6">
                     <circle cx="7" cy="7" r="2.5" stroke="currentColor" stroke-width="1.4"/>
                     <path d="M7 1v1.5M7 11.5V13M1 7h1.5M11.5 7H13M2.93 2.93l1.06 1.06M10.01 10.01l1.06 1.06M2.93 11.07l1.06-1.06M10.01 3.99l1.06-1.06" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
@@ -267,7 +260,7 @@
                     <div class="dash-today-title" id="dash-today-title">Yükleniyor...</div>
                     <div class="dash-today-meta" id="dash-today-meta"></div>
                     <!-- Listeler özet butonu -->
-                    <button class="dash-lists-toggle" id="dash-lists-toggle" style="display:none;" onclick="toggleDashLists()">
+                    <button class="dash-lists-toggle" id="dash-lists-toggle" style="display:none;" data-action="toggleDashLists()">
                         <span id="dash-lists-toggle-label">📚 Listeler</span>
                         <svg class="dash-lists-chev" id="dash-lists-chev" width="12" height="12" viewBox="0 0 12 12" fill="none">
                             <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -278,7 +271,7 @@
                 </div>
                 <div class="dash-today-icon" id="dash-today-icon">🎯</div>
             </div>
-            <button class="dash-today-cta" id="dash-today-cta" onclick="dashTodayCTA()">
+            <button class="dash-today-cta" id="dash-today-cta" data-action="dashTodayCTA()">
                 <span id="dash-today-cta-label">Başla</span>
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                     <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -310,47 +303,47 @@
                 </div>
             </div>
             <div class="dash-quick-grid">
-                <button class="dash-qa dash-qa-2" onclick="startQuiz()">
+                <button class="dash-qa dash-qa-2" data-action="startQuiz()">
                     <span aria-hidden="true" class="dash-qa-icon">🎯</span>
                     <span class="dash-qa-title">Vocab Test</span>
                     <span class="dash-qa-desc">Çoktan seçmeli</span>
                 </button>
-                <button class="dash-qa dash-qa-3" onclick="_requireAuth(startAIQuizMode,'AI Vocabulary Test')">
+                <button class="dash-qa dash-qa-3" data-action="_requireAuth(startAIQuizMode,'AI Vocabulary Test')">
                     <span aria-hidden="true" class="dash-qa-icon">🤖</span>
                     <span class="dash-qa-title">AI Test</span>
                     <span class="dash-qa-desc">YDT formatı</span>
                 </button>
-                <button class="dash-qa dash-qa-4" onclick="showParagrafListesi()">
+                <button class="dash-qa dash-qa-4" data-action="showParagrafListesi()">
                     <span aria-hidden="true" class="dash-qa-icon">📄</span>
                     <span class="dash-qa-title">Paragraf</span>
                     <span class="dash-qa-desc">C1/C2 metinler</span>
                 </button>
-                <button class="dash-qa dash-qa-5" onclick="_requireAuth(()=>openSpeakingSection('overview'),'AI Konuşma Pratiği')">
+                <button class="dash-qa dash-qa-5" data-action="_requireAuth(()=>openSpeakingSection('overview'),'AI Konuşma Pratiği')">
                     <span aria-hidden="true" class="dash-qa-icon">🗣️</span>
                     <span class="dash-qa-title">AI Konuşma Pratiği</span>
                     <span class="dash-qa-desc">Konuşma pratiği</span>
                 </button>
-                <button class="dash-qa dash-qa-6" onclick="sbToggleGrammarMain()">
+                <button class="dash-qa dash-qa-6" data-action="sbToggleGrammarMain()">
                     <span aria-hidden="true" class="dash-qa-icon">📐</span>
                     <span class="dash-qa-title">Grammar</span>
                     <span class="dash-qa-desc">11 modül</span>
                 </button>
-                <button class="dash-qa dash-qa-7" onclick="showExercisePage()">
+                <button class="dash-qa dash-qa-7" data-action="showExercisePage()">
                     <span aria-hidden="true" class="dash-qa-icon">✍️</span>
                     <span class="dash-qa-title">Alıştırmalar</span>
                     <span class="dash-qa-desc">Yazarak · SM-2</span>
                 </button>
-                <button class="dash-qa dash-qa-8" onclick="showGamesPage()">
+                <button class="dash-qa dash-qa-8" data-action="showGamesPage()">
                     <span aria-hidden="true" class="dash-qa-icon">🎮</span>
                     <span class="dash-qa-title">Oyunlar</span>
                     <span class="dash-qa-desc">Eğlenerek öğren</span>
                 </button>
-                <button class="dash-qa dash-qa-9" onclick="showAIArsiv()">
+                <button class="dash-qa dash-qa-9" data-action="showAIArsiv()">
                     <span aria-hidden="true" class="dash-qa-icon">🗃️</span>
                     <span class="dash-qa-title">Soru Bankası</span>
                     <span class="dash-qa-desc">AI soruları</span>
                 </button>
-                <button class="dash-qa dash-qa-10" onclick="KW.open()">
+                <button class="dash-qa dash-qa-10" data-action="KW.open()">
                     <span aria-hidden="true" class="dash-qa-icon">🌍</span>
                     <span class="dash-qa-title">Kids English</span>
                     <span class="dash-qa-desc">Küçükler için</span>
@@ -362,7 +355,7 @@
         <div class="dash-section">
             <h2 class="dash-section-title">📊 Soru İstatistikleri</h2>
             <div class="dash-sorustat-grid">
-                <div class="dash-ss-item" onclick="showAIArsiv()">
+                <div class="dash-ss-item" data-action="showAIArsiv()">
                     <div class="dash-ss-icon" style="background:color-mix(in srgb,var(--c-violet) 12%,transparent);color:var(--c-violet);">📝</div>
                     <div class="dash-ss-body">
                         <div class="dash-ss-label">Kelime Soruları</div>
@@ -370,7 +363,7 @@
                         <div class="dash-ss-bar"><div id="ss-kelime-fill" style="background:var(--c-violet);height:100%;border-radius:3px;width:0%;transition:width .6s;"></div></div>
                     </div>
                 </div>
-                <div class="dash-ss-item" onclick="_requireAuth(startAIQuizMode,'AI Vocabulary Test')">
+                <div class="dash-ss-item" data-action="_requireAuth(startAIQuizMode,'AI Vocabulary Test')">
                     <div class="dash-ss-icon" style="background:color-mix(in srgb,var(--color-active) 12%,transparent);color:var(--color-active);">🤖</div>
                     <div class="dash-ss-body">
                         <div class="dash-ss-label">AI Vocabulary</div>
@@ -378,7 +371,7 @@
                         <div class="dash-ss-bar"><div id="ss-ai-fill" style="background:var(--color-active);height:100%;border-radius:3px;width:0%;transition:width .6s;"></div></div>
                     </div>
                 </div>
-                <div class="dash-ss-item" onclick="showParagrafListesi()">
+                <div class="dash-ss-item" data-action="showParagrafListesi()">
                     <div class="dash-ss-icon" style="background:color-mix(in srgb,var(--c-sky) 12%,transparent);color:var(--c-sky);">📄</div>
                     <div class="dash-ss-body">
                         <div class="dash-ss-label">Paragraf</div>
@@ -386,7 +379,7 @@
                         <div class="dash-ss-bar"><div id="ss-para-fill" style="background:var(--c-sky);height:100%;border-radius:3px;width:0%;transition:width .6s;"></div></div>
                     </div>
                 </div>
-                <div class="dash-ss-item" onclick="openGrammarSection('overview')">
+                <div class="dash-ss-item" data-action="openGrammarSection('overview')">
                     <div class="dash-ss-icon" style="background:color-mix(in srgb,var(--c-teal) 12%,transparent);color:var(--c-teal);">📐</div>
                     <div class="dash-ss-body">
                         <div class="dash-ss-label">Grammar</div>
@@ -527,22 +520,22 @@
 
         <!-- ══ TAB SWITCH ══ -->
         <div class="rh2-tabbar">
-            <button class="rh2-tab rh2-tab-active" id="rh-tab-ai" onclick="_requireAuth(()=>openReadingHub('ai'),'Günlük Haber AI')">
+            <button class="rh2-tab rh2-tab-active" id="rh-tab-ai" data-action="_requireAuth(()=>openReadingHub('ai'),'Günlük Haber AI')">
                 <span aria-hidden="true" class="rh2-tab-icon">🤖</span>
                 <span>Günlük AI</span>
                 <span class="rh2-tab-pill" id="ai-daily-date-badge"></span>
             </button>
-            <button class="rh2-tab" id="rh-tab-saved" onclick="openReadingHub('saved')">
+            <button class="rh2-tab" id="rh-tab-saved" data-action="openReadingHub('saved')">
                 <span aria-hidden="true" class="rh2-tab-icon">📚</span>
                 <span>Yüklü Pasajlar</span>
                 <span class="rh2-tab-pill rh2-tab-pill-green" id="reading-hub-saved-count"></span>
             </button>
-            <button class="rh2-tab" id="rh-tab-generate" onclick="_requireAuth(()=>openReadingHub('generate'),'AI ile Pasaj Üret')">
+            <button class="rh2-tab" id="rh-tab-generate" data-action="_requireAuth(()=>openReadingHub('generate'),'AI ile Pasaj Üret')">
                 <span aria-hidden="true" class="rh2-tab-icon">✨</span>
                 <span>AI Üret</span>
             </button>
             <!-- Sağ: yenile -->
-            <button id="ai-daily-refresh-btn" onclick="_requireAuth(()=>generateAIDailyParagraflar(true),'Günlük Haber AI')" class="rh2-refresh-btn" style="display:none;">
+            <button id="ai-daily-refresh-btn" data-action="_requireAuth(()=>generateAIDailyParagraflar(true),'Günlük Haber AI')" class="rh2-refresh-btn" style="display:none;">
                 <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
                     <path d="M11.5 2A6 6 0 1 0 12 6.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
                     <path d="M8.5 2H11.5V5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
@@ -552,7 +545,7 @@
         </div>
 
         <!-- ══ MOBİL AI ÜRET SHORTCUT ══ -->
-        <button class="rh2-mob-generate-btn" onclick="_requireAuth(()=>openReadingHub('generate'),'AI ile Pasaj Üret')">
+        <button class="rh2-mob-generate-btn" data-action="_requireAuth(()=>openReadingHub('generate'),'AI ile Pasaj Üret')">
             <span>✨</span>
             <span>AI ile Özgün Paragraf Üret</span>
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -590,10 +583,10 @@
                 </div>
 
                 <div style="display:flex;gap:10px;margin-top:14px;">
-                    <button class="aig-gen-btn" id="aig-gen-btn" onclick="aiGenerateParagraf()">
+                    <button class="aig-gen-btn" id="aig-gen-btn" data-action="aiGenerateParagraf()">
                         <span id="aig-gen-btn-label">✨ Paragraf Oluştur</span>
                     </button>
-                    <button class="aig-gen-btn aig-gen-btn-ghost" onclick="aiGenerateParagraf(true)" title="Rastgele konu seç ve üret">
+                    <button class="aig-gen-btn aig-gen-btn-ghost" data-action="aiGenerateParagraf(true)" title="Rastgele konu seç ve üret">
                         🎲 Rastgele
                     </button>
                 </div>
@@ -669,10 +662,10 @@
                 <!-- Soru Bankası -->
                 <div class="sp-section">
                     <h2 class="sp-section-title">🗃️ Soru Bankası
-                        <button onclick="showAIArsiv()" style="font-size:.68rem;font-weight:700;padding:3px 10px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);color:var(--ink3);cursor:pointer;font-family:inherit;">Bankaya Git →</button>
+                        <button data-action="showAIArsiv()" style="font-size:.68rem;font-weight:700;padding:3px 10px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);color:var(--ink3);cursor:pointer;font-family:inherit;">Bankaya Git →</button>
                     </h2>
                     <div class="sp-content-grid">
-                        <div class="sp-content-item" onclick="showAIArsiv()">
+                        <div class="sp-content-item" data-action="showAIArsiv()">
                             <div class="sp-ci-icon" style="background:color-mix(in srgb,var(--c-violet) 12%,transparent);color:var(--c-violet);">📝</div>
                             <div class="sp-ci-body">
                                 <div class="sp-ci-lbl">Kelime Soruları</div>
@@ -680,7 +673,7 @@
                                 <div class="sp-ci-sub">Çözülebilir soru</div>
                             </div>
                         </div>
-                        <div class="sp-content-item" onclick="showAIArsiv()">
+                        <div class="sp-content-item" data-action="showAIArsiv()">
                             <div class="sp-ci-icon" style="background:color-mix(in srgb,var(--c-teal) 12%,transparent);color:var(--c-teal);">📖</div>
                             <div class="sp-ci-body">
                                 <div class="sp-ci-lbl">Paragraf Soruları</div>
@@ -688,7 +681,7 @@
                                 <div class="sp-ci-sub" id="sp-bank-para-sub">pasaj</div>
                             </div>
                         </div>
-                        <div class="sp-content-item" onclick="showAIArsiv()">
+                        <div class="sp-content-item" data-action="showAIArsiv()">
                             <div class="sp-ci-icon" style="background:color-mix(in srgb,var(--c-amber) 12%,transparent);color:var(--c-amber);">⚙️</div>
                             <div class="sp-ci-body">
                                 <div class="sp-ci-lbl">Gramer Soruları</div>
@@ -696,7 +689,7 @@
                                 <div class="sp-ci-sub">Çözülebilir soru</div>
                             </div>
                         </div>
-                        <div class="sp-content-item" onclick="showAIArsiv()">
+                        <div class="sp-content-item" data-action="showAIArsiv()">
                             <div class="sp-ci-icon" style="background:color-mix(in srgb,var(--color-active) 12%,transparent);color:var(--color-active);">🔠</div>
                             <div class="sp-ci-body">
                                 <div class="sp-ci-lbl">Cloze Test</div>
@@ -704,7 +697,7 @@
                                 <div class="sp-ci-sub">Boşluk doldurma</div>
                             </div>
                         </div>
-                        <div class="sp-content-item" onclick="showAIArsiv()">
+                        <div class="sp-content-item" data-action="showAIArsiv()">
                             <div class="sp-ci-icon" style="background:color-mix(in srgb,var(--c-purple) 12%,transparent);color:var(--c-purple);">🔀</div>
                             <div class="sp-ci-body">
                                 <div class="sp-ci-lbl">Yakın Anlamlı</div>
@@ -712,7 +705,7 @@
                                 <div class="sp-ci-sub">Cümle eşleme</div>
                             </div>
                         </div>
-                        <div class="sp-content-item" onclick="showAIArsiv()">
+                        <div class="sp-content-item" data-action="showAIArsiv()">
                             <div class="sp-ci-icon" style="background:color-mix(in srgb,var(--c-sky) 12%,transparent);color:var(--c-sky);">💬</div>
                             <div class="sp-ci-body">
                                 <div class="sp-ci-lbl">Diyalog / Durum</div>
@@ -726,7 +719,7 @@
                 <!-- Paragraf Okuma -->
                 <div class="sp-section">
                     <h2 class="sp-section-title">📄 Paragraf Okuma
-                        <button onclick="showParagrafListesi()" style="font-size:.68rem;font-weight:700;padding:3px 10px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);color:var(--ink3);cursor:pointer;font-family:inherit;">Pasajlara Git →</button>
+                        <button data-action="showParagrafListesi()" style="font-size:.68rem;font-weight:700;padding:3px 10px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);color:var(--ink3);cursor:pointer;font-family:inherit;">Pasajlara Git →</button>
                     </h2>
                     <div class="sp-para-kpi-row">
                         <div class="sp-para-kpi">
@@ -747,7 +740,7 @@
                         </div>
                     </div>
                     <div class="sp-para-paket-list" id="sp-para-paket-list"></div>
-                    <button class="sp-para-goto-btn" onclick="showParagrafListesi()">📖 Paragraf Okumaya Git</button>
+                    <button class="sp-para-goto-btn" data-action="showParagrafListesi()">📖 Paragraf Okumaya Git</button>
                 </div>
 
             </div>
@@ -770,7 +763,7 @@
                 <!-- Kelime Isı Haritası -->
                 <div class="sp-section">
                     <h2 class="sp-section-title">🌡️ Kelime Isı Haritası
-                        <select id="heatmap-list-sel" class="sp-select" onchange="renderHeatmap()"></select>
+                        <select id="heatmap-list-sel" class="sp-select" data-change="renderHeatmap()"></select>
                     </h2>
                     <p class="sp-hint">Her kare bir kelime — renk hata sayısına göre değişir.</p>
                     <div id="heatmap-grid" class="heatmap-grid"></div>
@@ -802,20 +795,20 @@
     <div id="study-page" class="container hidden">
         <!-- Üst bar -->
         <div class="study-topbar">
-            <button class="back-btn-inline" onclick="exitModule()">←</button>
+            <button class="back-btn-inline" data-action="exitModule()">←</button>
             <div class="study-progress-wrap">
                 <div class="study-progress-track">
                     <div class="study-progress-fill" id="study-prog-fill"></div>
                 </div>
                 <span class="study-progress-label" id="study-progress-label">1 / 10</span>
             </div>
-            <button class="study-speak-btn" onclick="speakWord(document.getElementById('study-eng').innerText)" title="Sesli dinle">🔊</button>
+            <button class="study-speak-btn" data-action="speakWord(document.getElementById('study-eng').innerText)" title="Sesli dinle">🔊</button>
         </div>
 
         <!-- Liste adı + değiştir — progress altında ortalı -->
         <div class="study-list-namerow">
-            <select id="study-list-switcher" class="study-list-switcher" onchange="switchStudyList(this.value)" title="Liste değiştir"></select>
-            <button class="study-mylist-btn" onclick="goToMyWords()" title="Kişisel listelerini yönet">✏️</button>
+            <select id="study-list-switcher" class="study-list-switcher" data-change="switchStudyList(this.value)" title="Liste değiştir"></select>
+            <button class="study-mylist-btn" data-action="goToMyWords()" title="Kişisel listelerini yönet">✏️</button>
         </div>
 
         <!-- Mini stat chips -->
@@ -830,7 +823,7 @@
 
                 <!-- ── HERO: Kelime + fonetik ── -->
                 <div class="wc-hero">
-                    <button class="wc-speak-btn" onclick="event.stopPropagation();speakWord(document.getElementById('study-eng').innerText)" title="Sesli dinle">🔊</button>
+                    <button class="wc-speak-btn" data-action="event.stopPropagation();speakWord(document.getElementById('study-eng').innerText)" title="Sesli dinle">🔊</button>
 
                     <div class="wc-hero-top">
                         <span class="wc-list-tag" id="study-list-tag">Liste</span>
@@ -881,7 +874,7 @@
                 <div class="wc-sentences" id="study-sentences-wrap">
                     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
                         <span style="font-size:.58rem;font-weight:800;letter-spacing:.9px;text-transform:uppercase;color:var(--ink3);">Örnek Cümleler</span>
-                        <button class="wc-ai-btn" id="study-gen-btn" onclick="generateStudySentences()">✨ AI ile üret</button>
+                        <button class="wc-ai-btn" id="study-gen-btn" data-action="generateStudySentences()">✨ AI ile üret</button>
                     </div>
                     <div id="study-sentences-list">
                         <div style="font-size:.78rem;color:var(--ink3);font-style:italic;padding:4px 0;">Cümle üretmek için ✨ butonuna bas.</div>
@@ -911,13 +904,13 @@
 
         <!-- Aksiyon butonları -->
         <div class="study-actions" id="study-actions">
-            <button class="study-btn-again" onclick="studyMarkAgain()">🔁 Tekrar Et</button>
-            <button class="study-btn-known" onclick="studyMarkKnown()">✅ Biliyorum!</button>
+            <button class="study-btn-again" data-action="studyMarkAgain()">🔁 Tekrar Et</button>
+            <button class="study-btn-known" data-action="studyMarkKnown()">✅ Biliyorum!</button>
         </div>
 
         <!-- Klasik ileri/geri -->
         <div class="study-nav-simple" id="study-nav-simple">
-            <button class="btn btn-ghost" style="flex:1;margin:0;" onclick="prevStudy()">← Geri</button>
+            <button class="btn btn-ghost" style="flex:1;margin:0;" data-action="prevStudy()">← Geri</button>
         </div>
     </div>
 
@@ -945,9 +938,9 @@
         </div>
         <div class="sdone-msg" id="sdone-msg"></div>
         <div style="display:flex;flex-direction:column;gap:8px;margin-top:16px;">
-            <button class="btn" onclick="restartStudy()">🔄 Tekrar Çalış</button>
-            <button class="btn" style="background:var(--c-purple);" onclick="restartStudyAgainOnly()">🎯 Sadece Tekrarları Çalış</button>
-            <button class="btn btn-ghost" style="margin:0;" onclick="exitModule()">Ana Sayfaya Dön</button>
+            <button class="btn" data-action="restartStudy()">🔄 Tekrar Çalış</button>
+            <button class="btn" style="background:var(--c-purple);" data-action="restartStudyAgainOnly()">🎯 Sadece Tekrarları Çalış</button>
+            <button class="btn btn-ghost" style="margin:0;" data-action="exitModule()">Ana Sayfaya Dön</button>
         </div>
     </div>
 
@@ -958,7 +951,7 @@
 
         <!-- ── Üst HUD (sabit) ── -->
         <div class="qz-hud" id="qz-hud">
-            <button class="qz-exit-btn" onclick="exitModule()">✕</button>
+            <button class="qz-exit-btn" data-action="exitModule()">✕</button>
 
             <div class="qz-hud-center">
                 <div class="qz-hud-title">🎯 Vocabulary Test</div>
@@ -1044,8 +1037,8 @@
                     <div class="qz-rs-box"><div class="qz-rs-num" id="qz-rs-correct">0</div><div class="qz-rs-lbl">Doğru</div></div>
                     <div class="qz-rs-box"><div class="qz-rs-num" id="qz-rs-streak">0</div><div class="qz-rs-lbl">Max Combo</div></div>
                 </div>
-                <button class="qz-res-btn" onclick="startQuizFromNav()">🔄 Tekrar Oyna</button>
-                <button class="qz-res-btn qz-res-ghost" onclick="exitModule()">Ana Sayfaya Dön</button>
+                <button class="qz-res-btn" data-action="startQuizFromNav()">🔄 Tekrar Oyna</button>
+                <button class="qz-res-btn qz-res-ghost" data-action="exitModule()">Ana Sayfaya Dön</button>
             </div>
 
         </div><!-- /qz-body -->
@@ -1061,7 +1054,7 @@
                     <div class="qz-fb-sub" id="qz-fb-sub"></div>
                 </div>
                 <div class="qz-fb-xp-gain" id="qz-fb-xp-gain" style="display:none;">+10 XP</div>
-                <button class="qz-next-btn" onclick="nextQuestion()">Devam →</button>
+                <button class="qz-next-btn" data-action="nextQuestion()">Devam →</button>
             </div>
 
             <!-- Detay içeriği -->
@@ -1127,22 +1120,22 @@
 
                 <!-- SOL SIDEBAR -->
                 <nav class="adm-sidebar">
-                    <button class="adm-tab active" data-tab="api" onclick="admSwitchTab('api')">
+                    <button class="adm-tab active" data-tab="api" data-action="admSwitchTab('api')">
                         <span aria-hidden="true" class="adm-tab-icon">🔑</span><span>API Anahtarları</span>
                     </button>
-                    <button class="adm-tab" data-tab="words" onclick="admSwitchTab('words')">
+                    <button class="adm-tab" data-tab="words" data-action="admSwitchTab('words')">
                         <span aria-hidden="true" class="adm-tab-icon">📚</span><span>Kelime Listeleri</span> <span style="font-size:.6rem;background:#e63946;color:#fff;border-radius:99px;padding:1px 6px;font-weight:800;vertical-align:middle;">PAYLAŞ</span>
                     </button>
-                    <button class="adm-tab" data-tab="paragraf" onclick="admSwitchTab('paragraf')">
+                    <button class="adm-tab" data-tab="paragraf" data-action="admSwitchTab('paragraf')">
                         <span aria-hidden="true" class="adm-tab-icon">📄</span><span>Paragraflar</span>
                     </button>
-                    <button class="adm-tab" data-tab="ai" onclick="admSwitchTab('ai')">
+                    <button class="adm-tab" data-tab="ai" data-action="admSwitchTab('ai')">
                         <span aria-hidden="true" class="adm-tab-icon">🤖</span><span>AI Üretici</span>
                     </button>
-                    <button class="adm-tab" data-tab="bank" onclick="admSwitchTab('bank')">
+                    <button class="adm-tab" data-tab="bank" data-action="admSwitchTab('bank')">
                         <span aria-hidden="true" class="adm-tab-icon">🗃️</span><span>Soru Bankası</span>
                     </button>
-                    <button class="adm-tab" data-tab="system" onclick="admSwitchTab('system')">
+                    <button class="adm-tab" data-tab="system" data-action="admSwitchTab('system')">
                         <span aria-hidden="true" class="adm-tab-icon">☁️</span><span>Sistem & Yedek</span>
                     </button>
                 </nav>
@@ -1178,8 +1171,8 @@
                                 <div class="adm-key-row">
                                     <label for="akey-gemini" class="sr-only">Gemini API Anahtarı</label>
                                     <input type="password" id="akey-gemini" class="adm-input" placeholder="AIza...">
-                                    <button class="adm-btn-save" onclick="saveApiKey('gemini','akey-gemini')">Kaydet</button>
-                                    <button class="adm-btn-ghost" onclick="removeApiKey('gemini')" title="Sil" style="padding:0 10px;">🗑</button>
+                                    <button class="adm-btn-save" data-action="saveApiKey('gemini','akey-gemini')">Kaydet</button>
+                                    <button class="adm-btn-ghost" data-action="removeApiKey('gemini')" title="Sil" style="padding:0 10px;">🗑</button>
                                 </div>
                             </div>
                             <div class="adm-key-card" id="adm-keycard-groq">
@@ -1194,8 +1187,8 @@
                                 <div class="adm-key-row">
                                     <label for="akey-groq" class="sr-only">Groq API Anahtarı</label>
                                     <input type="password" id="akey-groq" class="adm-input" placeholder="gsk_...">
-                                    <button class="adm-btn-save" onclick="saveApiKey('groq','akey-groq')">Kaydet</button>
-                                    <button class="adm-btn-ghost" onclick="removeApiKey('groq')" title="Sil" style="padding:0 10px;">🗑</button>
+                                    <button class="adm-btn-save" data-action="saveApiKey('groq','akey-groq')">Kaydet</button>
+                                    <button class="adm-btn-ghost" data-action="removeApiKey('groq')" title="Sil" style="padding:0 10px;">🗑</button>
                                 </div>
                             </div>
                             <div class="adm-key-card" id="adm-keycard-openrouter">
@@ -1210,8 +1203,8 @@
                                 <div class="adm-key-row">
                                     <label for="akey-openrouter" class="sr-only">OpenRouter API Anahtarı</label>
                                     <input type="password" id="akey-openrouter" class="adm-input" placeholder="sk-or-...">
-                                    <button class="adm-btn-save" onclick="saveApiKey('openrouter','akey-openrouter')">Kaydet</button>
-                                    <button class="adm-btn-ghost" onclick="removeApiKey('openrouter')" title="Sil" style="padding:0 10px;">🗑</button>
+                                    <button class="adm-btn-save" data-action="saveApiKey('openrouter','akey-openrouter')">Kaydet</button>
+                                    <button class="adm-btn-ghost" data-action="removeApiKey('openrouter')" title="Sil" style="padding:0 10px;">🗑</button>
                                 </div>
                             </div>
                             <div class="adm-key-card" id="adm-keycard-mistral">
@@ -1226,8 +1219,8 @@
                                 <div class="adm-key-row">
                                     <label for="akey-mistral" class="sr-only">Mistral API Anahtarı</label>
                                     <input type="password" id="akey-mistral" class="adm-input" placeholder="...">
-                                    <button class="adm-btn-save" onclick="saveApiKey('mistral','akey-mistral')">Kaydet</button>
-                                    <button class="adm-btn-ghost" onclick="removeApiKey('mistral')" title="Sil" style="padding:0 10px;">🗑</button>
+                                    <button class="adm-btn-save" data-action="saveApiKey('mistral','akey-mistral')">Kaydet</button>
+                                    <button class="adm-btn-ghost" data-action="removeApiKey('mistral')" title="Sil" style="padding:0 10px;">🗑</button>
                                 </div>
                             </div>
                         </div>
@@ -1257,7 +1250,7 @@
                                 <select id="share-list-selector" class="adm-input" style="flex:1;min-width:160px;">
                                     <option value="__ALL__">— Tüm Listeleri Paylaş —</option>
                                 </select>
-                                <button class="adm-btn-primary" onclick="adminShareLists()" id="adm-share-btn">
+                                <button class="adm-btn-primary" data-action="adminShareLists()" id="adm-share-btn">
                                     ☁️ Firestore'a Yükle
                                 </button>
                             </div>
@@ -1269,21 +1262,21 @@
                                 <div class="adm-card-title">➕ Yeni Liste</div>
                                 <div class="adm-key-row">
                                     <input type="text" id="new-list-name" class="adm-input" placeholder="Liste adı...">
-                                    <button class="adm-btn-primary" onclick="createNewList()">Oluştur</button>
+                                    <button class="adm-btn-primary" data-action="createNewList()">Oluştur</button>
                                 </div>
                             </div>
                             <div class="adm-card" style="flex:2;">
                                 <div class="adm-card-title">✏️ Mevcut Liste Düzenle</div>
                                 <div style="display:flex; gap:8px; margin-bottom:10px;">
-                                    <select id="edit-list-selector" class="adm-input" style="flex:1;" onchange="loadListToTextarea()"></select>
+                                    <select id="edit-list-selector" class="adm-input" style="flex:1;" data-change="loadListToTextarea()"></select>
                                     <input type="text" id="rename-list-input" class="adm-input" style="flex:1;" placeholder="Yeni isim...">
-                                    <button class="adm-btn-ghost" onclick="renameList()">Yeniden Adlandır</button>
+                                    <button class="adm-btn-ghost" data-action="renameList()">Yeniden Adlandır</button>
                                 </div>
                                 <div class="adm-format-hint">📋 Format: <code>Kelime:Anlam:Mnemonic:Hikaye</code></div>
                                 <textarea id="bulk-input" class="adm-textarea" rows="10" placeholder="Kelimeleri buraya yapıştırın..."></textarea>
                                 <div class="adm-btn-row" style="margin-top:10px;">
-                                    <button class="adm-btn-primary" style="flex:2;" onclick="saveCurrentList()">💾 Kaydet</button>
-                                    <button class="adm-btn-danger" style="flex:1;" onclick="deleteList()">🗑 Listeyi Sil</button>
+                                    <button class="adm-btn-primary" style="flex:2;" data-action="saveCurrentList()">💾 Kaydet</button>
+                                    <button class="adm-btn-danger" style="flex:1;" data-action="deleteList()">🗑 Listeyi Sil</button>
                                 </div>
                             </div>
                         </div>
@@ -1313,7 +1306,7 @@
                                 <select id="share-para-selector" class="adm-input" style="flex:1;min-width:180px;">
                                     <option value="__ALL__">— Tüm Pasajları Paylaş —</option>
                                 </select>
-                                <button class="adm-btn-primary" onclick="adminShareParagraflar()" id="adm-share-para-btn">
+                                <button class="adm-btn-primary" data-action="adminShareParagraflar()" id="adm-share-para-btn">
                                     ☁️ Firestore'a Yükle
                                 </button>
                             </div>
@@ -1328,13 +1321,13 @@
                             <div class="adm-card" style="flex:1;">
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                                     <div class="adm-card-title" id="paragraf-form-title">➕ Yeni Paragraf</div>
-                                    <button id="paragraf-form-cancel-btn" onclick="cancelParagrafEdit()" style="display:none; font-size:.75rem; background:none; border:none; color:var(--ink3); cursor:pointer; font-family:inherit;">✕ İptal</button>
+                                    <button id="paragraf-form-cancel-btn" data-action="cancelParagrafEdit()" style="display:none; font-size:.75rem; background:none; border:none; color:var(--ink3); cursor:pointer; font-family:inherit;">✕ İptal</button>
                                 </div>
                                 <input type="hidden" id="edit-paragraf-index" value="-1">
                                 <input type="text" id="new-p-title" class="adm-input" placeholder="Paragraf Başlığı" style="margin-bottom:8px;">
                                 <textarea id="new-p-text" class="adm-textarea" rows="7" placeholder="Paragraf metnini buraya yapıştırın..." style="margin-bottom:8px;"></textarea>
                                 <textarea id="new-p-words" class="adm-textarea" rows="3" placeholder="Zor Kelimeler: profound:derin, myriad:sayısız" style="margin-bottom:12px;"></textarea>
-                                <button class="adm-btn-primary" id="paragraf-save-btn" onclick="addParagrafFromAdmin()">💾 Paragrafı Kaydet</button>
+                                <button class="adm-btn-primary" id="paragraf-save-btn" data-action="addParagrafFromAdmin()">💾 Paragrafı Kaydet</button>
                             </div>
                         </div>
                     </div>
@@ -1371,7 +1364,7 @@
                                     <label class="adm-label">Hedef Liste</label>
                                     <select id="ai-gen-target-list" class="adm-input"></select>
                                 </div>
-                                <button id="ai-gen-btn" class="adm-btn-ai" onclick="aiGenerateWords()">✨ Kelimeleri Üret</button>
+                                <button id="ai-gen-btn" class="adm-btn-ai" data-action="aiGenerateWords()">✨ Kelimeleri Üret</button>
                                 <div id="ai-gen-loading" style="display:none; text-align:center; padding:24px 0;">
                                     <div style="font-size:2rem; animation:spin 1s linear infinite; display:inline-block;">⚙️</div>
                                     <div style="font-size:.82rem; color:var(--ink3); margin-top:8px;" id="ai-gen-loading-text">Üretiliyor...</div>
@@ -1385,8 +1378,8 @@
                                     </div>
                                     <div id="ai-gen-preview-list" style="max-height:340px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;"></div>
                                     <div class="adm-btn-row" style="margin-top:12px;">
-                                        <button class="adm-btn-primary" style="flex:2;" onclick="aiGenSaveToList()">💾 Listeye Kaydet</button>
-                                        <button class="adm-btn-ghost" style="flex:1;" onclick="aiGenDiscard()">✕ İptal</button>
+                                        <button class="adm-btn-primary" style="flex:2;" data-action="aiGenSaveToList()">💾 Listeye Kaydet</button>
+                                        <button class="adm-btn-ghost" style="flex:1;" data-action="aiGenDiscard()">✕ İptal</button>
                                     </div>
                                 </div>
                                 <div id="ai-gen-empty" style="color:var(--ink3); font-size:.82rem; padding:40px 0; text-align:center;">Kelimeler üretildikten sonra burada görünecek.</div>
@@ -1408,7 +1401,7 @@
                                 <div style="font-size:.62rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;opacity:.8;">Google ile Giriş Yapan Kullanıcılar</div>
                                 <div style="font-size:1.6rem;font-weight:900;" id="adm-user-count">—</div>
                             </div>
-                            <button onclick="admLoadUserCount()" style="margin-left:auto;background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.4);color:white;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:.75rem;font-weight:700;">🔄 Yenile</button>
+                            <button data-action="admLoadUserCount()" style="margin-left:auto;background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.4);color:white;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:.75rem;font-weight:700;">🔄 Yenile</button>
                         </div>
 
                         <!-- Mevcut soru sayıları — tüm kategoriler -->
@@ -1492,9 +1485,9 @@
                                     </div>
                                 </div>
                                 <div id="adm-upload-status-kelime" style="display:none;font-size:.72rem;margin-bottom:8px;padding:6px 10px;border-radius:8px;"></div>
-                                <label style="display:flex;align-items:center;justify-content:center;gap:8px;background:var(--color-danger-soft);border:1.5px solid var(--c-pink-border);border-radius:10px;padding:10px;cursor:pointer;font-size:.78rem;font-weight:700;color:var(--color-danger);transition:background .15s;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">
+                                <label style="display:flex;align-items:center;justify-content:center;gap:8px;background:var(--color-danger-soft);border:1.5px solid var(--c-pink-border);border-radius:10px;padding:10px;cursor:pointer;font-size:.78rem;font-weight:700;color:var(--color-danger);transition:background .15s;" data-hover-bg="#fee2e2" data-hoverout-bg="#fef2f2">
                                     📎 Dosya Seç
-                                    <input type="file" accept=".pdf,.doc,.docx" style="display:none;" onchange="admBankUpload(this,'kelime')">
+                                    <input type="file" accept=".pdf,.doc,.docx" style="display:none;" data-change="admBankUpload(this,'kelime')">
                                 </label>
                             </div>
 
@@ -1508,9 +1501,9 @@
                                     </div>
                                 </div>
                                 <div id="adm-upload-status-paragraf" style="display:none;font-size:.72rem;margin-bottom:8px;padding:6px 10px;border-radius:8px;"></div>
-                                <label style="display:flex;align-items:center;justify-content:center;gap:8px;background:var(--c-sky-soft);border:1.5px solid var(--c-sky-border);border-radius:10px;padding:10px;cursor:pointer;font-size:.78rem;font-weight:700;color:var(--c-sky);transition:background .15s;" onmouseover="this.style.background='#e0f2fe'" onmouseout="this.style.background='#f0f9ff'">
+                                <label style="display:flex;align-items:center;justify-content:center;gap:8px;background:var(--c-sky-soft);border:1.5px solid var(--c-sky-border);border-radius:10px;padding:10px;cursor:pointer;font-size:.78rem;font-weight:700;color:var(--c-sky);transition:background .15s;" data-hover-bg="#e0f2fe" data-hoverout-bg="#f0f9ff">
                                     📎 Dosya Seç
-                                    <input type="file" accept=".pdf,.doc,.docx" style="display:none;" onchange="admBankUpload(this,'paragraf')">
+                                    <input type="file" accept=".pdf,.doc,.docx" style="display:none;" data-change="admBankUpload(this,'paragraf')">
                                 </label>
                             </div>
 
@@ -1524,9 +1517,9 @@
                                     </div>
                                 </div>
                                 <div id="adm-upload-status-gramer" style="display:none;font-size:.72rem;margin-bottom:8px;padding:6px 10px;border-radius:8px;"></div>
-                                <label style="display:flex;align-items:center;justify-content:center;gap:8px;background:var(--c-purple-soft);border:1.5px solid var(--c-purple-border);border-radius:10px;padding:10px;cursor:pointer;font-size:.78rem;font-weight:700;color:var(--c-purple);transition:background .15s;" onmouseover="this.style.background='#ede9fe'" onmouseout="this.style.background='#f5f3ff'">
+                                <label style="display:flex;align-items:center;justify-content:center;gap:8px;background:var(--c-purple-soft);border:1.5px solid var(--c-purple-border);border-radius:10px;padding:10px;cursor:pointer;font-size:.78rem;font-weight:700;color:var(--c-purple);transition:background .15s;" data-hover-bg="#ede9fe" data-hoverout-bg="#f5f3ff">
                                     📎 Dosya Seç
-                                    <input type="file" accept=".pdf,.doc,.docx" style="display:none;" onchange="admBankUpload(this,'gramer')">
+                                    <input type="file" accept=".pdf,.doc,.docx" style="display:none;" data-change="admBankUpload(this,'gramer')">
                                 </label>
                             </div>
 
@@ -1540,9 +1533,9 @@
                                     </div>
                                 </div>
                                 <div id="adm-upload-status-cloze" style="display:none;font-size:.72rem;margin-bottom:8px;padding:6px 10px;border-radius:8px;"></div>
-                                <label style="display:flex;align-items:center;justify-content:center;gap:8px;background:var(--c-teal-soft);border:1.5px solid var(--c-teal-border);border-radius:10px;padding:10px;cursor:pointer;font-size:.78rem;font-weight:700;color:var(--c-teal);transition:background .15s;" onmouseover="this.style.background='#d1fae5'" onmouseout="this.style.background='#ecfdf5'">
+                                <label style="display:flex;align-items:center;justify-content:center;gap:8px;background:var(--c-teal-soft);border:1.5px solid var(--c-teal-border);border-radius:10px;padding:10px;cursor:pointer;font-size:.78rem;font-weight:700;color:var(--c-teal);transition:background .15s;" data-hover-bg="#d1fae5" data-hoverout-bg="#ecfdf5">
                                     📎 Dosya Seç
-                                    <input type="file" accept=".pdf,.doc,.docx" style="display:none;" onchange="admBankUpload(this,'cloze')">
+                                    <input type="file" accept=".pdf,.doc,.docx" style="display:none;" data-change="admBankUpload(this,'cloze')">
                                 </label>
                             </div>
 
@@ -1556,9 +1549,9 @@
                                     </div>
                                 </div>
                                 <div id="adm-upload-status-yakin" style="display:none;font-size:.72rem;margin-bottom:8px;padding:6px 10px;border-radius:8px;"></div>
-                                <label style="display:flex;align-items:center;justify-content:center;gap:8px;background:var(--c-pink-soft);border:1.5px solid var(--c-pink-border);border-radius:10px;padding:10px;cursor:pointer;font-size:.78rem;font-weight:700;color:var(--c-pink);transition:background .15s;" onmouseover="this.style.background='#ffe4e6'" onmouseout="this.style.background='#fff1f2'">
+                                <label style="display:flex;align-items:center;justify-content:center;gap:8px;background:var(--c-pink-soft);border:1.5px solid var(--c-pink-border);border-radius:10px;padding:10px;cursor:pointer;font-size:.78rem;font-weight:700;color:var(--c-pink);transition:background .15s;" data-hover-bg="#ffe4e6" data-hoverout-bg="#fff1f2">
                                     📎 Dosya Seç
-                                    <input type="file" accept=".pdf,.doc,.docx" style="display:none;" onchange="admBankUpload(this,'yakin')">
+                                    <input type="file" accept=".pdf,.doc,.docx" style="display:none;" data-change="admBankUpload(this,'yakin')">
                                 </label>
                             </div>
 
@@ -1572,9 +1565,9 @@
                                     </div>
                                 </div>
                                 <div id="adm-upload-status-diyalog" style="display:none;font-size:.72rem;margin-bottom:8px;padding:6px 10px;border-radius:8px;"></div>
-                                <label style="display:flex;align-items:center;justify-content:center;gap:8px;background:var(--c-indigo-soft);border:1.5px solid var(--c-indigo-border);border-radius:10px;padding:10px;cursor:pointer;font-size:.78rem;font-weight:700;color:var(--c-indigo);transition:background .15s;" onmouseover="this.style.background='#e0e7ff'" onmouseout="this.style.background='#eef2ff'">
+                                <label style="display:flex;align-items:center;justify-content:center;gap:8px;background:var(--c-indigo-soft);border:1.5px solid var(--c-indigo-border);border-radius:10px;padding:10px;cursor:pointer;font-size:.78rem;font-weight:700;color:var(--c-indigo);transition:background .15s;" data-hover-bg="#e0e7ff" data-hoverout-bg="#eef2ff">
                                     📎 Dosya Seç
-                                    <input type="file" accept=".pdf,.doc,.docx" style="display:none;" onchange="admBankUpload(this,'diyalog')">
+                                    <input type="file" accept=".pdf,.doc,.docx" style="display:none;" data-change="admBankUpload(this,'diyalog')">
                                 </label>
                             </div>
 
@@ -1607,16 +1600,16 @@
                                         <div style="font-size:.7rem; color:var(--ink3);">Değişiklikler otomatik kaydedilir</div>
                                     </div>
                                 </div>
-                                <button class="adm-btn-primary" onclick="forceSyncNow()">🔄 Şimdi Senkronize Et</button>
+                                <button class="adm-btn-primary" data-action="forceSyncNow()">🔄 Şimdi Senkronize Et</button>
                             </div>
                             <div class="adm-card">
                                 <div class="adm-card-title">💾 Yedekleme</div>
                                 <p style="font-size:.78rem; color:var(--ink3); margin-bottom:14px; line-height:1.6;">Tüm verileri JSON olarak indir ya da geri yükle.</p>
                                 <div class="adm-btn-row">
-                                    <button class="adm-btn-ghost" style="flex:1;" onclick="exportData()">⬇️ İndir</button>
-                                    <button class="adm-btn-ghost" style="flex:1;" onclick="document.getElementById('fileInput').click()">⬆️ Yükle</button>
+                                    <button class="adm-btn-ghost" style="flex:1;" data-action="exportData()">⬇️ İndir</button>
+                                    <button class="adm-btn-ghost" style="flex:1;" data-action="document.getElementById('fileInput').click()">⬆️ Yükle</button>
                                 </div>
-                                <input type="file" id="fileInput" class="hidden" accept=".json" onchange="importData(event)">
+                                <input type="file" id="fileInput" class="hidden" accept=".json" data-change="importData(event)">
                             </div>
                         </div>
                     </div>
@@ -1633,21 +1626,21 @@
     <div id="exercise-page" class="container hidden">
         <p class="page-title">Alıştırmalar</p>
         <p class="page-sub">Aktif öğrenme modları</p>
-        <div class="game-card" onclick="startTypingQuiz()">
+        <div class="game-card" data-action="startTypingQuiz()">
             <div class="game-card-icon">✍️</div>
             <div>
                 <div class="game-card-title">Yazarak Cevap</div>
                 <div class="game-card-desc">Kelimeyi gör, Türkçe anlamı klavyeyle yaz. Harfler renklenerek değerlendirilir.</div>
             </div>
         </div>
-        <div class="game-card" onclick="startContextMode()">
+        <div class="game-card" data-action="startContextMode()">
             <div class="game-card-icon">📝</div>
             <div>
                 <div class="game-card-title">Bağlam Cümlesi</div>
                 <div class="game-card-desc">Cümledeki boşluğu doldur. Hikaye yoksa AI otomatik üretir ve kaydeder.</div>
             </div>
         </div>
-        <div class="game-card" onclick="startSM2Review()">
+        <div class="game-card" data-action="startSM2Review()">
             <div class="game-card-icon">🧠</div>
             <div>
                 <div class="game-card-title">SM-2 Tekrar <span id="sm2-due-badge" style="background:var(--red);color:white;font-size:0.65rem;padding:2px 7px;border-radius:8px;margin-left:6px;font-weight:700;"></span></div>
@@ -1668,7 +1661,7 @@
             <div class="tw-orb tw-orb3"></div>
         </div>
         <header class="tw-header">
-            <button class="tw-exit-btn" onclick="exitTyping()" title="Çıkış">
+            <button class="tw-exit-btn" data-action="exitTyping()" title="Çıkış">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
             <div class="tw-header-center">
@@ -1704,7 +1697,7 @@
                     <span id="tw-qtype-label">Tam Çeviri</span>
                 </div>
                 <div class="tw-question-area" id="tw-question-area">
-                    <div class="tw-word-display" id="tw-word-display" onclick="twSpeak()">
+                    <div class="tw-word-display" id="tw-word-display" data-action="twSpeak()">
                         <span id="tw-word-text">—</span>
                         <button class="tw-speak-btn" title="Dinle">
                             <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path d="M9.586 3.293A1 1 0 0 0 8 4v12a1 1 0 0 0 1.586.814l5-3.5a1 1 0 0 0 0-1.628l-5-3.5zM3 7a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h2V7H3z"/></svg>
@@ -1723,23 +1716,23 @@
                 <div class="tw-input-wrap">
                     <input id="tw-input" class="tw-input" type="text" placeholder="Cevabını yaz..."
                            autocomplete="off" autocorrect="off" spellcheck="false"
-                           onkeydown="if(event.key==='Enter'){twAnswered?twNext():twCheck()}">
-                    <button class="tw-submit-btn" id="tw-submit-btn" onclick="twCheck()">
+                           data-keydown-enter="twAnswered?twNext():twCheck()">
+                    <button class="tw-submit-btn" id="tw-submit-btn" data-action="twCheck()">
                         <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M4 10h12M11 5l5 5-5 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </button>
                 </div>
                 <div class="tw-chars" id="tw-chars"></div>
                 <div class="tw-feedback" id="tw-feedback"></div>
                 <div class="tw-actions">
-                    <button class="tw-btn-check" id="tw-btn-check" onclick="twCheck()">Kontrol Et</button>
-                    <button class="tw-btn-next" id="tw-btn-next" style="display:none;" onclick="twNext()">
+                    <button class="tw-btn-check" id="tw-btn-check" data-action="twCheck()">Kontrol Et</button>
+                    <button class="tw-btn-next" id="tw-btn-next" style="display:none;" data-action="twNext()">
                         Sonraki <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </button>
-                    <button class="tw-btn-skip" id="tw-btn-skip" onclick="twSkip()">Geç</button>
+                    <button class="tw-btn-skip" id="tw-btn-skip" data-action="twSkip()">Geç</button>
                 </div>
             </div>
             <div class="tw-help-row">
-                <button class="tw-help-btn" onclick="twToggleHelp()" id="tw-help-toggle">
+                <button class="tw-help-btn" data-action="twToggleHelp()" id="tw-help-toggle">
                     <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.6"/><path d="M8 11v-1M8 7a2 2 0 1 1 0-4 2 2 0 0 1 0 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
                     Nasıl çalışır?
                 </button>
@@ -1759,7 +1752,7 @@
     <div id="sm2-page" class="sr-page hidden">
 
         <header class="sr-header">
-            <button class="sr-exit-btn" onclick="exitSM2()">
+            <button class="sr-exit-btn" data-action="exitSM2()">
                 <svg width="16" height="16" fill="none" viewBox="0 0 16 16"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
             <div class="sr-header-mid">
@@ -1795,9 +1788,9 @@
                     <div class="sr-card-eyebrow">
                         <span class="sr-eyebrow-dot"></span> Kelimeyi hatırla
                     </div>
-                    <div class="sr-word" id="sm2-word" onclick="speakWord(this.innerText)">—</div>
+                    <div class="sr-word" id="sm2-word" data-action="speakWord(this.innerText)">—</div>
                     <div class="sr-mnemonic" id="sm2-mnemonic"></div>
-                    <button class="sr-reveal-btn" id="sm2-show-btn" onclick="showSM2Answer()">
+                    <button class="sr-reveal-btn" id="sm2-show-btn" data-action="showSM2Answer()">
                         <svg width="14" height="14" fill="none" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.6"/><path d="M8 5v3l2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
                         Anlamı Göster
                     </button>
@@ -1810,22 +1803,22 @@
                     </div>
                     <div class="sr-rate-question">Ne kadar kolaydı?</div>
                     <div class="sr-rate-grid">
-                        <button class="sr-rate-btn sr-fail" onclick="rateSM2(0)">
+                        <button class="sr-rate-btn sr-fail" data-action="rateSM2(0)">
                             <span aria-hidden="true" class="sr-rate-emoji">😰</span>
                             <span class="sr-rate-title">Bilmedim</span>
                             <span class="sr-rate-sub">Tekrar göster</span>
                         </button>
-                        <button class="sr-rate-btn sr-hard" onclick="rateSM2(2)">
+                        <button class="sr-rate-btn sr-hard" data-action="rateSM2(2)">
                             <span aria-hidden="true" class="sr-rate-emoji">😅</span>
                             <span class="sr-rate-title">Zor</span>
                             <span class="sr-rate-sub">Yakında tekrar</span>
                         </button>
-                        <button class="sr-rate-btn sr-good" onclick="rateSM2(4)">
+                        <button class="sr-rate-btn sr-good" data-action="rateSM2(4)">
                             <span aria-hidden="true" class="sr-rate-emoji">🙂</span>
                             <span class="sr-rate-title">İyi</span>
                             <span class="sr-rate-sub">Birkaç gün</span>
                         </button>
-                        <button class="sr-rate-btn sr-easy" onclick="rateSM2(5)">
+                        <button class="sr-rate-btn sr-easy" data-action="rateSM2(5)">
                             <span aria-hidden="true" class="sr-rate-emoji">😎</span>
                             <span class="sr-rate-title">Kolay</span>
                             <span class="sr-rate-sub">Uzun süre</span>
@@ -1846,7 +1839,7 @@
     <div id="context-page" class="cx-page hidden">
 
         <header class="cx-header">
-            <button class="cx-exit-btn" onclick="exitContext()">
+            <button class="cx-exit-btn" data-action="exitContext()">
                 <svg width="16" height="16" fill="none" viewBox="0 0 16 16"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
             <div class="cx-header-mid">
@@ -1884,7 +1877,7 @@
                     <div class="cx-card-eyebrow">
                         <span class="cx-eyebrow-dot"></span> Boşluğu Doldur
                     </div>
-                    <button id="ctx-regen-btn" class="cx-regen-btn" onclick="ctxRegenSentence()">
+                    <button id="ctx-regen-btn" class="cx-regen-btn" data-action="ctxRegenSentence()">
                         <svg width="12" height="12" fill="none" viewBox="0 0 16 16"><path d="M13.5 2.5A6.5 6.5 0 1 0 14 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M14 2.5V6h-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         Yeni cümle
                     </button>
@@ -1904,8 +1897,8 @@
                     <input id="ctx-input" class="cx-input" type="text"
                         placeholder="İngilizce kelimeyi yaz..."
                         autocomplete="off" autocorrect="off" spellcheck="false"
-                        onkeydown="if(event.key==='Enter'){ctxAnswered?ctxNext():ctxCheck()}">
-                    <button class="cx-go-btn" onclick="ctxCheck()">
+                        data-keydown-enter="ctxAnswered?ctxNext():ctxCheck()">
+                    <button class="cx-go-btn" data-action="ctxCheck()">
                         <svg width="17" height="17" fill="none" viewBox="0 0 20 20"><path d="M4 10h12M11 5l5 5-5 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </button>
                 </div>
@@ -1913,8 +1906,8 @@
                 <div class="cx-feedback" id="ctx-feedback"></div>
 
                 <div class="cx-actions">
-                    <button class="cx-check-btn" id="ctx-check-btn" onclick="ctxCheck()">Kontrol Et</button>
-                    <button class="cx-next-btn" id="ctx-next-btn" style="display:none;" onclick="ctxNext()">
+                    <button class="cx-check-btn" id="ctx-check-btn" data-action="ctxCheck()">Kontrol Et</button>
+                    <button class="cx-next-btn" id="ctx-next-btn" style="display:none;" data-action="ctxNext()">
                         Sonraki
                         <svg width="13" height="13" fill="none" viewBox="0 0 16 16"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </button>
@@ -1928,7 +1921,7 @@
 
         <!-- ══ TOP BAR ══ -->
         <div class="poku-topbar">
-            <button class="poku-back-btn" onclick="showPage('paragraf-liste-page')">
+            <button class="poku-back-btn" data-action="showPage('paragraf-liste-page')">
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                     <path d="M11 14L6 9l5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
@@ -1938,7 +1931,7 @@
                 <div class="poku-topbar-hints">
                     <span aria-hidden="true" class="poku-hint-chip">🔴 Kelimeye hover → anlam</span>
                     <span aria-hidden="true" class="poku-hint-chip">🔍 Cümleye tıkla → Grammar X-Ray</span>
-                    <button id="translate-mode-btn" onclick="toggleTranslateMode()" class="poku-translate-btn">
+                    <button id="translate-mode-btn" data-action="toggleTranslateMode()" class="poku-translate-btn">
                         🌐 Çeviri: Kapalı
                     </button>
                 </div>
@@ -1961,7 +1954,7 @@
                 <div id="p-grammar-panel" class="p-grammar-panel" style="display:none; margin-top:16px;">
                     <div class="p-grammar-header">
                         <span>🔍 Grammar X-Ray</span>
-                        <button onclick="document.getElementById('p-grammar-panel').style.display='none'; document.querySelectorAll('.p-sentence.psa').forEach(s=>s.classList.remove('psa'))" class="p-grammar-close">✕</button>
+                        <button data-action="document.getElementById('p-grammar-panel').style.display='none'; document.querySelectorAll('.p-sentence.psa').forEach(s=>s.classList.remove('psa'))" class="p-grammar-close">✕</button>
                     </div>
                     <div id="p-grammar-content" class="p-grammar-content">
                         <div class="p-grammar-loading">⏳ Analiz ediliyor...</div>
@@ -1973,7 +1966,7 @@
                     <div id="p-ydt-saved-section" style="display:none; margin-bottom:14px;">
                         <div id="p-ydt-saved-questions"></div>
                     </div>
-                    <button class="p-ydt-gen-btn" id="p-ydt-gen-btn" onclick="generateYDTQuestions()">
+                    <button class="p-ydt-gen-btn" id="p-ydt-gen-btn" data-action="generateYDTQuestions()">
                         🎯 Bu paragraftan YDT sorusu üret
                     </button>
                     <div id="p-ydt-panel" style="display:none; margin-top:14px;">
@@ -2067,7 +2060,7 @@
             <div class="profil-gh-top">
                 <img id="profil-gh-photo" class="profil-gh-photo"
                      src="" alt="Profil" style="display:none;"
-                     onerror="this.style.display='none';document.getElementById('profil-gh-photo-placeholder').style.display='flex';">
+                     data-error="this.style.display='none';document.getElementById('profil-gh-photo-placeholder').style.display='flex';">
                 <div id="profil-gh-photo-placeholder" class="profil-gh-photo-placeholder">🎓</div>
                 <div class="profil-gh-info">
                     <div class="profil-gh-greeting">
@@ -2077,7 +2070,7 @@
                     <div id="profil-gh-email" class="profil-gh-email">—</div>
                     <div class="profil-gh-badge">🔒 Veriler güvende · Google ile giriş</div>
                 </div>
-                <button class="profil-gh-logout" onclick="window.AuthModule ? window.AuthModule.authSignOut() : ydtSignOut()">
+                <button class="profil-gh-logout" data-action="window.AuthModule ? window.AuthModule.authSignOut() : ydtSignOut()">
                     Çıkış
                 </button>
             </div>
@@ -2183,19 +2176,19 @@
             📌 Bugün Ne Çalışmak İstersin?
         </div>
         <div class="profil-feature-cards">
-            <div class="profil-feat-card" onclick="startQuizFromNav()">
+            <div class="profil-feat-card" data-action="startQuizFromNav()">
                 <div class="profil-feat-icon">📖</div>
                 <div class="profil-feat-name">Kelime</div>
                 <div class="profil-feat-why">YDT'de her 3 sorudan biri kelime bilgisi ölçer. Günde 20 kelime öğren, sınav gününe hazır gel.</div>
                 <span class="profil-feat-cta">Başla →</span>
             </div>
-            <div class="profil-feat-card" onclick="openGrammarSection('overview')">
+            <div class="profil-feat-card" data-action="openGrammarSection('overview')">
                 <div class="profil-feat-icon">🔤</div>
                 <div class="profil-feat-name">Gramer</div>
                 <div class="profil-feat-why">Tenses, passive, conditionals — YDT'nin temel gramer kalıplarını interaktif modüllerle pekiştir.</div>
                 <span class="profil-feat-cta">Başla →</span>
             </div>
-            <div class="profil-feat-card" onclick="showParagrafListesi()">
+            <div class="profil-feat-card" data-action="showParagrafListesi()">
                 <div class="profil-feat-icon">🤖</div>
                 <div class="profil-feat-name">AI Paragraf</div>
                 <div class="profil-feat-why">Yapay zeka destekli okuma parçaları. Gerçek YDT formatında sorularla anlama hızını artır.</div>
@@ -2212,16 +2205,16 @@
             <input id="profil-goal-inp" type="text" placeholder="Örn: YDT'de 90+ almak" style="margin-bottom:10px;">
             <label style="font-size:.75rem;font-weight:700;color:var(--ink2);margin-bottom:6px;display:block;">Avatar Seç</label>
             <div class="avatar-picker">
-                <button class="avatar-opt selected" data-av="🎓" onclick="selectAvatar(this)">🎓</button>
-                <button class="avatar-opt" data-av="🦁" onclick="selectAvatar(this)">🦁</button>
-                <button class="avatar-opt" data-av="🦊" onclick="selectAvatar(this)">🦊</button>
-                <button class="avatar-opt" data-av="🐺" onclick="selectAvatar(this)">🐺</button>
-                <button class="avatar-opt" data-av="🦅" onclick="selectAvatar(this)">🦅</button>
-                <button class="avatar-opt" data-av="🧠" onclick="selectAvatar(this)">🧠</button>
-                <button class="avatar-opt" data-av="🚀" onclick="selectAvatar(this)">🚀</button>
-                <button class="avatar-opt" data-av="⚡" onclick="selectAvatar(this)">⚡</button>
+                <button class="avatar-opt selected" data-av="🎓" data-action="selectAvatar(this)">🎓</button>
+                <button class="avatar-opt" data-av="🦁" data-action="selectAvatar(this)">🦁</button>
+                <button class="avatar-opt" data-av="🦊" data-action="selectAvatar(this)">🦊</button>
+                <button class="avatar-opt" data-av="🐺" data-action="selectAvatar(this)">🐺</button>
+                <button class="avatar-opt" data-av="🦅" data-action="selectAvatar(this)">🦅</button>
+                <button class="avatar-opt" data-av="🧠" data-action="selectAvatar(this)">🧠</button>
+                <button class="avatar-opt" data-av="🚀" data-action="selectAvatar(this)">🚀</button>
+                <button class="avatar-opt" data-av="⚡" data-action="selectAvatar(this)">⚡</button>
             </div>
-            <button id="profil-save-btn" class="btn" onclick="saveProfilInfo()" style="margin-top:10px;">💾 Kaydet</button>
+            <button id="profil-save-btn" class="btn" data-action="saveProfilInfo()" style="margin-top:10px;">💾 Kaydet</button>
         </div>
 
         <!-- Rozetler -->
@@ -2285,7 +2278,7 @@
 
         <!-- El ile Sync -->
         <div style="text-align:center; margin-top:16px;">
-            <button onclick="window.AuthModule && window.AuthModule.syncNow()"
+            <button data-action="window.AuthModule && window.AuthModule.syncNow()"
                 style="background:transparent;border:1.5px solid var(--border);border-radius:12px;
                        padding:9px 20px;font-size:.78rem;font-weight:700;color:var(--ink3);cursor:pointer;">
                 ☁️ Şimdi Senkronize Et
@@ -2311,8 +2304,8 @@
             </div>
 
             <div class="ukm-tabs">
-                <button class="ukm-tab active" onclick="ukmTab('lists')" id="ukm-tab-lists">📋 Listelerim</button>
-                <button class="ukm-tab" onclick="ukmTab('add')"   id="ukm-tab-add">➕ Kelime Ekle</button>
+                <button class="ukm-tab active" data-action="ukmTab('lists')" id="ukm-tab-lists">📋 Listelerim</button>
+                <button class="ukm-tab" data-action="ukmTab('add')"   id="ukm-tab-add">➕ Kelime Ekle</button>
             </div>
 
             <!-- TAB: LİSTELERİM -->
@@ -2322,7 +2315,7 @@
                 </div>
                 <div class="ukm-new-list">
                     <input type="text" id="ukm-new-name" class="ukm-input" placeholder="Yeni liste adı..." maxlength="40">
-                    <button class="ukm-btn ukm-btn-primary" onclick="ukmCreateList()" id="ukm-create-btn">Oluştur</button>
+                    <button class="ukm-btn ukm-btn-primary" data-action="ukmCreateList()" id="ukm-create-btn">Oluştur</button>
                 </div>
                 <div id="ukm-lists-container">
                     <div class="ukm-empty">Henüz kişisel listeniz yok.<br>Yukarıdan yeni bir liste oluşturun.</div>
@@ -2332,7 +2325,7 @@
             <!-- TAB: KELİME EKLE -->
             <div class="ukm-panel" id="ukm-panel-add">
                 <div class="ukm-list-row">
-                    <select id="ukm-target-list" class="ukm-select" onchange="ukmLoadWordList()">
+                    <select id="ukm-target-list" class="ukm-select" data-change="ukmLoadWordList()">
                         <option value="">— Liste seçin —</option>
                     </select>
                     <span id="ukm-word-count-badge" style="font-size:.7rem;font-weight:700;color:var(--ink3);white-space:nowrap;">0 / 20</span>
@@ -2344,12 +2337,12 @@
                         <span style="margin-left:auto;font-size:.65rem;color:var(--ink3);font-weight:600;">Dictionary API + AI Türkçe</span>
                     </div>
                     <div class="ukm-word-row">
-                        <input type="text" id="ukm-eng" class="ukm-input" placeholder="İngilizce kelime..." style="flex:1.2" oninput="ukmClearPreview()">
+                        <input type="text" id="ukm-eng" class="ukm-input" placeholder="İngilizce kelime..." style="flex:1.2" data-input="ukmClearPreview()">
                         <input type="text" id="ukm-tr"  class="ukm-input" placeholder="Türkçe anlam (opsiyonel)" style="flex:1">
                     </div>
                     <div class="ukm-word-row">
-                        <button class="ukm-btn ukm-btn-primary" onclick="ukmFetchAI()" id="ukm-ai-btn" style="flex:1">🔍 Sözlükten Getir</button>
-                        <button class="ukm-btn ukm-btn-ghost"   onclick="ukmAddManual()" id="ukm-manual-btn" style="flex:1">+ Manuel Ekle</button>
+                        <button class="ukm-btn ukm-btn-primary" data-action="ukmFetchAI()" id="ukm-ai-btn" style="flex:1">🔍 Sözlükten Getir</button>
+                        <button class="ukm-btn ukm-btn-ghost"   data-action="ukmAddManual()" id="ukm-manual-btn" style="flex:1">+ Manuel Ekle</button>
                     </div>
                     <div class="ukm-ai-loading" id="ukm-ai-loading">Sözlükten bilgiler çekiliyor…</div>
                 </div>
@@ -2360,8 +2353,8 @@
                     <div class="ukm-preview-tr"  id="ukm-preview-tr">—</div>
                     <div class="ukm-preview-meta" id="ukm-preview-meta"></div>
                     <div class="ukm-preview-actions">
-                        <button class="ukm-btn ukm-btn-primary" onclick="ukmConfirmAdd()" style="flex:1">✅ Listeye Ekle</button>
-                        <button class="ukm-btn ukm-btn-ghost"   onclick="ukmClearPreview()" style="flex:0.6">İptal</button>
+                        <button class="ukm-btn ukm-btn-primary" data-action="ukmConfirmAdd()" style="flex:1">✅ Listeye Ekle</button>
+                        <button class="ukm-btn ukm-btn-ghost"   data-action="ukmClearPreview()" style="flex:0.6">İptal</button>
                     </div>
                 </div>
 
@@ -2381,1206 +2374,10 @@
 
 </div>
 
-<!-- ── Global fonksiyonlar: onclick="" attribute'larından erişilebilir ── -->
-<script>
-function sbToggleCollapse() {
-    const sb = document.getElementById('desktop-sidebar');
-    if (!sb) return;
-    const collapsed = sb.classList.toggle('sb-collapsed');
-    localStorage.setItem('ydt_sb_collapsed', collapsed ? '1' : '0');
-}
-function sbToggleGrammar() {
-    const btn  = document.getElementById('sb-grammar-toggle-main');
-    const list = document.getElementById('sb-grammar-list-main');
-    if (!btn || !list) return;
-    const open = btn.getAttribute('aria-expanded') === 'true';
-    btn.setAttribute('aria-expanded', String(!open));
-    list.setAttribute('aria-hidden',  String(open));
-    list.classList.toggle('sb-grammar-list--open', !open);
-}
-function sbToggleGrammarMain() { sbToggleGrammar(); }
-function mobToggleGrammar() {
-    const btn  = document.getElementById('di-grammar-toggle-main');
-    const list = document.getElementById('di-grammar-list-main');
-    if (!btn || !list) return;
-    const open = btn.getAttribute('aria-expanded') === 'true';
-    btn.setAttribute('aria-expanded', String(!open));
-    list.setAttribute('aria-hidden',  String(open));
-    list.classList.toggle('mob-grammar-list--open', !open);
-}
-function mobToggleGrammarMain() { mobToggleGrammar(); }
-(function() {
-    if (localStorage.getItem('ydt_sb_collapsed') === '1') {
-        const sb = document.getElementById('desktop-sidebar');
-        if (sb) sb.classList.add('sb-collapsed');
-    }
-})();
-</script>
+<!-- ── Global fonksiyonlar: [data-action] delegation ile erişilebilir (ydt-delegation.js) ── -->
+<!-- ydtui.js: sbToggleCollapse/sbToggleGrammar/mobToggleGrammar buraya taşındı -->
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    const firebaseConfig = {
-        apiKey: "AIzaSyC94N6Y8hxXmpFLrK6TvgVP4k-F9N6qX8A",
-        authDomain: "ydt-master.firebaseapp.com",
-        projectId: "ydt-master",
-        storageBucket: "ydt-master.firebasestorage.app",
-        messagingSenderId: "674787283521",
-        appId: "1:674787283521:web:fccca6b20e174f9e79ecc0"
-    };
-
-    /* ── Firestore Security Rules (Firebase Console > Firestore > Rules) ──
-       Aşağıdaki kuralları Firebase Console'da uygulayın:
-
-       rules_version = '2';
-       service cloud.firestore {
-         match /databases/{database}/documents {
-
-           // Kullanıcı kendi dökümanına ve subcollection'larına erişebilir
-           match /users/{userId} {
-             allow read, write: if request.auth != null && request.auth.uid == userId;
-
-             match /lists/{listId} {
-               allow read, write: if request.auth != null && request.auth.uid == userId;
-             }
-             match /arsiv/{arsivId} {
-               allow read, write: if request.auth != null && request.auth.uid == userId;
-             }
-             match /content/{contentId} {
-               allow read, write: if request.auth != null && request.auth.uid == userId;
-             }
-           }
-
-           // Paylaşımlı içerik: herkes okur, sadece admin custom claim'i olanlar yazar
-           // Firebase Console > Firestore Rules > admin custom claim kontrolü:
-           // allow write: if request.auth != null && request.auth.token.admin == true;
-           match /shared/{docId} {
-             allow read: if true;
-             allow write: if request.auth != null && request.auth.token.admin == true;
-           }
-         }
-       }
-       ── */
-
-    const firebaseApp = initializeApp(firebaseConfig);
-    let syncTimeout = null;
-
-    function setSyncStatus(s) {
-        const map = {
-            idle:    { color: '#aaa',    text: 'Yerel' },
-            syncing: { color: '#f39c12', text: 'Senkronize ediliyor...' },
-            ok:      { color: '#2ecc71', text: 'Senkronize ✓' },
-            error:   { color: '#e74c3c', text: 'Bağlantı hatası' }
-        };
-        ['sync-dot', 'sync-dot-admin', 'sync-dot-drawer', 'sync-dot-mob'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.style.background = map[s].color;
-        });
-        ['sync-label', 'sync-lbl-drawer', 'sync-lbl-mob'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.innerText = map[s].text;
-        });
-    }
-
-    window._saveData = function () {
-        const uid = window._currentUser?.uid || 'guest';
-        localStorage.setItem(`ydt_${uid}_all_data`, JSON.stringify(window.allData));
-        localStorage.setItem('ydt_all_data', JSON.stringify(window.allData));
-
-        // ── Tüm yerel verileri localStorage'a yaz ──
-        const _ls = (k, v) => { try { if (v !== undefined) localStorage.setItem(k, JSON.stringify(v)); } catch(e){} };
-        _ls('ydt_paragraf_sorular',  window.paragrafSorular);
-        _ls('ydt_ai_arsiv',          window.aiArsiv);
-        _ls('ydt_ai_pasaj_arsiv',    window.aiPasajArsiv);
-        _ls('ydt_gramer_arsiv',      window.aiGramerArsiv);
-        _ls('ydt_cloze_arsiv',       window.aiClozeArsiv);
-        _ls('ydt_yakin_arsiv',       window.aiYakinArsiv);
-        _ls('ydt_diyalog_arsiv',     window.aiDiyalogArsiv);
-        _ls('ydt_durum_arsiv',       window.aiDurumArsiv);
-        _ls('ydt_paracom_arsiv',     window.aiParaComArsiv);
-        _ls('ydt_paraboz_arsiv',     window.aiParaBozArsiv);
-        _ls('ydt_paragraflar',       window.paragraflar);
-        _ls('ydt_badges',            window.badges);
-        _ls('ydt_profile',           window.userProfile);
-        // gr_scores, grammar_scores, perf_hist, streak, daily — motor.js zaten yazıyor
-        saveToFirebase();
-    };
-    // YDT namespace alias — window._saveData ile senkron kalır
-    if (window.YDT) window.YDT.save = window._saveData;
-
-    // ════════════════════════════════════════════════════════════════════
-    // OFFLINE SYNC QUEUE — internet kesilince değişiklikler kaybolmasın
-    // ════════════════════════════════════════════════════════════════════
-    const PENDING_SYNC_KEY = 'ydt_pending_sync';
-    let _syncRetryTimer = null;
-
-    /** Bekleyen sync'i localStorage'a işaretle */
-    function _markPendingSync() {
-        try { localStorage.setItem(PENDING_SYNC_KEY, String(Date.now())); } catch(_) {}
-    }
-    /** Bekleyen sync bayrağını temizle */
-    function _clearPendingSync() {
-        try { localStorage.removeItem(PENDING_SYNC_KEY); } catch(_) {}
-    }
-    /** Bekleyen sync var mı? */
-    function _hasPendingSync() {
-        return !!localStorage.getItem(PENDING_SYNC_KEY);
-    }
-
-    /**
-     * Çevrimiçi olunca otomatik sync yap
-     * Sayfa açıkken internet kesilip tekrar geldiğinde çağrılır
-     */
-    async function _onNetworkRestore() {
-        const uid = window._currentUser?.uid;
-        if (!uid || !_hasPendingSync()) return;
-        console.log('[YDT Sync] Bağlantı geri geldi — bekleyen sync gönderiliyor…');
-        setSyncStatus('syncing');
-        if (typeof showAIToast === 'function') showAIToast('☁️ Bağlantı sağlandı, veriler senkronize ediliyor…', 'info', 3000);
-        try {
-            if (window.AuthModule && typeof window.AuthModule.syncNow === 'function') {
-                await window.AuthModule.syncNow();
-            }
-            _clearPendingSync();
-            setSyncStatus('ok');
-        } catch(e) {
-            console.warn('[YDT Sync] Restore sync hatası:', e.message);
-            setSyncStatus('error');
-        }
-    }
-
-    // Ağ event listener'ları — sadece bir kez bağla
-    if (!window._ytdNetworkListenersAdded) {
-        window.addEventListener('online',  _onNetworkRestore);
-        window.addEventListener('offline', () => {
-            setSyncStatus('error');
-            if (typeof showAIToast === 'function') showAIToast('📴 İnternet bağlantısı kesildi. Veriler yerel kayıt edilecek.', 'warn', 5000);
-        });
-        window._ytdNetworkListenersAdded = true;
-    }
-
-    function saveToFirebase() {
-        // Artık Firestore üzerinden _saveUserData() kullanıyoruz.
-        // Bu fonksiyon yalnızca window.AuthModule.syncNow() çağrısıyla tetiklenir.
-        const uid = window._currentUser?.uid;
-        if (!uid) return;
-
-        // Çevrimdışıysa bekleyen sync olarak işaretle
-        if (!navigator.onLine) {
-            _markPendingSync();
-            setSyncStatus('error');
-            return;
-        }
-
-        _markPendingSync(); // Sync tamamlanana kadar işaretli kalsın
-        clearTimeout(syncTimeout);
-        syncTimeout = setTimeout(async () => {
-            if (window.AuthModule && typeof window.AuthModule.syncNow === 'function') {
-                try {
-                    await window.AuthModule.syncNow();
-                    _clearPendingSync(); // Başarılı → bayrağı kaldır
-                } catch(e) {
-                    console.warn('[YDT Sync] saveToFirebase hatası:', e.message);
-                    // Bayrak kalır — online event tetiklenince tekrar denenecek
-                }
-            }
-        }, 800);
-    }
-
-    async function initData() {
-        // ── Sayfa açılışında sadece localStorage'dan yükle ──────────────────
-        // Auth durumu henüz belli değil; Firebase'e gidersek rules hatası
-        // "Bağlantı hatası" gösterir. Gerçek Firebase sync'i
-        // onAuthStateChanged → _loadUserData() / _saveUserData() üstleniyor.
-        document.getElementById('loading-overlay').style.display = 'flex';
-        // Her anahtar bağımsız try/catch ile sarılı — biri bozuk olursa diğerleri çökmez
-        try {
-            const raw = localStorage.getItem('ydt_all_data');
-            if (raw) window.allData = { ...(window.allData || {}), ...JSON.parse(raw) };
-        } catch(e) {
-            console.warn('[initData] ydt_all_data parse hatası, sıfırlandı:', e.message);
-            localStorage.removeItem('ydt_all_data');
-        }
-        try {
-            const rawP = localStorage.getItem('ydt_paragraf_sorular');
-            if (rawP) window.paragrafSorular = JSON.parse(rawP);
-        } catch(e) {
-            console.warn('[initData] ydt_paragraf_sorular parse hatası, sıfırlandı:', e.message);
-            window.paragrafSorular = {};
-            localStorage.removeItem('ydt_paragraf_sorular');
-        }
-        try {
-            const rawA = localStorage.getItem('ydt_ai_arsiv');
-            if (rawA) window.aiArsiv = JSON.parse(rawA);
-        } catch(e) {
-            console.warn('[initData] ydt_ai_arsiv parse hatası, sıfırlandı:', e.message);
-            localStorage.removeItem('ydt_ai_arsiv');
-        }
-        setSyncStatus('idle');
-        document.getElementById('loading-overlay').style.display = 'none';
-        if (typeof updateSelectors    === 'function') updateSelectors();
-        if (typeof updateIndexStats   === 'function') updateIndexStats();
-        if (typeof updateDailyGoalBar === 'function') updateDailyGoalBar();
-    }
-
-    window.saveToFirebase = saveToFirebase;
-    initData();
-
-    // ════════════════════════════════════════════════════
-    // AUTH — Google Giriş / Çıkış
-    // ════════════════════════════════════════════════════
-    const {
-        initializeAuth,
-        browserLocalPersistence,
-        indexedDBLocalPersistence,
-        browserPopupRedirectResolver,
-        GoogleAuthProvider,
-        signInWithPopup,
-        signInWithRedirect,
-        getRedirectResult,
-        signOut,
-        onAuthStateChanged
-    } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js");
-    const { getFirestore, doc, getDoc, setDoc, collection, getDocs, deleteDoc, writeBatch }
-        = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
-
-    /**
-     * initializeAuth — persistence zinciri [indexedDB, localStorage].
-     * Android Chrome ve bazı desktop tarayıcılarda COOP header'ı popup'ı bloke eder.
-     * Hem mobil hem desktop için signInWithRedirect kullanılır.
-     */
-    const auth = initializeAuth(firebaseApp, {
-        persistence: [indexedDBLocalPersistence, browserLocalPersistence],
-        popupRedirectResolver: browserPopupRedirectResolver,
-    });
-    const fsdb = getFirestore(firebaseApp);
-
-    // ── Admin modülleri için global Firestore referansları ────────────────
-    // admin.js ES module scope dışında olduğundan window üzerinden erişir.
-    window._fsdb   = fsdb;
-    window._doc    = doc;
-    window._setDoc = setDoc;
-    window._getDoc = getDoc;
-    // ──────────────────────────────────────────────────────────────────────
-
-    let authTimerInterval = null;
-    let authSaveInterval  = null;
-
-    function _authSyncBar(state, text) {
-        const bar = document.getElementById('auth-sync-bar');
-        if (!bar) return;
-        bar.className = 'auth-sync-bar ' + state;
-        const span = bar.querySelector('.auth-sync-text');
-        if (span) span.textContent = text;
-    }
-
-    function _formatMinutes(mins) {
-        const m = Math.round(mins) || 0;
-        if (m < 60) return m + ' dk';
-        const h = Math.floor(m / 60), r = m % 60;
-        return r > 0 ? h + 's ' + r + 'dk' : h + 's';
-    }
-
-    function _updateAuthStats() {
-        if (typeof window.stats === 'undefined') return;
-        const total   = stats.totalAnswers   || 0;
-        const correct = stats.correctAnswers || 0;
-        const acc     = total > 0 ? Math.round((correct / total) * 100) : 0;
-        const el1 = document.getElementById('auth-stat-total');
-        const el2 = document.getElementById('auth-stat-accuracy');
-        const el3 = document.getElementById('auth-stat-time');
-        if (el1) el1.textContent = total;
-        if (el2) el2.textContent = acc + '%';
-        if (el3) el3.textContent = _formatMinutes(stats.totalMinutes || 0);
-        _updateProfilWidgets();
-    }
-
-    function _updateProfilWidgets() {
-        if (typeof window.stats === 'undefined') return;
-        const minutes = Math.round(stats.totalMinutes) || 0;
-        const correct = stats.correctAnswers || 0;
-        const xp = correct * 10 + Math.floor(minutes / 5) * 5;
-        const level = Math.floor(xp / 500) + 1;
-        const xpInLevel = xp % 500;
-        const xpPct = Math.min(100, Math.round((xpInLevel / 500) * 100));
-        const lvlEl = document.getElementById('pp-level-num');
-        const xpEl  = document.getElementById('pp-xp-val');
-        const xpBar = document.getElementById('pp-xp-bar');
-        if (lvlEl) lvlEl.textContent = level;
-        if (xpEl)  xpEl.textContent  = xpInLevel + ' / 500 XP';
-        if (xpBar) xpBar.style.width = xpPct + '%';
-
-        const todayKey = 'ydt_daily_' + new Date().toISOString().slice(0,10);
-        const todayAnswers = parseInt(localStorage.getItem(todayKey) || '0');
-        const dailyGoal = 20;
-        const dailyPct = Math.min(100, Math.round((todayAnswers / dailyGoal) * 100));
-        const dEl  = document.getElementById('pp-daily-val');
-        const dBar = document.getElementById('pp-daily-bar');
-        const dLbl = document.getElementById('pp-daily-lbl');
-        if (dEl)  dEl.textContent  = todayAnswers + ' / ' + dailyGoal + ' soru';
-        if (dBar) dBar.style.width = dailyPct + '%';
-        if (dLbl) dLbl.textContent = dailyPct >= 100 ? '🎉 Hedefe ulaştın!' : '%' + dailyPct + ' tamamlandı';
-
-        _renderActivityCalendar();
-
-        const msgs = [
-            "Her gün 20 kelime = yılda 7.300 kelime. Başla! 💪",
-            "YDT'ye hazırlanmak bir maraton, sprint değil. 🏃",
-            "Bugün çalışmak, yarın özgüven demek. ✨",
-            "Küçük adımlar, büyük başarılar getirir. 🚀",
-            "Düzenlilik, yeteneği her zaman yener. 🔥",
-            "Beyin bir kas gibidir — egzersiz yapmazsan zayıflar. 🧠",
-            "En iyi zaman bugün. İkinci en iyi zaman da şimdi. ⚡",
-        ];
-        const mEl = document.getElementById('pp-motivation-text');
-        if (mEl) mEl.textContent = msgs[new Date().getDay() % msgs.length];
-    }
-
-    function _renderActivityCalendar() {
-        const cal = document.getElementById('pp-calendar');
-        if (!cal) return;
-        cal.innerHTML = '';
-        const today = new Date();
-        for (let i = 27; i >= 0; i--) {
-            const d = new Date(today);
-            d.setDate(today.getDate() - i);
-            const key = 'ydt_daily_' + d.toISOString().slice(0,10);
-            const count = parseInt(localStorage.getItem(key) || '0');
-            const cell = document.createElement('div');
-            cell.className = 'pp-cal-cell';
-            cell.title = d.toLocaleDateString('tr-TR') + ': ' + count + ' soru';
-            cell.dataset.intensity = count === 0 ? 0 : count < 5 ? 1 : count < 15 ? 2 : count < 25 ? 3 : 4;
-            cal.appendChild(cell);
-        }
-    }
-
-    function _updateProfilUI(user) {
-        // Hero switching — giriş yapılmışsa auth hero, yoksa guest hero
-        const heroAuth  = document.getElementById('profil-hero-auth');
-        const heroGuest = document.getElementById('profil-hero-guest');
-        if (user) {
-            if (heroAuth)  heroAuth.style.display  = 'block';
-            if (heroGuest) heroGuest.style.display = 'none';
-        } else {
-            if (heroAuth)  heroAuth.style.display  = 'none';
-            if (heroGuest) heroGuest.style.display = 'block';
-            // Misafir giriş butonu
-            const guestBtn = document.getElementById('profil-guest-signin-btn');
-            if (guestBtn && !guestBtn._bound) {
-                guestBtn._bound = true;
-                guestBtn.addEventListener('click', _authSignIn);
-            }
-            return; // Misafir için profil alanları doldurma
-        }
-
-        const photo = document.getElementById('profil-gh-photo');
-        const placeholder = document.getElementById('profil-gh-photo-placeholder');
-        if (photo && user.photoURL) {
-            photo.src = user.photoURL;
-            photo.style.display = 'block';
-            if (placeholder) placeholder.style.display = 'none';
-        }
-        const displayName = user.displayName || 'Kullanıcı';
-        const firstName   = displayName.split(' ')[0];
-        const greetEl = document.getElementById('profil-gh-greeting-name');
-        const nameEl  = document.getElementById('profil-gh-name');
-        const emailEl = document.getElementById('profil-gh-email');
-        if (greetEl) greetEl.textContent = firstName;
-        if (nameEl)  nameEl.textContent  = displayName;
-        if (emailEl) emailEl.textContent = user.email || '';
-        _updateAuthStats();
-    }
-
-    async function _loadUserData(uid) {
-        try {
-            _authSyncBar('syncing', 'Veriler yükleniyor…');
-            window.stats   = { totalAnswers: 0, correctAnswers: 0, totalMinutes: 0 };
-            window.allData = {};
-            _updateAuthStats();
-
-            const _lsSet = (k, v) => { try { if (v !== null && v !== undefined) localStorage.setItem(k, JSON.stringify(v)); } catch(e){} };
-
-            // ── Ana döküman ────────────────────────────────────────────────
-            const snap = await getDoc(doc(fsdb, 'users', uid));
-            if (snap.exists()) {
-                const data = snap.data();
-                if (data.stats)   { window.stats = { ...data.stats }; if (isNaN(stats.totalMinutes)) stats.totalMinutes = 0; localStorage.setItem(`ydt_${uid}_stats`, JSON.stringify(window.stats)); }
-                if (data.grScores)  { _lsSet('ydt_gr_scores', data.grScores); _lsSet('ydt_grammar_scores', data.grScores); }
-                if (data.perfHist)  _lsSet('ydt_perf_hist', data.perfHist);
-                if (data.badges)    { _lsSet('ydt_badges', data.badges); window.badges = data.badges; }
-                if (data.profile)   { _lsSet('ydt_profile', data.profile); window.userProfile = data.profile; }
-                if (data.streak)    localStorage.setItem('ydt_streak',   String(data.streak));
-                if (data.lastDay)   localStorage.setItem('ydt_last_day', data.lastDay);
-                if (data.ydtai_tot) localStorage.setItem('ydtai_tot', String(data.ydtai_tot));
-                if (data.ydtai_cor) localStorage.setItem('ydtai_cor', String(data.ydtai_cor));
-                if (data.ydtai_wrg) localStorage.setItem('ydtai_wrg', String(data.ydtai_wrg));
-                ['ydt_gemini_api_key','ydt_groq_api_key','ydt_openrouter_api_key','ydt_mistral_api_key'].forEach(k => {
-                    if (data[k]) localStorage.setItem(k, data[k]);
-                });
-            }
-
-            // ── Kelime listeleri — subcollection ────────────────────────────
-            try {
-                const listsSnap = await getDocs(collection(fsdb, 'users', uid, 'lists'));
-                if (!listsSnap.empty) {
-                    listsSnap.forEach(listDoc => {
-                        const d = listDoc.data();
-                        const name = d.displayName || listDoc.id;
-                        if (Array.isArray(d.words)) window.allData[name] = d.words;
-                    });
-                    _purgeAllDataLegacyLists(window.allData);
-                    localStorage.setItem(`ydt_${uid}_all_data`, JSON.stringify(window.allData));
-                    console.info(`[load] ${Object.keys(window.allData).length} liste yüklendi`);
-                } else {
-                    // Subcollection boş — eski format fallback
-                    const raw = localStorage.getItem(`ydt_${uid}_all_data`);
-                    if (raw) { try { window.allData = JSON.parse(raw); _purgeAllDataLegacyLists(window.allData); } catch(e){} }
-                }
-            } catch(e) {
-                console.warn('[load] Liste subcollection hatası:', e.message);
-                const raw = localStorage.getItem(`ydt_${uid}_all_data`);
-                if (raw) { try { window.allData = JSON.parse(raw); } catch(ex){} }
-            }
-
-            // ── AI Arşivleri — subcollection ────────────────────────────────
-            try {
-                const arsivMap = {
-                    kelime:'ydt_ai_arsiv', pasaj:'ydt_ai_pasaj_arsiv', gramer:'ydt_gramer_arsiv',
-                    cloze:'ydt_cloze_arsiv', yakin:'ydt_yakin_arsiv', diyalog:'ydt_diyalog_arsiv',
-                    durum:'ydt_durum_arsiv', paracom:'ydt_paracom_arsiv', paraboz:'ydt_paraboz_arsiv'
-                };
-                const winMap = {
-                    kelime:'aiArsiv', pasaj:'aiPasajArsiv', gramer:'aiGramerArsiv',
-                    cloze:'aiClozeArsiv', yakin:'aiYakinArsiv', diyalog:'aiDiyalogArsiv',
-                    durum:'aiDurumArsiv', paracom:'aiParaComArsiv', paraboz:'aiParaBozArsiv'
-                };
-                const arsivSnap = await getDocs(collection(fsdb, 'users', uid, 'arsiv'));
-                arsivSnap.forEach(d => {
-                    const tip = d.id;
-                    const items = d.data().items || [];
-                    if (arsivMap[tip]) _lsSet(arsivMap[tip], items);
-                    if (winMap[tip])   window[winMap[tip]] = items;
-                });
-            } catch(e) { console.warn('[load] Arşiv subcollection hatası:', e.message); }
-
-            // ── Paragraf & Sorular — subcollection ──────────────────────────
-            try {
-                const contentSnap = await getDocs(collection(fsdb, 'users', uid, 'content'));
-                contentSnap.forEach(d => {
-                    const id = d.id;
-                    if (id === 'paragraflar') {
-                        const items = d.data().items || [];
-                        window.paragraflar = items;
-                        _lsSet('ydt_paragraflar', items);
-                    } else if (id === 'paragrafSorular') {
-                        const data2 = d.data().data || {};
-                        window.paragrafSorular = data2;
-                        _lsSet('ydt_paragraf_sorular', data2);
-                    } else if (id.startsWith('bank_')) {
-                        const items = d.data().items || [];
-                        const cat = id.replace('bank_','');
-                        localStorage.setItem(`ydt_bank_${cat}`, JSON.stringify(items));
-                    }
-                });
-            } catch(e) { console.warn('[load] Content subcollection hatası:', e.message); }
-
-            // ── Stats fallback ───────────────────────────────────────────────
-            if (!stats.totalAnswers && !stats.totalMinutes) {
-                const rawST = localStorage.getItem(`ydt_${uid}_stats`) || localStorage.getItem('ydt_stats');
-                if (rawST) { try { const s = JSON.parse(rawST); if (s) { window.stats = s; if (isNaN(stats.totalMinutes)) stats.totalMinutes = 0; } } catch(e){} }
-            }
-
-            if (typeof updateSelectors    === 'function') updateSelectors();
-            if (typeof updateIndexStats   === 'function') updateIndexStats();
-            if (typeof updateDailyGoalBar === 'function') updateDailyGoalBar();
-            _updateAuthStats();
-            _authSyncBar('synced', 'Veriler yüklendi ✓');
-            setSyncStatus('ok');
-
-        } catch(e) {
-            console.warn('Firestore yükleme hatası:', e);
-            _authSyncBar('synced', 'Yerel veriler kullanılıyor');
-            setSyncStatus('idle');
-        }
-
-        // ── Paylaşımlı (admin) içerikleri yükle ──────────────────────────
-        // shared/content dökümanı: paragraflar + paragrafSorular + sharedLists
-        try {
-            const _lsSet2 = (k, v) => { try { if (v !== null && v !== undefined) localStorage.setItem(k, JSON.stringify(v)); } catch(e){} };
-            const sharedSnap = await getDoc(doc(fsdb, 'shared', 'content'));
-            if (sharedSnap.exists()) {
-                const sharedData = sharedSnap.data();
-
-                // ── Paragraflar ──────────────────────────────────────────────
-                if (Array.isArray(sharedData.paragraflar) && sharedData.paragraflar.length > 0) {
-                    const sharedPara = sharedData.paragraflar;
-                    const current = window.paragraflar || [];
-                    const sharedTitles = new Set(sharedPara.map(p => p.baslik));
-                    const personalExtra = current.filter(p => !sharedTitles.has(p.baslik));
-                    window.paragraflar = [...sharedPara, ...personalExtra];
-                    _lsSet2('ydt_paragraflar', window.paragraflar);
-                    console.log(`[shared] ${sharedPara.length} paylaşımlı paragraf yüklendi, ${personalExtra.length} kişisel ek`);
-                }
-
-                // ── Paragraf Soruları ────────────────────────────────────────
-                if (sharedData.paragrafSorular && typeof sharedData.paragrafSorular === 'object') {
-                    window.paragrafSorular = { ...sharedData.paragrafSorular, ...(window.paragrafSorular || {}) };
-                    _lsSet2('ydt_paragraf_sorular', window.paragrafSorular);
-                }
-
-                // ── Paylaşımlı Kelime Listeleri ──────────────────────────────
-                // Admin'in shared/content'e yüklediği listeler — tüm kullanıcılara merge edilir.
-                // Kullanıcının kendi ilerlemesi (errorCount, correctStreak) korunur — overwrite olmaz.
-                if (sharedData.sharedLists && typeof sharedData.sharedLists === 'object') {
-                    let mergeCount = 0;
-                    Object.entries(sharedData.sharedLists).forEach(([listName, words]) => {
-                        if (!Array.isArray(words) || words.length === 0) return;
-                        if (!window.allData[listName]) {
-                            // Liste yok — direkt ekle
-                            window.allData[listName] = words;
-                            mergeCount++;
-                        } else {
-                            // Liste var — sadece eksik kelimeleri ekle, mevcut kelimelerin progress'ini koru
-                            const existingEngSet = new Set(window.allData[listName].map(w => w.eng));
-                            const newWords = words.filter(w => !existingEngSet.has(w.eng));
-                            if (newWords.length > 0) {
-                                window.allData[listName] = [...window.allData[listName], ...newWords];
-                                mergeCount++;
-                            }
-                        }
-                    });
-                    if (mergeCount > 0) {
-                        // Merge edilen veriyi localStorage'a yaz
-                        const userKey = typeof getUserKey === 'function' ? getUserKey('all_data') : null;
-                        if (userKey) localStorage.setItem(userKey, JSON.stringify(window.allData));
-                        console.info(`[shared] ${mergeCount} kelime listesi merge edildi`);
-                    }
-                }
-
-                if (typeof window._populateParagrafListesi === 'function') window._populateParagrafListesi();
-            }
-        } catch(e) {
-            console.warn('[shared] Paylaşımlı içerik yüklenemedi:', e);
-        } finally {
-            document.dispatchEvent(new Event('ydtDataReady'));
-        }
-    }
-
-    // Firestore field adları '.', '#', '$', '[', ']' içeremez — temizle
-    function _fsCleanKey(k) { return String(k).replace(/[.#$\[\]]/g, '_'); }
-    function _fsCleanObj(obj) {
-        if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return obj;
-        const out = {};
-        Object.keys(obj).forEach(k => { out[_fsCleanKey(k)] = obj[k]; });
-        return out;
-    }
-
-    async function _saveUserData(uid) {
-        try {
-            _authSyncBar('syncing', 'Kaydediliyor…');
-            setSyncStatus('syncing');
-
-            const _lsGet = (k) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch(e){ return null; } };
-
-            // ── Küçük alanlar — ana döküman (users/{uid}) ──────────────────
-            const apiKeyData = {};
-            ['ydt_gemini_api_key','ydt_groq_api_key','ydt_openrouter_api_key','ydt_mistral_api_key'].forEach(k => {
-                const v = localStorage.getItem(k);
-                if (v) apiKeyData[k] = v;
-            });
-            const grScores = _lsGet('ydt_gr_scores') || _lsGet('ydt_grammar_scores') || {};
-            const perfHist = _lsGet('ydt_perf_hist') || [];
-            const badges   = _lsGet('ydt_badges')    || [];
-            const profile  = _lsGet('ydt_profile')   || {};
-            const streak   = parseInt(localStorage.getItem('ydt_streak')   || '0');
-            const lastDay  = localStorage.getItem('ydt_last_day') || '';
-            const ydtaiStats = {
-                ydtai_tot: parseInt(localStorage.getItem('ydtai_tot') || '0'),
-                ydtai_cor: parseInt(localStorage.getItem('ydtai_cor') || '0'),
-                ydtai_wrg: parseInt(localStorage.getItem('ydtai_wrg') || '0'),
-            };
-
-            // Ana döküman — sadece küçük alanlar
-            await setDoc(doc(fsdb, 'users', uid), {
-                stats:     typeof window.stats !== 'undefined' ? stats : {},
-                grScores, perfHist, badges, profile, streak, lastDay,
-                updatedAt: new Date().toISOString(),
-                ...ydtaiStats,
-                ...apiKeyData
-            }, { merge: true });
-
-            // ── Kelime listeleri — subcollection: users/{uid}/lists/{listAdı} ──
-            const currentAllData = typeof window.allData !== 'undefined' ? allData : {};
-            const batch = writeBatch(fsdb);
-            Object.keys(currentAllData).forEach(listName => {
-                const words = currentAllData[listName];
-                if (!Array.isArray(words) || words.length === 0) return;
-                const safeKey = _fsCleanKey(listName);
-                const listRef = doc(fsdb, 'users', uid, 'lists', safeKey);
-                batch.set(listRef, { displayName: listName, words: words, updatedAt: new Date().toISOString() });
-            });
-            await batch.commit();
-
-            // ── AI Arşivleri — subcollection: users/{uid}/arsiv/{tip} ──
-            const arsivMap = {
-                kelime:  window.aiArsiv        || _lsGet('ydt_ai_arsiv')       || [],
-                pasaj:   window.aiPasajArsiv   || _lsGet('ydt_ai_pasaj_arsiv') || [],
-                gramer:  window.aiGramerArsiv  || _lsGet('ydt_gramer_arsiv')   || [],
-                cloze:   window.aiClozeArsiv   || _lsGet('ydt_cloze_arsiv')    || [],
-                yakin:   window.aiYakinArsiv   || _lsGet('ydt_yakin_arsiv')    || [],
-                diyalog: window.aiDiyalogArsiv || _lsGet('ydt_diyalog_arsiv')  || [],
-                durum:   window.aiDurumArsiv   || _lsGet('ydt_durum_arsiv')    || [],
-                paracom: window.aiParaComArsiv || _lsGet('ydt_paracom_arsiv')  || [],
-                paraboz: window.aiParaBozArsiv || _lsGet('ydt_paraboz_arsiv')  || [],
-            };
-            const arsivBatch = writeBatch(fsdb);
-            Object.entries(arsivMap).forEach(([tip, arr]) => {
-                arsivBatch.set(doc(fsdb, 'users', uid, 'arsiv', tip),
-                    { items: arr, updatedAt: new Date().toISOString() });
-            });
-            await arsivBatch.commit();
-
-            // ── Paragraf & Sorular — subcollection: users/{uid}/content/{tip} ──
-            const paragraflarData     = window.paragraflar     || _lsGet('ydt_paragraflar')      || [];
-            const paragrafSorularData = window.paragrafSorular || _lsGet('ydt_paragraf_sorular') || {};
-            const contentBatch = writeBatch(fsdb);
-            contentBatch.set(doc(fsdb, 'users', uid, 'content', 'paragraflar'),
-                { items: paragraflarData, updatedAt: new Date().toISOString() });
-            contentBatch.set(doc(fsdb, 'users', uid, 'content', 'paragrafSorular'),
-                { data: paragrafSorularData, updatedAt: new Date().toISOString() });
-            await contentBatch.commit();
-
-            // ── Soru Bankaları — subcollection: users/{uid}/content/bank_{cat} ──
-            const bankBatch = writeBatch(fsdb);
-            ['paragraf','gramer','cloze','yakin','diyalog','paratam','durum','parabut'].forEach(cat => {
-                const v = _lsGet(`ydt_bank_${cat}`);
-                if (v && v.length) {
-                    bankBatch.set(doc(fsdb, 'users', uid, 'content', `bank_${cat}`),
-                        { items: v, updatedAt: new Date().toISOString() });
-                }
-            });
-            await bankBatch.commit();
-
-            // ── Admin: shared/content güncelle — custom claim kontrolü ───────────
-            let _isAdminForSync = false;
-            try {
-                const _tokenResult = await window._currentUser?.getIdTokenResult?.();
-                _isAdminForSync = _tokenResult?.claims?.admin === true;
-            } catch(_) {}
-            if (_isAdminForSync && paragraflarData.length > 0) {
-                try {
-                    await setDoc(doc(fsdb, 'shared', 'content'), {
-                        paragraflar:     paragraflarData,
-                        paragrafSorular: paragrafSorularData,
-                        updatedAt:       new Date().toISOString(),
-                        updatedBy:       uid
-                    }, { merge: true });
-                    console.log(`[shared] ${paragraflarData.length} paragraf shared/content'e yazıldı`);
-                } catch(sharedErr) {
-                    console.warn('[shared] Admin paylaşım yazma hatası:', sharedErr);
-                }
-            }
-
-            _authSyncBar('synced', 'Kaydedildi ✓');
-            setSyncStatus('ok');
-            localStorage.setItem(`ydt_${uid}_stats`,    JSON.stringify(window.stats || {}));
-            localStorage.setItem(`ydt_${uid}_all_data`, JSON.stringify(window.allData || {}));
-        } catch(e) {
-            console.warn('Firestore kayıt hatası:', e);
-            setSyncStatus('idle');
-            localStorage.setItem(`ydt_${uid}_stats`,    JSON.stringify(window.stats || {}));
-            localStorage.setItem(`ydt_${uid}_all_data`, JSON.stringify(window.allData || {}));
-        }
-    }
-
-    function _showLoginOverlay() {
-        if (document.getElementById('login-overlay')) return;
-        const overlay = document.createElement('div');
-        overlay.id = 'login-overlay';
-        overlay.innerHTML = `
-            <div class="lo-bg-layer" aria-hidden="true">
-                <div class="lo-orb lo-orb-1"></div>
-                <div class="lo-orb lo-orb-2"></div>
-                <div class="lo-orb lo-orb-3"></div>
-                <div class="lo-grid-lines"></div>
-            </div>
-            <div class="lo-card">
-                <!-- Üst logo + marka -->
-                <div class="lo-brand">
-                    <div class="lo-logo-wrap">
-                        <div class="lo-logo-ring"></div>
-                        <span class="lo-logo-icon" aria-hidden="true">🎓</span>
-                    </div>
-                    <div class="lo-brand-text">
-                        <span class="lo-brand-name">YDT Master Pro</span>
-                        <span class="lo-brand-tag">by Serkan Hoca</span>
-                    </div>
-                </div>
-
-                <!-- Başlık -->
-                <div class="lo-headline">
-                    <h1 class="lo-title">Kelime Ustası <span class="lo-title-accent">ol.</span></h1>
-                    <p class="lo-subtitle">Hafıza teknikleriyle kalıcı İngilizce öğrenme</p>
-                </div>
-
-                <!-- Stats bar — pasaj sayısı Firestore'dan dinamik okunur -->
-                <div class="lo-stats-row" aria-label="Uygulama istatistikleri">
-                    <div class="lo-stat">
-                        <span class="lo-stat-num">1300+</span>
-                        <span class="lo-stat-lbl">Kelime</span>
-                    </div>
-                    <div class="lo-stat-div" aria-hidden="true"></div>
-                    <div class="lo-stat">
-                        <span class="lo-stat-num" id="lo-stat-pasaj">…</span>
-                        <span class="lo-stat-lbl">Pasaj</span>
-                    </div>
-                    <div class="lo-stat-div" aria-hidden="true"></div>
-                    <div class="lo-stat">
-                        <span class="lo-stat-num">SM-2</span>
-                        <span class="lo-stat-lbl">Algoritma</span>
-                    </div>
-                </div>
-
-                <!-- Google giriş butonu -->
-                <button class="lo-btn-google" id="btn-google-signin" aria-label="Google hesabınla giriş yap">
-                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" width="20" height="20">
-                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
-                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                    </svg>
-                    <span>Google ile Giriş Yap</span>
-                    <span class="lo-btn-google-arrow" aria-hidden="true">→</span>
-                </button>
-
-                <!-- Fayda maddecikleri -->
-                <div class="lo-perks" aria-label="Giriş yapmanın avantajları">
-                    <div class="lo-perk">
-                        <span class="lo-perk-dot" aria-hidden="true"></span>
-                        <span>Her cihazda senkronize ilerleme</span>
-                    </div>
-                    <div class="lo-perk">
-                        <span class="lo-perk-dot" aria-hidden="true"></span>
-                        <span>Kişisel istatistik & streak takibi</span>
-                    </div>
-                    <div class="lo-perk">
-                        <span class="lo-perk-dot" aria-hidden="true"></span>
-                        <span>Admin'in paylaştığı tüm içeriklere erişim</span>
-                    </div>
-                </div>
-
-                <!-- Ayırıcı -->
-                <div class="lo-divider" aria-hidden="true"><span>ya da</span></div>
-
-                <!-- Misafir butonu -->
-                <button class="lo-btn-guest" id="btn-guest">
-                    Misafir olarak devam et
-                    <span class="lo-guest-note">İlerleme kaydedilmez</span>
-                </button>
-
-                <!-- Yasal not -->
-                <p class="lo-legal">Giriş yaparak <a href="#" class="lo-legal-link">Gizlilik Politikası</a>'nı kabul etmiş olursunuz.</p>
-            </div>`;
-
-        document.body.appendChild(overlay);
-
-        // Animasyon — kartı sahneye sok
-        requestAnimationFrame(() => overlay.classList.add('lo-ready'));
-
-        // Pasaj sayısını dinamik yükle — her zaman Firestore'dan taze veri çek.
-        // localStorage / window.paragraflar sadece Firestore erişilemezse fallback.
-        (async () => {
-            const el = document.getElementById('lo-stat-pasaj');
-            if (!el) return;
-
-            // Hemen yerel değeri göster (kullanıcı boş görmesin)
-            const _localCount = (() => {
-                if (Array.isArray(window.paragraflar) && window.paragraflar.length)
-                    return window.paragraflar.length;
-                try {
-                    const c = localStorage.getItem('ydt_paragraflar');
-                    const a = c ? JSON.parse(c) : null;
-                    return Array.isArray(a) ? a.length : 0;
-                } catch(_) { return 0; }
-            })();
-            if (_localCount > 0) el.textContent = _localCount;
-
-            // Firestore'dan her zaman taze sayıyı çek ve override et
-            try {
-                // Firestore modülleri henüz hazır değilse bekle (max 4sn)
-                if (!window._fsdb || !window._doc || !window._getDoc) {
-                    await new Promise((resolve) => {
-                        const _t0 = Date.now();
-                        const _poll = () => {
-                            if (window._fsdb && window._doc && window._getDoc) return resolve();
-                            if (Date.now() - _t0 > 4000) return resolve();
-                            setTimeout(_poll, 200);
-                        };
-                        _poll();
-                    });
-                }
-                if (!window._fsdb || !window._doc || !window._getDoc) return;
-
-                const snap = await window._getDoc(window._doc(window._fsdb, 'shared', 'content'));
-                if (snap.exists()) {
-                    const d = snap.data();
-                    if (Array.isArray(d.paragraflar) && d.paragraflar.length > 0) {
-                        el.textContent = d.paragraflar.length;
-                    }
-                }
-            } catch(e) {
-                console.warn('[lo-stat] Firestore pasaj sayısı alınamadı:', e.message);
-            }
-        })();
-
-        // Google giriş
-        document.getElementById('btn-google-signin').addEventListener('click', _authSignIn);
-
-        // Misafir girişi
-        document.getElementById('btn-guest').addEventListener('click', () => {
-            overlay.classList.add('lo-exit');
-            setTimeout(() => overlay.remove(), 380);
-
-            // Starter Pack yükle — misafir verisi
-            if (typeof loadUserScopedData === 'function') {
-                loadUserScopedData();
-            } else {
-                try {
-                    const raw = localStorage.getItem('ydt_guest_all_data') || localStorage.getItem('ydt_all_data');
-                    if (raw) window.allData = JSON.parse(raw);
-                } catch(e) { console.warn('[guest] parse hatası:', e.message); }
-                if (!window.allData || Object.keys(window.allData).length === 0) {
-                    if (typeof DEFAULT_VOCAB !== 'undefined') window.allData = { ...DEFAULT_VOCAB };
-                    else if (typeof YDT_STARTER_PACK !== 'undefined') window.allData = { ...YDT_STARTER_PACK };
-                }
-            }
-
-            // Misafir banner'ını göster — kayıt ol teşviki
-            setTimeout(_showGuestBanner, 800);
-
-            document.dispatchEvent(new Event('ydtDataReady'));
-        });
-    }
-
-    /* ── Auth Guard — misafir AI özelliklerine erişmeye çalışırsa ─────── */
-    /**
-     * Kullanıcı giriş yapmışsa fn() çalıştırır.
-     * Misafirse "Bu özellik için giriş gerekli" modal'ı gösterir.
-     * @param {Function} fn       — Çalıştırılacak fonksiyon
-     * @param {string}   label    — Özellik adı (modal başlığı için)
-     */
-    window._requireAuth = function(fn, label) {
-        if (window._currentUser) {
-            fn();
-        } else {
-            _showAuthRequiredModal(label || 'Bu özellik');
-        }
-    };
-
-    function _showAuthRequiredModal(featureName) {
-        if (document.getElementById('auth-required-modal')) return;
-        const modal = document.createElement('div');
-        modal.id = 'auth-required-modal';
-        modal.setAttribute('role', 'dialog');
-        modal.setAttribute('aria-modal', 'true');
-        modal.setAttribute('aria-label', 'Giriş Gerekli');
-        modal.innerHTML = `
-            <div class="arm-backdrop"></div>
-            <div class="arm-card">
-                <div class="arm-icon" aria-hidden="true">🔐</div>
-                <h2 class="arm-title">Giriş Gerekli</h2>
-                <p class="arm-desc">
-                    <strong>${featureName}</strong> için Google hesabınla giriş yapman gerekiyor.
-                    <br><span class="arm-sub">Veriler buluta kaydedilir, her cihazda erişebilirsin.</span>
-                </p>
-                <button class="arm-btn-google" id="arm-signin-btn">
-                    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
-                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                    </svg>
-                    Google ile Giriş Yap
-                </button>
-                <button class="arm-btn-cancel" id="arm-cancel-btn">Şimdi Değil</button>
-            </div>`;
-        document.body.appendChild(modal);
-        requestAnimationFrame(() => modal.classList.add('arm-visible'));
-
-        const close = () => {
-            modal.classList.remove('arm-visible');
-            setTimeout(() => modal.remove(), 280);
-        };
-
-        document.getElementById('arm-signin-btn').addEventListener('click', () => {
-            close();
-            // Mevcut AuthModule üzerinden giriş başlat
-            if (window.AuthModule && typeof window.AuthModule.authSignIn === 'function') {
-                window.AuthModule.authSignIn();
-            } else if (typeof _authSignIn === 'function') {
-                _authSignIn();
-            }
-        });
-        document.getElementById('arm-cancel-btn').addEventListener('click', close);
-        modal.querySelector('.arm-backdrop').addEventListener('click', close);
-    }
-
-    /* ── Misafir Banner — sayfa içinde sabit şerit ─────────────────────── */
-    function _showGuestBanner() {
-        if (document.getElementById('guest-banner')) return;
-        const banner = document.createElement('div');
-        banner.id = 'guest-banner';
-        banner.setAttribute('role', 'banner');
-        banner.innerHTML = `
-            <div class="gb-inner">
-                <span class="gb-icon" aria-hidden="true">☁️</span>
-                <div class="gb-text">
-                    <strong>İlerlemen kaydedilmiyor</strong>
-                    <span>Giriş yap — tüm veriler bulutta korunsun</span>
-                </div>
-                <button class="gb-btn" id="gb-signin-btn">Giriş Yap</button>
-                <button class="gb-close" id="gb-close-btn" aria-label="Kapat">✕</button>
-            </div>`;
-        document.body.appendChild(banner);
-        requestAnimationFrame(() => banner.classList.add('gb-visible'));
-
-        document.getElementById('gb-signin-btn').addEventListener('click', () => {
-            banner.remove();
-            _showLoginOverlay();
-        });
-        document.getElementById('gb-close-btn').addEventListener('click', () => {
-            banner.classList.remove('gb-visible');
-            setTimeout(() => banner.remove(), 300);
-        });
-    }
-
-    /**
-     * _setSignInBtnState — Google giriş butonunun görsel durumunu günceller.
-     * state: 'loading' | 'idle' | 'error'
-     */
-    function _setSignInBtnState(state, msg) {
-        const btn = document.getElementById('btn-google-signin');
-        if (!btn) return;
-        if (state === 'loading') {
-            btn.disabled = true;
-            btn.style.opacity = '0.7';
-            btn.querySelector('span') && (btn.querySelector('span').textContent = 'Yükleniyor...');
-        } else if (state === 'error') {
-            btn.disabled = false;
-            btn.style.opacity = '1';
-            const sp = btn.querySelector('span');
-            if (sp) sp.textContent = msg || 'Hata — tekrar dene';
-        } else {
-            btn.disabled = false;
-            btn.style.opacity = '1';
-            const sp = btn.querySelector('span');
-            if (sp) sp.textContent = 'Google ile Giriş Yap';
-        }
-    }
-
-    /** Tüm Google giriş butonları için durum güncelle */
-    function _triggerAllGoogleBtns(state, msg) {
-        ['btn-google-signin', 'pgh-btn-google', 'arm-btn-google'].forEach(id => {
-            const el = document.getElementById(id);
-            if (!el) return;
-            el.disabled = state === 'loading';
-            el.style.opacity = state === 'loading' ? '0.7' : '1';
-        });
-        _setSignInBtnState(state, msg);
-    }
-
-    function _hideLoginOverlay() {
-        const overlay = document.getElementById('login-overlay');
-        if (!overlay) return;
-        overlay.classList.add('fade-out');
-        setTimeout(() => overlay.remove(), 400);
-    }
-
-    /**
-     * _authSignIn — Ortama göre strateji seçer:
-     *
-     *  • localhost / 127.0.0.1 / 192.168.x.x  → signInWithPopup
-     *    Redirect kullanılırsa Firebase, authDomain (firebaseapp.com) üzerinden
-     *    döner ve token localhost'ta yakalanamaz. Popup bu durumda hatasız çalışır.
-     *
-     *  • Production (firebaseapp.com / özel domain) → signInWithRedirect
-     *    COOP header'ı olan sunucularda popup bloke edilebilir; redirect daha güvenilir.
-     */
-    function _isLocalEnv() {
-        const h = location.hostname;
-        return h === 'localhost' || h === '127.0.0.1' || /^192\.168\.\d+\.\d+$/.test(h) || /^10\.\d+\.\d+\.\d+$/.test(h);
-    }
-
-    async function _authSignIn() {
-        const provider = new GoogleAuthProvider();
-        provider.addScope('profile');
-        provider.addScope('email');
-        _triggerAllGoogleBtns('loading');
-        try {
-            if (_isLocalEnv()) {
-                // ── Lokal geliştirme: popup ──────────────────────────────────
-                await signInWithPopup(auth, provider, browserPopupRedirectResolver);
-                // signInWithPopup tamamlanınca onAuthStateChanged(user) tetiklenir
-                _triggerAllGoogleBtns('idle');
-            } else {
-                // ── Production: redirect ─────────────────────────────────────
-                await signInWithRedirect(auth, provider);
-                // Sayfa yönlendirilir — sonraki satıra dönülmez
-            }
-        } catch(e) {
-            _triggerAllGoogleBtns('idle');
-            if (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request' || e.code === 'auth/redirect-cancelled-by-user') return;
-            const domain = location.hostname + (location.port ? ':' + location.port : '');
-            if (e.code === 'auth/unauthorized-domain') {
-                console.error(`[auth] Yetkisiz domain: "${domain}". Firebase Console → Authentication → Authorized domains.`);
-                _triggerAllGoogleBtns('error', `"${domain}" yetkisiz`);
-            } else {
-                console.error('[auth] Giriş hatası:', e.code, e.message);
-                _triggerAllGoogleBtns('error', 'Giriş başarısız — tekrar dene');
-            }
-        }
-    }
-
-    /**
-     * _authReady — Firebase auth durumu netleşene kadar overlay açılmaz.
-     *
-     * Strateji:
-     *   • Localhost/LAN  → signInWithPopup  → getRedirectResult null döner → hemen ready
-     *   • Production     → signInWithRedirect → getRedirectResult user/null → sonra ready
-     *
-     * onAuthStateChanged(null) her iki durumda da ilk tetiklenişte overlay
-     * açmamalı; auth durumu netleştikten sonra açmalı.
-     */
-    /**
-     * Auth başlatma — tek kaynaktan, race-condition'sız.
-     *
-     * Firebase'in auth başlatma sırası:
-     *   1. initializeAuth() çağrıldı — persistence (IndexedDB/localStorage) kontrol ediliyor
-     *   2. onAuthStateChanged ilk tetiklenişi — user var mı yok mu belli oluyor
-     *   3. (production only) getRedirectResult — redirect token'ı yakalar
-     *
-     * Çözüm: onAuthStateChanged'i TEK karar noktası yap.
-     * _authInitDone flag'i ile ilk tetiklenişi bekle, o noktada karar ver.
-     * getRedirectResult'ı sadece production'da, sessizce çalıştır.
-     */
-    let _overlayShown = false;   // Overlay açıldı mı — çift açılmayı önler
-
-    // Production'da redirect token'ı yakala — hata olsa da onAuthStateChanged'e güven
-    if (!_isLocalEnv()) {
-        getRedirectResult(auth).then(result => {
-            if (result?.user) console.info('[auth] Redirect giriş OK:', result.user.displayName);
-        }).catch(e => {
-            const domain = location.hostname + (location.port ? ':' + location.port : '');
-            if (e.code === 'auth/unauthorized-domain') {
-                console.error('[auth] Yetkisiz domain:', domain);
-                _triggerAllGoogleBtns('error', `"${domain}" yetkisiz domain`);
-            } else if (e.code && !['auth/redirect-cancelled-by-user','auth/no-current-user'].includes(e.code)) {
-                console.warn('[auth] getRedirectResult:', e.code, e.message);
-            }
-        });
-    }
-
-    async function _authSignOut() {
-        if (authTimerInterval) { clearInterval(authTimerInterval); authTimerInterval = null; }
-        if (authSaveInterval)  { clearInterval(authSaveInterval);  authSaveInterval  = null; }
-        const user = auth.currentUser;
-        if (user) await _saveUserData(user.uid);
-        _overlayShown = false; // Çıkışta yeni overlay açılmasına izin ver
-        await signOut(auth);
-        // onAuthStateChanged(null) overlay'i açacak
-    }
-
-    // Admin görünürlüğü — Firebase custom claim kontrolü (admin:true)
-    async function _updateAdminVisibility(user) {
-        let isAdmin = false;
-        if (user) {
-            try {
-                const tokenResult = await user.getIdTokenResult();
-                isAdmin = tokenResult.claims.admin === true;
-            } catch(e) {
-                console.warn('[auth] Admin claim kontrol hatası:', e.message);
-            }
-        }
-        ['sb-admin','di-admin'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.style.display = isAdmin ? '' : 'none';
-        });
-        window._isAdmin = isAdmin;
-    }
-
-    onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            window._currentUser = user;
-            // Yeni kullanıcı — önce sıfırla, UI'da 0 göster
-            window.stats   = { totalAnswers: 0, correctAnswers: 0, totalMinutes: 0 };
-            window.allData = {};
-            _updateAuthStats();
-            await _updateAdminVisibility(user);
-            _hideLoginOverlay();
-            _updateProfilUI(user);
-            await _loadUserData(user.uid);
-            if (typeof obCheckAndShow === 'function') obCheckAndShow();
-            if (!authTimerInterval) {
-                authTimerInterval = setInterval(() => {
-                    if (typeof window.stats !== 'undefined') {
-                        stats.totalMinutes = (stats.totalMinutes || 0) + 1;
-                        _updateAuthStats(); // UI'ı güncelle
-                        // user-scoped localStorage'a da yaz
-                        const u = auth.currentUser;
-                        if (u) localStorage.setItem(`ydt_${u.uid}_stats`, JSON.stringify(window.stats));
-                    }
-                }, 60000);
-            }
-            if (!authSaveInterval) {
-                authSaveInterval = setInterval(() => _saveUserData(user.uid), 5 * 60 * 1000);
-                window.addEventListener('beforeunload', () => _saveUserData(user.uid), { once: true });
-            }
-        } else {
-            // Oturum yok / çıkış yapıldı
-            window.stats        = { totalAnswers: 0, correctAnswers: 0, totalMinutes: 0 };
-            window._currentUser = null;
-            _updateAuthStats();
-            _updateAdminVisibility(null);
-            _updateProfilUI(null);
-
-            if (typeof loadUserScopedData === 'function') {
-                loadUserScopedData();
-            } else if (typeof DEFAULT_VOCAB !== 'undefined') {
-                window.allData = { ...DEFAULT_VOCAB };
-                allData = window.allData;
-            } else {
-                window.allData = {};
-            }
-            document.dispatchEvent(new Event('ydtDataReady'));
-
-            // İlk tetiklenişte overlay göster (tek seferlik).
-            // Sonraki null tetiklenişleri (çıkış) da overlay göstermeli —
-            // _overlayShown sadece aynı "oturum"da çift açılmayı önler.
-            if (!_overlayShown) {
-                _overlayShown = true;
-                _showLoginOverlay();
-            }
-        }
-    });
-
-    // Global erişim
-    window.AuthModule = {
-        authSignIn:         _authSignIn,
-        authSignOut:        _authSignOut,
-        syncNow:            async () => { const u = auth.currentUser; if (u) await _saveUserData(u.uid); },
-        updateAuthStats:    _updateAuthStats,
-        updateProfilWidgets: _updateProfilWidgets
-    };
-
-    // Çıkış butonuna direkt event listener ekle (onclick'e güvenme)
-    document.addEventListener('DOMContentLoaded', () => {
-        const logoutBtn = document.querySelector('.profil-gh-logout');
-        if (logoutBtn) logoutBtn.addEventListener('click', _authSignOut);
-    });
-    // Sayfa zaten yüklüyse hemen bağla
-    const logoutBtn = document.querySelector('.profil-gh-logout');
-    if (logoutBtn) logoutBtn.addEventListener('click', _authSignOut);
-
-</script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script type="module" src="firebase-init.js"></script>
 
 <!-- ═══ SCRIPT YÜKLEMESİ ═══════════════════════════════════════════════
      defer: DOM hazır olunca, sırayla çalışır — render blocking yok
@@ -3588,23 +2385,23 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
      puter.js defer yok (CDN, üçüncü taraf — kendi iç bağımlılıkları var)
      ═══════════════════════════════════════════════════════════════════ -->
 <script src="kelimeler.js" defer></script>
-<script src="js/utils.js" defer></script>
+<script src="utils.js" defer></script>
 <script src="motor.js" defer></script>
 <script src="rss_paragraf.js" defer></script>
-<script src="js/ai.js" defer></script>
-<script src="js/ai-daily.js" defer></script>
-<script src="js/ai-quiz.js" defer></script>
-<script src="js/aig.js" defer></script>
-<script src="js/sm2-typing.js" defer></script>
-<script src="js/paragraf.js" defer></script>
-<script src="js/bank.js" defer></script>
-<script src="js/admin.js" defer></script>
-<script src="js/stats-widgets.js" defer></script>
-<script src="js/stats.js" defer></script>
-<script src="js/quiz.js" defer></script>
-<script src="js/study.js" defer></script>
-<script src="js/games.js" defer></script>
-<script src="js/profile.js" defer></script>
+<script src="ai.js" defer></script>
+<script src="ai-daily.js" defer></script>
+<script src="ai-quiz.js" defer></script>
+<script src="aig.js" defer></script>
+<script src="sm2-typing.js" defer></script>
+<script src="paragraf.js" defer></script>
+<script src="bank.js" defer></script>
+<script src="admin.js" defer></script>
+<script src="stats-widgets.js" defer></script>
+<script src="stats.js" defer></script>
+<script src="quiz.js" defer></script>
+<script src="study.js" defer></script>
+<script src="games.js" defer></script>
+<script src="profile.js" defer></script>
 <script src="grammar-engine.js" defer></script>
 <script src="grammar.js" defer></script>
 <script src="modals.js" defer></script>
@@ -3620,6 +2417,9 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
 <script src="speaking.js" defer></script>
 <script src="kids.js" defer></script>
 <script src="onboarding.js" defer></script>
+<script src="ydtui.js" defer></script>
+<script src="ydtapp.js" defer></script>
+<script src="ydt-delegation.js" defer></script>
 
     <!-- AI YDT ARŞİV SAYFASI -->
     <div id="ai-arsiv-page" class="hidden arsiv-full-page">
@@ -3633,7 +2433,7 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
                 </span>
             </div>
             <div class="bk-topbar-actions">
-                <select id="arsiv-list-filter" class="bk-filter-sel" onchange="renderArsiv()">
+                <select id="arsiv-list-filter" class="bk-filter-sel" data-change="renderArsiv()">
                     <option value="">Tüm Listeler</option>
                 </select>
             </div>
@@ -3719,285 +2519,7 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
     </div>
 
 
-<script>
-/* ── Günün Görevi CTA ── */
-function initDashToday() {
-    // allData yoksa veya boşsa localStorage'dan yükle (giriş yapan + misafir)
-    if (!window.allData || Object.keys(window.allData).length === 0) {
-        if (typeof loadUserScopedData === 'function') {
-            loadUserScopedData();
-        } else if (typeof getUserKey === 'function') {
-            const key = getUserKey('all_data');
-            if (key) {
-                try {
-                    const raw = localStorage.getItem(key);
-                    if (raw) { window.allData = JSON.parse(raw); allData = window.allData; }
-                } catch(e) {}
-            }
-        }
-    }
-
-    // Kullanıcı çıkış yaptıysa dashboard'u render etme
-    if (!window._currentUser && (!window.allData || Object.keys(window.allData).length === 0)) return;
-
-    const sm2Due  = (typeof countSM2Due === 'function') ? countSM2Due() : 0;
-    const allKeys = Object.keys(window.allData || {});
-    // Array.isArray guard — object/string key'ler NaN'e yol açar
-    const totalW  = allKeys.reduce((s, k) => {
-        const v = (window.allData || {})[k];
-        return s + (Array.isArray(v) ? v.length : 0);
-    }, 0);
-
-    const titleEl    = document.getElementById('dash-today-title');
-    const metaEl     = document.getElementById('dash-today-meta');
-    const iconEl     = document.getElementById('dash-today-icon');
-    const ctaLabel   = document.getElementById('dash-today-cta-label');
-    const toggleBtn  = document.getElementById('dash-lists-toggle');
-    const toggleLbl  = document.getElementById('dash-lists-toggle-label');
-    const dropdown   = document.getElementById('dash-lists-dropdown');
-    if (!titleEl) return;
-
-    const hour  = new Date().getHours();
-    const greet = hour < 12 ? 'Günaydın 🌅' : hour < 18 ? 'İyi günler ☀️' : 'İyi akşamlar 🌙';
-
-    // Reset dropdown
-    if (dropdown) { dropdown.innerHTML = ''; dropdown.style.display = 'none'; }
-    if (toggleBtn) toggleBtn.style.display = 'none';
-
-    if (sm2Due > 0) {
-        titleEl.innerHTML    = `<strong>${sm2Due}</strong> kelime tekrar seni bekliyor`;
-        metaEl.textContent   = 'SM-2 algoritması: bugünkü tekrarları tamamla';
-        iconEl.textContent   = '🧠';
-        ctaLabel.textContent = 'Tekrara Başla';
-        window._dashCTAFn   = () => (typeof startSM2Review === 'function') && startSM2Review();
-    } else if (totalW === 0) {
-        // Kelime yok — Starter Pack varsa otomatik yükle
-        const _pack = (typeof DEFAULT_VOCAB !== 'undefined') ? DEFAULT_VOCAB
-                    : (typeof YDT_STARTER_PACK !== 'undefined') ? YDT_STARTER_PACK : null;
-        if (_pack && Object.keys(_pack).length > 0) {
-            Object.keys(_pack).forEach(k => { if (!window.allData[k]) window.allData[k] = _pack[k]; });
-            allData = window.allData;
-            if (typeof _saveData === 'function') _saveData();
-            initDashToday(); // Yeniden render — bu sefer totalW > 0 olacak
-            return;
-        }
-        // Pack yoksa fallback mesaj göster
-        titleEl.innerHTML    = 'YDT Starter Pack\'i <strong>yükle</strong>';
-        metaEl.textContent   = '1300+ hazır kelimeyle hemen başla';
-        iconEl.textContent   = '🚀';
-        ctaLabel.textContent = 'Starter Pack Yükle';
-        window._dashCTAFn   = () => {
-            if (typeof YDT_STARTER_PACK !== 'undefined') {
-                Object.keys(YDT_STARTER_PACK).forEach(k => {
-                    if (!allData[k]) allData[k] = YDT_STARTER_PACK[k];
-                });
-                if (typeof _saveData === 'function') _saveData();
-                initDashToday();
-            }
-        };
-    } else {
-        titleEl.innerHTML    = `${greet} — <strong>${totalW}</strong> kelime seni bekliyor`;
-        metaEl.textContent   = '';
-        iconEl.textContent   = '📖';
-        ctaLabel.textContent = 'Öğrenmeye Başla';
-        window._dashCTAFn   = () => (typeof startStudy === 'function') && startStudy();
-
-        // Chip'leri dropdown içine yaz
-        if (dropdown && allKeys.length > 0) {
-            const chipsHtml = allKeys.map(k => {
-                const cnt = (allData[k] || []).length;
-                const firstChar = k.trim().charAt(0);
-                const hasEmoji  = /\p{Emoji}/u.test(firstChar);
-                const label     = hasEmoji ? k : `📚 ${k}`;
-                return `<span class="dash-list-chip">${label} <b>${cnt}</b></span>`;
-            }).join('');
-            dropdown.innerHTML = `<div class="dash-list-chips">${chipsHtml}</div>`;
-        }
-
-        // Toggle butonu göster: "X liste ▾"
-        if (toggleBtn && toggleLbl) {
-            toggleLbl.textContent = `📚 ${allKeys.length} liste`;
-            toggleBtn.style.display = 'inline-flex';
-        }
-    }
-}
-
-function toggleDashLists() {
-    const dropdown = document.getElementById('dash-lists-dropdown');
-    const chev     = document.getElementById('dash-lists-chev');
-    if (!dropdown) return;
-    const open = dropdown.style.display !== 'none';
-    dropdown.style.display = open ? 'none' : 'block';
-    if (chev) chev.style.transform = open ? '' : 'rotate(180deg)';
-}
-
-function dashTodayCTA() {
-    if (typeof window._dashCTAFn === 'function') window._dashCTAFn();
-}
-
-// ── ydtDataReady event — deterministic, timeout-free ──────────────
-document.addEventListener('ydtDataReady', function () {
-    initDashToday();
-    if (typeof updateIndexStats   === 'function') updateIndexStats();
-    if (typeof updateDailyGoalBar === 'function') updateDailyGoalBar();
-    if (typeof obRenderLevelBanner === 'function') obRenderLevelBanner();
-}, { once: false });
-
-// Fallback: module script DOM'dan sonra çalışır — DOMContentLoaded zaten geçmiş olabilir
-// readyState kontrol ederek ya anında ya 400ms sonra tetikle
-(function startFallback() {
-    let fired = false;
-    document.addEventListener('ydtDataReady', () => { fired = true; }, { once: true });
-    function tryFallback() {
-        if (fired) return;
-        try {
-            // getUserKey varsa user-scoped, yoksa guest key
-            const key = (typeof getUserKey === 'function') ? getUserKey('all_data') : 'ydt_guest_all_data';
-            const raw = localStorage.getItem(key) || localStorage.getItem('ydt_all_data');
-            if (raw) allData = JSON.parse(raw);
-        } catch(e) {
-            console.warn('[startFallback] allData parse hatası, sıfırlandı:', e.message);
-            allData = {};
-        }
-        document.dispatchEvent(new Event('ydtDataReady'));
-    }
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => setTimeout(tryFallback, 400));
-    } else {
-        // DOMContentLoaded zaten geçti — Firebase yüklenmesine kısa süre ver, sonra tetikle
-        setTimeout(tryFallback, 400);
-    }
-})();
-
-/* ── Sidebar Grammar Collapse (Desktop) ── */
-function sbToggleGrammar() { sbToggleGrammarMain(); } // compat alias
-
-function sbToggleGrammarMain() {
-    const btn  = document.getElementById('sb-grammar-toggle-main');
-    const list = document.getElementById('sb-grammar-list-main');
-    if (!btn || !list) return;
-    const open = btn.getAttribute('aria-expanded') === 'true';
-    btn.setAttribute('aria-expanded', String(!open));
-    list.setAttribute('aria-hidden',  String(open));
-    list.classList.toggle('sb-grammar-list--open', !open);
-}
-
-/* ── Mobil Drawer Grammar Collapse ── */
-function mobToggleGrammar() { mobToggleGrammarMain(); } // compat alias
-
-function mobToggleGrammarMain() {
-    const btn  = document.getElementById('di-grammar-toggle-main');
-    const list = document.getElementById('di-grammar-list-main');
-    if (!btn || !list) return;
-    const open = btn.getAttribute('aria-expanded') === 'true';
-    btn.setAttribute('aria-expanded', String(!open));
-    list.setAttribute('aria-hidden',  String(open));
-    list.classList.toggle('mob-grammar-list--open', !open);
-}
-
-/* ── Merkezi Sayfa Temizleyici ─────────────────────────────────────
-   Herhangi bir sidebar/nav butonuna tıklanınca cx-page ve sr-page'i
-   otomatik gizle. Hangi modül dosyasının güncel olduğundan bağımsız
-   çalışır — "tıklayınca hiçbir şey olmaz" sorununu kökte çözer.
-─────────────────────────────────────────────────────────────────── */
-document.addEventListener('DOMContentLoaded', function () {
-    function hideFullScreenPages() {
-        document.querySelectorAll('.cx-page, .sr-page, .tw-page').forEach(function (el) {
-            el.classList.add('hidden');
-            el.style.display = 'none';
-        });
-    }
-    // Sadece modül DIŞI butonlara uygula — typing/context/sm2 açan butonları hariç tut
-    var sel = '.sb-btn:not(#sb-typing):not(#sb-context):not(#sb-sm2), .sb-btn-sub, .mob-drawer-btn:not(#di-typing):not(#di-context):not(#di-sm2)';
-    document.querySelectorAll(sel).forEach(function (btn) {
-        btn.addEventListener('click', hideFullScreenPages);
-    });
-
-    // ── data-nav butonları için global click handler ─────────────────────
-    // sb-admin ve diğer data-nav="xxx-page" butonlarını çalıştırır
-    // onclick olmayan tüm data-nav butonlarını kapsar (event delegation)
-    document.addEventListener('click', function (e) {
-        var btn = e.target.closest('[data-nav]');
-        if (!btn) return;
-        // Kendi onclick'i varsa dokunma — o zaten çalışır
-        if (btn.hasAttribute('onclick')) return;
-        var pageId = btn.getAttribute('data-nav');
-        if (!pageId) return;
-        e.preventDefault();
-        if (typeof navTo === 'function') {
-            navTo(pageId);
-        } else if (typeof showPage === 'function') {
-            showPage(pageId);
-        }
-    });
-});
-
-// ── Eski Starter Pack / sistem listelerini allData'dan temizle ──
-// Kullanıcının kendi oluşturduğu özel listeler KORUNUR
-// Sadece bilinen eski sistem listeleri ve DEFAULT_VOCAB ile değiştirilen listeler çıkarılır
-function _purgeAllDataLegacyLists(dataObj) {
-    if (!dataObj || typeof dataObj !== 'object') return;
-
-    // YDT Master Pack'taki GÜNCEL liste adları — bunlar KORUNUR
-    const VALID_STARTER_LISTS = new Set([
-        '🟢 A2 Temel', '🔵 B1 Orta', '🟡 B2 Orta-İleri', '🔴 C1 İleri', '🟣 C2 Üst-İleri'
-    ]);
-
-    // Bilinen eski sistem listeleri — silinir
-    const LEGACY_EXACT = new Set([
-        'Genel Kelimeler', 'Örnek Liste', 'kidsPlayer', 'paragrafSorular',
-        'aiArsiv', 'Mart V2', 'Mart V1', 'Şubat V2', 'Şubat V1',
-        'Liste 1', 'Liste 2', 'Liste 3', 'Liste 4', 'Liste 5',
-        'YDT A1', 'YDT A2', 'YDT B1', 'YDT B2', 'YDT C1',
-        'A2 Temel', 'B1 Orta', 'B2 Orta-İleri', 'C1 İleri', // emoji'siz eski versiyonlar
-    ]);
-
-    Object.keys(dataObj).forEach(key => {
-        const isLegacyExact = LEGACY_EXACT.has(key);
-        // "Liste X - N Kelime" gibi pattern
-        const isLegacyPattern = /^Liste\s+\d+(\s*-|\s+\d)/.test(key);
-        // Bilinen sistem anahtar kelimeleri (array olmayan veri yanlışlıkla girmiş)
-        const isSystemKey = ['paragrafSorular','aiArsiv','kidsPlayer'].includes(key);
-        // Eski emoji'siz starter pack versiyonları
-        const isOldStarter = !VALID_STARTER_LISTS.has(key) && (
-            isLegacyExact || isLegacyPattern || isSystemKey
-        );
-
-        if (isOldStarter) {
-            delete dataObj[key];
-            console.info(`[purge] Eski liste silindi: "${key}"`);
-        }
-    });
-
-    // DEFAULT_VOCAB listelerini eksikse ekle
-    if (typeof DEFAULT_VOCAB !== 'undefined') {
-        Object.keys(DEFAULT_VOCAB).forEach(k => {
-            if (!dataObj[k]) {
-                dataObj[k] = DEFAULT_VOCAB[k];
-                console.info(`[purge] Yeni liste eklendi: "${k}"`);
-            }
-        });
-    } else if (typeof YDT_STARTER_PACK !== 'undefined') {
-        Object.keys(YDT_STARTER_PACK).forEach(k => {
-            if (!dataObj[k]) {
-                dataObj[k] = YDT_STARTER_PACK[k];
-            }
-        });
-    }
-}
-
-function ydtSignOut() {
-    if (window.AuthModule && typeof window.AuthModule.authSignOut === 'function') {
-        window.AuthModule.authSignOut();
-    } else {
-        setTimeout(function() {
-            if (window.AuthModule && typeof window.AuthModule.authSignOut === 'function') {
-                window.AuthModule.authSignOut();
-            }
-        }, 800);
-    }
-}
-</script>
+<!-- ydtapp.js: initDashToday/dashTodayCTA/ydtSignOut buraya taşındı -->
 
 <!-- ── Standart Boş Durum Şablonu ── -->
 <template id="tpl-empty-state">

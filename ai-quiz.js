@@ -484,3 +484,6 @@ window.aiGramerArsiv = (function() {
 })();
 window._arsivGroupPage     = window._arsivGroupPage     || 1; // 10'luk sayfa
 // → js/bank.js (ayrı dosyaya taşındı)
+
+// ── Window Exports (defer uyumluluğu) ────────────────────────────
+window.showAIArsiv = showAIArsiv;

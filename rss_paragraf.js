@@ -822,7 +822,7 @@ async function generateAIDailyParagraflar(force) {
                 const icon    = p.sourceIcon || fbIcons[i % fbIcons.length];
                 const lc      = lvlClr[p.level] || '#6b7280';
 
-                return `<div class="rh2-card" id="ai-card-${i}" onclick="openAIDailyParagraf(${i})">
+                return `<div class="rh2-card" id="ai-card-${i}" data-action="openAIDailyParagraf(${i})">
                     <div class="rh2-card-accent rh2-card-accent-ai" style="background:linear-gradient(90deg,#0ea5e9,#0284c7);"></div>
                     <div class="rh2-card-body">
                         <div class="rh2-card-header">
@@ -845,8 +845,8 @@ async function generateAIDailyParagraflar(force) {
                             ${voc.length ? `<span class="rh2-pill rh2-pill-word">📖 ${voc.length} kelime</span>` : ''}
                             <span class="rh2-pill" style="background:#e0f2fe;color:#0284c7;font-weight:800;">📰 ${p.sourceName||'RSS'}</span>
                             ${pills}
-                            ${p.link ? `<a href="${p.link}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="rh2-pill" style="background:#f0fdf4;color:#16a34a;text-decoration:none;font-weight:800;">🔗 Kaynak</a>` : ''}
-                            <button class="rh2-card-save-btn ${saved?'saved':''}" id="ai-save-btn-${i}" onclick="event.stopPropagation();_saveAIPasaj(${i})">${saved?'✅ Arşivde':'🗂 Arşivle'}</button>
+                            ${p.link ? `<a href="${p.link}" target="_blank" rel="noopener" data-stop="true" class="rh2-pill" style="background:#f0fdf4;color:#16a34a;text-decoration:none;font-weight:800;">🔗 Kaynak</a>` : ''}
+                            <button class="rh2-card-save-btn ${saved?'saved':''}" id="ai-save-btn-${i}" data-stop="true" data-action="_saveAIPasaj(${i})">${saved?'✅ Arşivde':'🗂 Arşivle'}</button>
                         </div>
                     </div>
                 </div>`;

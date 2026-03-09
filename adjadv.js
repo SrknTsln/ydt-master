@@ -67,7 +67,7 @@ function aaAcc(items) {
             return '<div style="background:#f5f3ff;border:1.5px solid #c4b5fd;border-radius:8px;padding:10px 14px;margin:6px 0;font-size:.8rem;color:#4c1d95;line-height:1.7">' + n + '</div>';
         }).join('');
         const descHtml = it.desc ? '<p class="gr-acc-desc">' + it.desc + '</p>' : '';
-        return '<div class="gr-acc" onclick="this.classList.toggle(\'open\')">'
+        return '<div class="gr-acc" data-toggle-class="open">'
             + '<div class="gr-acc-head">'
             + '<div class="gr-acc-ico" style="background:' + it.bg + '">' + it.ico + '</div>'
             + '<div class="gr-acc-title">' + it.title + '</div>'
@@ -122,7 +122,7 @@ function aaOverview() {
         return '<div style="border:1.5px solid ' + c.bd + ';border-radius:14px;padding:16px;background:' + c.bc + ';cursor:pointer;transition:all .18s;"'
             + ' onmouseover="this.style.transform=\'translateY(-3px)\';this.style.boxShadow=\'0 8px 24px rgba(0,0,0,.1)\'"'
             + ' onmouseout="this.style.transform=\'\';this.style.boxShadow=\'\'"'
-            + ' onclick="_aaRenderSection(\'' + c.id + '\')">'
+            + ' data-action="_aaRenderSection(\'' + c.id + '\')">'
             + '<div style="font-size:1.4rem;margin-bottom:8px">' + c.emoji + '</div>'
             + '<div style="font-size:.9rem;font-weight:900;color:#1a1a2e;margin-bottom:4px">' + c.name + '</div>'
             + '<div style="font-size:.72rem;color:' + c.tc + ';line-height:1.5">' + c.sub + '</div>'
@@ -144,7 +144,7 @@ function aaOverview() {
         + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:14px;padding:0 36px 20px;">'
         + cardHtml + '</div>'
         + '<div style="padding:0 36px 36px;text-align:center;">'
-        + '<button onclick="_aaRenderSection(\'exercises\')" style="padding:14px 32px;background:linear-gradient(135deg,#7c3aed,#a78bfa);border:none;border-radius:13px;color:#fff;font-size:.9rem;font-weight:900;cursor:pointer;font-family:inherit;">✨ Alıştırmalara Geç</button>'
+        + '<button data-action="_aaRenderSection(\'exercises\')" style="padding:14px 32px;background:linear-gradient(135deg,#7c3aed,#a78bfa);border:none;border-radius:13px;color:#fff;font-size:.9rem;font-weight:900;cursor:pointer;font-family:inherit;">✨ Alıştırmalara Geç</button>'
         + '</div>';
 }
 
@@ -802,7 +802,7 @@ function _aaBuildExercisePage() {
     const tabs = AA_SETS.map(function(s, i) {
         const active = i === _aaSetIdx
             ? 'style="background:#7c3aed;color:#fff;border-color:#7c3aed;"' : '';
-        return '<button class="gr-set-tab" ' + active + ' onclick="aaSwitchSet(' + i + ')">' + s.label + '</button>';
+        return '<button class="gr-set-tab" ' + active + ' data-action="aaSwitchSet(' + i + ')">' + s.label + '</button>';
     }).join('');
 
     const qCards = set.questions.map(function(q, i) {
@@ -815,7 +815,7 @@ function _aaBuildExercisePage() {
                 if (lv === q.cor)                         cls += ' ok';
                 else if (lv === state && state !== q.cor) cls += ' bad';
             } else if (state === lv) cls += ' sel';
-            return '<div class="' + cls + '" id="aaso-' + i + '-' + j + '" onclick="aaSetOpt(' + i + ',' + j + ',\'' + lv + '\')">'
+            return '<div class="' + cls + '" id="aaso-' + i + '-' + j + '" data-action="aaSetOpt(' + i + ',' + j + ',\'' + lv + '\')">'
                 + '<span class="gr-opt-letter">' + letter + '</span>' + o + '</div>';
         }).join('');
 
@@ -830,13 +830,13 @@ function _aaBuildExercisePage() {
             + '<div class="gr-q-num">SORU ' + String(i+1).padStart(2,'0') + ' -- ' + set.label.toUpperCase() + '</div>'
             + '<div class="gr-q-text">' + q.q + '</div>'
             + '<div class="gr-mcq">' + opts + '</div>'
-            + '<button class="gr-chk-btn" style="margin-top:10px;border-color:#7c3aed;color:#7c3aed" onclick="aaCheckSetQ(' + i + ')" ' + btnDis + '>Kontrol Et</button>'
+            + '<button class="gr-chk-btn" style="margin-top:10px;border-color:#7c3aed;color:#7c3aed" data-action="aaCheckSetQ(' + i + ')" ' + btnDis + '>Kontrol Et</button>'
             + '<div class="' + fbCls + '" id="aasfb-' + i + '">' + fbTxt + '</div>'
             + '</div>';
     }).join('');
 
     const nextBtn = _aaSetIdx < AA_SETS.length - 1
-        ? '<button class="gr-retry-btn" style="background:#7c3aed;color:#fff;border-color:#7c3aed" onclick="aaNextSet()">Sonraki Set </button>'
+        ? '<button class="gr-retry-btn" style="background:#7c3aed;color:#fff;border-color:#7c3aed" data-action="aaNextSet()">Sonraki Set </button>'
         : '<span style="font-size:.8rem;color:var(--ink3);align-self:center">Tum setler tamamlandi!</span>';
 
     return aaH('Adjectives & Adverbs', 'Alistirmalar', AA_SETS.length + ' set x 10 soru -- Seti tamamla, sonucu gor, siradaki sete gec.')
@@ -847,13 +847,13 @@ function _aaBuildExercisePage() {
         + '<span class="gr-score-val" id="aa-live-score">' + _aaSetScore + ' / ' + total + '</span>'
         + '</div>'
         + qCards
-        + '<button class="gr-submit-btn" style="background:linear-gradient(135deg,#7c3aed,#a78bfa)" onclick="aaSubmitSet()">Seti Degerlendir & Sonucu Gor</button>'
+        + '<button class="gr-submit-btn" style="background:linear-gradient(135deg,#7c3aed,#a78bfa)" data-action="aaSubmitSet()">Seti Degerlendir & Sonucu Gor</button>'
         + '<div class="gr-result" id="aa-result">'
         + '<div class="gr-res-score" id="aa-res-score">0/' + total + '</div>'
         + '<div class="gr-res-lbl">' + set.label + ' Tamamlandi</div>'
         + '<div class="gr-res-msg" id="aa-res-msg"></div>'
         + '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px">'
-        + '<button class="gr-retry-btn" onclick="aaRetrySameSet()">Ayni Seti Tekrar</button>'
+        + '<button class="gr-retry-btn" data-action="aaRetrySameSet()">Ayni Seti Tekrar</button>'
         + nextBtn
         + '</div></div></div>';
 }

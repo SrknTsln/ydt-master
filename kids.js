@@ -429,12 +429,12 @@ function hud(){
         </div>
         <div style="display:flex;gap:8px;align-items:center;">
             <span style="font-family:'Fredoka One',cursive;color:#FF7043;font-size:.9rem;">🔥 ${P.streak}</span>
-            <span onclick="KW._go('quests')" style="font-family:'Fredoka One',cursive;font-size:.78rem;background:${doneQ===3?'linear-gradient(135deg,#22c55e,#16a34a)':'#EDE7F6'};color:${doneQ===3?'white':'#7E57C2'};padding:3px 10px;border-radius:20px;cursor:pointer;">📋 ${doneQ}/3</span>
+            <span data-action="KW._go('quests')" style="font-family:'Fredoka One',cursive;font-size:.78rem;background:${doneQ===3?'linear-gradient(135deg,#22c55e,#16a34a)':'#EDE7F6'};color:${doneQ===3?'white':'#7E57C2'};padding:3px 10px;border-radius:20px;cursor:pointer;">📋 ${doneQ}/3</span>
         </div>
     </div>`;
 }
 
-function back(v,d){return `<button class="kw-back" onclick="KW._go('${v}'${d?`,'${d}'`:''})">← Geri</button>`;}
+function back(v,d){return `<button class="kw-back" data-action="KW._go('${v}'${d?`,'${d}'`:''})">← Geri</button>`;}
 
 function prog(id,i,n,liv,ml){
     const hrt=liv!=null?`<span>${'❤️'.repeat(liv)+'🖤'.repeat((ml||3)-liv)}</span>`:'';
@@ -453,7 +453,7 @@ function vName(){
         <div class="kw-title-grad">WordWorld!</div>
         <div style="color:#5C6BC0;font-weight:700;margin-bottom:20px;">İngilizce öğrenmenin en eğlenceli yolu!</div>
         <input class="kw-input" id="kw-ni" type="text" placeholder="Adını yaz..." maxlength="14" style="text-align:center;font-size:1.1rem;margin-bottom:14px;">
-        <button class="kw-btn-primary" onclick="KW._name()" style="width:100%;font-size:1.05rem;padding:15px;">🚀 Maceraya Başla!</button>
+        <button class="kw-btn-primary" data-action="KW._name()" style="width:100%;font-size:1.05rem;padding:15px;">🚀 Maceraya Başla!</button>
     </div>`;
 }
 
@@ -464,7 +464,7 @@ function vHome(){
     const wc=Object.entries(WORLDS).map(([wid,w])=>{
         const s=P.ws[wid]||0, [c1,c2]=w.color.split(',');
         const visited=P.worldsVisited&&P.worldsVisited[wid];
-        return `<div class="kw-world-card" style="background:linear-gradient(135deg,${c1},${c2});" onclick="KW._go('world','${wid}')">
+        return `<div class="kw-world-card" style="background:linear-gradient(135deg,${c1},${c2});" data-action="KW._go('world','${wid}')">
             <div style="font-size:2.3rem;margin-bottom:5px;">${w.icon}</div>
             <div style="font-family:'Fredoka One',cursive;font-size:.92rem;color:#1A237E;">${w.name}</div>
             <div style="font-size:.62rem;color:#5C6BC0;font-weight:700;">${w.words.length} kelime</div>
@@ -497,7 +497,7 @@ function vHome(){
                 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;align-items:center;">
                     <span class="kw-badge-pill" style="background:linear-gradient(135deg,#7E57C2,#AB47BC);font-size:.75rem;">${rank}</span>
                     <span class="kw-badge-pill" style="background:linear-gradient(135deg,#FF7043,#FF5722);font-size:.75rem;">⭐ ${P.xp} XP</span>
-                    <button onclick="KW._go('name')" style="font-size:.62rem;font-weight:700;color:#5C6BC0;background:#EDE7F6;border:none;border-radius:20px;padding:3px 10px;cursor:pointer;">✏️ İsim Değiştir</button>
+                    <button data-action="KW._go('name')" style="font-size:.62rem;font-weight:700;color:#5C6BC0;background:#EDE7F6;border:none;border-radius:20px;padding:3px 10px;cursor:pointer;">✏️ İsim Değiştir</button>
                 </div>
             </div>
             <div style="font-size:3.5rem;animation:kwBounce 2s infinite;">🦄</div>
@@ -508,14 +508,14 @@ function vHome(){
     <div class="kw-card" style="margin-bottom:14px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
             <div style="font-family:'Fredoka One',cursive;font-size:1.1rem;color:#1A237E;">📋 Günlük Görevler</div>
-            <button onclick="KW._go('quests')" style="font-size:.75rem;font-weight:800;color:#7E57C2;background:#EDE7F6;border:none;border-radius:20px;padding:4px 12px;cursor:pointer;">Tümünü Gör</button>
+            <button data-action="KW._go('quests')" style="font-size:.75rem;font-weight:800;color:#7E57C2;background:#EDE7F6;border:none;border-radius:20px;padding:4px 12px;cursor:pointer;">Tümünü Gör</button>
         </div>
         ${questHtml}
     </div>
 
     <div style="font-family:'Fredoka One',cursive;font-size:1rem;color:#5C6BC0;margin-bottom:10px;">🌍 Dünyaları Keşfet</div>
     <div class="kw-world-grid">${wc}</div>
-    <button class="kw-btn-secondary" style="width:100%;margin-top:8px;" onclick="KW._go('badges')">🏆 Rozetlerim (${P.badges.length}/${BADGES.length})</button>`;
+    <button class="kw-btn-secondary" style="width:100%;margin-top:8px;" data-action="KW._go('badges')">🏆 Rozetlerim (${P.badges.length}/${BADGES.length})</button>`;
 }
 
 function vWorld(wid){
@@ -536,7 +536,7 @@ function vWorld(wid){
         {icon:'🎧',n:'Listen & Choose',  d:'Sesli telaffuzu duy, doğru cevabı seç',  xp:'+15',  v:'listen',   mi:'mi-listen'},
         {icon:'🔤',n:'Word Scramble',    d:'Karışık harfleri doğru sıraya diz',       xp:'+20',  v:'scramble', mi:'mi-scram'},
         {icon:'🗂️',n:'Category Sort',   d:'Kelimeleri doğru kategorilere taşı',     xp:'+20',  v:'sort',     mi:'mi-sort'},
-    ].map(m=>`<button class="kw-mode-btn" onclick="KW._go('${m.v}')">
+    ].map(m=>`<button class="kw-mode-btn" data-action="KW._go('${m.v}')">
         <div class="kw-mode-icon ${m.mi}">${m.icon}</div>
         <div style="flex:1;text-align:left;">
             <div style="font-family:'Fredoka One',cursive;font-size:1rem;color:#1A237E;">${m.n}</div>
@@ -645,8 +645,8 @@ function vResult(d){
         <div style="font-weight:800;color:#7E57C2;margin-bottom:12px;">+${d.xp} XP &nbsp;·&nbsp; ${d.correct}/${d.total} doğru</div>
         <div style="font-size:2rem;letter-spacing:6px;margin-bottom:22px;">${'⭐'.repeat(stars)+'☆'.repeat(3-stars)}</div>
         <div style="display:flex;gap:10px;">
-            <button class="kw-btn-secondary" style="flex:1;" onclick="KW._go('world','${CW}')">🏠 Menü</button>
-            <button class="kw-btn-primary" style="flex:1;" onclick="KW._replay()">🔄 Tekrar</button>
+            <button class="kw-btn-secondary" style="flex:1;" data-action="KW._go('world','${CW}')">🏠 Menü</button>
+            <button class="kw-btn-primary" style="flex:1;" data-action="KW._replay()">🔄 Tekrar</button>
         </div>
     </div>`;
 }
@@ -731,7 +731,7 @@ function rwm(){
     ga.innerHTML=`${prog('wm-p',wm.i,wm.qs.length)}
         <div class="kw-q-word"><div style="font-size:1.2rem;margin-bottom:8px;">${q.emoji||'📝'}</div>${q.en}</div>
         <div class="kw-ans-grid">
-        ${opts.map(o=>`<button class="kw-ans-btn" onclick="KW._wma(this,'${o.en}','${q.en}')">
+        ${opts.map(o=>`<button class="kw-ans-btn" data-action="KW._wma(this,'${o.en}','${q.en}')">
             <span style="font-size:1.4rem;">${o.emoji||'📝'}</span><span>${o.tr}</span>
         </button>`).join('')}
         </div>`;
@@ -844,9 +844,9 @@ function rsp(){
             <div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap;margin-bottom:14px;">${tiles}</div>
             <div style="display:flex;gap:8px;margin-bottom:12px;">
                 <input id="kw-si" class="kw-input" type="text" placeholder="Yaz..." autocomplete="off" autocorrect="off" spellcheck="false" style="text-align:center;font-family:'Fredoka One',cursive;font-size:1.3rem;flex:1;">
-                <button class="kw-btn-primary" onclick="KW._csp()" style="width:52px;height:52px;border-radius:14px;padding:0;font-size:1.4rem;flex-shrink:0;">✓</button>
+                <button class="kw-btn-primary" data-action="KW._csp()" style="width:52px;height:52px;border-radius:14px;padding:0;font-size:1.4rem;flex-shrink:0;">✓</button>
             </div>
-            <button class="kw-btn-secondary" onclick="KW._sph()" style="width:100%;font-size:.85rem;padding:10px;">💡 İpucu</button>
+            <button class="kw-btn-secondary" data-action="KW._sph()" style="width:100%;font-size:.85rem;padding:10px;">💡 İpucu</button>
         </div>`;
     setTimeout(()=>{const i=$id('kw-si');if(i)i.focus();},100);
 }
@@ -884,8 +884,8 @@ function rsent(){
 function rsentState(q,ga){
     if(!q)q=sb_._q;
     if(!ga)ga=$id('kw-ga'); if(!ga)return;
-    const dc=sb_.b.map((w,i)=>`<div class="kw-chip kw-chip-in" onclick="KW._srm(${i})">${w}</div>`).join('');
-    const bk=sb_.bk.map((w,i)=>`<div class="kw-chip" onclick="KW._sad(${i})">${w}</div>`).join('');
+    const dc=sb_.b.map((w,i)=>`<div class="kw-chip kw-chip-in" data-action="KW._srm(${i})">${w}</div>`).join('');
+    const bk=sb_.bk.map((w,i)=>`<div class="kw-chip" data-action="KW._sad(${i})">${w}</div>`).join('');
     ga.innerHTML=`${prog('sb-p',sb_.i,sb_.qs.length)}
         <div class="kw-card">
             <div style="background:linear-gradient(135deg,#E3F2FD,#EDE7F6);border-radius:14px;padding:12px;margin-bottom:12px;text-align:center;font-size:.85rem;font-weight:700;color:#5C6BC0;">
@@ -897,7 +897,7 @@ function rsentState(q,ga){
             </div>
             <div style="font-size:.78rem;font-weight:700;color:#5C6BC0;margin-bottom:8px;">Kelimeler:</div>
             <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px;">${bk}</div>
-            <button class="kw-btn-primary" onclick="KW._ckst()" style="width:100%;">Kontrol Et ✓</button>
+            <button class="kw-btn-primary" data-action="KW._ckst()" style="width:100%;">Kontrol Et ✓</button>
         </div>`;
 }
 function _sad(i){sb_.b.push(sb_.bk[i]);sb_.bk.splice(i,1);rsentState(sb_._q);}
@@ -927,14 +927,14 @@ function rls(){
     ga.innerHTML=`${prog('ls-p',ls_.i,ls_.qs.length)}
         <div class="kw-card kw-center" style="margin-bottom:14px;">
             <div style="font-size:.85rem;font-weight:700;color:#5C6BC0;margin-bottom:12px;">Sesi dinle ve doğru kelimeyi seç 👂</div>
-            <button id="kw-spk-btn" class="kw-listen-btn" onclick="speakWord('${q.en}',this)">
+            <button id="kw-spk-btn" class="kw-listen-btn" data-action="speakWord('${q.en}',this)">
                 <span style="font-size:2.5rem;">🎧</span>
                 <span style="font-family:'Fredoka One',cursive;font-size:1rem;">Dinle</span>
             </button>
             <div style="font-size:.75rem;color:#AB47BC;font-weight:700;margin-top:10px;">Tekrar dinlemek için tekrar tıkla</div>
         </div>
         <div class="kw-ans-grid" id="ls-opts">
-        ${opts.map(o=>`<button class="kw-ans-btn" onclick="KW._lsa(this,'${o.en}','${q.en}')">
+        ${opts.map(o=>`<button class="kw-ans-btn" data-action="KW._lsa(this,'${o.en}','${q.en}')">
             <span style="font-size:1.4rem;">${o.emoji}</span>
             <span style="font-size:.85rem;">${o.tr}</span>
         </button>`).join('')}
@@ -982,13 +982,13 @@ function rscrState(ga){
     const q=scr_._q;
     const ansHtml=Array.from({length:q.en.length},(_,i)=>{
         const l=scr_.sel[i];
-        return `<div class="kw-scr-slot${l?' kw-scr-filled':''}" onclick="${l?`KW._scrRm(${i})`:''}">
+        return `<div class="kw-scr-slot${l?' kw-scr-filled':''}" data-action="${l?`KW._scrRm(${i})`:''}">
             ${l||'&nbsp;'}
         </div>`;
     }).join('');
     const letHtml=scr_._letters.map((l,i)=>{
         const used=scr_.sel.includes(l)&&scr_._letters.filter((x,j)=>x===l&&j<=i).length<=scr_.sel.filter(x=>x===l).length;
-        return `<button class="kw-scr-tile${used?' kw-scr-used':''}" onclick="KW._scrAdd('${l}',${i})" ${used?'disabled':''}>
+        return `<button class="kw-scr-tile${used?' kw-scr-used':''}" data-action="KW._scrAdd('${l}',${i})" ${used?'disabled':''}>
             ${l.toUpperCase()}
         </button>`;
     }).join('');
@@ -1006,8 +1006,8 @@ function rscrState(ga){
                 ${letHtml}
             </div>
             <div style="display:flex;gap:8px;">
-                <button class="kw-btn-secondary" onclick="KW._scrClear()" style="flex:1;padding:12px;">🗑️ Temizle</button>
-                <button class="kw-btn-primary" onclick="KW._scrCheck()" style="flex:1;">Kontrol ✓</button>
+                <button class="kw-btn-secondary" data-action="KW._scrClear()" style="flex:1;padding:12px;">🗑️ Temizle</button>
+                <button class="kw-btn-primary" data-action="KW._scrCheck()" style="flex:1;">Kontrol ✓</button>
             </div>
         </div>`;
 }
@@ -1063,7 +1063,7 @@ function rcatState(){
     const itemsHtml=cat_.items.map((w,i)=>{
         if(w.placed!==null) return `<div class="kw-sort-slot kw-sort-placed" style="opacity:.35;">${w.emoji}</div>`;
         const active=(sel!==undefined&&sel===i);
-        return `<button class="kw-sort-item${active?' kw-sort-active':''}" onclick="KW._catSel(${i})">
+        return `<button class="kw-sort-item${active?' kw-sort-active':''}" data-action="KW._catSel(${i})">
             <span style="font-size:1.6rem;">${w.emoji}</span>
             <span style="font-size:.7rem;font-weight:800;color:#1A237E;">${w.tr}</span>
         </button>`;
@@ -1078,18 +1078,18 @@ function rcatState(){
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">${itemsHtml}</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-            <div class="kw-drop-zone" onclick="KW._catDrop('a')">
+            <div class="kw-drop-zone" data-action="KW._catDrop('a')">
                 <div style="font-size:1.1rem;margin-bottom:6px;">${cat_.a.slice(0,2).map(w=>w.emoji).join('')}</div>
                 <div style="font-size:.72rem;font-weight:800;color:#7E57C2;margin-bottom:6px;">${aLabel}</div>
                 <div style="display:flex;flex-wrap:wrap;gap:4px;min-height:24px;">${zoneA}</div>
             </div>
-            <div class="kw-drop-zone kw-drop-zone-b" onclick="KW._catDrop('b')">
+            <div class="kw-drop-zone kw-drop-zone-b" data-action="KW._catDrop('b')">
                 <div style="font-size:1.1rem;margin-bottom:6px;">${cat_.b.slice(0,2).map(w=>w.emoji).join('')}</div>
                 <div style="font-size:.72rem;font-weight:800;color:#EC407A;margin-bottom:6px;">${bLabel}</div>
                 <div style="display:flex;flex-wrap:wrap;gap:4px;min-height:24px;">${zoneB}</div>
             </div>
         </div>
-        ${cat_.items.every(w=>w.placed!==null)?`<button class="kw-btn-primary" onclick="KW._catCheck()" style="width:100%;margin-top:14px;">Kontrol Et ✓</button>`:''}
+        ${cat_.items.every(w=>w.placed!==null)?`<button class="kw-btn-primary" data-action="KW._catCheck()" style="width:100%;margin-top:14px;">Kontrol Et ✓</button>`:''}
     </div>`;
 }
 function _catSel(i){ cat_._selected=i; rcatState(); }
@@ -1139,3 +1139,6 @@ return {
     _catSel, _catDrop, _catCheck,
 };
 })();
+
+// Window export — delegation window.KW lookup için
+window.KW = KW;

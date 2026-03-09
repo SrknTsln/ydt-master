@@ -109,7 +109,7 @@ class GrammarModule {
 
         page.innerHTML =
             `<div class="gr-topbar">` +
-            `<button class="gr-back-btn" onclick="navTo('index-page')">←</button>` +
+            `<button class="gr-back-btn" data-action="navTo('index-page')" aria-label="Ana sayfaya dön">←</button>` +
             `<div><div class="gr-topbar-label">Grammar Modülü</div>` +
             `<div class="gr-topbar-title">${this.title}</div></div>` +
             `</div>` +
@@ -120,6 +120,65 @@ class GrammarModule {
 
         this._buildSidenav();
         this._renderSection(this._current);
+
+        // ── Event Delegation — dynamically rendered content ──────────
+        // gr-sidenav ve gr-content'te oluşan butonlar CSP'ye takılmaması için
+        // data-gr-goto, data-gr-toggle, data-gr-section attribute'ları ile listener bağla.
+        // Mevcut innerHTML onclick'ler CSP bloke edebilir — bu listener onları yakalar.
+        this._bindPageDelegation(page);
+    }
+
+    /**
+     * Sayfa içindeki gr-sidenav ve gr-content için event delegation.
+     * Her açılışta yeniden bağlanır — listener leak önlemek için AbortController kullanır.
+     */
+    _bindPageDelegation(page) {
+        // Önceki listener'ı temizle
+        if (this._delegationController) {
+            this._delegationController.abort();
+        }
+        this._delegationController = new AbortController();
+        const { signal } = this._delegationController;
+
+        const mod = this;
+
+        page.addEventListener('click', function(e) {
+            // gr-sn-btn (sidenav item) → data-gr-goto veya data-action ile çalışır
+            const snBtn = e.target.closest('.gr-sn-btn');
+            if (snBtn) {
+                // data-action zaten ydt-delegation tarafından handle edilir — skip
+                if (snBtn.hasAttribute('data-action')) return;
+                // Fallback: textContent ile section bul
+                return;
+            }
+
+            // gr-acc (accordion toggle)
+            const acc = e.target.closest('.gr-acc');
+            if (acc && e.target === acc) {
+                acc.classList.toggle('open');
+                e.stopPropagation();
+                return;
+            }
+
+            // gr-cat-card → section render
+            const catCard = e.target.closest('.gr-cat-card, [data-gr-section]');
+            if (catCard) {
+                const secId = catCard.getAttribute('data-gr-section') ||
+                              catCard.className.match(/cat-([\w-]+)/)?.[1];
+                if (secId && mod.sectionMap[secId]) {
+                    mod.goTo(secId);
+                }
+                return;
+            }
+
+            // tip-card toggle (collapsed/expanded)
+            const tipCard = e.target.closest('.gr-tip-card');
+            if (tipCard && e.target === tipCard) {
+                tipCard.classList.toggle('open');
+                return;
+            }
+
+        }, { signal });
     }
 
     _buildSidenav() {
@@ -142,9 +201,9 @@ class GrammarModule {
             html += `<div class="gr-sn-sec">${grp}</div>`;
             list.forEach(s => {
                 const active = s.id === this._current ? ' active' : '';
-                // onclick: modülün global render wrapper'ını çağır
+                // data-action → ydt-delegation.js tarafından işlenir (CSP unsafe-inline gerektirmez)
                 html += `<button class="gr-sn-btn${active}" ` +
-                    `onclick="window['_${this.id}GoTo']('${s.id}')">` +
+                    `data-action="window['_${this.id}GoTo']('${s.id}')">` +
                     `<span class="gr-sn-dot" style="background:${dot}"></span>` +
                     `${s.label}</button>`;
             });

@@ -127,13 +127,13 @@ function renderHub(){
     const tags=['Tümü','Kelime','Cümle','Seviye'];
     const activeTag=pg.dataset.tag||'Tümü';
 
-    const tagHtml=tags.map(t=>`<button class="gm-tag-btn${t===activeTag?' active':''}" onclick="GM._tag('${t}')">${t}</button>`).join('');
+    const tagHtml=tags.map(t=>`<button class="gm-tag-btn${t===activeTag?' active':''}" data-action="GM._tag('${t}')">${t}</button>`).join('');
 
     const filtered=GAME_META.filter(g=>activeTag==='Tümü'||g.tag===activeTag);
 
     const cards=filtered.map(g=>{
         const ok=poolSize>=g.min;
-        return `<div class="gm-game-card${ok?'':' gm-disabled'}" ${!ok?`data-disabled-reason="En az ${g.min} kelime gerekli"`:''} onclick="${ok?`GM.start('${g.id}')`:''}">\n            <div class="gm-game-icon" style="background:${g.color}18;color:${g.color};">${g.icon}</div>\n            <div class="gm-game-body">\n                <div class="gm-game-name">${g.name}</div>\n                <div class="gm-game-desc">${g.desc}</div>\n            </div>\n            <div class="gm-game-tag" style="background:${g.color}18;color:${g.color};">${g.tag}</div>\n        </div>`;
+        return `<div class="gm-game-card${ok?'':' gm-disabled'}" ${!ok?`data-disabled-reason="En az ${g.min} kelime gerekli"`:''} data-action="${ok?`GM.start('${g.id}')`:''}">\n            <div class="gm-game-icon" style="background:${g.color}18;color:${g.color};">${g.icon}</div>\n            <div class="gm-game-body">\n                <div class="gm-game-name">${g.name}</div>\n                <div class="gm-game-desc">${g.desc}</div>\n            </div>\n            <div class="gm-game-tag" style="background:${g.color}18;color:${g.color};">${g.tag}</div>\n        </div>`;
     }).join('');
 
     pg.innerHTML=`
@@ -183,7 +183,7 @@ function start(gameId){
 function gameShell(title, icon, color, extra=''){
     return `<div class="gm-game-shell">
         <div class="gm-game-topbar" style="border-bottom:3px solid ${color}20;">
-            <button class="gm-back-btn" onclick="GM._back()">← Geri</button>
+            <button class="gm-back-btn" data-action="GM._back()">← Geri</button>
             <div class="gm-game-topbar-title"><span style="margin-right:6px;">${icon}</span>${title}</div>
             ${extra}
         </div>
@@ -217,8 +217,8 @@ function showResult(opts){
         </div>
         <div style="font-size:1.8rem;letter-spacing:6px;margin:14px 0;">${'⭐'.repeat(stars)+'☆'.repeat(3-stars)}</div>
         <div style="display:flex;gap:10px;justify-content:center;">
-            <button class="gm-btn-sec" onclick="GM.showGamesPage()">🏠 Menü</button>
-            <button class="gm-btn-pri" onclick="${opts.onReplay||'GM.showGamesPage()'}">🔄 Tekrar</button>
+            <button class="gm-btn-sec" data-action="GM.showGamesPage()">🏠 Menü</button>
+            <button class="gm-btn-pri" data-action="${opts.onReplay||'GM.showGamesPage()'}">🔄 Tekrar</button>
         </div>
     </div>`;
 }
@@ -411,14 +411,14 @@ function _agRender(){
     const w=_ag._w;
     const ansHtml=Array.from({length:w.eng.length},(_,i)=>{
         const l=_ag.sel[i];
-        return `<div class="gm-ag-slot${l?' filled':''}" onclick="GM._agRm(${i})">${l?l.toUpperCase():'&nbsp;'}</div>`;
+        return `<div class="gm-ag-slot${l?' filled':''}" data-action="GM._agRm(${i})">${l?l.toUpperCase():'&nbsp;'}</div>`;
     }).join('');
     const letHtml=_ag._letters.map((l,i)=>{
         const usedN=_ag.sel.filter(x=>x===l).length;
         const totalN=_ag._letters.filter(x=>x===l).length;
         const used=usedN>=(totalN- (_ag.sel.slice(0,_ag.sel.length).filter(x=>x===l).length - _ag._letters.slice(0,i).filter(x=>x===l).length));
         // simpler: track by index
-        return `<button class="gm-ag-tile" id="gm-ag-t-${i}" onclick="GM._agAdd('${l}',${i})">${l.toUpperCase()}</button>`;
+        return `<button class="gm-ag-tile" id="gm-ag-t-${i}" data-action="GM._agAdd('${l}',${i})">${l.toUpperCase()}</button>`;
     }).join('');
 
     area.innerHTML=`<div style="padding:16px;">
@@ -432,8 +432,8 @@ function _agRender(){
         <div style="font-size:.72rem;font-weight:700;color:var(--ink3);text-align:center;margin-bottom:10px;">Harflere tıkla:</div>
         <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:16px;" id="gm-ag-tiles">${letHtml}</div>
         <div style="display:flex;gap:10px;">
-            <button class="gm-btn-sec" style="flex:1;" onclick="GM._agClear()">🗑️ Temizle</button>
-            <button class="gm-btn-pri" style="flex:1;" onclick="GM._agCheck()">Kontrol ✓</button>
+            <button class="gm-btn-sec" style="flex:1;" data-action="GM._agClear()">🗑️ Temizle</button>
+            <button class="gm-btn-pri" style="flex:1;" data-action="GM._agCheck()">Kontrol ✓</button>
         </div>
     </div>`;
     // disable used tiles
@@ -518,7 +518,7 @@ function _hgRender(){
 
     const keyboard='abcdefghijklmnopqrstuvwxyz'.split('').map(c=>{
         const state=wrong.includes(c)?'wrong':guessed.has(c)?'right':'';
-        return `<button class="gm-hg-key${state?' '+state:''}" onclick="GM._hgGuess('${c}')" ${state?'disabled':''}>${c.toUpperCase()}</button>`;
+        return `<button class="gm-hg-key${state?' '+state:''}" data-action="GM._hgGuess('${c}')" ${state?'disabled':''}>${c.toUpperCase()}</button>`;
     }).join('');
 
     area.innerHTML=`<div style="padding:16px;">
@@ -593,7 +593,7 @@ function _frNext(){
         <div class="gm-flash-word">${esc(w.eng)}</div>
         ${w.mnemonic?`<div style="text-align:center;font-size:.72rem;color:var(--ink3);margin-bottom:10px;font-style:italic;">💡 ${esc(w.mnemonic)}</div>`:''}
         <div class="gm-ans-grid">
-            ${opts.map(o=>`<button class="gm-ans-btn" onclick="GM._frAns(this,'${esc(o)}','${esc(w.tr)}')">${esc(o)}</button>`).join('')}
+            ${opts.map(o=>`<button class="gm-ans-btn" data-action="GM._frAns(this,'${esc(o)}','${esc(w.tr)}')">${esc(o)}</button>`).join('')}
         </div>
     </div>`;
     // Timer
@@ -682,8 +682,8 @@ function _sbNext(){
 function _sbRender(){
     const area=$id('gm-area'); if(!area) return;
     const q=_sb._q;
-    const dc=_sb.b.map((w,i)=>`<div class="gm-chip gm-chip-in" onclick="GM._sbRm(${i})">${esc(w)}</div>`).join('');
-    const bk=_sb.bk.map((w,i)=>`<div class="gm-chip" onclick="GM._sbAdd(${i})">${esc(w)}</div>`).join('');
+    const dc=_sb.b.map((w,i)=>`<div class="gm-chip gm-chip-in" data-action="GM._sbRm(${i})">${esc(w)}</div>`).join('');
+    const bk=_sb.bk.map((w,i)=>`<div class="gm-chip" data-action="GM._sbAdd(${i})">${esc(w)}</div>`).join('');
     area.innerHTML=`<div style="padding:16px;">
         <div class="gm-prog-bar-wrap"><div class="gm-prog-bar" style="width:${(_sb.i/_sb.qs.length)*100}%"></div></div>
         <div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border-radius:14px;padding:12px;margin-bottom:14px;text-align:center;">
@@ -694,7 +694,7 @@ function _sbRender(){
             ${dc||'<span style="color:#d1fae5;font-size:.8rem;font-weight:700;">Kelimeler buraya gelecek...</span>'}
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;">${bk}</div>
-        <button class="gm-btn-pri" onclick="GM._sbCheck()" style="width:100%;">Kontrol Et ✓</button>
+        <button class="gm-btn-pri" data-action="GM._sbCheck()" style="width:100%;">Kontrol Et ✓</button>
     </div>`;
 }
 function _sbAdd(i){ _sb.b.push(_sb.bk[i]); _sb.bk.splice(i,1); _sbRender(); }
@@ -755,7 +755,7 @@ function _fbNext(){
             ${w.tr?`<div style="font-size:.78rem;color:var(--ink3);margin-top:8px;">Türkçe ipucu: <em>${esc(w.tr)}</em></div>`:''}
         </div>
         <div class="gm-ans-grid">
-            ${opts.map(o=>`<button class="gm-ans-btn" onclick="GM._fbAns(this,'${esc(o)}','${esc(w.eng)}')">${esc(o)}</button>`).join('')}
+            ${opts.map(o=>`<button class="gm-ans-btn" data-action="GM._fbAns(this,'${esc(o)}','${esc(w.eng)}')">${esc(o)}</button>`).join('')}
         </div>
     </div>`;
 }
@@ -803,7 +803,7 @@ function _tdNext(){
         <div class="gm-flash-word" style="font-size:2rem;">${esc(question)}</div>
         ${_td.streak>=3?`<div style="text-align:center;font-size:.8rem;color:#f59e0b;font-weight:800;margin:-6px 0 10px;">🔥 ${_td.streak} seri bonus! ×${Math.min(3,Math.floor(_td.streak/3)+1)}</div>`:''}
         <div class="gm-ans-grid">
-            ${opts.map(o=>`<button class="gm-ans-btn" onclick="GM._tdAns(this,'${esc(o)}','${esc(correctAns)}')">${esc(o)}</button>`).join('')}
+            ${opts.map(o=>`<button class="gm-ans-btn" data-action="GM._tdAns(this,'${esc(o)}','${esc(correctAns)}')">${esc(o)}</button>`).join('')}
         </div>
     </div>`;
 }
@@ -865,7 +865,7 @@ function startLevelMap(listName){
         if(!words.length) return;
         const color=label.includes('🏆')?'#16a34a':label.includes('🟡')?'#f59e0b':label.includes('🔴')?'#e63946':'#6366f1';
         const cards=words.map(w=>`
-            <div style="background:white;border-radius:12px;padding:10px 12px;border-left:4px solid ${color};display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="GM._lvFlip(this,'${esc(w.eng)}','${esc(w.tr)}')">
+            <div style="background:white;border-radius:12px;padding:10px 12px;border-left:4px solid ${color};display:flex;align-items:center;gap:10px;cursor:pointer;" data-action="GM._lvFlip(this,'${esc(w.eng)}','${esc(w.tr)}')">
                 <div style="flex:1;">
                     <div style="font-weight:800;font-size:.9rem;color:var(--ink);">${esc(w.eng)}</div>
                     <div class="gm-lv-tr" style="font-size:.75rem;color:var(--ink3);display:none;">${esc(w.tr)}</div>
@@ -883,7 +883,7 @@ function startLevelMap(listName){
     // Zor kelimelere odaklan butonu
     const hardWords=groups['🔴 Zor'];
     if(hardWords.length>=4){
-        html+=`<button class="gm-btn-pri" style="width:100%;margin-top:8px;" onclick="GM._lvPractice()">🎯 Zor Kelimeleri Pratik Et (${hardWords.length})</button>`;
+        html+=`<button class="gm-btn-pri" style="width:100%;margin-top:8px;" data-action="GM._lvPractice()">🎯 Zor Kelimeleri Pratik Et (${hardWords.length})</button>`;
     }
     html+='</div>';
     area.innerHTML=html;
@@ -937,7 +937,7 @@ function _spNext(){
         <div class="gm-prog-bar-wrap"><div class="gm-prog-bar" style="width:${(_sp.i/Math.min(_sp.pool.length,10))*100}%"></div></div>
         <div class="gm-sp-card">
             <div style="font-size:.8rem;font-weight:700;color:var(--ink3);margin-bottom:12px;text-align:center;">Sesi duy, kelimeyi yaz 👂</div>
-            <button id="gm-sp-btn" class="gm-sp-listen-btn" onclick="GM._spListen(this)">
+            <button id="gm-sp-btn" class="gm-sp-listen-btn" data-action="GM._spListen(this)">
                 🔊 Dinle
             </button>
             <div style="font-size:.72rem;color:var(--ink3);margin:8px 0 14px;text-align:center;">Tekrar duymak için tıkla</div>
@@ -948,9 +948,9 @@ function _spNext(){
             <div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap;margin-bottom:14px;">${blanks}</div>
             <div style="display:flex;gap:8px;margin-bottom:10px;">
                 <input id="gm-sp-inp" class="gm-inp" type="text" placeholder="Kelimeyi yaz..." autocomplete="off" autocorrect="off" spellcheck="false">
-                <button class="gm-btn-pri" onclick="GM._spCheck()" style="flex-shrink:0;padding:0 20px;">✓</button>
+                <button class="gm-btn-pri" data-action="GM._spCheck()" style="flex-shrink:0;padding:0 20px;">✓</button>
             </div>
-            <button class="gm-btn-sec" onclick="GM._spHint()" style="width:100%;font-size:.82rem;padding:10px;">💡 İpucu (harf göster)</button>
+            <button class="gm-btn-sec" data-action="GM._spHint()" style="width:100%;font-size:.82rem;padding:10px;">💡 İpucu (harf göster)</button>
         </div>
     </div>`;
     setTimeout(()=>{ const b=$id('gm-sp-btn'); if(b) _spSpeak(w.eng,b); },400);
@@ -1014,3 +1014,9 @@ return {
 function showGamesPage(){ GM.showGamesPage(); }
 function startMemoryGame(listName){ window._gmCurrentList=listName||window._gmCurrentList; GM.start('memory'); }
 function exitMemoryGame(){ GM._back(); }
+
+// ── Window Export — delegation window.GM lookup için ─────────────
+window.GM = GM;
+window.showGamesPage = showGamesPage;
+window.showExercisePage = showExercisePage;
+

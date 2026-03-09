@@ -528,7 +528,7 @@ function _spRenderPage() {
     if (!pg) return;
     pg.innerHTML = SP_GLOBAL_CSS + `
         <div class="gr-topbar">
-            <button class="gr-back-btn" onclick="navTo('index-page')">←</button>
+            <button class="gr-back-btn" data-action="navTo('index-page')">←</button>
             <div>
                 <div class="gr-topbar-label">Speaking Modülü</div>
                 <div class="gr-topbar-title">Günlük İngilizce Konuşma</div>
@@ -555,7 +555,7 @@ function _spBuildNav() {
         list.forEach(s => {
             const dot = SP_DOTS[s.cat]||'#aaa';
             const act = s.id===_spSection?' active':'';
-            h += `<button class="gr-sn-btn${act}" onclick="_spGo('${s.id}')">
+            h += `<button class="gr-sn-btn${act}" data-action="_spGo('${s.id}')">
                 <span class="gr-sn-dot" style="background:${dot}"></span>${s.label}
             </button>`;
         });
@@ -611,7 +611,7 @@ function _spTbl(rows, accentColor='#059669') {
             <div class="sp-row-tr">${r[0]}</div>
             <div class="sp-row-en" style="color:${accentColor}">${r[1]}</div>
             <div class="sp-row-spk">
-                <button onclick="spSpeak('${safe}','${uid}')" id="spk${uid}" class="sp-spk-btn" title="Dinle">🔊</button>
+                <button data-action="spSpeak('${safe}','${uid}')" id="spk${uid}" class="sp-spk-btn" title="Dinle">🔊</button>
             </div>
         </div>`;
     }).join('');
@@ -669,7 +669,7 @@ function _spOverview() {
     ];
 
     const makeCard = (item) => `
-        <div class="sp-ov-card" onclick="_spGo('${item.id}')"
+        <div class="sp-ov-card" data-action="_spGo('${item.id}')"
              style="background:${item.bg};border-color:${item.c}30;">
             <div class="sp-ov-icon" style="background:rgba(255,255,255,.6);">${item.ico}</div>
             <div class="sp-ov-title" style="color:${item.c}88;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:0;">${item.count}</div>
@@ -1017,11 +1017,11 @@ function _spPronunciation() {
                 const safe = w.replace(/'/g,"\\'");
                 return `<div class="sp-word-chip">
                     <span>${w}</span>
-                    <button onclick="spSpeak('${safe}','p${ci}${ii}${wi}')" id="spkp${ci}${ii}${wi}" class="sp-spk-btn">🔊</button>
+                    <button data-action="spSpeak('${safe}','p${ci}${ii}${wi}')" id="spkp${ci}${ii}${wi}" class="sp-spk-btn">🔊</button>
                 </div>`;
             }).join('');
             h += `<div class="sp-ipa-card">
-                <div class="sp-ipa-head" onclick="var el=document.getElementById('${uid}');el.classList.toggle('open');this.querySelector('.sp-chev').style.transform=el.classList.contains('open')?'rotate(180deg)':'rotate(0)';">
+                <div class="sp-ipa-head" data-toggle-id="${uid}" data-toggle-chev=".sp-chev">
                     <span class="sp-ipa-badge" style="color:#db2777;background:#fdf2f8;">${item.ipa}</span>
                     <div style="flex:1;">
                         <div style="font-weight:800;color:var(--ink);font-size:.92rem;">${item.name}</div>
@@ -1105,7 +1105,7 @@ function _spFlashcardsPage() {
     const catBtns = cats.map(c => {
         const isActive = c === _spActiveCat;
         const col = FC_CAT_COLORS[c] || FC_CAT_DEFAULT;
-        return `<button onclick="spFcFilter('${c}')" id="spfccat-${c}"
+        return `<button data-action="spFcFilter('${c}')" id="spfccat-${c}"
             style="padding:6px 14px;border-radius:20px;border:1.5px solid ${isActive ? col.border : 'var(--border)'};
             background:${isActive ? col.badge : '#fff'};color:${isActive ? col.badgeText : 'var(--ink2)'};
             font-size:.75rem;font-weight:700;cursor:pointer;transition:all .15s;font-family:inherit;">${c}</button>`;
@@ -1114,7 +1114,7 @@ function _spFlashcardsPage() {
     + `<div style="padding:18px 24px 28px;">
         <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;" id="sp-fc-cats">${catBtns}</div>
         <div style="text-align:center;font-size:.8rem;color:var(--ink3);margin-bottom:14px;font-weight:600;" id="sp-fc-counter">Kart 1 / ${_spCardDeck.length}</div>
-        <div id="sp-fc-card" onclick="spFcFlip()" class="sp-fc-card" style="border:2.5px solid #059669;box-shadow:0 6px 24px rgba(5,150,105,.15);">
+        <div id="sp-fc-card" data-action="spFcFlip()" class="sp-fc-card" style="border:2.5px solid #059669;box-shadow:0 6px 24px rgba(5,150,105,.15);">
             <div class="sp-fc-card-bg" id="sp-fc-bg" style="background:linear-gradient(135deg,#f0fdf4,#d1fae5);"></div>
             <div class="sp-fc-card-content">
                 <div style="font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px;" id="sp-fc-lbl">🇹🇷 Türkçe</div>
@@ -1123,12 +1123,12 @@ function _spFlashcardsPage() {
             </div>
         </div>
         <div id="sp-fc-audio" style="text-align:center;margin-top:14px;display:none;">
-            <button onclick="spFcSpeak()" style="background:#d1fae5;border:1.5px solid #6ee7b7;color:#065f46;padding:10px 24px;border-radius:12px;font-size:.84rem;font-weight:700;cursor:pointer;font-family:inherit;">🔊 Sesi Dinle</button>
+            <button data-action="spFcSpeak()" style="background:#d1fae5;border:1.5px solid #6ee7b7;color:#065f46;padding:10px 24px;border-radius:12px;font-size:.84rem;font-weight:700;cursor:pointer;font-family:inherit;">🔊 Sesi Dinle</button>
         </div>
         <div style="display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap;">
-            <button onclick="spFcPrev()" style="padding:11px 24px;border-radius:12px;border:1.5px solid var(--border);background:#fff;font-size:.84rem;font-weight:700;cursor:pointer;color:var(--ink2);font-family:inherit;">← Önceki</button>
-            <button onclick="spFcShuffle()" style="padding:11px 24px;border-radius:12px;border:1.5px solid #c7d2fe;background:#e0e7ff;font-size:.84rem;font-weight:700;cursor:pointer;color:#4f46e5;font-family:inherit;">🔀 Karıştır</button>
-            <button onclick="spFcNext()" style="padding:11px 24px;border-radius:12px;border:1.5px solid #6ee7b7;background:#d1fae5;font-size:.84rem;font-weight:700;cursor:pointer;color:#065f46;font-family:inherit;">Sonraki →</button>
+            <button data-action="spFcPrev()" style="padding:11px 24px;border-radius:12px;border:1.5px solid var(--border);background:#fff;font-size:.84rem;font-weight:700;cursor:pointer;color:var(--ink2);font-family:inherit;">← Önceki</button>
+            <button data-action="spFcShuffle()" style="padding:11px 24px;border-radius:12px;border:1.5px solid #c7d2fe;background:#e0e7ff;font-size:.84rem;font-weight:700;cursor:pointer;color:#4f46e5;font-family:inherit;">🔀 Karıştır</button>
+            <button data-action="spFcNext()" style="padding:11px 24px;border-radius:12px;border:1.5px solid #6ee7b7;background:#d1fae5;font-size:.84rem;font-weight:700;cursor:pointer;color:#065f46;font-family:inherit;">Sonraki →</button>
         </div>
         <div style="margin-top:10px;text-align:center;font-size:.72rem;color:var(--ink3);">⌨️ Klavye: ← Önceki · → Sonraki · Boşluk: Çevir</div>
     </div>`;
@@ -1221,7 +1221,7 @@ const SP_AI_TOPICS = [
 function _spAiChatPage() {
     _spAiHistory = []; _spAiTopic = null;
     const topicGrid = SP_AI_TOPICS.map((t, i) => `
-        <div class="sp-topic-card" onclick="spStartChat(${i})">
+        <div class="sp-topic-card" data-action="spStartChat(${i})">
             <div class="sp-topic-icon" style="background:${t.bg};">${t.label.split(' ')[0]}</div>
             <div>
                 <div class="sp-topic-label">${t.label.substring(t.label.indexOf(' ')+1)}</div>
@@ -1275,7 +1275,7 @@ function _spAiChatPage() {
                     <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;animation:sp-pulse 1.5s ease-in-out infinite;"></span>
                     <span id="sp-chat-lbl"></span>
                 </div>
-                <button onclick="spChatReset()" style="font-size:.72rem;padding:6px 14px;border-radius:10px;border:1.5px solid var(--border);background:#fff;cursor:pointer;color:var(--ink3);font-family:inherit;">🔄 Yeni Konu</button>
+                <button data-action="spChatReset()" style="font-size:.72rem;padding:6px 14px;border-radius:10px;border:1.5px solid var(--border);background:#fff;cursor:pointer;color:var(--ink3);font-family:inherit;">🔄 Yeni Konu</button>
             </div>
             <div id="sp-chat-msgs" style="background:var(--bg);border:1.5px solid var(--border);border-radius:16px;padding:16px;min-height:280px;max-height:400px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;"></div>
             <div style="display:flex;gap:8px;margin-top:12px;">
@@ -1284,7 +1284,7 @@ function _spAiChatPage() {
                     onkeydown="if(event.key==='Enter')spChatSend()"
                     onfocus="this.style.borderColor='#3b82f6'"
                     onblur="this.style.borderColor='var(--border)'">
-                <button onclick="spChatSend()" style="padding:12px 22px;border-radius:12px;border:none;background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;font-size:.87rem;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 3px 12px rgba(29,78,216,.3);">Gönder</button>
+                <button data-action="spChatSend()" style="padding:12px 22px;border-radius:12px;border:none;background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;font-size:.87rem;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 3px 12px rgba(29,78,216,.3);">Gönder</button>
             </div>
             <div style="font-size:.7rem;color:var(--ink3);margin-top:8px;text-align:center;">Hata düzeltmesi için mesajının sonuna <strong>(feedback)</strong> ekle</div>
         </div>
@@ -1547,12 +1547,12 @@ function _spPhrasal() {
                     <div class="sp-pv-ex">
                         <span class="sp-pv-tag">✅</span>
                         <span>${v[2]}</span>
-                        <button onclick="spSpeak('${safe1}','${uid1}')" id="spk${uid1}" class="sp-spk-btn" title="Dinle">🔊</button>
+                        <button data-action="spSpeak('${safe1}','${uid1}')" id="spk${uid1}" class="sp-spk-btn" title="Dinle">🔊</button>
                     </div>
                     <div class="sp-pv-ex">
                         <span class="sp-pv-tag">✅</span>
                         <span>${v[3]}</span>
-                        <button onclick="spSpeak('${safe2}','${uid2}')" id="spk${uid2}" class="sp-spk-btn" title="Dinle">🔊</button>
+                        <button data-action="spSpeak('${safe2}','${uid2}')" id="spk${uid2}" class="sp-spk-btn" title="Dinle">🔊</button>
                     </div>
                 </div>
             </div>`;
@@ -1655,7 +1655,7 @@ function _spHesitation() {
             return `<div class="sp-row">
                 <div class="sp-row-tr">${p[1]}</div>
                 <div class="sp-row-en" style="color:${s.color}">${p[0]}</div>
-                <div class="sp-row-spk"><button onclick="spSpeak('${safe}','${uid}')" id="spk${uid}" class="sp-spk-btn" title="Dinle">🔊</button></div>
+                <div class="sp-row-spk"><button data-action="spSpeak('${safe}','${uid}')" id="spk${uid}" class="sp-spk-btn" title="Dinle">🔊</button></div>
             </div>`;
         }).join('');
         return `
@@ -1756,14 +1756,14 @@ function _spRegister() {
                     <span style="background:#fef3c7;color:#92400e;font-size:.62rem;font-weight:800;padding:2px 7px;border-radius:99px;white-space:nowrap;margin-top:2px">INFORMAL</span>
                     <div>
                         <div style="font-size:.88rem;color:#1e293b;font-weight:600">${r[0]}</div>
-                        <button onclick="spSpeak('${safe1}','${uid1}')" id="spk${uid1}" class="sp-spk-btn" title="Dinle" style="margin-top:3px">🔊</button>
+                        <button data-action="spSpeak('${safe1}','${uid1}')" id="spk${uid1}" class="sp-spk-btn" title="Dinle" style="margin-top:3px">🔊</button>
                     </div>
                 </div>
                 <div style="display:flex;align-items:flex-start;gap:6px">
                     <span style="background:#dbeafe;color:#1d4ed8;font-size:.62rem;font-weight:800;padding:2px 7px;border-radius:99px;white-space:nowrap;margin-top:2px">FORMAL</span>
                     <div>
                         <div style="font-size:.88rem;color:#1e293b;font-weight:600">${r[1]}</div>
-                        <button onclick="spSpeak('${safe2}','${uid2}')" id="spk${uid2}" class="sp-spk-btn" title="Dinle" style="margin-top:3px">🔊</button>
+                        <button data-action="spSpeak('${safe2}','${uid2}')" id="spk${uid2}" class="sp-spk-btn" title="Dinle" style="margin-top:3px">🔊</button>
                     </div>
                 </div>
             </div>`;
@@ -1886,7 +1886,7 @@ function _spInterview() {
             return `<div class="sp-row">
                 <div class="sp-row-tr">${p[1]}</div>
                 <div class="sp-row-en" style="color:${s.color}">${p[0]}</div>
-                <div class="sp-row-spk"><button onclick="spSpeak('${safe}','${uid}')" id="spk${uid}" class="sp-spk-btn" title="Dinle">🔊</button></div>
+                <div class="sp-row-spk"><button data-action="spSpeak('${safe}','${uid}')" id="spk${uid}" class="sp-spk-btn" title="Dinle">🔊</button></div>
             </div>`;
         }).join('');
         return `

@@ -65,7 +65,7 @@ function cjAcc(items) {
                 + n + '</div>';
         }).join('');
         const descHtml = it.desc ? '<p class="gr-acc-desc">' + it.desc + '</p>' : '';
-        return '<div class="gr-acc" onclick="this.classList.toggle(\'open\')">'
+        return '<div class="gr-acc" data-toggle-class="open">'
             + '<div class="gr-acc-head">'
             + '<div class="gr-acc-ico" style="background:' + it.bg + '">' + it.ico + '</div>'
             + '<div class="gr-acc-title">' + it.title + '</div>'
@@ -119,7 +119,7 @@ function cjOverview() {
         return '<div style="border:1.5px solid ' + c.bd + ';border-radius:14px;padding:16px;background:' + c.bc + ';cursor:pointer;transition:all .18s;"'
             + ' onmouseover="this.style.transform=\'translateY(-3px)\';this.style.boxShadow=\'0 8px 24px rgba(0,0,0,.1)\'"'
             + ' onmouseout="this.style.transform=\'\';this.style.boxShadow=\'\'"'
-            + ' onclick="_cjRenderSection(\'' + c.id + '\')">'
+            + ' data-action="_cjRenderSection(\'' + c.id + '\')">'
             + '<div style="font-size:1.4rem;margin-bottom:8px">' + c.emoji + '</div>'
             + '<div style="font-size:.95rem;font-weight:900;color:#1a1a2e;margin-bottom:4px">' + c.name + '</div>'
             + '<div style="font-size:.73rem;color:' + c.tc + ';line-height:1.5">' + c.sub + '</div>'
@@ -136,7 +136,7 @@ function cjOverview() {
             '<strong>Transition Words</strong> → iki cümle arasında anlam köprüsü kurar, noktalama ile ayrılır.',
         ])
         + '<div style="padding:0 36px 36px;text-align:center;margin-top:16px;">'
-        + '<button onclick="_cjRenderSection(\'exercises\')" style="padding:14px 32px;background:linear-gradient(135deg,#16a34a,#4ade80);border:none;border-radius:13px;color:#fff;font-size:.9rem;font-weight:900;cursor:pointer;font-family:inherit;">✨ Alıştırmalara Geç</button>'
+        + '<button data-action="_cjRenderSection(\'exercises\')" style="padding:14px 32px;background:linear-gradient(135deg,#16a34a,#4ade80);border:none;border-radius:13px;color:#fff;font-size:.9rem;font-weight:900;cursor:pointer;font-family:inherit;">✨ Alıştırmalara Geç</button>'
         + '</div>';
 }
 
@@ -814,7 +814,7 @@ function _cjBuildExercisePage() {
     const tabs = CJ_SETS.map(function(s, i) {
         const active = i === _cjSetIdx
             ? 'style="background:#16a34a;color:#fff;border-color:#16a34a;"' : '';
-        return '<button class="gr-set-tab" ' + active + ' onclick="cjSwitchSet(' + i + ')">' + s.label + '</button>';
+        return '<button class="gr-set-tab" ' + active + ' data-action="cjSwitchSet(' + i + ')">' + s.label + '</button>';
     }).join('');
 
     const qCards = set.questions.map(function(q, i) {
@@ -827,7 +827,7 @@ function _cjBuildExercisePage() {
                 if (lv === q.cor)                         cls += ' ok';
                 else if (lv === state && state !== q.cor) cls += ' bad';
             } else if (state === lv) cls += ' sel';
-            return '<div class="' + cls + '" id="cjso-' + i + '-' + j + '" onclick="cjSetOpt(' + i + ',' + j + ',\'' + lv + '\')">'
+            return '<div class="' + cls + '" id="cjso-' + i + '-' + j + '" data-action="cjSetOpt(' + i + ',' + j + ',\'' + lv + '\')">'
                 + '<span class="gr-opt-letter">' + letter + '</span>' + o + '</div>';
         }).join('');
 
@@ -842,13 +842,13 @@ function _cjBuildExercisePage() {
             + '<div class="gr-q-num">SORU ' + String(i+1).padStart(2,'0') + ' -- ' + set.label.toUpperCase() + '</div>'
             + '<div class="gr-q-text">' + q.q + '</div>'
             + '<div class="gr-mcq">' + opts + '</div>'
-            + '<button class="gr-chk-btn" style="margin-top:10px;border-color:#16a34a;color:#16a34a" onclick="cjCheckSetQ(' + i + ')" ' + btnDis + '>Kontrol Et</button>'
+            + '<button class="gr-chk-btn" style="margin-top:10px;border-color:#16a34a;color:#16a34a" data-action="cjCheckSetQ(' + i + ')" ' + btnDis + '>Kontrol Et</button>'
             + '<div class="' + fbCls + '" id="cjsfb-' + i + '">' + fbTxt + '</div>'
             + '</div>';
     }).join('');
 
     const nextBtn = _cjSetIdx < CJ_SETS.length - 1
-        ? '<button class="gr-retry-btn" style="background:#16a34a;color:#fff;border-color:#16a34a" onclick="cjNextSet()">Sonraki Set &rarr;</button>'
+        ? '<button class="gr-retry-btn" style="background:#16a34a;color:#fff;border-color:#16a34a" data-action="cjNextSet()">Sonraki Set &rarr;</button>'
         : '<span style="font-size:.8rem;color:var(--ink3);align-self:center">Tum setler tamamlandi!</span>';
 
     return cjH('Conjunctions & Transitions', 'Alistirmalar', CJ_SETS.length + ' set x 10 soru -- Her seti tamamla, sonraki sete geç.')
@@ -859,13 +859,13 @@ function _cjBuildExercisePage() {
         + '<span class="gr-score-val" id="cj-live-score">' + _cjSetScore + ' / ' + total + '</span>'
         + '</div>'
         + qCards
-        + '<button class="gr-submit-btn" style="background:linear-gradient(135deg,#16a34a,#4ade80)" onclick="cjSubmitSet()">Seti Degerlendir & Sonucu Gor</button>'
+        + '<button class="gr-submit-btn" style="background:linear-gradient(135deg,#16a34a,#4ade80)" data-action="cjSubmitSet()">Seti Degerlendir & Sonucu Gor</button>'
         + '<div class="gr-result" id="cj-result">'
         + '<div class="gr-res-score" id="cj-res-score" style="color:#16a34a">0/' + total + '</div>'
         + '<div class="gr-res-lbl">' + set.label + ' Tamamlandi</div>'
         + '<div class="gr-res-msg" id="cj-res-msg"></div>'
         + '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px">'
-        + '<button class="gr-retry-btn" style="border-color:#16a34a;color:#16a34a" onclick="cjRetrySameSet()">Ayni Seti Tekrar</button>'
+        + '<button class="gr-retry-btn" style="border-color:#16a34a;color:#16a34a" data-action="cjRetrySameSet()">Ayni Seti Tekrar</button>'
         + nextBtn
         + '</div></div></div>';
 }

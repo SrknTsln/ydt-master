@@ -565,3 +565,9 @@ function _admPopulateParaSelector() {
         sel.appendChild(opt);
     });
 }
+
+// ── Window Exports ────────────────────────────────────────────────
+window.admLoadUserCount    = admLoadUserCount;
+window.adminShareLists     = adminShareLists;
+window.adminShareParagraflar = adminShareParagraflar;
+window.showExerciseNav     = showExerciseNav;

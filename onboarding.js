@@ -330,7 +330,7 @@ function obBuildStep1() {
         </div>
         <div class="ob-body">
             <div class="ob-age-grid">
-                <div class="ob-age-card" onclick="obSelectAge('4-8', this)">
+                <div class="ob-age-card" data-action="obSelectAge('4-8', this)">
                     <div class="ob-age-emoji">🌈</div>
                     <div class="ob-age-info">
                         <div class="ob-age-range">4 – 8 Yaş</div>
@@ -343,7 +343,7 @@ function obBuildStep1() {
                     </div>
                     <div class="ob-age-check">✅</div>
                 </div>
-                <div class="ob-age-card" onclick="obSelectAge('9-12', this)">
+                <div class="ob-age-card" data-action="obSelectAge('9-12', this)">
                     <div class="ob-age-emoji">🎒</div>
                     <div class="ob-age-info">
                         <div class="ob-age-range">9 – 12 Yaş</div>
@@ -356,7 +356,7 @@ function obBuildStep1() {
                     </div>
                     <div class="ob-age-check">✅</div>
                 </div>
-                <div class="ob-age-card" onclick="obSelectAge('16+', this)">
+                <div class="ob-age-card" data-action="obSelectAge('16+', this)">
                     <div class="ob-age-emoji">🎓</div>
                     <div class="ob-age-info">
                         <div class="ob-age-range">13 Yaş ve Üzeri</div>
@@ -372,11 +372,11 @@ function obBuildStep1() {
             </div>
         </div>
         <div class="ob-footer">
-            <button class="ob-btn-primary" id="ob-next-1" onclick="obStep1Next()" disabled>
+            <button class="ob-btn-primary" id="ob-next-1" data-action="obStep1Next()" disabled>
                 Devam Et →
             </button>
             <div class="ob-skip-link">
-                <button class="ob-skip-btn" onclick="obClose(true)">⚡ Atla — direkt siteye git</button>
+                <button class="ob-skip-btn" data-action="obClose(true)">⚡ Atla — direkt siteye git</button>
             </div>
         </div>
     </div>`;
@@ -442,11 +442,11 @@ function obRenderStep2() {
             ${obBuildQuizQ(0)}
         </div>
         <div class="ob-footer">
-            <button class="ob-btn-primary" id="ob-quiz-btn" onclick="obQuizAction()" disabled>
+            <button class="ob-btn-primary" id="ob-quiz-btn" data-action="obQuizAction()" disabled>
                 Cevapla
             </button>
             <div class="ob-skip-link">
-                <button class="ob-skip-btn" onclick="obSkipQuiz()">Testi atla</button>
+                <button class="ob-skip-btn" data-action="obSkipQuiz()">Testi atla</button>
             </div>
         </div>`;
 
@@ -480,7 +480,7 @@ function obBuildQuizQ(idx) {
         <div class="ob-quiz-question">${questionHtml}</div>
         <div class="ob-quiz-options" id="ob-quiz-opts">
             ${q.opts.map((opt, i) => `
-                <button class="ob-quiz-opt" onclick="obSelectOpt(${i}, this)">
+                <button class="ob-quiz-opt" data-action="obSelectOpt(${i}, this)">
                     <span class="ob-quiz-opt-letter">${letters[i]}</span>
                     ${opt}
                 </button>`).join('')}
@@ -625,7 +625,7 @@ function obShowResult() {
             </div>
         </div>
         <div class="ob-footer">
-            <button class="ob-btn-primary" onclick="obCheckStarterPack()">
+            <button class="ob-btn-primary" data-action="obCheckStarterPack()">
                 🚀 Öğrenmeye Başla
             </button>
         </div>`;
@@ -700,10 +700,10 @@ function obShowStarterPack() {
             </div>
         </div>
         <div class="ob-footer">
-            <button class="ob-btn-primary" id="ob-sp-load-btn" onclick="obLoadStarterPack()" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);box-shadow:0 4px 14px rgba(14,165,233,.3);">
+            <button class="ob-btn-primary" id="ob-sp-load-btn" data-action="obLoadStarterPack()" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);box-shadow:0 4px 14px rgba(14,165,233,.3);">
                 📥 Starter Pack'i Yükle (${packInfo.total} kelime)
             </button>
-            <button class="ob-btn-secondary" onclick="obClose(false)">Atla, boş başlayacağım</button>
+            <button class="ob-btn-secondary" data-action="obClose(false)">Atla, boş başlayacağım</button>
         </div>`;
 
     card.classList.remove('ob-step');
@@ -831,7 +831,7 @@ function obAddProfilWidget() {
                 <div style="font-size:.62rem;font-weight:700;color:var(--ink3);text-transform:uppercase;margin-top:3px;">Seviye</div>
             </div>
         </div>
-        <button class="ob-restart-btn" onclick="obRestartOnboarding()">
+        <button class="ob-restart-btn" data-action="obRestartOnboarding()">
             🔄 Yaş / Seviye Testi Yeniden Yap
         </button>`;
 
@@ -995,7 +995,7 @@ function obRenderLevelBanner() {
     }
 
     const closeBtn = data.dismissable
-        ? `<button onclick="obDismissBanner()" aria-label="Kapat" style="
+        ? `<button data-action="obDismissBanner()" aria-label="Kapat" style="
             position:absolute;top:12px;right:12px;
             background:rgba(255,255,255,0.2);border:none;color:white;
             width:28px;height:28px;border-radius:50%;cursor:pointer;
@@ -1050,7 +1050,7 @@ function obRenderLevelBanner() {
             </div>
 
             <!-- CTA -->
-            <button onclick="${data.ctaFn}" style="
+            <button data-action="${data.ctaFn}" style="
                 background:rgba(255,255,255,0.22);
                 border:1.5px solid rgba(255,255,255,0.45);
                 color:white;font-weight:800;font-size:.78rem;

@@ -60,7 +60,7 @@ function cnAcc(items) {
                 + String(i+1).padStart(2,'0') + '</span>' + ex + '</div>';
         }).join('');
         const descHtml = it.desc ? '<p class="gr-acc-desc">' + it.desc + '</p>' : '';
-        return '<div class="gr-acc" onclick="this.classList.toggle(\'open\')">'
+        return '<div class="gr-acc" data-toggle-class="open">'
             + '<div class="gr-acc-head">'
             + '<div class="gr-acc-ico" style="background:' + it.bg + '">' + it.ico + '</div>'
             + '<div class="gr-acc-title">' + it.title + '</div>'
@@ -104,7 +104,7 @@ function cnOverview() {
         return '<div style="border:1.5px solid ' + c.bd + ';border-radius:14px;padding:16px;background:' + c.bc + ';cursor:pointer;transition:all .18s;"'
             + ' onmouseover="this.style.transform=\'translateY(-3px)\';this.style.boxShadow=\'0 8px 24px rgba(0,0,0,.1)\'"'
             + ' onmouseout="this.style.transform=\'\';this.style.boxShadow=\'\'"'
-            + ' onclick="_cnRenderSection(\'' + c.id + '\')">'
+            + ' data-action="_cnRenderSection(\'' + c.id + '\')">'
             + '<div style="font-size:1.4rem;margin-bottom:8px">' + c.emoji + '</div>'
             + '<div style="font-size:.95rem;font-weight:900;color:#1a1a2e;margin-bottom:4px">' + c.name + '</div>'
             + '<div style="font-size:.73rem;color:' + c.tc + ';line-height:1.5">' + c.sub + '</div>'
@@ -124,7 +124,7 @@ function cnOverview() {
             ['<strong>Mixed 2</strong><br>(2+3)','simple past / past cont. / could V₁ / had to V₁','would/could/might have V₃','"Şimdi şu olsaydı, geçmişte…"'],
         ]
     )
-    + '<div style="padding:0 36px 36px;text-align:center;margin-top:16px;"><button onclick="_cnRenderSection(\'exercises\')" style="padding:14px 32px;background:linear-gradient(135deg,#0369a1,#0ea5e9);border:none;border-radius:13px;color:#fff;font-size:.9rem;font-weight:900;cursor:pointer;font-family:inherit;">✨ Alıştırmalara Geç</button></div>';
+    + '<div style="padding:0 36px 36px;text-align:center;margin-top:16px;"><button data-action="_cnRenderSection(\'exercises\')" style="padding:14px 32px;background:linear-gradient(135deg,#0369a1,#0ea5e9);border:none;border-radius:13px;color:#fff;font-size:.9rem;font-weight:900;cursor:pointer;font-family:inherit;">✨ Alıştırmalara Geç</button></div>';
 }
 
 /* ════════ TYPE 0 ════════ */
@@ -374,7 +374,7 @@ function cnTips() {
             return '<div style="display:flex;gap:10px;padding:9px 13px;background:#f7f7fb;border-radius:10px;margin-top:7px;font-size:.82rem;color:#374151;line-height:1.6;">'
                 + '<span style="flex-shrink:0;margin-top:1px">' + r.ico + '</span>' + r.text + '</div>';
         }).join('');
-        return '<div style="background:#fff;border:1.5px solid #ebebf0;border-radius:14px;overflow:hidden;margin-bottom:10px;" onclick="this.querySelector(\'.cn-tb\').classList.toggle(\'cn-hidden\')">'
+        return '<div style="background:#fff;border:1.5px solid #ebebf0;border-radius:14px;overflow:hidden;margin-bottom:10px;" data-toggle-child=".cn-tb" data-toggle-child-class="cn-hidden">'
             + '<div style="display:flex;align-items:center;gap:12px;padding:13px 18px;background:#f7f7fb;cursor:pointer;">'
             + '<span style="font-size:.6rem;font-weight:900;color:#0369a1;background:#eff6ff;border-radius:7px;padding:3px 9px;flex-shrink:0;font-family:\'Courier New\',monospace;">İPUCU ' + t.num + '</span>'
             + '<span style="flex:1;font-size:.87rem;font-weight:800;color:#1a1a2e">' + t.title + '</span>'
@@ -968,7 +968,7 @@ function _cnBuildExercisePage() {
     const tabs = CN_SETS.map(function(s, i) {
         const active = i === _cnSetIdx
             ? 'style="background:#0369a1;color:#fff;border-color:#0369a1;"' : '';
-        return '<button class="gr-set-tab" ' + active + ' onclick="cnSwitchSet(' + i + ')">' + s.label + '</button>';
+        return '<button class="gr-set-tab" ' + active + ' data-action="cnSwitchSet(' + i + ')">' + s.label + '</button>';
     }).join('');
 
     const qCards = set.questions.map(function(q, i) {
@@ -981,7 +981,7 @@ function _cnBuildExercisePage() {
                 if (lv === q.cor)                         cls += ' ok';
                 else if (lv === state && state !== q.cor) cls += ' bad';
             } else if (state === lv) cls += ' sel';
-            return '<div class="' + cls + '" id="cnso-' + i + '-' + j + '" onclick="cnSetOpt(' + i + ',' + j + ',\'' + lv + '\')">'
+            return '<div class="' + cls + '" id="cnso-' + i + '-' + j + '" data-action="cnSetOpt(' + i + ',' + j + ',\'' + lv + '\')">'
                 + '<span class="gr-opt-letter">' + letter + '</span>' + o
                 + '</div>';
         }).join('');
@@ -997,7 +997,7 @@ function _cnBuildExercisePage() {
             + '<div class="gr-q-num">SORU ' + String(i+1).padStart(2,'0') + ' — ' + set.label.toUpperCase() + '</div>'
             + '<div class="gr-q-text">' + q.q + '</div>'
             + '<div class="gr-mcq">' + opts + '</div>'
-            + '<button class="gr-chk-btn" style="margin-top:10px;border-color:#0369a1;color:#0369a1" onclick="cnCheckSetQ(' + i + ')" ' + btnDis + '>Kontrol Et</button>'
+            + '<button class="gr-chk-btn" style="margin-top:10px;border-color:#0369a1;color:#0369a1" data-action="cnCheckSetQ(' + i + ')" ' + btnDis + '>Kontrol Et</button>'
             + '<div class="' + fbCls + '" id="cnsfb-' + i + '">' + fbTxt + '</div>'
             + '</div>';
     }).join('');
@@ -1010,15 +1010,15 @@ function _cnBuildExercisePage() {
         + '<span class="gr-score-val" id="cn-live-score">' + _cnSetScore + ' / ' + total + '</span>'
         + '</div>'
         + qCards
-        + '<button class="gr-submit-btn" style="background:linear-gradient(135deg,#0369a1,#0ea5e9)" onclick="cnSubmitSet()">🎯 Seti Değerlendir & Sonucu Gör</button>'
+        + '<button class="gr-submit-btn" style="background:linear-gradient(135deg,#0369a1,#0ea5e9)" data-action="cnSubmitSet()">🎯 Seti Değerlendir & Sonucu Gör</button>'
         + '<div class="gr-result" id="cn-result">'
         + '<div class="gr-res-score" id="cn-res-score" style="color:#0369a1">0/' + total + '</div>'
         + '<div class="gr-res-lbl">' + set.label + ' Tamamlandı</div>'
         + '<div class="gr-res-msg" id="cn-res-msg"></div>'
         + '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px">'
-        + '<button class="gr-retry-btn" style="border-color:#0369a1;color:#0369a1" onclick="cnRetrySameSet()">🔄 Aynı Seti Tekrar</button>'
+        + '<button class="gr-retry-btn" style="border-color:#0369a1;color:#0369a1" data-action="cnRetrySameSet()">🔄 Aynı Seti Tekrar</button>'
         + (_cnSetIdx < CN_SETS.length - 1
-            ? '<button class="gr-retry-btn" style="background:#0369a1;color:#fff;border-color:#0369a1" onclick="cnNextSet()">Sonraki Set →</button>'
+            ? '<button class="gr-retry-btn" style="background:#0369a1;color:#fff;border-color:#0369a1" data-action="cnNextSet()">Sonraki Set →</button>'
             : '<span style="font-size:.8rem;color:var(--ink3);align-self:center">🏁 Tüm setler tamamlandı!</span>')
         + '</div>'
         + '</div></div>';

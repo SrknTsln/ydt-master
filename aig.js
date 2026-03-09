@@ -26,7 +26,7 @@ async function _aigInitTopics() {
     const grid = document.getElementById('aig-topics-grid');
     if (!grid || grid.children.length > 0) return;
     grid.innerHTML = AIG_TOPICS.map((t, i) =>
-        `<button class="aig-topic-chip" data-idx="${i}" onclick="aigSelectTopic(${i})">
+        `<button class="aig-topic-chip" data-idx="${i}" data-action="aigSelectTopic(${i})">
             <span class="aig-tc-icon">${t.icon}</span>${t.label}
         </button>`
     ).join('');
@@ -203,7 +203,7 @@ async function _aigRenderPreview(p) {
     let sentIdx = 0;
     const sentHighlight = highlightedText.replace(/([^.!?]+[.!?]+)/g, (match) => {
         const idx = sentIdx++;
-        return `<span class="p-sentence" data-idx="${idx}" onclick="aigPreviewGrammarXRay(${idx})" style="cursor:pointer;" title="Tıkla: Grammar X-Ray">` + match + `</span> `;
+        return `<span class="p-sentence" data-idx="${idx}" data-action="aigPreviewGrammarXRay(${idx})" style="cursor:pointer;" title="Tıkla: Grammar X-Ray">` + match + `</span> `;
     });
 
     const vocPills = vocab.map(([eng, tr]) =>
@@ -239,7 +239,7 @@ async function _aigRenderPreview(p) {
                 <div class="aig-wl-chips">${vocCheckboxes}</div>
                 <div class="aig-wl-actions">
                     <select id="aig-wl-target" class="aig-wl-select"><option value="">— Liste seçin —</option>${listOptions}</select>
-                    <button class="aig-action-btn primary" onclick="aigAddWordsToList()" style="flex:0 0 auto;padding:9px 14px;">➕ Seçilenleri Ekle</button>
+                    <button class="aig-action-btn primary" data-action="aigAddWordsToList()" style="flex:0 0 auto;padding:9px 14px;">➕ Seçilenleri Ekle</button>
                 </div>
                 <div id="aig-wl-result" style="font-size:.72rem;font-weight:700;color:var(--c-green);margin-top:6px;display:none;"></div>
             </div>` : ''}
@@ -248,7 +248,7 @@ async function _aigRenderPreview(p) {
             <div id="aig-grammar-panel" style="display:none; margin-top:16px; padding-top:16px; border-top:1.5px solid var(--border);">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
                     <div class="aig-vocab-title" style="margin:0;">⚙️ Grammar X-Ray</div>
-                    <button onclick="document.getElementById('aig-grammar-panel').style.display='none'"
+                    <button data-hide-id="aig-grammar-panel"
                         style="border:none;background:none;cursor:pointer;font-size:.8rem;color:var(--ink3);font-family:inherit;font-weight:700;">✕ Kapat</button>
                 </div>
                 <div id="aig-grammar-content">
@@ -259,9 +259,9 @@ async function _aigRenderPreview(p) {
             </div>
         </div>
         <div class="aig-result-actions">
-            <button class="aig-action-btn primary" onclick="aigOpenReading()">📖 Okumaya Başla</button>
-            <button class="aig-action-btn" onclick="aigSavePassage()" id="aig-save-btn">💾 Arşive Kaydet</button>
-            <button class="aig-action-btn" onclick="aiGenerateParagraf(true)">🎲 Yeniden Üret</button>
+            <button class="aig-action-btn primary" data-action="aigOpenReading()">📖 Okumaya Başla</button>
+            <button class="aig-action-btn" data-action="aigSavePassage()" id="aig-save-btn">💾 Arşive Kaydet</button>
+            <button class="aig-action-btn" data-action="aiGenerateParagraf(true)">🎲 Yeniden Üret</button>
         </div>
         ${quotaHTML}
     </div>`;
@@ -422,3 +422,7 @@ SADECE şu JSON formatını döndür:
         content.innerHTML = `<div style="color:var(--red);font-size:.84rem;padding:10px;">⚠ Analiz başarısız: ${e.message}</div>`;
     }
 }
+
+// ── Window Exports ────────────────────────────────────────────────
+window.aiGenerateParagraf    = aiGenerateParagraf;
+window.aigPreviewGrammarXRay = aigPreviewGrammarXRay;

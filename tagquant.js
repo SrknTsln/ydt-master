@@ -65,7 +65,7 @@ function tqAcc(items) {
             return '<div style="background:#f0f9ff;border:1.5px solid #7dd3fc;border-radius:8px;padding:10px 14px;margin:6px 0;font-size:.8rem;color:#0c4a6e;line-height:1.7">' + n + '</div>';
         }).join('');
         const descHtml = it.desc ? '<p class="gr-acc-desc">' + it.desc + '</p>' : '';
-        return '<div class="gr-acc" onclick="this.classList.toggle(\'open\')">'
+        return '<div class="gr-acc" data-toggle-class="open">'
             + '<div class="gr-acc-head">'
             + '<div class="gr-acc-ico" style="background:' + it.bg + '">' + it.ico + '</div>'
             + '<div class="gr-acc-title">' + it.title + '</div>'
@@ -116,7 +116,7 @@ function tqOverview() {
         return '<div style="border:1.5px solid ' + c.bd + ';border-radius:14px;padding:16px;background:' + c.bc + ';cursor:pointer;transition:all .18s;"'
             + ' onmouseover="this.style.transform=\'translateY(-3px)\';this.style.boxShadow=\'0 8px 24px rgba(0,0,0,.1)\'"'
             + ' onmouseout="this.style.transform=\'\';this.style.boxShadow=\'\'"'
-            + ' onclick="_tqRenderSection(\'' + c.id + '\')">'
+            + ' data-action="_tqRenderSection(\'' + c.id + '\')">'
             + '<div style="font-size:1.4rem;margin-bottom:8px">' + c.emoji + '</div>'
             + '<div style="font-size:.9rem;font-weight:900;color:#1a1a2e;margin-bottom:4px">' + c.name + '</div>'
             + '<div style="font-size:.72rem;color:' + c.tc + ';line-height:1.5">' + c.sub + '</div>'
@@ -155,7 +155,7 @@ function tqOverview() {
         + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;padding:0 36px 20px;">'
         + cardHtml + '</div>'
         + '<div style="padding:0 36px 36px;text-align:center;">'
-        + '<button onclick="_tqRenderSection(\'exercises\')" style="padding:14px 32px;background:linear-gradient(135deg,#0369a1,#38bdf8);border:none;border-radius:13px;color:#fff;font-size:.9rem;font-weight:900;cursor:pointer;font-family:inherit;">✨ Alıştırmalara Geç</button>'
+        + '<button data-action="_tqRenderSection(\'exercises\')" style="padding:14px 32px;background:linear-gradient(135deg,#0369a1,#38bdf8);border:none;border-radius:13px;color:#fff;font-size:.9rem;font-weight:900;cursor:pointer;font-family:inherit;">✨ Alıştırmalara Geç</button>'
         + '</div>';
 }
 
@@ -506,7 +506,7 @@ function tqExercises() {
             + '<div class="gr-q-num">SORU ' + String(i+1).padStart(2,'0') + ' / BÖLÜM A</div>'
             + '<div class="gr-q-text">' + q.q + '</div>'
             + '<input class="gr-q-inp tq-inp" id="tq-inp-' + i + '" data-index="' + i + '" placeholder="doğru yapıyı yaz…" autocomplete="off"><br>'
-            + '<button class="gr-chk-btn" style="border-color:#0369a1;color:#0369a1" onclick="tqCheckBlank(' + i + ')">Kontrol Et</button>'
+            + '<button class="gr-chk-btn" style="border-color:#0369a1;color:#0369a1" data-action="tqCheckBlank(' + i + ')">Kontrol Et</button>'
             + '<div class="gr-fb" id="tq-fb-b' + i + '"></div>'
             + '</div>';
     }).join('');
@@ -515,14 +515,14 @@ function tqExercises() {
         const opts = q.opts.map(function(o, j) {
             const letter = ['A','B','C','D'][j];
             const lv = ['a','b','c','d'][j];
-            return '<div class="gr-opt" id="tq-opt-' + i + '-' + j + '" onclick="tqSelectOpt(' + i + ',' + j + ',\'' + lv + '\')">'
+            return '<div class="gr-opt" id="tq-opt-' + i + '-' + j + '" data-action="tqSelectOpt(' + i + ',' + j + ',\'' + lv + '\')">'
                 + '<span class="gr-opt-letter">' + letter + '</span>' + o + '</div>';
         }).join('');
         return '<div class="gr-q-card" id="tqq-m' + i + '">'
             + '<div class="gr-q-num">SORU ' + String(i+1).padStart(2,'0') + ' / BÖLÜM B</div>'
             + '<div class="gr-q-text">' + q.q + '</div>'
             + '<div class="gr-mcq">' + opts + '</div>'
-            + '<button class="gr-chk-btn" style="margin-top:10px;border-color:#0369a1;color:#0369a1" onclick="tqCheckMCQ(' + i + ')">Kontrol Et</button>'
+            + '<button class="gr-chk-btn" style="margin-top:10px;border-color:#0369a1;color:#0369a1" data-action="tqCheckMCQ(' + i + ')">Kontrol Et</button>'
             + '<div class="gr-fb" id="tq-fb-m' + i + '"></div>'
             + '</div>';
     }).join('');
@@ -534,12 +534,12 @@ function tqExercises() {
         + blankCards
         + '<div class="gr-q-sec-hd" style="margin-top:20px">Bölüm B — Çoktan Seçmeli</div>'
         + mcqCards
-        + '<button class="gr-submit-btn" style="background:linear-gradient(135deg,#0369a1,#38bdf8)" onclick="tqSubmitAll()">🎯 Tümünü Değerlendir & Sonucu Gör</button>'
+        + '<button class="gr-submit-btn" style="background:linear-gradient(135deg,#0369a1,#38bdf8)" data-action="tqSubmitAll()">🎯 Tümünü Değerlendir & Sonucu Gör</button>'
         + '<div class="gr-result" id="tq-result">'
         + '<div class="gr-res-score" id="tq-res-score" style="color:#0369a1">0/' + TQ_TOTAL + '</div>'
         + '<div class="gr-res-lbl">Toplam Puan</div>'
         + '<div class="gr-res-msg" id="tq-res-msg"></div>'
-        + '<button class="gr-retry-btn" style="border-color:#0369a1;color:#0369a1" onclick="_tqRenderSection(\'exercises\')">🔄 Tekrar Dene</button>'
+        + '<button class="gr-retry-btn" style="border-color:#0369a1;color:#0369a1" data-action="_tqRenderSection(\'exercises\')">🔄 Tekrar Dene</button>'
         + '</div></div>';
 }
 

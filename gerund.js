@@ -64,7 +64,7 @@ function grdAcc(items) {
                 + n + '</div>';
         }).join('');
         const descHtml = it.desc ? '<p class="gr-acc-desc">' + it.desc + '</p>' : '';
-        return '<div class="gr-acc" onclick="this.classList.toggle(\'open\')">'
+        return '<div class="gr-acc" data-toggle-class="open">'
             + '<div class="gr-acc-head">'
             + '<div class="gr-acc-ico" style="background:' + it.bg + '">' + it.ico + '</div>'
             + '<div class="gr-acc-title">' + it.title + '</div>'
@@ -116,7 +116,7 @@ function grdOverview() {
         return '<div style="border:1.5px solid ' + c.bd + ';border-radius:14px;padding:16px;background:' + c.bc + ';cursor:pointer;transition:all .18s;"'
             + ' onmouseover="this.style.transform=\'translateY(-3px)\';this.style.boxShadow=\'0 8px 24px rgba(0,0,0,.1)\'"'
             + ' onmouseout="this.style.transform=\'\';this.style.boxShadow=\'\'"'
-            + ' onclick="_grdRenderSection(\'' + c.id + '\')">'
+            + ' data-action="_grdRenderSection(\'' + c.id + '\')">'
             + '<div style="font-size:1.4rem;margin-bottom:8px">' + c.emoji + '</div>'
             + '<div style="font-size:.95rem;font-weight:900;color:#1a1a2e;margin-bottom:4px">' + c.name + '</div>'
             + '<div style="font-size:.73rem;color:' + c.tc + ';line-height:1.5">' + c.sub + '</div>'
@@ -135,7 +135,7 @@ function grdOverview() {
         + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;padding:0 36px 20px;">'
         + cardHtml + '</div>'
         + '<div style="padding:0 36px 36px;text-align:center;">'
-        + '<button onclick="_grdRenderSection(\'exercises\')" style="padding:14px 32px;background:linear-gradient(135deg,#d97706,#fbbf24);border:none;border-radius:13px;color:#fff;font-size:.9rem;font-weight:900;cursor:pointer;font-family:inherit;">✨ Alıştırmalara Geç</button>'
+        + '<button data-action="_grdRenderSection(\'exercises\')" style="padding:14px 32px;background:linear-gradient(135deg,#d97706,#fbbf24);border:none;border-radius:13px;color:#fff;font-size:.9rem;font-weight:900;cursor:pointer;font-family:inherit;">✨ Alıştırmalara Geç</button>'
         + '</div>';
 }
 
@@ -1088,7 +1088,7 @@ function _grdBuildExercisePage() {
     const tabs = GRD_SETS.map(function(s, i) {
         const active = i === _grdSetIdx
             ? 'style="background:#d97706;color:#fff;border-color:#d97706;"' : '';
-        return '<button class="gr-set-tab" ' + active + ' onclick="grdSwitchSet(' + i + ')">' + s.label + '</button>';
+        return '<button class="gr-set-tab" ' + active + ' data-action="grdSwitchSet(' + i + ')">' + s.label + '</button>';
     }).join('');
 
     const qCards = set.questions.map(function(q, i) {
@@ -1101,7 +1101,7 @@ function _grdBuildExercisePage() {
                 if (lv === q.cor)                         cls += ' ok';
                 else if (lv === state && state !== q.cor) cls += ' bad';
             } else if (state === lv) cls += ' sel';
-            return '<div class="' + cls + '" id="grdso-' + i + '-' + j + '" onclick="grdSetOpt(' + i + ',' + j + ',\'' + lv + '\')">'
+            return '<div class="' + cls + '" id="grdso-' + i + '-' + j + '" data-action="grdSetOpt(' + i + ',' + j + ',\'' + lv + '\')">'
                 + '<span class="gr-opt-letter">' + letter + '</span>' + o + '</div>';
         }).join('');
 
@@ -1116,7 +1116,7 @@ function _grdBuildExercisePage() {
             + '<div class="gr-q-num">SORU ' + String(i+1).padStart(2,'0') + ' — ' + set.label.toUpperCase() + '</div>'
             + '<div class="gr-q-text">' + q.q + '</div>'
             + '<div class="gr-mcq">' + opts + '</div>'
-            + '<button class="gr-chk-btn" style="margin-top:10px;border-color:#d97706;color:#d97706" onclick="grdCheckSetQ(' + i + ')" ' + btnDis + '>Kontrol Et</button>'
+            + '<button class="gr-chk-btn" style="margin-top:10px;border-color:#d97706;color:#d97706" data-action="grdCheckSetQ(' + i + ')" ' + btnDis + '>Kontrol Et</button>'
             + '<div class="' + fbCls + '" id="grdsfb-' + i + '">' + fbTxt + '</div>'
             + '</div>';
     }).join('');
@@ -1129,15 +1129,15 @@ function _grdBuildExercisePage() {
         + '<span class="gr-score-val" id="grd-live-score">' + _grdSetScore + ' / ' + total + '</span>'
         + '</div>'
         + qCards
-        + '<button class="gr-submit-btn" style="background:linear-gradient(135deg,#d97706,#fbbf24)" onclick="grdSubmitSet()">🎯 Seti Değerlendir & Sonucu Gör</button>'
+        + '<button class="gr-submit-btn" style="background:linear-gradient(135deg,#d97706,#fbbf24)" data-action="grdSubmitSet()">🎯 Seti Değerlendir & Sonucu Gör</button>'
         + '<div class="gr-result" id="grd-result">'
         + '<div class="gr-res-score" id="grd-res-score" style="color:#d97706">0/' + total + '</div>'
         + '<div class="gr-res-lbl">' + set.label + ' Tamamlandı</div>'
         + '<div class="gr-res-msg" id="grd-res-msg"></div>'
         + '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px">'
-        + '<button class="gr-retry-btn" style="border-color:#d97706;color:#d97706" onclick="grdRetrySameSet()">🔄 Aynı Seti Tekrar</button>'
+        + '<button class="gr-retry-btn" style="border-color:#d97706;color:#d97706" data-action="grdRetrySameSet()">🔄 Aynı Seti Tekrar</button>'
         + (_grdSetIdx < GRD_SETS.length - 1
-            ? '<button class="gr-retry-btn" style="background:#d97706;color:#fff;border-color:#d97706" onclick="grdNextSet()">Sonraki Set →</button>'
+            ? '<button class="gr-retry-btn" style="background:#d97706;color:#fff;border-color:#d97706" data-action="grdNextSet()">Sonraki Set →</button>'
             : '<span style="font-size:.8rem;color:var(--ink3);align-self:center">🏁 Tüm setler tamamlandı!</span>')
         + '</div>'
         + '</div></div>';

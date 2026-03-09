@@ -289,14 +289,14 @@ function updateIndexStats() {
         elStreak.innerText = streak;
     }
 
-    // Analitik paneller — her zaman çalışır, element bağımsız
-    renderWeakWords();
-    renderPerfChart();
-    renderPOSChart();
-    renderSoruStats();
-    renderBankStats();
-    renderGrammarProgress();
-    renderSM2Plan();
+    // Analitik paneller — stats-widgets.js defer ile yüklenir, guard zorunlu
+    if (typeof renderWeakWords      === 'function') renderWeakWords();
+    if (typeof renderPerfChart      === 'function') renderPerfChart();
+    if (typeof renderPOSChart       === 'function') renderPOSChart();
+    if (typeof renderSoruStats      === 'function') renderSoruStats();
+    if (typeof renderBankStats      === 'function') renderBankStats();
+    if (typeof renderGrammarProgress === 'function') renderGrammarProgress();
+    if (typeof renderSM2Plan        === 'function') renderSM2Plan();
 }
 
 // ════════════════════════════════════════════════
@@ -458,7 +458,7 @@ function renderAiGenPreview() {
         <div class="aig-top">
             <span class="aig-eng">${_esc(w.eng)}</span>
             <span class="aig-tr">${_esc(w.tr)}</span>
-            <button onclick="aiGenRemoveWord(${i})" class="aig-remove">✕</button>
+            <button data-action="aiGenRemoveWord(${i})" class="aig-remove">✕</button>
         </div>
         <div class="aig-meta">🧠 ${_esc(w.mnemonic) || '—'}</div>
         <div class="aig-meta" style="color:var(--ink3);">📖 ${_esc(w.story) || '—'}</div>`;
@@ -510,3 +510,22 @@ function aiGenSaveToList() {
 // ══════════════════════════════════════════════
 // → js/ai-daily.js (ayrı dosyaya taşındı)
 // → js/utils.js (ayrı dosyaya taşındı)
+
+// ── Window Exports (defer uyumluluğu) ────────────────────────────
+// data-action delegation'ın window[fn] lookup'ı için zorunlu
+window.navTo             = navTo;
+window.navToAdmin        = navToAdmin;
+window.showPage          = showPage;
+window.exportData        = exportData;
+window.importData        = importData;
+window.updateSelectors   = updateSelectors;
+window.updateIndexStats  = updateIndexStats;
+window.saveApiKey        = saveApiKey;
+window.removeApiKey      = removeApiKey;
+window.aiGenSaveKey      = aiGenSaveKey;
+window.aiGenRemoveWord   = aiGenRemoveWord;
+window.aiGenDiscard      = aiGenDiscard;
+window.aiGenSaveToList   = aiGenSaveToList;
+window.renderAiGenPreview = renderAiGenPreview;
+window.startModule       = startModule;
+window.exitModule        = exitModule;

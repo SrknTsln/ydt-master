@@ -559,11 +559,17 @@ function showParagrafOku(index) {
             const regex = new RegExp(`\\b(${ing.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})\\b`, 'gi');
             s = s.replace(regex, `<span class="c1-word" data-tr="${tr}">$1</span>`);
         }
-        return `<span class="p-sentence" data-idx="${si}" onclick="analyzeGrammarXRay(${si})" title="Tıkla: Grammar X-Ray">${s}</span> `;
+        return `<span class="p-sentence" data-idx="${si}" data-action="analyzeGrammarXRay(${si})" title="Tıkla: Grammar X-Ray">${s}</span> `;
     }).join('');
 
     document.getElementById('p-oku-baslik').innerText = stripNumPrefix(p.baslik);
     document.getElementById('p-oku-metin').innerHTML  = islenmisMetin;
+
+    // ── Desktop hover kelime tooltip — ai-daily.js'nin listener'ını bağla ──
+    const _metinEl = document.getElementById('p-oku-metin');
+    if (_metinEl && typeof _bindWordHoverListeners === 'function') {
+        _bindWordHoverListeners(_metinEl);
+    }
 
     // Panelleri sıfırla
     document.getElementById('p-grammar-panel').style.display = 'none';
@@ -635,3 +641,7 @@ function showParagrafOku(index) {
     }, 100);
 }
 // ══════════════════════════════════════════════
+
+// ── Window Exports ────────────────────────────────────────────────
+window.generateYDTQuestions = generateYDTQuestions;
+window.analyzeGrammarXRay   = analyzeGrammarXRay;

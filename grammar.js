@@ -44,10 +44,6 @@ const GR_SEC_ORDER = ['', 'present', 'past', 'future', 'modal'];
 /* ════════════════════════════════════════════════════
    HTML BUILDER HELPERS
 ════════════════════════════════════════════════════ */
-
-/* ════════════════════════════════════════════════════
-   ENTRY POINT — sidebar & mobile call this
-════════════════════════════════════════════════════ */
 function grHero(eyebrow, colorClass, title, sub) {
     return `<div class="gr-hero ${colorClass}">
         <div class="gr-hero-eyebrow">${eyebrow}</div>

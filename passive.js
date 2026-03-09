@@ -59,7 +59,7 @@ function paAcc(items) {
                 + String(i+1).padStart(2,'0') + '</span>' + ex + '</div>';
         }).join('');
         const descHtml = it.desc ? '<p class="gr-acc-desc">' + it.desc + '</p>' : '';
-        return '<div class="gr-acc" onclick="this.classList.toggle(\'open\')">'
+        return '<div class="gr-acc" data-toggle-class=\"open\">'
             + '<div class="gr-acc-head">'
             + '<div class="gr-acc-ico" style="background:' + it.bg + '">' + it.ico + '</div>'
             + '<div class="gr-acc-title">' + it.title + '</div>'
@@ -104,7 +104,7 @@ function paOverview() {
         return '<div style="border:1.5px solid ' + c.b + ';border-radius:14px;padding:16px;background:' + c.c + ';cursor:pointer;transition:all .18s;"'
             + ' onmouseover="this.style.transform=\'translateY(-3px)\';this.style.boxShadow=\'0 8px 24px rgba(0,0,0,.1)\'"'
             + ' onmouseout="this.style.transform=\'\';this.style.boxShadow=\'\'"'
-            + ' onclick="_paRenderSection(\'' + c.id + '\')">'
+            + ' data-action="_paRenderSection(\'' + c.id + '\')">'
             + '<div style="font-size:1.4rem;margin-bottom:8px">' + c.emoji + '</div>'
             + '<div style="font-size:.95rem;font-weight:900;color:#1a1a2e;margin-bottom:4px">' + c.name + '</div>'
             + '<div style="font-size:.73rem;color:' + c.t + ';line-height:1.5">' + c.sub + '</div>'
@@ -112,7 +112,7 @@ function paOverview() {
     }).join('');
     return paH('🔄 Edilgen Yapı', 'Active / Passive & Causative', 'Türkçedeki etken, edilgen ve ettirgen yapıların İngilizce karşılığı. Tüm konular, tablo ve alıştırmalarla.')
         + '<div style="padding:24px 36px;display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px">' + cardHtml + '</div>'
-        + '<div style="padding:0 36px 36px;text-align:center;"><button onclick="_paRenderSection(\'exercises\')" style="padding:14px 32px;background:linear-gradient(135deg,#4c1d95,#7c3aed);border:none;border-radius:13px;color:#fff;font-size:.9rem;font-weight:900;cursor:pointer;font-family:inherit;">✨ Alıştırmalara Geç</button></div>';
+        + '<div style="padding:0 36px 36px;text-align:center;"><button data-action="_paRenderSection(\'exercises\')" style="padding:14px 32px;background:linear-gradient(135deg,#4c1d95,#7c3aed);border:none;border-radius:13px;color:#fff;font-size:.9rem;font-weight:900;cursor:pointer;font-family:inherit;">✨ Alıştırmalara Geç</button></div>';
 }
 
 function paConcept() {
@@ -324,7 +324,7 @@ function paTips() {
             return '<div style="display:flex;gap:10px;padding:9px 13px;background:#f7f7fb;border-radius:10px;margin-top:7px;font-size:.82rem;color:#374151;line-height:1.6;">'
                 + '<span style="flex-shrink:0;margin-top:1px">' + r.ico + '</span>' + r.text + '</div>';
         }).join('');
-        return '<div style="background:#fff;border:1.5px solid #ebebf0;border-radius:14px;overflow:hidden;margin-bottom:10px;" onclick="this.querySelector(\'.pa-tb\').classList.toggle(\'pa-hidden\')">'
+        return '<div style="background:#fff;border:1.5px solid #ebebf0;border-radius:14px;overflow:hidden;margin-bottom:10px;" data-toggle-child=\".pa-tb\" data-toggle-child-class=\"pa-hidden\">'
             + '<div style="display:flex;align-items:center;gap:12px;padding:13px 18px;background:#f7f7fb;cursor:pointer;">'
             + '<span style="font-size:.6rem;font-weight:900;color:#7c3aed;background:#f5f3ff;border-radius:7px;padding:3px 9px;flex-shrink:0;font-family:\'Courier New\',monospace;">İPUCU ' + t.num + '</span>'
             + '<span style="flex:1;font-size:.87rem;font-weight:800;color:#1a1a2e">' + t.title + '</span>'
@@ -1103,29 +1103,29 @@ function _paBuildExercisePage() {
 
     /* ── Set sekme butonları ── */
     const tabs = PA_SETS.map(function(s, i) {
-        return '<button class="gr-set-tab' + (i === _paSetIdx ? ' active' : '') + '" onclick="paSwitchSet(' + i + ')">' + s.label + '</button>';
+        return '<button class="gr-set-tab' + (i === _paSetIdx ? ' active' : '') + '" data-action="paSwitchSet(' + i + ')">' + s.label + '</button>';
     }).join('');
 
     /* ── Soru kartları ── */
     const cards = set.questions.map(function(q, i) {
         const opts = q.opts.map(function(o, j) {
-            return '<div class="gr-opt" id="pa-sopt-' + i + '-' + j + '" onclick="paSetOpt(' + i + ',' + j + ',\'' + lv[j] + '\')">'
+            return '<div class="gr-opt" id="pa-sopt-' + i + '-' + j + '" data-action="paSetOpt(' + i + ',' + j + ',\'' + lv[j] + '\')">'
                 + '<span class="gr-opt-letter">' + letters[j] + '</span>' + o + '</div>';
         }).join('');
         return '<div class="gr-q-card" id="pa-sq-' + i + '">'
             + '<div class="gr-q-num">SORU ' + String(i+1).padStart(2,'0') + ' / ' + String(total).padStart(2,'0') + '</div>'
             + '<div class="gr-q-text">' + q.q + '</div>'
             + '<div class="gr-mcq">' + opts + '</div>'
-            + '<button class="gr-chk-btn" style="margin-top:10px;border-color:#7c3aed;color:#7c3aed" onclick="paCheckSetQ(' + i + ')">Kontrol Et</button>'
+            + '<button class="gr-chk-btn" style="margin-top:10px;border-color:#7c3aed;color:#7c3aed" data-action="paCheckSetQ(' + i + ')">Kontrol Et</button>'
             + '<div class="gr-fb" id="pa-sfb-' + i + '"></div>'
             + '</div>';
     }).join('');
 
     /* ── Navigasyon ── */
     const prevBtn = _paSetIdx > 0
-        ? '<button class="gr-nav-btn" onclick="paSwitchSet(' + (_paSetIdx-1) + ')">← Önceki Set</button>' : '';
+        ? '<button class="gr-nav-btn" data-action="paSwitchSet(' + (_paSetIdx-1) + ')">← Önceki Set</button>' : '';
     const nextBtn = _paSetIdx < PA_SETS.length - 1
-        ? '<button class="gr-nav-btn" onclick="paSwitchSet(' + (_paSetIdx+1) + ')">Sonraki Set →</button>' : '';
+        ? '<button class="gr-nav-btn" data-action="paSwitchSet(' + (_paSetIdx+1) + ')">Sonraki Set →</button>' : '';
 
     return paH('✨ Pratik Yap', 'Alıştırmalar — ' + set.label,
                total + ' soruluk test. Passive yapıları ve tense kombinasyonlarını pekiştir.')
@@ -1133,14 +1133,14 @@ function _paBuildExercisePage() {
         + '<div class="gr-quiz-wrap">'
         + '<div class="gr-score-bar"><span class="gr-score-label">Canlı Puan</span><span class="gr-score-val" id="pa-live-score">0 / ' + total + '</span></div>'
         + cards
-        + '<button class="gr-submit-btn" style="background:linear-gradient(135deg,#4c1d95,#7c3aed)" onclick="paSubmitSet()">🎯 Seti Değerlendir & Sonucu Gör</button>'
+        + '<button class="gr-submit-btn" style="background:linear-gradient(135deg,#4c1d95,#7c3aed)" data-action="paSubmitSet()">🎯 Seti Değerlendir & Sonucu Gör</button>'
         + '<div class="gr-result" id="pa-result">'
         + '<div class="gr-res-score" id="pa-res-score" style="color:#7c3aed">0/' + total + '</div>'
         + '<div class="gr-res-lbl">Toplam Puan</div>'
         + '<div class="gr-res-msg" id="pa-res-msg"></div>'
         + '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:12px">'
-        + '<button class="gr-retry-btn" style="border-color:#7c3aed;color:#7c3aed" onclick="paRetrySameSet()">🔄 Aynı Seti Tekrarla</button>'
-        + (nextBtn ? '<button class="gr-retry-btn" style="border-color:#10b981;color:#10b981" onclick="paNextSet()">Sonraki Set →</button>' : '')
+        + '<button class="gr-retry-btn" style="border-color:#7c3aed;color:#7c3aed" data-action="paRetrySameSet()">🔄 Aynı Seti Tekrarla</button>'
+        + (nextBtn ? '<button class="gr-retry-btn" style="border-color:#10b981;color:#10b981" data-action="paNextSet()">Sonraki Set →</button>' : '')
         + '</div></div>'
         + '<div style="display:flex;gap:10px;justify-content:space-between;margin-top:16px">' + prevBtn + nextBtn + '</div>'
         + '</div>';

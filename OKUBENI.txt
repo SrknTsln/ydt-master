@@ -1,0 +1,43 @@
+YDT Master Pro — Deployment Paketi
+=====================================
+Tarih: 2026-03-09
+
+KURULUM
+───────
+Bu klasörün TÜM içeriğini web sunucunuzun ROOT dizinine yükleyin.
+index.html ile tüm .js ve .css dosyaları AYNI dizinde olmalıdır.
+js/ alt dizini artık YOK — tüm dosyalar root'ta.
+
+KLASÖR YAPISI
+─────────────
+  index.html         → Ana giriş noktası
+  firebase-init.js   → Firebase Auth & Firestore (DÜZELTILDI)
+  ydt-delegation.js  → CSP-uyumlu event sistemi (DÜZELTILDI)
+  ai.js              → AI okuma modülü (DÜZELTILDI - window export eklendi)
+  ai-daily.js        → Günlük haber okuma (DÜZELTILDI)
+  profile.js         → Profil sayfası (DÜZELTILDI)
+  admin.js           → Admin paneli (DÜZELTILDI)
+  games.js           → Oyunlar (DÜZELTILDI)
+  ydtapp.js          → App shell (DÜZELTILDI)
+  ydtui.js           → UI yardımcıları (DÜZELTILDI)
+  *.css / *.js       → Diğer modüller
+  _gelistirici/      → Audit raporları (sunucuya yükleme)
+
+DÜZELTILEN BUGLAR
+─────────────────
+  1. AI Reading — kart tıklanamıyordu
+     → Neden: js/ alt dizini yoktu, ai.js hiç yüklenmiyordu
+     → Fix: Tüm script path'leri root'a taşındı, showParagrafOku export edildi
+
+  2. AI Reading — Arşivle butonu çalışmıyordu
+     → Neden: data-stop="true" delegation'da handle edilmiyordu
+     → Fix: ydt-delegation.js click handler'a data-stop guard eklendi
+
+  3. Giriş sonrası login overlay tekrar geliyordu
+     → Neden: signInWithRedirect + race condition
+     → Fix: signInWithPopup, 800ms delay, _overlayPending timer
+
+  4. Profil sayfası açılmıyordu
+     → Neden: Duplicate DOM ID + data-action parse hatası
+
+  5. 8 fonksiyon window'a export edilmemişti

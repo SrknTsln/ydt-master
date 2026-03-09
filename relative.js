@@ -62,7 +62,7 @@ function rcAcc(items) {
                 + String(i+1).padStart(2,'0') + '</span>' + ex + '</div>';
         }).join('');
         const descHtml = it.desc ? '<p class="gr-acc-desc">' + it.desc + '</p>' : '';
-        return '<div class="gr-acc" onclick="this.classList.toggle(\'open\')">'
+        return '<div class="gr-acc" data-toggle-class="open">'
             + '<div class="gr-acc-head">'
             + '<div class="gr-acc-ico" style="background:' + it.bg + '">' + it.ico + '</div>'
             + '<div class="gr-acc-title">' + it.title + '</div>'
@@ -107,7 +107,7 @@ function rcOverview() {
         return '<div style="border:1.5px solid ' + c.b + ';border-radius:14px;padding:16px;background:' + c.c + ';cursor:pointer;transition:all .18s;"'
             + ' onmouseover="this.style.transform=\'translateY(-3px)\';this.style.boxShadow=\'0 8px 24px rgba(0,0,0,.1)\'"'
             + ' onmouseout="this.style.transform=\'\';this.style.boxShadow=\'\'"'
-            + ' onclick="_rcRenderSection(\'' + c.id + '\')">'
+            + ' data-action="_rcRenderSection(\'' + c.id + '\')">'
             + '<div style="font-size:1.3rem;margin-bottom:8px">' + c.e + '</div>'
             + '<div style="font-size:.95rem;font-weight:900;color:#1a1a2e;margin-bottom:4px">' + c.n + '</div>'
             + '<div style="font-size:.73rem;color:' + c.t + ';line-height:1.5">' + c.s + '</div>'
@@ -125,7 +125,7 @@ function rcOverview() {
             ]
         )
         + '<div style="padding:20px 36px;display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:11px">' + cardHtml + '</div>'
-        + '<div style="padding:0 36px 36px;text-align:center;"><button onclick="_rcRenderSection(\'exercises\')" style="padding:14px 32px;background:linear-gradient(135deg,#047857,#10b981);border:none;border-radius:13px;color:#fff;font-size:.9rem;font-weight:900;cursor:pointer;font-family:inherit;">✨ Alıştırmalara Geç</button></div>';
+        + '<div style="padding:0 36px 36px;text-align:center;"><button data-action="_rcRenderSection(\'exercises\')" style="padding:14px 32px;background:linear-gradient(135deg,#047857,#10b981);border:none;border-radius:13px;color:#fff;font-size:.9rem;font-weight:900;cursor:pointer;font-family:inherit;">✨ Alıştırmalara Geç</button></div>';
 }
 
 /* ════════ DEFINING ════════ */
@@ -376,7 +376,7 @@ function rcTips() {
             return '<div style="display:flex;gap:10px;padding:9px 13px;background:#f7f7fb;border-radius:10px;margin-top:7px;font-size:.82rem;color:#374151;line-height:1.6;">'
                 + '<span style="flex-shrink:0;margin-top:1px">' + r.ico + '</span>' + r.text + '</div>';
         }).join('');
-        return '<div style="background:#fff;border:1.5px solid #ebebf0;border-radius:14px;overflow:hidden;margin-bottom:10px;" onclick="this.querySelector(\'.rc-tb\').classList.toggle(\'rc-hidden\')">'
+        return '<div style="background:#fff;border:1.5px solid #ebebf0;border-radius:14px;overflow:hidden;margin-bottom:10px;" data-toggle-child=".rc-tb" data-toggle-child-class="rc-hidden">'
             + '<div style="display:flex;align-items:center;gap:12px;padding:13px 18px;background:#f7f7fb;cursor:pointer;">'
             + '<span style="font-size:.6rem;font-weight:900;color:#047857;background:#f0fdf4;border-radius:7px;padding:3px 9px;flex-shrink:0;font-family:\'Courier New\',monospace;">İPUCU ' + t.num + '</span>'
             + '<span style="flex:1;font-size:.87rem;font-weight:800;color:#1a1a2e">' + t.title + '</span>'
@@ -440,7 +440,7 @@ function rcExercises() {
             + '<div class="gr-q-num">SORU ' + String(i+1).padStart(2,'0') + ' / BÖLÜM A</div>'
             + '<div class="gr-q-text">' + q.q + '</div>'
             + '<input class="gr-q-inp rc-inp" id="rc-inp-' + i + '" data-index="' + i + '" placeholder="relative pronoun yaz…" autocomplete="off"><br>'
-            + '<button class="gr-chk-btn" style="border-color:#047857;color:#047857" onclick="rcCheckBlank(' + i + ')">Kontrol Et</button>'
+            + '<button class="gr-chk-btn" style="border-color:#047857;color:#047857" data-action="rcCheckBlank(' + i + ')">Kontrol Et</button>'
             + '<div class="gr-fb" id="rc-fb-b' + i + '"></div>'
             + '</div>';
     }).join('');
@@ -449,14 +449,14 @@ function rcExercises() {
         const opts = q.opts.map(function(o, j) {
             const letter = ['A','B','C','D'][j];
             const lv = ['a','b','c','d'][j];
-            return '<div class="gr-opt" id="rc-opt-' + i + '-' + j + '" onclick="rcSelectOpt(' + i + ',' + j + ',\'' + lv + '\')">'
+            return '<div class="gr-opt" id="rc-opt-' + i + '-' + j + '" data-action="rcSelectOpt(' + i + ',' + j + ',\'' + lv + '\')">'
                 + '<span class="gr-opt-letter">' + letter + '</span>' + o + '</div>';
         }).join('');
         return '<div class="gr-q-card" id="rcq-m' + i + '">'
             + '<div class="gr-q-num">SORU ' + String(i+1).padStart(2,'0') + ' / BÖLÜM B</div>'
             + '<div class="gr-q-text">' + q.q + '</div>'
             + '<div class="gr-mcq">' + opts + '</div>'
-            + '<button class="gr-chk-btn" style="margin-top:10px;border-color:#047857;color:#047857" onclick="rcCheckMCQ(' + i + ')">Kontrol Et</button>'
+            + '<button class="gr-chk-btn" style="margin-top:10px;border-color:#047857;color:#047857" data-action="rcCheckMCQ(' + i + ')">Kontrol Et</button>'
             + '<div class="gr-fb" id="rc-fb-m' + i + '"></div>'
             + '</div>';
     }).join('');
@@ -468,12 +468,12 @@ function rcExercises() {
         + blankCards
         + '<div class="gr-q-sec-hd" style="margin-top:20px">Bölüm B — Çoktan Seçmeli</div>'
         + mcqCards
-        + '<button class="gr-submit-btn" style="background:linear-gradient(135deg,#047857,#10b981)" onclick="rcSubmitAll()">🎯 Tümünü Değerlendir & Sonucu Gör</button>'
+        + '<button class="gr-submit-btn" style="background:linear-gradient(135deg,#047857,#10b981)" data-action="rcSubmitAll()">🎯 Tümünü Değerlendir & Sonucu Gör</button>'
         + '<div class="gr-result" id="rc-result">'
         + '<div class="gr-res-score" id="rc-res-score" style="color:#047857">0/' + RC_TOTAL + '</div>'
         + '<div class="gr-res-lbl">Toplam Puan</div>'
         + '<div class="gr-res-msg" id="rc-res-msg"></div>'
-        + '<button class="gr-retry-btn" style="border-color:#047857;color:#047857" onclick="_rcRenderSection(\'exercises\')">🔄 Tekrar Dene</button>'
+        + '<button class="gr-retry-btn" style="border-color:#047857;color:#047857" data-action="_rcRenderSection(\'exercises\')">🔄 Tekrar Dene</button>'
         + '</div></div>';
 }
 

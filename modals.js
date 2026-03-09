@@ -78,7 +78,7 @@ function mdAcc(items) {
             `<div class="gr-ex ex-modal"><span class="gr-ex-n">${String(i+1).padStart(2,'0')}</span>${ex}</div>`
         ).join('');
         const descHtml = it.desc ? `<p class="gr-acc-desc">${it.desc}</p>` : '';
-        return `<div class="gr-acc" onclick="this.classList.toggle('open')">
+        return `<div class="gr-acc" data-toggle-class="open">
             <div class="gr-acc-head">
                 <div class="gr-acc-ico" style="background:${it.bg}">${it.ico}</div>
                 <div class="gr-acc-title">${it.title}</div>
@@ -137,7 +137,7 @@ function mdOverview() {
         return `<div style="border:1.5px solid ${cm.border};border-radius:14px;padding:16px;background:${cm.card};cursor:pointer;transition:all .18s;" 
                      onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.09)'" 
                      onmouseout="this.style.transform='';this.style.boxShadow=''"
-                     onclick="_mdRenderSection('${c.id}')">
+                     data-action="_mdRenderSection('${c.id}')">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
                 <span style="font-size:1.2rem">${c.emoji}</span>
                 <span style="${cm.tag};font-size:.52rem;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;padding:3px 10px;border-radius:20px;">${c.tr}</span>
@@ -151,7 +151,7 @@ function mdOverview() {
     return mdH('⚡ Modal Verbs', 'Modals', 'Yetenek, zorunluluk, olasılık, tavsiye... 11 kullanım alanı, ÖSYM ipuçları ve interaktif alıştırmalar.')
     + `<div style="padding:24px 36px;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">${cards}</div>`
     + `<div style="padding:0 36px 36px;text-align:center;">
-        <button onclick="_mdRenderSection('exercises')" style="padding:14px 32px;background:linear-gradient(135deg,#d97706,#f59e0b);border:none;border-radius:13px;color:#fff;font-size:.9rem;font-weight:900;cursor:pointer;font-family:inherit;">
+        <button data-action="_mdRenderSection('exercises')" style="padding:14px 32px;background:linear-gradient(135deg,#d97706,#f59e0b);border:none;border-radius:13px;color:#fff;font-size:.9rem;font-weight:900;cursor:pointer;font-family:inherit;">
             ✨ Alıştırmalara Geç
         </button>
       </div>`;
@@ -450,7 +450,7 @@ function mdTips() {
                 <span style="flex-shrink:0;font-size:.95rem;margin-top:1px">${r.ico}</span>${r.text}
             </div>`
         ).join('');
-        return `<div style="background:#fff;border:1.5px solid #ebebf0;border-radius:14px;overflow:hidden;margin-bottom:10px;" onclick="this.querySelector('.md-tip-body').classList.toggle('hidden-body')">
+        return `<div style="background:#fff;border:1.5px solid #ebebf0;border-radius:14px;overflow:hidden;margin-bottom:10px;" data-toggle-child=".md-tip-body" data-toggle-child-class="hidden-body">
             <div style="display:flex;align-items:center;gap:12px;padding:13px 18px;background:#f7f7fb;cursor:pointer;">
                 <span style="font-size:.6rem;font-weight:900;color:#e63946;background:#fdf1f2;border-radius:7px;padding:3px 9px;flex-shrink:0;font-family:'Courier New',monospace;">İPUCU ${t.num}</span>
                 <span style="flex:1;font-size:.87rem;font-weight:800;color:#1a1a2e">${t.title}</span>
@@ -1115,7 +1115,7 @@ function _mdBuildExercisePage() {
 
     /* ── Set sekme butonları ── */
     const tabs = MD_SETS.map((s, i) =>
-        `<button class="gr-set-tab${i === _mdSetIdx ? ' active' : ''}" onclick="mdSwitchSet(${i})">${s.label}</button>`
+        `<button class="gr-set-tab${i === _mdSetIdx ? ' active' : ''}" data-action="mdSwitchSet(${i})">${s.label}</button>`
     ).join('');
 
     /* ── Soru kartları ── */
@@ -1123,7 +1123,7 @@ function _mdBuildExercisePage() {
         const letters = ['A','B','C','D','E'];
         const lv      = ['a','b','c','d','e'];
         const opts = q.opts.map((o, j) =>
-            `<div class="gr-opt" id="md-sopt-${i}-${j}" onclick="mdSetOpt(${i},${j},'${lv[j]}')">
+            `<div class="gr-opt" id="md-sopt-${i}-${j}" data-action="mdSetOpt(${i},${j},'${lv[j]}')">
                 <span class="gr-opt-letter">${letters[j]}</span>${o}
             </div>`
         ).join('');
@@ -1131,16 +1131,16 @@ function _mdBuildExercisePage() {
             <div class="gr-q-num">SORU ${String(i+1).padStart(2,'0')} / ${String(total).padStart(2,'0')}</div>
             <div class="gr-q-text">${q.q}</div>
             <div class="gr-mcq">${opts}</div>
-            <button class="gr-chk-btn" style="margin-top:10px" onclick="mdCheckSetQ(${i})">Kontrol Et</button>
+            <button class="gr-chk-btn" style="margin-top:10px" data-action="mdCheckSetQ(${i})">Kontrol Et</button>
             <div class="gr-fb" id="md-sfb-${i}"></div>
         </div>`;
     }).join('');
 
     /* ── Navigasyon butonları ── */
     const prevBtn = _mdSetIdx > 0
-        ? `<button class="gr-nav-btn" onclick="mdSwitchSet(${_mdSetIdx-1})">← Önceki Set</button>` : '';
+        ? `<button class="gr-nav-btn" data-action="mdSwitchSet(${_mdSetIdx-1})">← Önceki Set</button>` : '';
     const nextBtn = _mdSetIdx < MD_SETS.length - 1
-        ? `<button class="gr-nav-btn" onclick="mdSwitchSet(${_mdSetIdx+1})">Sonraki Set →</button>` : '';
+        ? `<button class="gr-nav-btn" data-action="mdSwitchSet(${_mdSetIdx+1})">Sonraki Set →</button>` : '';
 
     return mdH('✨ Pratik Yap', `Alıştırmalar — ${set.label}`,
                `${total} soruluk çoktan seçmeli test. Her soruyu anında kontrol edin.`)
@@ -1152,16 +1152,16 @@ function _mdBuildExercisePage() {
         </div>
         ${cards}
         <button class="gr-submit-btn" style="background:linear-gradient(135deg,#d97706,#f59e0b)"
-                onclick="mdSubmitSet()">🎯 Seti Değerlendir & Sonucu Gör</button>
+                data-action="mdSubmitSet()">🎯 Seti Değerlendir & Sonucu Gör</button>
         <div class="gr-result" id="md-result">
             <div class="gr-res-score" id="md-res-score" style="color:#d97706">0/${total}</div>
             <div class="gr-res-lbl">Toplam Puan</div>
             <div class="gr-res-msg" id="md-res-msg"></div>
             <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:12px">
                 <button class="gr-retry-btn" style="border-color:#d97706;color:#d97706"
-                        onclick="mdRetrySameSet()">🔄 Aynı Seti Tekrarla</button>
+                        data-action="mdRetrySameSet()">🔄 Aynı Seti Tekrarla</button>
                 ${nextBtn ? `<button class="gr-retry-btn" style="border-color:#10b981;color:#10b981"
-                        onclick="mdNextSet()">Sonraki Set →</button>` : ''}
+                        data-action="mdNextSet()">Sonraki Set →</button>` : ''}
             </div>
         </div>
         <div style="display:flex;gap:10px;justify-content:space-between;margin-top:16px">

@@ -63,7 +63,7 @@ function prAcc(items) {
             return '<div class="gr-ex" style="border-left:3px solid #059669"><span class="gr-ex-n">' + String(i+1).padStart(2,'0') + '</span>' + ex + '</div>';
         }).join('');
         const descHtml = it.desc ? '<p class="gr-acc-desc">' + it.desc + '</p>' : '';
-        return '<div class="gr-acc" onclick="this.classList.toggle(\'open\')">'
+        return '<div class="gr-acc" data-toggle-class="open">'
             + '<div class="gr-acc-head">'
             + '<div class="gr-acc-ico" style="background:' + it.bg + '">' + it.ico + '</div>'
             + '<div class="gr-acc-title">' + it.title + '</div>'
@@ -109,7 +109,7 @@ function prOverview() {
         return '<div style="border:1.5px solid ' + c.border + ';border-radius:14px;padding:16px;background:' + c.color + ';cursor:pointer;transition:all .18s;"'
             + ' onmouseover="this.style.transform=\'translateY(-3px)\';this.style.boxShadow=\'0 8px 24px rgba(0,0,0,.09)\'"'
             + ' onmouseout="this.style.transform=\'\';this.style.boxShadow=\'\'"'
-            + ' onclick="PronounsModule.goTo(\'' + c.id + '\')">'
+            + ' data-action="PronounsModule.goTo(\'' + c.id + '\')">'
             + '<div style="font-size:1.3rem;margin-bottom:8px">' + c.emoji + '</div>'
             + '<div style="font-size:.96rem;font-weight:900;color:#1a1a2e;margin-bottom:3px">' + c.name + '</div>'
             + '<div style="font-size:.6rem;font-weight:900;letter-spacing:1.2px;text-transform:uppercase;color:' + c.tc + ';margin-bottom:7px">' + c.tr + '</div>'
@@ -118,7 +118,7 @@ function prOverview() {
     }).join('');
     return prH('👤 Zamirler', 'Pronouns', 'Zamirlerin tüm türleri: şahıs, iyelik, dönüşlü ve "other" ailesi. Bir konuya tıkla ve başla.')
         + '<div style="padding:24px 36px;display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px">' + cards + '</div>'
-        + '<div style="padding:0 36px 36px;text-align:center;"><button onclick="PronounsModule.goTo(\'exercises\')" style="padding:14px 32px;background:linear-gradient(135deg,#059669,#0d9488);border:none;border-radius:13px;color:#fff;font-size:.9rem;font-weight:900;cursor:pointer;font-family:inherit;">✨ Alıştırmalara Geç</button></div>';
+        + '<div style="padding:0 36px 36px;text-align:center;"><button data-action="PronounsModule.goTo(\'exercises\')" style="padding:14px 32px;background:linear-gradient(135deg,#059669,#0d9488);border:none;border-radius:13px;color:#fff;font-size:.9rem;font-weight:900;cursor:pointer;font-family:inherit;">✨ Alıştırmalara Geç</button></div>';
 }
 
 function prPersonal() {
@@ -364,7 +364,7 @@ function prTips() {
             return '<div style="display:flex;gap:10px;padding:9px 13px;background:#f7f7fb;border-radius:10px;margin-top:7px;font-size:.82rem;color:#374151;line-height:1.6;">'
                 + '<span style="flex-shrink:0;margin-top:1px">' + r.ico + '</span>' + r.text + '</div>';
         }).join('');
-        return '<div style="background:#fff;border:1.5px solid #ebebf0;border-radius:14px;overflow:hidden;margin-bottom:10px;" onclick="this.querySelector(\'.pr-tb\').classList.toggle(\'pr-hidden\')">'
+        return '<div style="background:#fff;border:1.5px solid #ebebf0;border-radius:14px;overflow:hidden;margin-bottom:10px;" data-toggle-child=".pr-tb" data-toggle-child-class="pr-hidden">'
             + '<div style="display:flex;align-items:center;gap:12px;padding:13px 18px;background:#f7f7fb;cursor:pointer;">'
             + '<span style="font-size:.6rem;font-weight:900;color:#059669;background:#ecfdf5;border-radius:7px;padding:3px 9px;flex-shrink:0;font-family:\'Courier New\',monospace;">İPUCU ' + t.num + '</span>'
             + '<span style="flex:1;font-size:.87rem;font-weight:800;color:#1a1a2e">' + t.title + '</span>'
@@ -405,7 +405,7 @@ function prExercises() {
             + '<div class="gr-q-num">SORU ' + String(i+1).padStart(2,'0') + ' / BÖLÜM A</div>'
             + '<div class="gr-q-text">' + q.q + '</div>'
             + '<input class="gr-q-inp pr-inp" id="pr-inp-' + i + '" placeholder="doğru zamiri yaz…" autocomplete="off"><br>'
-            + '<button class="gr-chk-btn" style="border-color:#059669;color:#059669" onclick="prCheckBlank(' + i + ')">Kontrol Et</button>'
+            + '<button class="gr-chk-btn" style="border-color:#059669;color:#059669" data-action="prCheckBlank(' + i + ')">Kontrol Et</button>'
             + '<div class="gr-fb" id="pr-fb-b' + i + '"></div>'
             + '</div>';
     }).join('');
@@ -414,14 +414,14 @@ function prExercises() {
         const opts = q.opts.map(function(o, j) {
             const letter = ['A','B','C','D'][j];
             const lv = ['a','b','c','d'][j];
-            return '<div class="gr-opt" id="pr-opt-' + i + '-' + j + '" onclick="prSelectOpt(' + i + ',' + j + ',\'' + lv + '\')">'
+            return '<div class="gr-opt" id="pr-opt-' + i + '-' + j + '" data-action="prSelectOpt(' + i + ',' + j + ',\'' + lv + '\')">'
                 + '<span class="gr-opt-letter">' + letter + '</span>' + o + '</div>';
         }).join('');
         return '<div class="gr-q-card" id="prq-m' + i + '">'
             + '<div class="gr-q-num">SORU ' + String(i+1).padStart(2,'0') + ' / BÖLÜM B</div>'
             + '<div class="gr-q-text">' + q.q + '</div>'
             + '<div class="gr-mcq">' + opts + '</div>'
-            + '<button class="gr-chk-btn" style="margin-top:10px;border-color:#059669;color:#059669" onclick="prCheckMCQ(' + i + ')">Kontrol Et</button>'
+            + '<button class="gr-chk-btn" style="margin-top:10px;border-color:#059669;color:#059669" data-action="prCheckMCQ(' + i + ')">Kontrol Et</button>'
             + '<div class="gr-fb" id="pr-fb-m' + i + '"></div>'
             + '</div>';
     }).join('');
@@ -433,12 +433,12 @@ function prExercises() {
         + blankCards
         + '<div class="gr-q-sec-hd" style="margin-top:20px">Bölüm B — Çoktan Seçmeli</div>'
         + mcqCards
-        + '<button class="gr-submit-btn" style="background:linear-gradient(135deg,#059669,#0d9488)" onclick="prSubmitAll()">🎯 Tümünü Değerlendir & Sonucu Gör</button>'
+        + '<button class="gr-submit-btn" style="background:linear-gradient(135deg,#059669,#0d9488)" data-action="prSubmitAll()">🎯 Tümünü Değerlendir & Sonucu Gör</button>'
         + '<div class="gr-result" id="pr-result">'
         + '<div class="gr-res-score" id="pr-res-score" style="color:#059669">0/' + PR_TOTAL + '</div>'
         + '<div class="gr-res-lbl">Toplam Puan</div>'
         + '<div class="gr-res-msg" id="pr-res-msg"></div>'
-        + '<button class="gr-retry-btn" style="border-color:#059669;color:#059669" onclick="PronounsModule.goTo(\'exercises\')">🔄 Tekrar Dene</button>'
+        + '<button class="gr-retry-btn" style="border-color:#059669;color:#059669" data-action="PronounsModule.goTo(\'exercises\')">🔄 Tekrar Dene</button>'
         + '</div></div>';
 }
 
@@ -565,3 +565,13 @@ window.prCheckBlank        = prCheckBlank;
 window.prSelectOpt         = prSelectOpt;
 window.prCheckMCQ          = prCheckMCQ;
 window.prSubmitAll         = prSubmitAll;
+
+// goTo → open alias (data-action="PronounsModule.goTo(...)" uyumluluğu)
+PronounsModule.goTo = PronounsModule.open.bind(PronounsModule);
+
+// ── Window Export — delegation window.PronounsModule lookup için ──
+window.PronounsModule = PronounsModule;
+
+// grammar-engine.js: data-action="window['_pronounsGoTo']('sectionId')" pattern'i için zorunlu
+// GrammarModule, her modülü window['_${id}GoTo'] şeklinde çağırır
+window['_pronounsGoTo'] = function(id) { PronounsModule.open(id); };

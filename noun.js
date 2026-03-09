@@ -59,7 +59,7 @@ function ncAcc(items) {
                 + String(i+1).padStart(2,'0') + '</span>' + ex + '</div>';
         }).join('');
         const descHtml = it.desc ? '<p class="gr-acc-desc">' + it.desc + '</p>' : '';
-        return '<div class="gr-acc" onclick="this.classList.toggle(\'open\')">'
+        return '<div class="gr-acc" data-toggle-class="open">'
             + '<div class="gr-acc-head">'
             + '<div class="gr-acc-ico" style="background:' + it.bg + '">' + it.ico + '</div>'
             + '<div class="gr-acc-title">' + it.title + '</div>'
@@ -103,7 +103,7 @@ function ncOverview() {
         return '<div style="border:1.5px solid '+c.b+';border-radius:14px;padding:16px;background:'+c.c+';cursor:pointer;transition:all .18s;"'
             +' onmouseover="this.style.transform=\'translateY(-3px)\';this.style.boxShadow=\'0 8px 24px rgba(0,0,0,.1)\'"'
             +' onmouseout="this.style.transform=\'\';this.style.boxShadow=\'\'"'
-            +' onclick="_ncRenderSection(\''+c.id+'\')">'
+            +' data-action="_ncRenderSection(\''+c.id+'\')">'
             +'<div style="font-size:1.3rem;margin-bottom:8px">'+c.e+'</div>'
             +'<div style="font-size:.95rem;font-weight:900;color:#1a1a2e;margin-bottom:4px">'+c.n+'</div>'
             +'<div style="font-size:.73rem;color:'+c.t+';line-height:1.5">'+c.s+'</div>'
@@ -111,7 +111,7 @@ function ncOverview() {
     }).join('');
     return ncH('💬 İsim Cümlecikleri','Noun Clauses & Reported Speech','Bir cümlenin içinde isim görevi üstlenen alt cümleler ve dolaylı anlatım. 4 başlık + Reported Speech.')
         +'<div style="padding:20px 36px;display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:11px">'+cardHtml+'</div>'
-        +'<div style="padding:0 36px 36px;text-align:center;"><button onclick="_ncRenderSection(\'exercises\')" style="padding:14px 32px;background:linear-gradient(135deg,#b45309,#f59e0b);border:none;border-radius:13px;color:#fff;font-size:.9rem;font-weight:900;cursor:pointer;font-family:inherit;">✨ Alıştırmalara Geç</button></div>';
+        +'<div style="padding:0 36px 36px;text-align:center;"><button data-action="_ncRenderSection(\'exercises\')" style="padding:14px 32px;background:linear-gradient(135deg,#b45309,#f59e0b);border:none;border-radius:13px;color:#fff;font-size:.9rem;font-weight:900;cursor:pointer;font-family:inherit;">✨ Alıştırmalara Geç</button></div>';
 }
 
 /* ════════ THAT / THE FACT THAT ════════ */
@@ -900,7 +900,7 @@ function _ncBuildExercisePage() {
     const tabs = NC_SETS.map(function(s, i) {
         const active = i === _ncSetIdx
             ? 'style="background:#b45309;color:#fff;border-color:#b45309;"' : '';
-        return '<button class="gr-set-tab" ' + active + ' onclick="ncSwitchSet(' + i + ')">' + s.label + '</button>';
+        return '<button class="gr-set-tab" ' + active + ' data-action="ncSwitchSet(' + i + ')">' + s.label + '</button>';
     }).join('');
 
     const qCards = set.questions.map(function(q, i) {
@@ -913,7 +913,7 @@ function _ncBuildExercisePage() {
                 if (lv === q.cor)                         cls += ' ok';
                 else if (lv === state && state !== q.cor) cls += ' bad';
             } else if (state === lv) cls += ' sel';
-            return '<div class="' + cls + '" id="ncso-' + i + '-' + j + '" onclick="ncSetOpt(' + i + ',' + j + ',\'' + lv + '\')">'
+            return '<div class="' + cls + '" id="ncso-' + i + '-' + j + '" data-action="ncSetOpt(' + i + ',' + j + ',\'' + lv + '\')">'
                 + '<span class="gr-opt-letter">' + letter + '</span>' + o
                 + '</div>';
         }).join('');
@@ -929,7 +929,7 @@ function _ncBuildExercisePage() {
             + '<div class="gr-q-num">SORU ' + String(i+1).padStart(2,'0') + ' — ' + set.label.toUpperCase() + '</div>'
             + '<div class="gr-q-text">' + q.q + '</div>'
             + '<div class="gr-mcq">' + opts + '</div>'
-            + '<button class="gr-chk-btn" style="margin-top:10px;border-color:#b45309;color:#b45309" onclick="ncCheckSetQ(' + i + ')" ' + btnDis + '>Kontrol Et</button>'
+            + '<button class="gr-chk-btn" style="margin-top:10px;border-color:#b45309;color:#b45309" data-action="ncCheckSetQ(' + i + ')" ' + btnDis + '>Kontrol Et</button>'
             + '<div class="' + fbCls + '" id="ncsfb-' + i + '">' + fbTxt + '</div>'
             + '</div>';
     }).join('');
@@ -942,15 +942,15 @@ function _ncBuildExercisePage() {
         + '<span class="gr-score-val" id="nc-live-score">' + _ncSetScore + ' / ' + total + '</span>'
         + '</div>'
         + qCards
-        + '<button class="gr-submit-btn" style="background:linear-gradient(135deg,#b45309,#f59e0b)" onclick="ncSubmitSet()">🎯 Seti Değerlendir & Sonucu Gör</button>'
+        + '<button class="gr-submit-btn" style="background:linear-gradient(135deg,#b45309,#f59e0b)" data-action="ncSubmitSet()">🎯 Seti Değerlendir & Sonucu Gör</button>'
         + '<div class="gr-result" id="nc-result">'
         + '<div class="gr-res-score" id="nc-res-score" style="color:#b45309">0/' + total + '</div>'
         + '<div class="gr-res-lbl">' + set.label + ' Tamamlandı</div>'
         + '<div class="gr-res-msg" id="nc-res-msg"></div>'
         + '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px">'
-        + '<button class="gr-retry-btn" style="border-color:#b45309;color:#b45309" onclick="ncRetrySameSet()">🔄 Aynı Seti Tekrar</button>'
+        + '<button class="gr-retry-btn" style="border-color:#b45309;color:#b45309" data-action="ncRetrySameSet()">🔄 Aynı Seti Tekrar</button>'
         + (_ncSetIdx < NC_SETS.length - 1
-            ? '<button class="gr-retry-btn" style="background:#b45309;color:#fff;border-color:#b45309" onclick="ncNextSet()">Sonraki Set →</button>'
+            ? '<button class="gr-retry-btn" style="background:#b45309;color:#fff;border-color:#b45309" data-action="ncNextSet()">Sonraki Set →</button>'
             : '<span style="font-size:.8rem;color:var(--ink3);align-self:center">🏁 Tüm setler tamamlandı!</span>')
         + '</div>'
         + '</div></div>';
