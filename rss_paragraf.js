@@ -193,13 +193,13 @@ async function _fetchOneSource(source) {
                         return { source, items };
                     }
                 }
-            } catch(e) { console.debug("[RSS proxy] fetch hatası, kaynak atlandı:", e.message); }
+            } catch(e) {}
             return null;
         });
         try {
             const winner = await Promise.any(freeTries);
             if (winner) return winner;
-        } catch(_) { console.debug("[RSS] Tüm proxy'ler başarısız, fallback'e geçiliyor"); }
+        } catch(_) {}
 
         // 3. SON FALLBACK: rss2json (API key'siz ücretsiz tier)
         try {
@@ -456,9 +456,14 @@ Analyze the ${items.length} passages below. Return ONLY a JSON array, no markdow
 
 ${items.map(it => `[${it.i}] "${it.title}"\n${it.snippet}`).join('\n\n')}
 
-JSON array (exactly ${items.length} items):
-[{"level":"B2","levelNote":"max 6 Turkish words","vocabulary":{"word":"Turkish"}}, ...]
-- level: A2/B1/B2/C1/C2  - vocabulary: 5-6 hardest words`;
+Return a JSON array with exactly ${items.length} objects in this format:
+[{"level":"B2","levelNote":"kısa Türkçe not","vocabulary":{"actual_english_word":"Türkçe karşılık","another_word":"çevirisi"}}, ...]
+
+Rules:
+- level: A2/B1/B2/C1/C2
+- levelNote: max 6 Turkish words describing difficulty
+- vocabulary: 5-6 hardest/most advanced English words ACTUALLY found in the text, each mapped to its Turkish translation
+- NEVER use placeholder keys like "word" or "english_word" — use the real words from the text`;
 
             try {
                 const result = await Promise.race([
@@ -495,12 +500,14 @@ async function _analyzeWithAI(text, title) {
     Title: "${title}"
     Text: "${text.slice(0, 400)}"
 
-    Return exactly: {"level":"C1","levelNote":"Akademik söz varlığı yoğun","vocabulary":{"english_word":"Türkçe karşılık"}}
+    Return exactly this structure (replace examples with real words from the text):
+    {"level":"C1","levelNote":"Akademik söz varlığı yoğun","vocabulary":{"sophisticated":"sofistike/karmaşık","inevitable":"kaçınılmaz"}}
 
     Rules:
     - level: A2/B1/B2/C1/C2
     - levelNote: max 6 Turkish words
-    - vocabulary: 6-8 hardest words FROM the text with accurate Turkish translations`;
+    - vocabulary: 6-8 hardest words ACTUALLY FROM the text with accurate Turkish translations
+    - Use the real English words as keys, NOT placeholders like "english_word" or "word"`;
         try {
             if (typeof aiCall === 'function') {
                 return await Promise.race([
@@ -508,7 +515,7 @@ async function _analyzeWithAI(text, title) {
                     new Promise((_, rej) => setTimeout(() => rej(new Error('single_timeout')), 7000))
                 ]);
             }
-        } catch(_) { console.debug("[RSS AI] Tekil analiz zaman aşımı, vocab fallback"); }
+        } catch(_) {}
         return _vocabFallback(text);
     } catch(e) {
         console.error("[_analyzeWithAI] Hata:", e.message || e);
@@ -524,11 +531,22 @@ function _toPassageSync(article, aiData) {
     // Başlık mutlaka bu article'dan gelsin
     const title = (article.title || '').trim();
     const data = aiData || _vocabFallback(text);
+
+    // Vocabulary: placeholder key'leri temizle (AI bazen {"word":"Turkish"} döndürüyor)
+    const PLACEHOLDER_KEYS = new Set(['word','english_word','english','turkish','tr','key','vocab','term','placeholder']);
+    const rawVoc = data.vocabulary || {};
+    const cleanVoc = {};
+    for (const [eng, tr] of Object.entries(rawVoc)) {
+        const k = eng.trim().toLowerCase();
+        if (PLACEHOLDER_KEYS.has(k) || k.length <= 2) continue;
+        cleanVoc[eng.trim()] = tr;
+    }
+
     return {
         title,
         topic:      article.sourceName,
         text,
-        vocabulary: data.vocabulary || {},
+        vocabulary: cleanVoc,
         level:      data.level      || 'B2',
         levelNote:  data.levelNote  || '',
         sourceIcon: article.sourceIcon || '📰',
@@ -566,7 +584,7 @@ async function _syncRSSToFirebase(passages) {
         try {
             const snap = await get(ref(window.db, `ydt_users/${uid}/rssArsiv`));
             if (snap.exists()) existing = snap.val() || [];
-        } catch(_) { console.debug("[RSS] Firebase arsiv okuma hatası, boş başlatılıyor"); }
+        } catch(_) {}
         const merged = [...passages];
         existing.forEach(p => { if (!merged.some(m => m.title === p.title)) merged.push(p); });
         if (merged.length > 300) merged.length = 300;
@@ -627,9 +645,9 @@ async function _loadRSSFromFirebase() {
 /* ── localStorage'a yaz ─────────────────────────────────────── */
 function _saveToLS(passages) {
     const uid      = window._currentUser?.uid || getDeviceId();
-    (window.YDT?.lsSet || localStorage.setItem.bind(localStorage))(`ydt_rss_cache_${_rssCacheSlot()}`, JSON.stringify(passages));
+    localStorage.setItem(`ydt_rss_cache_${_rssCacheSlot()}`, JSON.stringify(passages));
     let arsiv = [];
-    try { arsiv = JSON.parse(localStorage.getItem(`ydt_${uid}_rss_arsiv`) || '[]'); } catch(_) { console.warn('[RSS] arsiv parse hatası, sıfırlandı'); }
+    try { arsiv = JSON.parse(localStorage.getItem(`ydt_${uid}_rss_arsiv`) || '[]'); } catch(_) {}
     passages.forEach(p => {
         // Duplicate kontrolü: aynı link VEYA (aynı başlık + aynı gün)
         const today = new Date().toISOString().slice(0, 10);
@@ -673,7 +691,7 @@ async function generateAIDailyParagraflar(force) {
                         renderAIDailyParagraflar(p, listEl);
                         return;
                     }
-                } catch(_) { console.debug("[RSS] Render hatası, atlanıyor"); }
+                } catch(_) {}
             }
         }
 
@@ -804,19 +822,23 @@ async function generateAIDailyParagraflar(force) {
                 const icon    = p.sourceIcon || fbIcons[i % fbIcons.length];
                 const lc      = lvlClr[p.level] || '#6b7280';
 
-                return `<div class="rh2-card" id="ai-card-${i}" style="position:relative;">
-                    <div class="rh2-card-accent rh2-card-accent-ai" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);"></div>
-                    <div class="rh2-card-body" onclick="openAIDailyParagraf(${i})" style="cursor:pointer;">
+                return `<div class="rh2-card" id="ai-card-${i}" onclick="openAIDailyParagraf(${i})">
+                    <div class="rh2-card-accent rh2-card-accent-ai" style="background:linear-gradient(90deg,#0ea5e9,#0284c7);"></div>
+                    <div class="rh2-card-body">
                         <div class="rh2-card-header">
                             <div class="rh2-card-icon rh2-card-icon-ai">${icon}</div>
                             <div class="rh2-card-titlemeta">
                                 <div class="rh2-card-title">${p.title}</div>
-                                <div class="rh2-card-timing">
-                                    ⏱ ${rm} dk · ${wc} kelime · ${sents.length} cümle &nbsp;·&nbsp;
-                                    <span style="color:${lc};font-weight:800;">${p.level||'B2'}</span>
-                                    ${p.levelNote ? `<span style="color:var(--ink3);font-size:.65rem;"> — ${p.levelNote}</span>` : ''}
-                                </div>
                             </div>
+                        </div>
+                        <div class="rh2-card-statband">
+                            <div class="rh2-sband-cell"><span class="rh2-sband-ico">⏱</span><span class="rh2-sband-num">${rm} dk</span></div>
+                            <div class="rh2-sband-div"></div>
+                            <div class="rh2-sband-cell"><span class="rh2-sband-ico">📝</span><span class="rh2-sband-num">${wc}</span><span class="rh2-sband-lbl">KELİME</span></div>
+                            <div class="rh2-sband-div"></div>
+                            <div class="rh2-sband-cell"><span class="rh2-sband-ico">💬</span><span class="rh2-sband-num">${sents.length}</span><span class="rh2-sband-lbl">CÜMLE</span></div>
+                            <div class="rh2-sband-div"></div>
+                            <div class="rh2-sband-cell rh2-sband-max"><span class="rh2-sband-maxlbl">MAX:</span><span class="rh2-sband-maxnum">${voc.length}</span><span class="rh2-sband-maxsub">KELİME</span></div>
                         </div>
                         <div class="rh2-card-preview">${preview}</div>
                         <div class="rh2-card-footer">
@@ -824,15 +846,9 @@ async function generateAIDailyParagraflar(force) {
                             <span class="rh2-pill" style="background:#e0f2fe;color:#0284c7;font-weight:800;">📰 ${p.sourceName||'RSS'}</span>
                             ${pills}
                             ${p.link ? `<a href="${p.link}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="rh2-pill" style="background:#f0fdf4;color:#16a34a;text-decoration:none;font-weight:800;">🔗 Kaynak</a>` : ''}
+                            <button class="rh2-card-save-btn ${saved?'saved':''}" id="ai-save-btn-${i}" onclick="event.stopPropagation();_saveAIPasaj(${i})">${saved?'✅ Arşivde':'🗂 Arşivle'}</button>
                         </div>
                     </div>
-                    <button class="rh2-card-save-btn ${saved ? 'saved' : ''}" 
-                            id="ai-save-btn-${i}"
-                            onclick="event.stopPropagation(); _saveAIPasaj(${i})"
-                            title="${saved ? 'Arşivde' : 'Yüklü Pasajlara Ekle'}"
-                            style="position:absolute;bottom:14px;right:14px;z-index:2;">
-                        ${saved ? '✅ Arşivde' : '📥 Arşive Ekle'}
-                    </button>
                 </div>`;
             }).join('');
 
@@ -868,7 +884,7 @@ async function _syncParagraflarToFirebase() {
         if (arsiv.length > 0) {
             await set(ref(window.db, `ydt_users/${uid}/rssArsiv`), arsiv.slice(0, 300));
         }
-    } catch(_) { console.warn("[RSS] Firebase arsiv sync hatası"); }
+    } catch(_) {}
 }
 
 /* ── Tab label ──────────────────────────────────────────────── */
@@ -956,11 +972,5 @@ window.generateAIDailyParagraflar = generateAIDailyParagraflar;
 window.RSS_SOURCES                 = RSS_SOURCES;
 window._syncRSSToFirebase          = _syncRSSToFirebase;
 window._loadRSSFromFirebase        = _loadRSSFromFirebase;
-// ai-daily.js bağımlılıkları — yükleme sırasından bağımsız güvenli erişim
-window._analyzeWithAI              = _analyzeWithAI;
-window._toPassageSync              = _toPassageSync;
-window._cleanText                  = _cleanText;
-window._hasMinSentences            = _hasMinSentences;
-window._vocabFallback              = _vocabFallback;
 
 console.log('[rss_paragraf.js v4.7] ✅ 16 kaynak · Bilim→Teknoloji→Oyun önceliği · free proxy önce · rss2json fallback · max 25/gün');

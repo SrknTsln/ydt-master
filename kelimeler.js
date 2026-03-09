@@ -1419,7 +1419,9 @@ function loadUserScopedData() {
             // Yeni anahtara yaz
             try { localStorage.setItem(`ydt_${uid}_all_data`, JSON.stringify(allData)); } catch(e) {}
         } else {
+            // Yeni misafir — Starter Pack yükle ve localStorage'a kaydet
             allData = { ...DEFAULT_VOCAB };
+            try { localStorage.setItem(`ydt_${uid}_all_data`, JSON.stringify(allData)); } catch(e) {}
         }
     }
 
@@ -1437,6 +1439,15 @@ function loadUserScopedData() {
 
     window.allData = allData;
     window.stats   = stats;
+
+    // currentActiveList boşsa veya allData'da yoksa ilk geçerli listeye ata
+    const _validKeys = Object.keys(allData).filter(k => Array.isArray(allData[k]) && allData[k].length > 0);
+    if (_validKeys.length > 0) {
+        if (!window.currentActiveList || !allData[window.currentActiveList]) {
+            window.currentActiveList = _validKeys[0];
+            currentActiveList = _validKeys[0];
+        }
+    }
 
     if (typeof updateSelectors  === 'function') updateSelectors();
     if (typeof updateIndexStats === 'function') updateIndexStats();

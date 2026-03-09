@@ -244,7 +244,9 @@ const QUEST_TEMPLATES = [
 // ══════════════════════════════════════════════════════
 // PLAYER STATE
 // ══════════════════════════════════════════════════════
-let P = JSON.parse(localStorage.getItem('ww_p2')) || {
+// YDT.lsGet — try/catch + JSON.parse güvenli wrapper (utils.js)
+// Bozuk veri veya QuotaExceededError durumunda varsayılan obje döner
+let P = (window.YDT && YDT.lsGet('ww_p2')) || {
     name:'', xp:0, level:1, lives:5, ml:5, streak:0,
     lastPlay:null, lastLR:null, badges:[], ws:{}, wp:{},
     perf:false, memw:false, bee:false, bld:false,
@@ -269,7 +271,8 @@ let wm={}, pq={}, mem_={}, sp_={}, sb_={}, scr_={}, ls_={}, cat_={};
 function xpL(l){return l*60;}
 function txpL(l){let t=0;for(let i=1;i<l;i++)t+=xpL(i);return t;}
 function save(){
-    localStorage.setItem('ww_p2', JSON.stringify(P));
+    // YDT.lsSet — QuotaExceededError korumalı wrapper (utils.js)
+    YDT.lsSet('ww_p2', P);
     // allData'ya da yaz — Firebase sync için (debounced)
     if (typeof window.allData !== 'undefined') {
         window.allData.kidsPlayer = JSON.parse(JSON.stringify(P));
@@ -361,7 +364,7 @@ function open(){
         // (yerel veri daha eskiyse remote ile güncelle)
         if ((remote.xp || 0) > P.xp) {
             P = { ...P, ...remote };
-            localStorage.setItem('ww_p2', JSON.stringify(P));
+            YDT.lsSet('ww_p2', P);
         }
     }
     render(P.name?'home':'name');

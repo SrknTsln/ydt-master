@@ -1,24 +1,23 @@
-// ── DOM Element Cache — tekrarlanan querySelector maliyetini azaltır ──
-// showPage() her çağrıldığında DOM değişebilir, cache invalidate edilir
+// ════════════════════════════════════════════════════
+// motor.js  –  Tüm uygulama mantığı
+// ════════════════════════════════════════════════════
+
+// ── DOM Cache — document.getElementById tekrarlı çağrısını önler ──────────
 const _domCache = new Map();
+
 function $id(id) {
-    // Önce cache'e bak; yoksa sorgula ve kaydet
     if (_domCache.has(id)) {
-        const el = _domCache.get(id);
-        // Hâlâ DOM'a bağlı mı?
-        if (el && el.isConnected) return el;
-        _domCache.delete(id); // Stale entry temizle
+        const cached = _domCache.get(id);
+        // Stale check: element hâlâ DOM'da mı?
+        if (cached && document.contains(cached)) return cached;
+        _domCache.delete(id);
     }
     const el = document.getElementById(id);
     if (el) _domCache.set(id, el);
     return el;
 }
-/** Cache'i temizle — showPage gibi büyük DOM değişikliklerinden sonra çağır */
-function _invalidateDomCache() { _domCache.clear(); }
 
-// ════════════════════════════════════════════════════
-// motor.js  –  Tüm uygulama mantığı
-// ════════════════════════════════════════════════════
+function _invalidateDomCache() { _domCache.clear(); }
 
 // --- GENEL DEĞİŞKENLER ---
 let currentActiveList = "", studyIndex = 0, currentWord, score = 0, canAnswer = true, moduleStartTime = null;
@@ -47,7 +46,8 @@ function _hideAllModulePages() {
 }
 
 function showPage(id) {
-    const target = document.getElementById(id);
+    _invalidateDomCache(); // sayfa değişince DOM cache'i temizle
+    const target = $id(id);
 
     // TÜM sayfa elementlerini kapat — sınıf değişse bile ID ile yakala
     // games.js container class'ı kaldırıyor, bu yüzden class bazlı seçici yetmez
@@ -138,8 +138,8 @@ function setNavActive(pageId) {
     document.querySelectorAll('.sb-btn, .mob-drawer-btn').forEach(el => el.classList.remove('active'));
     const map = NAV_MAP[pageId];
     if (map) {
-        const sb = document.getElementById(map.sb);
-        const di = document.getElementById(map.di);
+        const sb = $id(map.sb);
+        const di = $id(map.di);
         if (sb) sb.classList.add('active');
         if (di) di.classList.add('active');
     }
@@ -148,7 +148,7 @@ function setNavActive(pageId) {
 function navTo(pageId) {
     if (pageId === 'stats-page') { showStatsPage(); return; }
     showPage(pageId);
-    if (pageId === 'index-page') { updateIndexStats(); updateDailyGoalBar(); }
+    if (pageId === 'index-page') { updateSelectors(); updateIndexStats(); updateDailyGoalBar(); }
     if (pageId === 'admin-page') { adminCheckAccess(); }
 }
 
@@ -195,27 +195,35 @@ function importData(e) {
 }
 
 function updateSelectors() {
-    // Her zaman güncel user-scoped allData'yı oku
+    // Güncel allData'yı oku — giriş yapan kullanıcı veya misafir
     if (typeof getUserKey === 'function') {
-        const raw = localStorage.getItem(getUserKey('all_data'));
-        if (raw) { try { allData = JSON.parse(raw); } catch(e) { console.warn("[YDT] allData parse hatası (localStorage bozuk olabilir):", e.message); } }
+        const key = getUserKey('all_data'); // misafir için ydt_guest_all_data döner
+        if (key) {
+            const raw = localStorage.getItem(key);
+            if (raw) { try { allData = JSON.parse(raw); } catch(e) {} }
+        }
+    }
+    // allData hâlâ boşsa window.allData'dan al
+    if ((!allData || Object.keys(allData).length === 0) && window.allData && Object.keys(window.allData).length > 0) {
+        allData = window.allData;
     }
 
-    const keys = Object.keys(allData);
+    // Sadece gerçek kelime listelerini al — system key'leri (object, string) hariç
+    const keys = Object.keys(allData).filter(k => Array.isArray(allData[k]) && allData[k].length > 0);
 
     ['list-selector', 'edit-list-selector', 'exercise-list-selector',
      'game-list-selector', 'ai-gen-target-list'].forEach(id => {
-        const s = document.getElementById(id);
+        const s = $id(id);
         if (!s) return;
         const prev = s.value;
         s.innerHTML = '';
         keys.forEach(n => s.add(new Option(n, n)));
-        if (prev && allData[prev]) s.value = prev;
+        if (prev && allData[prev] && Array.isArray(allData[prev])) s.value = prev;
         else if (keys.length) s.value = keys[0];
     });
 
-    // currentActiveList boşsa ilk listeye ata
-    if ((!currentActiveList || !allData[currentActiveList]) && keys.length) {
+    // currentActiveList boşsa veya array değilse ilk geçerli listeye ata
+    if ((!currentActiveList || !Array.isArray(allData[currentActiveList])) && keys.length) {
         currentActiveList = keys[0];
     }
 
@@ -225,7 +233,7 @@ function updateSelectors() {
 function updateIndexStats() {
     // Skeleton/KPI elementler opsiyonel — olmasa da analitik paneller çalışır
     ['idx-total','idx-learned','idx-accuracy'].forEach(id => {
-        const el = document.getElementById(id);
+        const el = $id(id);
         if (el) el.innerHTML = '';
     });
     const streakEl0 = $id('idx-streak-val');
@@ -236,21 +244,20 @@ function updateIndexStats() {
         const rawAD = localStorage.getItem(getUserKey('all_data'));
         const rawST = localStorage.getItem(getUserKey('stats'));
         if (rawAD && Object.keys(window.allData || {}).length === 0) {
-            try { allData = JSON.parse(rawAD); } catch(e) { console.warn("[YDT] allData (AD) parse hatası:", e.message); }
+            try { allData = JSON.parse(rawAD); } catch(e) {}
         }
         if (rawST) {
-            try { const s = JSON.parse(rawST); if (s) { stats = s; if (isNaN(stats.totalMinutes)) stats.totalMinutes = 0; } } catch(e) { console.warn("[YDT] stats parse hatası:", e.message); }
+            try { const s = JSON.parse(rawST); if (s) { stats = s; if (isNaN(stats.totalMinutes)) stats.totalMinutes = 0; } } catch(e) {}
         }
     }
 
     let total = 0, learned = 0;
     Object.values(allData).forEach(list => {
-        // Güvenli kontrol: Firestore merge sonrası bazı değerler array olmayabilir
-        if (!Array.isArray(list)) return;
+        if (!Array.isArray(list)) return; // system key'leri (object/string) atla
         total += list.length;
         list.forEach(w => {
-            if (w && typeof w === 'object' &&
-                (w.errorCount || 0) <= 0 && (w.correctStreak || 0) >= 2) learned++;
+            if (!w || typeof w !== 'object') return;
+            if ((w.errorCount || 0) <= 0 && (w.correctStreak || 0) >= 2) learned++;
         });
     });
 
@@ -304,7 +311,7 @@ let aiGenWords = []; // üretilen önizleme kelimeler
 
 // API Key kaydet
 function saveApiKey(providerId, inputId) {
-    const input = document.getElementById(inputId);
+    const input = $id(inputId);
     const val   = (input?.value || '').trim();
     const p     = AI_PROVIDERS.find(x => x.id === providerId);
     if (!p) return;
@@ -334,9 +341,9 @@ function removeApiKey(providerId) {
 function updateCascadeStatus() {
     AI_PROVIDERS.forEach(p => {
         const has  = !!localStorage.getItem(p.lsKey);
-        const dot  = document.getElementById(`co-dot-${p.id}`);
-        const item = document.getElementById(`co-item-${p.id}`);
-        const inp  = document.getElementById(`akey-${p.id}`);
+        const dot  = $id(`co-dot-${p.id}`);
+        const item = $id(`co-item-${p.id}`);
+        const inp  = $id(`akey-${p.id}`);
         if (dot)  { dot.textContent = has ? '✓' : '—'; dot.style.color = has ? '#22c55e' : '#d1d5db'; }
         if (item) item.classList.toggle('co-active', has);
         if (inp)  inp.placeholder = has ? '●●●●●●● (kayıtlı)' : p.keyHint;
@@ -344,8 +351,8 @@ function updateCascadeStatus() {
 
     // Kayıtlı ibaresi güncelle
     AI_PROVIDERS.forEach(p => {
-        const statusEl = document.getElementById(`adm-keystatus-${p.id}`);
-        const cardEl   = document.getElementById(`adm-keycard-${p.id}`);
+        const statusEl = $id(`adm-keystatus-${p.id}`);
+        const cardEl   = $id(`adm-keycard-${p.id}`);
         const has = !!localStorage.getItem(p.lsKey);
         if (statusEl) statusEl.style.display = has ? 'inline-block' : 'none';
         if (cardEl)   cardEl.style.borderColor = has ? '#86efac' : '';

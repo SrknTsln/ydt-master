@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YDT Master Pro — Güncel Audit v4 (Mart 2026)</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Sora:wght@400;600;700;800&display=swap');
+
+:root {
+  --bg: #0a0a0f;
+  --surface: #111118;
+  --surface2: #1a1a24;
+  --border: #252535;
+  --border2: #2e2e42;
+
+  --red:    #ff4455; --red-dim:   #2a0d12; --red-mid:   #7f1d2a;
+  --orange: #ff8c42; --orange-dim:#2a1508; --orange-mid:#7f3d12;
+  --yellow: #f5c842; --yellow-dim:#2a2008; --yellow-mid:#7f6012;
+  --green:  #42e07c; --green-dim: #082a15; --green-mid: #126b30;
+  --blue:   #4a9eff; --blue-dim:  #081828; --blue-mid:  #12457f;
+  --purple: #b87aff; --purple-dim:#1a0828; --purple-mid:#5c1f8f;
+  --teal:   #42d4c8; --teal-dim:  #082420; --teal-mid:  #126b63;
+
+  --ink:    #e8e8f5;
+  --ink2:   #9090b0;
+  --ink3:   #606080;
+  --mono:   'JetBrains Mono', monospace;
+  --sans:   'Sora', system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ── Scanline overlay ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,.03) 2px, rgba(0,0,0,.03) 4px);
+  pointer-events: none;
+  z-index: 9999;
+}
+
+.page { max-width: 1100px; margin: 0 auto; padding: 40px 20px 100px; }
+
+/* ── Header ── */
+.header {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #0f0a1e 0%, #1a0a2e 50%, #0f1a2e 100%);
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  padding: 40px 36px 32px;
+  margin-bottom: 28px;
+}
+.header::before {
+  content: '';
+  position: absolute;
+  top: -80px; right: -80px;
+  width: 320px; height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(184,122,255,.15) 0%, transparent 70%);
+}
+.header::after {
+  content: '';
+  position: absolute;
+  bottom: -60px; left: -60px;
+  width: 250px; height: 250px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(74,158,255,.1) 0%, transparent 70%);
+}
+.header-inner { position: relative; z-index: 1; }
+.header-shield { font-size: 2.8rem; margin-bottom: 12px; }
+.header h1 { font-size: 1.6rem; font-weight: 800; color: #fff; margin-bottom: 6px; }
+.header .sub { font-size: .85rem; color: var(--ink2); margin-bottom: 18px; }
+.header-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+.hbadge {
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 20px;
+  padding: 4px 14px;
+  font-size: .72rem;
+  font-weight: 600;
+  color: var(--ink2);
+  font-family: var(--mono);
+}
+
+/* ── Summary grid ── */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin-bottom: 28px;
+}
+.scard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px 14px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.scard::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  border-radius: 14px 14px 0 0;
+}
+.scard.red::before   { background: var(--red); }
+.scard.orange::before{ background: var(--orange); }
+.scard.green::before { background: var(--green); }
+.scard.blue::before  { background: var(--blue); }
+.scard.purple::before{ background: var(--purple); }
+.scard.yellow::before{ background: var(--yellow); }
+
+.scard-num {
+  font-size: 2rem;
+  font-weight: 800;
+  font-family: var(--mono);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.scard.red .scard-num    { color: var(--red); }
+.scard.orange .scard-num { color: var(--orange); }
+.scard.green .scard-num  { color: var(--green); }
+.scard.blue .scard-num   { color: var(--blue); }
+.scard.purple .scard-num { color: var(--purple); }
+.scard.yellow .scard-num { color: var(--yellow); }
+
+.scard-lbl { font-size: .68rem; color: var(--ink3); text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
+
+/* ── Filter bar ── */
+.filterbar {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.fbtn {
+  border: 1px solid var(--border2);
+  background: transparent;
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-size: .73rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--ink2);
+  font-family: var(--sans);
+  transition: all .15s;
+}
+.fbtn:hover { background: var(--surface2); color: var(--ink); border-color: var(--border2); }
+.fbtn.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+/* ── Section ── */
+.section { margin-bottom: 28px; }
+.section-title {
+  font-size: .78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--ink3);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-title .line {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.section-pill {
+  font-size: .65rem;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 20px;
+}
+
+/* ── Cards ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  margin-bottom: 8px;
+  overflow: hidden;
+  transition: border-color .15s;
+}
+.card:hover { border-color: var(--border2); }
+.card.open  { border-color: var(--border2); }
+
+.card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  user-select: none;
+}
+.card-head:hover { background: var(--surface2); }
+
+/* Severity badges */
+.sev {
+  flex-shrink: 0;
+  font-size: .6rem;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-top: 1px;
+  font-family: var(--mono);
+}
+.sev-critical { background: var(--red-dim);    color: var(--red);    border: 1px solid var(--red-mid); }
+.sev-high     { background: var(--orange-dim); color: var(--orange); border: 1px solid var(--orange-mid); }
+.sev-medium   { background: var(--blue-dim);   color: var(--blue);   border: 1px solid var(--blue-mid); }
+.sev-low      { background: var(--surface2);   color: var(--ink3);   border: 1px solid var(--border2); }
+.sev-design   { background: var(--purple-dim); color: var(--purple); border: 1px solid var(--purple-mid); }
+
+/* Status badges */
+.status {
+  flex-shrink: 0;
+  font-size: .65rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-family: var(--mono);
+}
+.s-open    { background: var(--red-dim);    color: var(--red);    border: 1px solid var(--red-mid); }
+.s-partial { background: var(--yellow-dim); color: var(--yellow); border: 1px solid var(--yellow-mid); }
+.s-done    { background: var(--green-dim);  color: var(--green);  border: 1px solid var(--green-mid); }
+.s-new     { background: var(--orange-dim); color: var(--orange); border: 1px solid var(--orange-mid); }
+
+.card-info { flex: 1; min-width: 0; }
+.card-title { font-size: .88rem; font-weight: 700; color: var(--ink); line-height: 1.3; }
+.card-sub   { font-size: .72rem; color: var(--ink3); margin-top: 3px; font-family: var(--mono); }
+
+.chevron { flex-shrink: 0; color: var(--ink3); font-size: .7rem; margin-top: 3px; transition: transform .2s; }
+.card.open .chevron { transform: rotate(90deg); }
+
+.card-body {
+  display: none;
+  padding: 16px 16px 18px;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+}
+.card.open .card-body { display: block; }
+
+.desc {
+  font-size: .8rem;
+  color: var(--ink2);
+  line-height: 1.65;
+  margin-bottom: 12px;
+}
+.desc code {
+  font-family: var(--mono);
+  font-size: .75rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
+  color: var(--teal);
+}
+
+/* Evidences */
+.evidence {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 10px 0;
+}
+.ev-line {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: .76rem;
+  padding: 6px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-family: var(--mono);
+}
+.ev-file { color: var(--blue); flex-shrink: 0; }
+.ev-line-num { color: var(--ink3); flex-shrink: 0; }
+.ev-code { color: var(--red); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ev-note { color: var(--ink3); font-size: .7rem; }
+
+/* Tag list */
+.tags { display: flex; flex-wrap: wrap; gap: 5px; margin: 8px 0; }
+.tag {
+  font-size: .68rem;
+  font-family: var(--mono);
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border2);
+  background: var(--surface2);
+  color: var(--ink2);
+}
+.tag.red    { border-color: var(--red-mid);    background: var(--red-dim);    color: var(--red); }
+.tag.green  { border-color: var(--green-mid);  background: var(--green-dim);  color: var(--green); }
+.tag.orange { border-color: var(--orange-mid); background: var(--orange-dim); color: var(--orange); }
+.tag.blue   { border-color: var(--blue-mid);   background: var(--blue-dim);   color: var(--blue); }
+
+/* Prompt box */
+.prompt-wrap {
+  margin-top: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.prompt-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+}
+.prompt-label { font-size: .68rem; font-weight: 700; color: var(--purple); text-transform: uppercase; letter-spacing: .08em; }
+.copy-btn {
+  background: var(--purple-dim);
+  color: var(--purple);
+  border: 1px solid var(--purple-mid);
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-size: .7rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--sans);
+  transition: all .15s;
+}
+.copy-btn:hover { background: var(--purple); color: #fff; }
+.copy-btn.copied { background: var(--green-dim); color: var(--green); border-color: var(--green-mid); }
+
+textarea.prompt-ta {
+  width: 100%;
+  min-height: 100px;
+  background: transparent;
+  border: none;
+  padding: 12px 14px;
+  font-family: var(--mono);
+  font-size: .75rem;
+  color: var(--ink2);
+  line-height: 1.6;
+  resize: vertical;
+  outline: none;
+}
+
+/* New badge */
+.new-badge {
+  display: inline-block;
+  font-size: .58rem;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 20px;
+  background: var(--orange-dim);
+  color: var(--orange);
+  border: 1px solid var(--orange-mid);
+  margin-left: 6px;
+  vertical-align: middle;
+  font-family: var(--mono);
+}
+
+/* Divider */
+.group-label {
+  font-size: .7rem;
+  font-weight: 700;
+  padding: 7px 12px;
+  border-radius: 8px;
+  margin: 14px 0 8px;
+  font-family: var(--mono);
+}
+.group-label.warn  { background: var(--orange-dim); color: var(--orange); border: 1px solid var(--orange-mid); }
+.group-label.info  { background: var(--blue-dim);   color: var(--blue);   border: 1px solid var(--blue-mid); }
+.group-label.muted { background: var(--surface2);   color: var(--ink3);   border: 1px solid var(--border); }
+
+/* Responsive */
+@media(max-width:600px) {
+  .page { padding: 20px 12px 80px; }
+  .header { padding: 24px 18px 20px; }
+  .header h1 { font-size: 1.2rem; }
+  .summary-grid { grid-template-columns: repeat(3,1fr); }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- Header -->
+<div class="header">
+  <div class="header-inner">
+    <div class="header-shield">🛡️</div>
+    <h1>YDT Master Pro — Güncel Audit v4</h1>
+    <div class="sub">Bu oturumda tamamlananlar işlendi · 08 Mart 2026 (2. oturum)</div>
+    <div class="header-badges">
+      <span class="hbadge">📅 08 Mart 2026 · v4</span>
+      <span class="hbadge">📁 37 dosya</span>
+      <span class="hbadge">🔧 ~41.000 satır</span>
+      <span class="hbadge">🌐 ydt-master.web.app</span>
+    </div>
+  </div>
+</div>
+
+<!-- Summary -->
+<div class="summary-grid">
+  <div class="scard red">
+    <div class="scard-num">0</div>
+    <div class="scard-lbl">Kritik Açık</div>
+  </div>
+  <div class="scard orange">
+    <div class="scard-num">0</div>
+    <div class="scard-lbl">Yüksek Açık</div>
+  </div>
+  <div class="scard yellow">
+    <div class="scard-num">5</div>
+    <div class="scard-lbl">Orta Açık</div>
+  </div>
+  <div class="scard green">
+    <div class="scard-num">27</div>
+    <div class="scard-lbl">Tamamlandı</div>
+  </div>
+  <div class="scard blue">
+    <div class="scard-num">8</div>
+    <div class="scard-lbl">Bu Oturumda Kapandı</div>
+  </div>
+  <div class="scard purple">
+    <div class="scard-num">2</div>
+    <div class="scard-lbl">Tasarım / Düşük</div>
+  </div>
+</div>
+
+<!-- Filter bar -->
+<div class="filterbar">
+  <button class="fbtn active" onclick="filter(this,'all')">Tümü</button>
+  <button class="fbtn" onclick="filter(this,'open')">🔴 Açık</button>
+  <button class="fbtn" onclick="filter(this,'high')">⚠️ Yüksek</button>
+  <button class="fbtn" onclick="filter(this,'medium')">🔵 Orta</button>
+  <button class="fbtn" onclick="filter(this,'design')">🎨 Tasarım</button>
+  <button class="fbtn" onclick="filter(this,'session')">🆕 Bu Oturumda</button>
+  <button class="fbtn" onclick="filter(this,'done')">✅ Tamamlananlar</button>
+</div>
+
+<!-- ═══ BÖLÜM 1: KRİTİK AÇIK ═══ -->
+<div class="section">
+  <div class="section-title">
+<span>⚠️ Yüksek — Tamamlandı</span>
+<div class="line"></div>
+<span class="section-pill" style="background:var(--green-dim);color:var(--green);border:1px solid var(--green-mid)">0 açık bulgu</span>
+</div>
+
+  <!-- H1 done → aşağıya taşındı -->
+  <!-- H2 done → aşağıya taşındı -->
+  <div class="card" data-session="true" data-sev="high" data-status="done">
+<div class="card-head" onclick="tog(this)">
+<span class="sev sev-high">YÜKSEK</span>
+<div class="card-info">
+<div class="card-title">kids.js: korumasız JSON.parse — uygulama top-level'da çöküyor <span class="new-badge">Bu Oturumda</span></div>
+<div class="card-sub">kids.js:247 → YDT.lsGet(); save() + open() → YDT.lsSet() ile değiştirildi ✓</div>
+</div>
+<span class="status s-done">✅ Tamamlandı</span>
+<span class="chevron">▶</span>
+</div>
+<div class="card-body">
+<p class="desc">
+<code>kids.js</code> dosyasının 247. satırında top-level bir <code>JSON.parse(localStorage.getItem('ww_p2'))</code> çağrısı var. Bu dosya yüklenirken localStorage verisi bozuksa sayfa çöker ve kids modu tamamen kullanılamaz hale gelir. YDT.lsGet wrapper mevcut ama kullanılmamış.
+      </p>
+<div class="tags">
+<span class="tag red">CRASH</span>
+<span class="tag orange">NO_TRY_CATCH</span>
+</div>
+<div class="evidence">
+<div class="ev-line"><span class="ev-file">kids.js:247</span><span class="ev-code">let P = JSON.parse(localStorage.getItem('ww_p2')) || {...}</span></div>
+</div>
+<div class="prompt-wrap">
+<div class="prompt-header">
+<span class="prompt-label">✏️ Düzeltme Promptu</span>
+<button class="copy-btn" onclick="cp(this)">📋 Kopyala</button>
+</div>
+<textarea class="prompt-ta" readonly="">kids.js satır 247'yi düzelt:
+
+// ÖNCE (çöküyor)
+let P = JSON.parse(localStorage.getItem('ww_p2')) || { ... };
+
+// SONRA — YDT.lsGet wrapper kullan (utils.js'de mevcut)
+let P = (window.YDT &amp;&amp; YDT.lsGet('ww_p2')) || {
+  name: '', level: 1, xp: 0, coins: 0, streak: 0, badges: [], lastDate: ''
+};
+
+YDT.lsGet zaten try/catch ve JSON.parse içeriyor, güvenli.
+
+Aynı şekilde kids.js içindeki tüm localStorage.setItem çağrılarını YDT.lsSet ile değiştir (QuotaExceededError koruması için).</textarea>
+</div>
+</div>
+</div>
+<div class="card" data-session="true" data-sev="high" data-status="done">
+<div class="card-head" onclick="tog(this)">
+<span class="sev sev-high">YÜKSEK</span>
+<div class="card-info">
+<div class="card-title">CSP: newscientist.com eklenmedi — RSS kaynağı bloke <span class="new-badge">Bu Oturumda</span></div>
+<div class="card-sub">index.html connect-src → https://www.newscientist.com https://newscientist.com eklendi ✓</div>
+</div>
+<span class="status s-done">✅ Tamamlandı</span>
+<span class="chevron">▶</span>
+</div>
+<div class="card-body">
+<p class="desc">
+        Audit'te Scientific American kaldırılıp New Scientist eklendi denildi. Ancak <code>index.html</code>'deki CSP'nin <code>connect-src</code> direktifinde <code>newscientist.com</code> bulunamadı. CSP ihlali nedeniyle bu kaynak sessizce bloke edilecek, network isteği console hatası verecek ve haber yüklenemeyecek.
+      </p>
+<div class="tags">
+<span class="tag red">WRONG_CLOSED</span>
+<span class="tag orange">CSP_BLOCK</span>
+</div>
+<div class="evidence">
+<div class="ev-line"><span class="ev-file">index.html:4</span><span class="ev-code">connect-src ... (newscientist.com YOK)</span></div>
+<div class="ev-line"><span class="ev-file">rss_paragraf.js</span><span class="ev-code">newscientist.com/feed/home/ → kaynak listede</span><span class="ev-note">← CSP'de yok</span></div>
+</div>
+<div class="prompt-wrap">
+<div class="prompt-header">
+<span class="prompt-label">✏️ Düzeltme Promptu</span>
+<button class="copy-btn" onclick="cp(this)">📋 Kopyala</button>
+</div>
+<textarea class="prompt-ta" readonly="">index.html'deki Content-Security-Policy meta tag'inin connect-src bölümüne şu alanı ekle:
+https://www.newscientist.com https://newscientist.com
+
+Ayrıca rss_paragraf.js içindeki tüm RSS kaynaklarını tara ve hiçbirinin CSP'den eksik olmadığını doğrula.
+Kontrol listesi: feeds.bbci.co.uk, theguardian.com, feeds.npr.org, newscientist.com
+Her yeni RSS kaynağı eklendiğinde CSP de güncellenmeli — bunu bir yorum olarak kaynak listesinin üstüne yaz.</textarea>
+</div>
+</div>
+</div>
+</div>
+
+<div class="section">
+  <div class="section-title">
+    <span>🔵 Orta — Hâlâ Açık</span>
+    <div class="line"></div>
+    <span class="section-pill" style="background:var(--blue-dim);color:var(--blue);border:1px solid var(--blue-mid)">5 bulgu</span>
+  </div>
+
+  <div class="card" data-session="true" data-sev="medium" data-status="done">
+    <div class="card-head" onclick="tog(this)">
+      <span class="sev sev-medium">ORTA</span>
+      <div class="card-info">
+        <div class="card-title">41 console.log production'da aktif — bilgi sızıntısı <span class="new-badge">Bu Oturumda</span></div>
+        <div class="card-sub">utils.js → YDT.log + window.log alias; ai.js, rss_paragraf.js, ai-daily.js, speaking.js → log.debug/warn/error ✓</div>
+      </div>
+      <span class="status s-done">✅ Tamamlandı</span>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="card-body">
+      <p class="desc">Audit bu maddeyi açık bıraktı. Tarama sonucu: ai.js (2), rss_paragraf.js (9), ai-daily.js (2), speaking.js (2), utils.js (2) olmak üzere toplam 18 console.log aktif. İç fonksiyon isimleri, API endpoint'leri ve kullanıcı akışları konsolda görünüyor.</p>
+      <div class="tags"><span class="tag orange">INFO_LEAK</span><span class="tag">DEV_CODE</span></div>
+      <div class="prompt-wrap">
+        <div class="prompt-header"><span class="prompt-label">✏️ Düzeltme Promptu</span><button class="copy-btn" onclick="cp(this)">📋 Kopyala</button></div>
+        <textarea class="prompt-ta" readonly>utils.js'e (YDT namespace içine) production-aware logger ekle:
+
+YDT.isDev = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+YDT.log = {
+  debug: (...a) => YDT.isDev && console.log('[YDT]', ...a),
+  warn:  (...a) => console.warn('[YDT]', ...a),
+  error: (...a) => console.error('[YDT]', ...a),
+};
+window.log = YDT.log; // alias
+
+Sonra tüm dosyalarda:
+- console.log → log.debug (production'da sessiz)
+- console.warn → log.warn (her zaman görünür)
+- console.error → log.error (her zaman görünür)
+
+Hedef dosyalar: ai.js, rss_paragraf.js, ai-daily.js, speaking.js, utils.js</textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" data-sev="medium" data-status="open">
+    <div class="card-head" onclick="tog(this)">
+      <span class="sev sev-medium">ORTA</span>
+      <div class="card-info">
+        <div class="card-title">Magic string localStorage key'leri — 15+ yerde tekrarlıyor</div>
+        <div class="card-sub">Tüm JS dosyaları — YDT.lsGet var ama key sabitleri yok</div>
+      </div>
+      <span class="status s-open">🔴 AÇIK</span>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="card-body">
+      <p class="desc">YDT namespace oluşturulmuş ama localStorage key sabitleri eklenmemiş. 'ydt_paragraflar', 'ydt_kelimeler' gibi string'ler çok dosyada tekrar yazılıyor. Tek bir typo tüm veriyi kaybettirebilir.</p>
+      <div class="tags"><span class="tag orange">MAINTAINABILITY</span><span class="tag">BUG_RISK</span></div>
+      <div class="prompt-wrap">
+        <div class="prompt-header"><span class="prompt-label">✏️ Düzeltme Promptu</span><button class="copy-btn" onclick="cp(this)">📋 Kopyala</button></div>
+        <textarea class="prompt-ta" readonly>utils.js içindeki window.YDT objesine LS_KEYS ekle:
+
+window.YDT.LS = {
+  WORDS:      'ydt_kelimeler',
+  PARAGRAPHS: 'ydt_paragraflar',
+  AI_ARSIV:   'ydt_aiArsiv',
+  BADGES:     'ydt_badges',
+  PROFILE:    'ydt_profile',
+  DAILY:      'ydt_daily',
+  PERF_HIST:  'ydt_perf_hist',
+  PARA_Q:     'ydt_paragraf_sorular',
+  KIDS:       'ww_p2',
+  RSS_ARSIV:  uid => `ydt_${uid}_rss_arsiv`,
+  RSS_CACHE:  slot => `ydt_rss_cache_${slot}`,
+};
+
+Sonra dosyalarda string literal kullanımlarını YDT.LS.* ile değiştir. Önce motor.js ve index.html'den başla.</textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" data-sev="medium" data-status="open">
+    <div class="card-head" onclick="tog(this)">
+      <span class="sev sev-medium">ORTA</span>
+      <div class="card-info">
+        <div class="card-title">Service Worker yok — internet kesilince uygulama çalışmıyor</div>
+        <div class="card-sub">PWA değil — manifest.json da yok</div>
+      </div>
+      <span class="status s-open">🔴 AÇIK</span>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="card-body">
+      <p class="desc">Mobil kullanıcılar için internet kesilince uygulama tamamen çalışmıyor. YDT bir eğitim uygulaması — offline çalışması temel beklentidir.</p>
+      <div class="prompt-wrap">
+        <div class="prompt-header"><span class="prompt-label">✏️ Düzeltme Promptu</span><button class="copy-btn" onclick="cp(this)">📋 Kopyala</button></div>
+        <textarea class="prompt-ta" readonly>YDT Master için temel Service Worker yaz (sw.js). Cache stratejisi:
+1) App Shell (index.html, stil.css, utils.js, motor.js, kelimeler.js) → Cache First
+2) AI/RSS API çağrıları → Network First, başarısız olunca son cache'i göster
+3) Firebase Auth → Network Only (hiç cache'leme)
+4) Font'lar → Cache First, 30 gün TTL
+
+manifest.json oluştur:
+{ "name": "YDT Master Pro", "short_name": "YDT", "display": "standalone",
+  "background_color": "#0a0a0f", "theme_color": "#e63946",
+  "start_url": "/", "icons": [...] }
+
+index.html'e SW kayıt kodu ekle:
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(e => console.warn('SW:', e));
+}</textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" data-sev="medium" data-status="open">
+    <div class="card-head" onclick="tog(this)">
+      <span class="sev sev-medium">ORTA</span>
+      <div class="card-info">
+        <div class="card-title">iOS Safari -webkit-overflow-scrolling eksik</div>
+        <div class="card-sub">stil.css — scroll'lu konteynerler iOS'ta takılıyor</div>
+      </div>
+      <span class="status s-open">🔴 AÇIK</span>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="card-body">
+      <p class="desc">Kelime listeleri, pasaj ekranı ve genel kaydırılabilir alanlar iOS Safari'de momentum scroll yapmıyor. Kullanıcı parmağını kaldırınca scroll hemen duruyor.</p>
+      <div class="prompt-wrap">
+        <div class="prompt-header"><span class="prompt-label">✏️ Düzeltme Promptu</span><button class="copy-btn" onclick="cp(this)">📋 Kopyala</button></div>
+        <textarea class="prompt-ta" readonly>stil.css'e iOS scroll iyileştirmeleri ekle.
+
+Override-safe global kural (en üste ekle):
+.scroll-y, [class*="-list"], [class*="-body"], [class*="-content"] {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+Sonra stil.css'te overflow-y: auto veya overflow: scroll olan tüm selektörleri bul ve her birine ekle:
+-webkit-overflow-scrolling: touch;
+
+Input, textarea, select için iOS zoom koruması (font-size >= 16px):
+input, textarea, select { font-size: max(16px, 1rem); }
+
+Ayrıca dash-list-strip (yatay scroll) için:
+-webkit-overflow-scrolling: touch;
+scroll-snap-type: x mandatory; /* isteğe bağlı snap */</textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" data-sev="medium" data-status="open">
+    <div class="card-head" onclick="tog(this)">
+      <span class="sev sev-medium">ORTA</span>
+      <div class="card-info">
+        <div class="card-title">tabindex / aria-label eksik — erişilebilirlik yok</div>
+        <div class="card-sub">index.html — sadece 12 aria-label mevcut</div>
+      </div>
+      <span class="status s-open">🔴 AÇIK</span>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="card-body">
+      <p class="desc">Klavye navigasyonu ve ekran okuyucular çalışmıyor. Modal'lar, ikon butonlar, kelime kartları erişilemez durumda.</p>
+      <div class="prompt-wrap">
+        <div class="prompt-header"><span class="prompt-label">✏️ Düzeltme Promptu</span><button class="copy-btn" onclick="cp(this)">📋 Kopyala</button></div>
+        <textarea class="prompt-ta" readonly>index.html'de erişilebilirlik düzeltmeleri (öncelik sırası):
+
+1) Tüm ikon-only butonlara aria-label ekle:
+   &lt;button aria-label="Tema değiştir"&gt;🌙&lt;/button&gt;
+
+2) Modal'lara:
+   role="dialog" aria-modal="true" aria-labelledby="modal-title-id"
+
+3) Nav menüsüne:
+   &lt;nav role="navigation" aria-label="Ana menü"&gt;
+
+4) Kelime kartlarına:
+   tabindex="0" role="button"
+   onkeydown: Enter ve Space → click tetikle
+
+5) Form alanlarına (input, select, textarea):
+   Etiket yoksa: aria-label="..."
+
+6) Gizlenmiş sayfalara: aria-hidden="true" (hidden class ile)</textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" data-sev="medium" data-status="open">
+    <div class="card-head" onclick="tog(this)">
+      <span class="sev sev-medium">ORTA</span>
+      <div class="card-info">
+        <div class="card-title">stil.css: 381 adet !important — override zinciri kırılmış</div>
+        <div class="card-sub">Bu oturumdaki gradient fix'ler 5 !important daha ekledi</div>
+      </div>
+      <span class="status s-open">🔴 AÇIK</span>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="card-body">
+      <p class="desc">
+        Audit'te 376 !important raporlanmıştı. Bu oturumdaki gradient fix denemeleri 5 !important daha ekledi — toplam 381. Bu durum bakımı neredeyse imkansız hale getiriyor; her yeni stil için !important eklenmesi gerekiyor ve CSS spesifity hesabı bozuluyor. (Gradient sorunun asıl çözümü: daha spesifik selector kullanmak, !important değil.)
+      </p>
+      <div class="tags"><span class="tag orange">CSS_DEBT</span><span class="tag">MAINTAINABILITY</span></div>
+      <div class="prompt-wrap">
+        <div class="prompt-header"><span class="prompt-label">✏️ Düzeltme Promptu</span><button class="copy-btn" onclick="cp(this)">📋 Kopyala</button></div>
+        <textarea class="prompt-ta" readonly>stil.css'deki !important sorununu çöz. Strateji:
+
+1) dash-today-primary gradient sorununu !important'sız düzelt:
+   [data-theme="light"] .dash-today-card.dash-today-primary { background: linear-gradient(...); }
+   (tek class yerine her iki class'ı birden hedef al — daha spesifik)
+
+2) !important'ları tara, gerçekten gerekli olanları tespit et:
+   - JS tarafından inline style eklenen alanlar (show/hide) → gerekli
+   - Sadece başka CSS'i override etmek için yazılanlar → gereksiz
+
+3) Gereksiz !important'ları daha spesifik selector ile değiştir.
+   Önce en çok tekrar eden 20'yi temizle.
+
+Hedef: !important sayısını 381'den 200'ün altına düşür.</textarea>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /medium -->
+
+<!-- ═══ BÖLÜM 4: TASARIM ═══ -->
+
+<div class="section">
+  <div class="section-title">
+    <span>🎨 Tasarım — Açık</span>
+    <div class="line"></div>
+    <span class="section-pill" style="background:var(--purple-dim);color:var(--purple);border:1px solid var(--purple-mid)">✅ Tümü Kapandı</span>
+  </div>
+
+  <div class="card" data-sev="design" data-status="open">
+    <div class="card-head" onclick="tog(this)">
+      <span class="sev sev-design">TASARIM</span>
+      <div class="card-info">
+        <div class="card-title">Dark mode — 129 hardcoded renk hâlâ var</div>
+        <div class="card-sub">stil.css — CSS custom property dönüşümü yapılmadı</div>
+      </div>
+      <span class="status s-open">🔴 AÇIK</span>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="card-body">
+      <p class="desc">Hardcoded #hex renkleri dark mode'da geçersiz kalıyor. data-theme="dark" token'ları var ama component CSS'lerde kullanılmıyor.</p>
+      <div class="prompt-wrap">
+        <div class="prompt-header"><span class="prompt-label">✏️ Düzeltme Promptu</span><button class="copy-btn" onclick="cp(this)">📋 Kopyala</button></div>
+        <textarea class="prompt-ta" readonly>stil.css'deki hardcoded renkleri kademeli olarak CSS custom property'e taşı.
+
+Önce :root içine token'lar ekle (zaten var, genişlet):
+:root {
+  --color-bg-card: #ffffff;
+  --color-bg-input: #f4f4f8;
+  --color-text-muted: #9ca3af;
+  --color-border-light: #f0f0f5;
+}
+[data-theme="dark"] {
+  --color-bg-card: #1a1a2e;
+  --color-bg-input: #252535;
+  --color-text-muted: #9090b0;
+  --color-border-light: #2a2a3e;
+}
+
+Strateji: En sık geçen 10 hardcoded rengi bul (grep ile), her birini token'a dönüştür, test et.
+Öncelik: #ffffff, #f4f4f8, #9ca3af, #e5e7eb, #374151 gibi nötr renkler.</textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" data-sev="design" data-status="open">
+    <div class="card-head" onclick="tog(this)">
+      <span class="sev sev-design">TASARIM</span>
+      <div class="card-info">
+        <div class="card-title">font-size px → rem dönüşümü yapılmadı</div>
+        <div class="card-sub">stil.css — tarayıcı font ayarını değiştiren kullanıcılar zarar görüyor</div>
+      </div>
+      <span class="status s-open">🔴 AÇIK</span>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="card-body">
+      <p class="desc">Tüm font-size'lar px cinsinden. Tarayıcı font boyutunu büyüten kullanıcılar (görme güçlüğü olanlar) arayüz bozulmalarıyla karşılaşıyor.</p>
+      <div class="prompt-wrap">
+        <div class="prompt-header"><span class="prompt-label">✏️ Düzeltme Promptu</span><button class="copy-btn" onclick="cp(this)">📋 Kopyala</button></div>
+        <textarea class="prompt-ta" readonly>stil.css'deki font-size px değerlerini rem'e çevir.
+
+:root { font-size: 16px; } ekle (zaten varsa kontrol et).
+
+Çeviri tablosu:
+10px → .625rem | 11px → .6875rem | 12px → .75rem | 13px → .8125rem
+14px → .875rem | 15px → .9375rem | 16px → 1rem   | 18px → 1.125rem
+20px → 1.25rem | 24px → 1.5rem   | 28px → 1.75rem | 32px → 2rem
+
+Sadece font-size değerlerini çevir. margin/padding/width/height px olarak kalabilir.
+Öncelik: body, p, span, button, input, h1-h6 elementleri ve .btn, .card gibi genel sınıflar.</textarea>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /design -->
+
+<!-- ═══ BÖLÜM 5: ONAYLANAN TAMAMLANANLAR ═══ -->
+
+<div class="section">
+  <div class="section-title">
+<span>✅ Kod Taramasıyla Onaylanan Tamamlananlar</span>
+<div class="line"></div>
+<span class="section-pill" style="background:var(--green-dim);color:var(--green);border:1px solid var(--green-mid)">29 tamamlandı</span>
+</div>
+
+  <div class="group-label" style="font-size:.7rem;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.08em;margin:14px 0 8px;">🚨 Kritik — Tamamlananlar</div>
+  <div class="card" data-session="true" data-sev="critical" data-status="done">
+<div class="card-head" onclick="tog(this)">
+<span class="sev sev-critical">KRİTİK</span>
+<div class="card-info">
+<div class="card-title">Admin e-posta kaynak kodda 4 noktada görünüyordu <span class="new-badge">Bu Oturumda</span></div>
+<div class="card-sub">index.html · aig.js · admin.js — Firebase custom claim ile değiştirildi ✓</div>
+</div>
+<span class="status s-done">✅ Tamamlandı</span>
+<span class="chevron">▶</span>
+</div>
+<div class="card-body">
+<p class="desc">
+        Audit raporu bu maddeyi ✅ Düzeltildi olarak kapattı. Ancak mevcut kodda <code><a class="__cf_email__" data-cfemail="b2c1c6d3c1d3ded3dcf2d5dfd3dbde9cd1dddf" href="/cdn-cgi/l/email-protection">[email protected]</a></code> ifadesi 4 farklı noktada görünmektedir. Bu ciddi bir güvenlik açığıdır — saldırgan admin hesabını kolayca tespit edebilir, hedefli kimlik avı yapabilir veya admin koşullarını DOM üzerinden bypass edebilir.
+      </p>
+<div class="tags">
+<span class="tag red">SECURITY</span>
+<span class="tag red">INFO_LEAK</span>
+<span class="tag orange">ADMIN_BYPASS</span>
+</div>
+<div class="evidence">
+<div class="ev-line"><span class="ev-file">index.html:2363</span><span class="ev-code">request.auth.token.email == '<a class="__cf_email__" data-cfemail="7e0d0a1f0d1f121f103e19131f1712501d1113" href="/cdn-cgi/l/email-protection">[email protected]</a>'</span></div>
+<div class="ev-line"><span class="ev-file">index.html:2875</span><span class="ev-code">window.ADMIN_EMAIL || '<a class="__cf_email__" data-cfemail="45363124362429242b052228242c296b262a28" href="/cdn-cgi/l/email-protection">[email protected]</a>'</span></div>
+<div class="ev-line"><span class="ev-file">index.html:2965</span><span class="ev-code">window.ADMIN_EMAIL = '<a class="__cf_email__" data-cfemail="f281869381939e939cb2959f939b9edc919d9f" href="/cdn-cgi/l/email-protection">[email protected]</a>'</span></div>
+<div class="ev-line"><span class="ev-file">aig.js:77</span><span class="ev-code">return email === ADMIN_EMAIL; // ADMIN_EMAIL tanımsız!</span></div>
+</div>
+<p class="desc">Ayrıca <code>aig.js</code> içindeki <code>ADMIN_EMAIL</code> değişkeni tanımsız — bu dosya yüklendiğinde <code>_isAdminUser()</code> her zaman hata fırlatır veya <code>false</code> döner, bu da admin özelliklerin çalışmamasına yol açar.</p>
+<div class="prompt-wrap">
+<div class="prompt-header">
+<span class="prompt-label">✏️ Düzeltme Promptu</span>
+<button class="copy-btn" onclick="cp(this)">📋 Kopyala</button>
+</div>
+<textarea class="prompt-ta" readonly="">index.html ve aig.js içindeki tüm 'stasalan@gmail.com' ifadelerini kaldır.
+
+index.html satır 2363: Firestore güvenlik kuralındaki hardcode e-posta kaldırılmalı — bu kurallar Firebase Console'da tutulur, HTML'de olmamalı.
+
+index.html satır 2875-2965: ADMIN_EMAIL artık kaynak kodda olmamalı. Bunun yerine:
+- Firebase Authentication custom claims kullan: admin:true claim'i Firebase Admin SDK ile set et
+- Client tarafında: firebase.auth().currentUser.getIdTokenResult() → result.claims.admin
+
+aig.js: ADMIN_EMAIL referansını kaldır. _isAdminUser() fonksiyonunu şu şekilde değiştir:
+async function _isAdminUser() {
+  const user = firebase.auth().currentUser;
+  if (!user) return false;
+  const token = await user.getIdTokenResult();
+  return token.claims.admin === true;
+}
+Tüm sync çağrıları async/await ile güncelle.</textarea>
+</div>
+</div>
+</div>
+<div class="card" data-session="true" data-sev="critical" data-status="done">
+<div class="card-head" onclick="tog(this)">
+<span class="sev sev-critical">KRİTİK</span>
+<div class="card-info">
+<div class="card-title">XSS — ai-quiz.js: AI çıktısı doğrudan innerHTML'e yazılıyordu <span class="new-badge">Bu Oturumda</span></div>
+<div class="card-sub">ai-quiz.js — _sanitizeExplanation() whitelist filtresi eklendi ✓</div>
+</div>
+<span class="status s-done">✅ Tamamlandı</span>
+<span class="chevron">▶</span>
+</div>
+<div class="card-body">
+<p class="desc">
+        AI'dan gelen <code>qData.explanation</code> içeriği hiçbir sanitizasyon olmadan doğrudan <code>innerHTML</code>'e yazılıyor. Manipüle edilmiş bir AI yanıtı veya poisoned prompt, kullanıcının tarayıcısında keyfi JS kodu çalıştırabilir. Audit'te "XSS düzeltildi" denilmiş olmasına rağmen bu dosyada düzeltme yapılmamış.
+      </p>
+<div class="tags">
+<span class="tag red">XSS</span>
+<span class="tag red">AI_OUTPUT_INJECTION</span>
+<span class="tag orange">CRITICAL</span>
+</div>
+<div class="evidence">
+<div class="ev-line"><span class="ev-file">ai-quiz.js:324</span><span class="ev-code">expDiv.innerHTML = `...${qData.explanation}`</span><span class="ev-note">← escape yok!</span></div>
+<div class="ev-line"><span class="ev-file">ai-quiz.js:381</span><span class="ev-code">explanation: qData.explanation</span><span class="ev-note">← zincir devam ediyor</span></div>
+</div>
+<div class="prompt-wrap">
+<div class="prompt-header">
+<span class="prompt-label">✏️ Düzeltme Promptu</span>
+<button class="copy-btn" onclick="cp(this)">📋 Kopyala</button>
+</div>
+<textarea class="prompt-ta" readonly="">ai-quiz.js içindeki XSS açığını düzelt.
+
+Satır 324'teki:
+expDiv.innerHTML = `<div class="aiq-exp-header">💡 Çözüm ve Çeviri</div>${qData.explanation}`;
+
+Şu şekilde değiştir — AI'dan gelen açıklama içeriği sadece belirli HTML tag'lerine izin verilerek temizlenmeli:
+function _sanitizeExplanation(html) {
+  // Sadece b, strong, em, span, br tag'lerine izin ver
+  const tmp = document.createElement('div');
+  tmp.textContent = html; // önce tüm HTML'i escape et
+  // Sonra sadece güvenli tag'leri geri aç (whitelist)
+  return tmp.innerHTML
+    .replace(/&lt;b&gt;/g, '<b>').replace(/&lt;\/b&gt;/g, '</b>')
+    .replace(/&lt;strong&gt;/g, '<strong>').replace(/&lt;\/strong&gt;/g, '</strong>')
+    .replace(/&lt;em&gt;/g, '<em>').replace(/&lt;\/em&gt;/g, '</em>')
+    .replace(/&lt;br&gt;/g, '<br/>').replace(/&lt;br\/&gt;/g, '<br/>');
+}
+
+expDiv.innerHTML = `<div class="aiq-exp-header">💡 Çözüm ve Çeviri</div>${_sanitizeExplanation(qData.explanation)}`;
+
+AI prompt'una da ekle: "Açıklamada sadece <b>, <strong>, <em>, <br/> tag'leri kullan. Başka hiçbir HTML kullanma."</em></strong></b></textarea>
+</div>
+</div>
+</div>
+<div class="card" data-session="true" data-sev="critical" data-status="done">
+<div class="card-head" onclick="tog(this)">
+<span class="sev sev-critical">KRİTİK</span>
+<div class="card-info">
+<div class="card-title">XSS — speaking.js: card.en doğrudan innerHTML'e yazılıyordu <span class="new-badge">Bu Oturumda</span></div>
+<div class="card-sub">speaking.js — DOM API (textContent) + _esc(card.cat) uygulandı ✓</div>
+</div>
+<span class="status s-done">✅ Tamamlandı</span>
+<span class="chevron">▶</span>
+</div>
+<div class="card-body">
+<p class="desc">
+        Kullanıcının kendi eklediği kelime verisi (<code>card.en</code>) doğrudan <code>innerHTML</code>'e yazılıyor. Kullanıcı kelime listesine <code>&lt;img src=x onerror=alert(1)&gt;</code> gibi bir değer girerse XSS tetiklenir. Kelime içe aktarma (import) yoluyla da tetiklenebilir.
+      </p>
+<div class="tags">
+<span class="tag red">XSS</span>
+<span class="tag red">USER_DATA</span>
+<span class="tag orange">STORED_XSS</span>
+</div>
+<div class="evidence">
+<div class="ev-line"><span class="ev-file">speaking.js:1168</span><span class="ev-code">main.innerHTML = `&lt;span style="..."&gt;${card.en}&lt;/span&gt;`</span></div>
+<div class="ev-line"><span class="ev-file">speaking.js:1159</span><span class="ev-code">lbl.innerHTML = `...${card.cat}...`</span><span class="ev-note">← cat de escape edilmemiş</span></div>
+</div>
+<div class="prompt-wrap">
+<div class="prompt-header">
+<span class="prompt-label">✏️ Düzeltme Promptu</span>
+<button class="copy-btn" onclick="cp(this)">📋 Kopyala</button>
+</div>
+<textarea class="prompt-ta" readonly="">speaking.js içindeki XSS açıklarını düzelt.
+
+utils.js'de zaten _esc() fonksiyonu var, speaking.js'de kullan:
+
+Satır 1168:
+// ÖNCE (XSS açığı)
+main.innerHTML = `<span style="color:${col.border}">${card.en}</span>`;
+
+// SONRA (güvenli)
+main.innerHTML = `<span style="color:${col.border}">${_esc(card.en)}</span>`;
+
+Satır 1159 ve 1166:
+lbl.innerHTML = `🇹🇷 Türkçe · <span ...="">${_esc(card.cat)}</span>`;
+lbl.innerHTML = `🇬🇧 İngilizce · <span ...="">${_esc(card.cat)}</span>`;
+
+Alternatif olarak innerHTML yerine DOM API kullan:
+main.textContent = ''; // temizle
+const span = document.createElement('span');
+span.style.color = col.border;
+span.textContent = card.en; // textContent XSS-safe
+main.appendChild(span);</textarea>
+</div>
+</div>
+</div>
+<div class="card" data-session="true" data-sev="critical" data-status="done">
+<div class="card-head" onclick="tog(this)">
+<span class="sev sev-critical">KRİTİK</span>
+<div class="card-info">
+<div class="card-title">paragraf.js: JSON.parse üst kapsamda korumasız çalışıyordu <span class="new-badge">Bu Oturumda</span></div>
+<div class="card-sub">paragraf.js:12 — try/catch sarıldı, bozuk veri temizleniyor ✓ — dosya yüklenirken try/catch olmadan parse</div>
+</div>
+<span class="status s-open">🔴 AÇIK</span>
+<span class="chevron">▶</span>
+</div>
+<div class="card-body">
+<p class="desc">
+<code>paragraf.js</code> dosyasının 12. satırında <code>JSON.parse()</code> çağrısı hiçbir try/catch olmadan üst kapsamda (top-level) çalışıyor. localStorage'daki veri bozulmuşsa veya başka bir script tarafından manipüle edilmişse, bu satır <code>SyntaxError</code> fırlatır ve sayfanın geri kalanının çalışmasını tamamen engeller. Tüm paragraf modülü ve bağlı özellikler kullanılamaz hale gelir.
+      </p>
+<div class="tags">
+<span class="tag red">CRASH</span>
+<span class="tag red">NO_TRY_CATCH</span>
+<span class="tag orange">TOP_LEVEL</span>
+</div>
+<div class="evidence">
+<div class="ev-line"><span class="ev-file">paragraf.js:12</span><span class="ev-code">window.paragrafSorular = JSON.parse(localStorage.getItem('ydt_paragraf_sorular')) || {};</span></div>
+</div>
+<div class="prompt-wrap">
+<div class="prompt-header">
+<span class="prompt-label">✏️ Düzeltme Promptu</span>
+<button class="copy-btn" onclick="cp(this)">📋 Kopyala</button>
+</div>
+<textarea class="prompt-ta" readonly="">paragraf.js satır 12'yi şu şekilde düzelt:
+
+// ÖNCE (çöküyor)
+window.paragrafSorular = JSON.parse(localStorage.getItem('ydt_paragraf_sorular')) || {};
+
+// SONRA (güvenli)
+try {
+  const _raw = localStorage.getItem('ydt_paragraf_sorular');
+  window.paragrafSorular = _raw ? JSON.parse(_raw) : {};
+} catch(e) {
+  console.warn('[paragraf.js] paragrafSorular parse hatası, sıfırlandı:', e.message);
+  window.paragrafSorular = {};
+  localStorage.removeItem('ydt_paragraf_sorular'); // bozuk veriyi temizle
+}
+
+Aynı şekilde index.html'deki korumasız JSON.parse'ları da düzelt (satır 2502, 2504, 2506, 2937, 3274):
+Hepsi try/catch ile sarılmalı veya YDT.lsGet() wrapper kullanılmalı.</textarea>
+</div>
+</div>
+</div>
+<div class="card" data-session="true" data-sev="critical" data-status="done">
+<div class="card-head" onclick="tog(this)">
+<span class="sev sev-critical">KRİTİK</span>
+<div class="card-info">
+<div class="card-title">motor.js: DOM cache ($id) implement edilmemiş — audit yanlış kapandıydı <span class="new-badge">Bu Oturumda</span></div>
+<div class="card-sub">motor.js + ai-daily.js — $id(), _domCache, _invalidateDomCache eklendi; 37 çağrı dönüştürüldü ✓</div>
+</div>
+<span class="status s-done">✅ Tamamlandı</span>
+<span class="chevron">▶</span>
+</div>
+<div class="card-body">
+<p class="desc">
+        Audit raporu "motor.js: <code>_domCache (Map)</code> + <code>$id(id)</code> helper — 27 getElementById → $id()" olarak tamamlandı işaretledi. Ancak kodda <code>$id</code>, <code>_domCache</code> veya <code>_invalidateDomCache</code> fonksiyonu bulunamadı. Tüm DOM sorguları hâlâ doğrudan <code>document.getElementById</code> olarak çalışıyor. Bu özellikle animasyon döngülerinde ve render fonksiyonlarında ciddi performans kaybına yol açıyor.
+      </p>
+<div class="tags">
+<span class="tag red">WRONG_CLOSED</span>
+<span class="tag orange">PERFORMANCE</span>
+<span class="tag orange">DOM_THRASH</span>
+</div>
+<div class="evidence">
+<div class="ev-line"><span class="ev-file">motor.js:32</span><span class="ev-code">const target = document.getElementById(id);</span><span class="ev-note">← cache yok</span></div>
+<div class="ev-line"><span class="ev-file">motor.js:213</span><span class="ev-code">const streakEl0 = document.getElementById('idx-streak-val');</span><span class="ev-note">← her render'da</span></div>
+<div class="ev-line"><span class="ev-file">motor.js:237-240</span><span class="ev-code">getElementById x4 — updateIndexStats içinde</span><span class="ev-note">← her stat güncellemesinde</span></div>
+</div>
+<div class="prompt-wrap">
+<div class="prompt-header">
+<span class="prompt-label">✏️ Düzeltme Promptu</span>
+<button class="copy-btn" onclick="cp(this)">📋 Kopyala</button>
+</div>
+<textarea class="prompt-ta" readonly="">motor.js başına DOM cache ekle:
+
+const _domCache = new Map();
+function $id(id) {
+  if (_domCache.has(id)) {
+    const cached = _domCache.get(id);
+    // Stale check: element hâlâ DOM'da mı?
+    if (cached &amp;&amp; document.contains(cached)) return cached;
+    _domCache.delete(id);
+  }
+  const el = document.getElementById(id);
+  if (el) _domCache.set(id, el);
+  return el;
+}
+function _invalidateDomCache() { _domCache.clear(); }
+
+Sonra motor.js içindeki document.getElementById çağrılarını $id() ile değiştir.
+showPage() fonksiyonuna _invalidateDomCache() çağrısı ekle (sayfa değişince cache sıfırlansın).
+
+Aynı pattern'i ai-daily.js'e de uygula.</textarea>
+</div>
+</div>
+</div>
+
+  <div class="group-label" style="font-size:.7rem;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:.08em;margin:18px 0 8px;">⚠️ Yüksek — Tamamlananlar</div>
+  <div class="card" data-session="true" data-sev="high" data-status="done">
+<div class="card-head" onclick="tog(this)">
+<span class="sev sev-high">YÜKSEK</span>
+<div class="card-info">
+<div class="card-title">rss_paragraf.js: window export'ları eksik — audit yanlış kapandıydı <span class="new-badge">Bu Oturumda</span></div>
+<div class="card-sub">rss_paragraf.js — 5 fonksiyon window'a export edildi; ai-daily.js önce bağımlılık eklendi ✓</div>
+</div>
+<span class="status s-done">✅ Tamamlandı</span>
+<span class="chevron">▶</span>
+</div>
+<div class="card-body">
+<p class="desc">
+        Audit "rss_paragraf.js: <code>window._analyzeWithAI</code>, <code>window._toPassageSync</code>, <code>window._cleanText</code>, <code>window._hasMinSentences</code>, <code>window._vocabFallback</code> export edildi" dedi. Kodda bu export'ların hiçbiri bulunamadı. <code>ai-daily.js</code> bu fonksiyonlara erişmeye çalışıyor — yükleme sırası değiştiğinde veya modül cache'lendiğinde runtime hatası kaçınılmaz.
+      </p>
+<div class="tags">
+<span class="tag red">WRONG_CLOSED</span>
+<span class="tag red">RUNTIME_ERROR</span>
+<span class="tag orange">DEPENDENCY</span>
+</div>
+<div class="evidence">
+<div class="ev-line"><span class="ev-file">rss_paragraf.js</span><span class="ev-code">window._analyzeWithAI → bulunamadı</span><span class="ev-note">← export yok</span></div>
+<div class="ev-line"><span class="ev-file">rss_paragraf.js</span><span class="ev-code">window._toPassageSync → bulunamadı</span><span class="ev-note">← export yok</span></div>
+<div class="ev-line"><span class="ev-file">rss_paragraf.js</span><span class="ev-code">window._cleanText → bulunamadı</span><span class="ev-note">← export yok</span></div>
+</div>
+<div class="prompt-wrap">
+<div class="prompt-header">
+<span class="prompt-label">✏️ Düzeltme Promptu</span>
+<button class="copy-btn" onclick="cp(this)">📋 Kopyala</button>
+</div>
+<textarea class="prompt-ta" readonly="">rss_paragraf.js dosyasının sonuna şu export satırlarını ekle:
+
+// ── ai-daily.js ve diğer modüller için window export ──
+window._analyzeWithAI   = typeof _analyzeWithAI   === 'function' ? _analyzeWithAI   : null;
+window._toPassageSync   = typeof _toPassageSync   === 'function' ? _toPassageSync   : null;
+window._cleanText       = typeof _cleanText       === 'function' ? _cleanText       : null;
+window._hasMinSentences = typeof _hasMinSentences === 'function' ? _hasMinSentences : null;
+window._vocabFallback   = typeof _vocabFallback   === 'function' ? _vocabFallback   : null;
+
+Önce rss_paragraf.js içinde bu fonksiyon isimlerini grep ile kontrol et. İsimler farklıysa doğru isimlerle export et.
+
+index.html'de script sırasını doğrula: rss_paragraf.js mutlaka js/ai-daily.js'den önce gelmeli.</textarea>
+</div>
+</div>
+</div>
+<div class="card" data-session="true" data-sev="high" data-status="done">
+<div class="card-head" onclick="tog(this)">
+<span class="sev sev-high">YÜKSEK</span>
+<div class="card-info">
+<div class="card-title">25 script tag'de defer/async yoktu — render blocking <span class="new-badge">Bu Oturumda</span></div>
+<div class="card-sub">index.html — 35 script tag'e defer eklendi; utils.js lazy patch ile setNavActive race condition çözüldü ✓</div>
+</div>
+<span class="status s-partial">⚡ KISMİ</span>
+<span class="chevron">▶</span>
+</div>
+<div class="card-body">
+<p class="desc">
+        Audit kısmi düzeltildi dedi. Kodda 18 script hâlâ defer/async olmadan yükleniyor. Her biri sayfanın render'ını bloke ediyor. Özellikle mobil cihazlarda ilk yüklenme süresi ciddi şekilde artıyor. Firebase SDK'ları da dahil olmak üzere 3000+ satır JavaScript DOM hazır olmadan sıralı olarak çalışıyor.
+      </p>
+<div class="tags">
+<span class="tag orange">PERFORMANCE</span>
+<span class="tag orange">RENDER_BLOCK</span>
+</div>
+<div class="evidence">
+<div class="ev-line"><span class="ev-file">index.html:3034</span><span class="ev-code">&lt;script src="kelimeler.js"&gt;&lt;/script&gt;</span><span class="ev-note">← defer yok</span></div>
+<div class="ev-line"><span class="ev-file">index.html:3035</span><span class="ev-code">&lt;script src="motor.js"&gt;&lt;/script&gt;</span><span class="ev-note">← defer yok</span></div>
+<div class="ev-line"><span class="ev-file">index.html:3036-3051</span><span class="ev-code">16 script daha</span><span class="ev-note">← defer yok</span></div>
+</div>
+<div class="prompt-wrap">
+<div class="prompt-header">
+<span class="prompt-label">✏️ Düzeltme Promptu</span>
+<button class="copy-btn" onclick="cp(this)">📋 Kopyala</button>
+</div>
+<textarea class="prompt-ta" readonly="">index.html'deki tüm &lt;script src="..."&gt; tag'lerine defer ekle.
+
+Bağımlılık sırası korunmalı — defer ile script'ler DOM hazır olunca sırayla çalışır.
+Önerilen sıra:
+1. kelimeler.js (veri — bağımsız)
+2. js/utils.js (yardımcı — tüm modüller kullanıyor)
+3. motor.js (core)
+4. rss_paragraf.js (ai-daily'den önce)
+5. js/ai.js, js/ai-daily.js, js/ai-quiz.js, js/aig.js
+6. Diğer modüller
+
+Örnek:
+&lt;script src="js/utils.js" defer&gt;&lt;/script&gt;
+&lt;script src="motor.js" defer&gt;&lt;/script&gt;
+
+DOMContentLoaded event'a bağlı init fonksiyonlarını kontrol et — defer ile birlikte çalışıyor olmalı.
+puter.js için defer eklenemiyor (CDN, üçüncü taraf), şimdilik bırak.</textarea>
+</div>
+</div>
+</div>
+
+  <div class="group-label" style="font-size:.7rem;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.08em;margin:18px 0 8px;">✅ Önceden Onaylanan Tamamlananlar</div>
+  <div class="card" data-sev="done" data-status="done"><div class="card-head" onclick="tog(this)"><span class="sev" style="background:var(--green-dim);color:var(--green);border:1px solid var(--green-mid)">DONE</span><div class="card-info"><div class="card-title">CSP meta tag eklendi — tüm domainler dahil</div><div class="card-sub">index.html:4 — kapsamlı Content-Security-Policy</div></div><span class="status s-done">✅ Onaylı</span><span class="chevron">▶</span></div><div class="card-body"><p class="desc">index.html'de kapsamlı CSP doğrulandı: <code>default-src 'self'</code>, 16 connect-src domain, <code>object-src 'none'</code>. Çalışıyor.</p></div></div>
+<div class="card" data-sev="done" data-status="done"><div class="card-head" onclick="tog(this)"><span class="sev" style="background:var(--green-dim);color:var(--green);border:1px solid var(--green-mid)">DONE</span><div class="card-info"><div class="card-title">_esc() XSS koruması — 7 dosyada kullanılıyor</div><div class="card-sub">motor.js, aig.js, utils.js, bank.js, ai.js, sm2-typing.js, paragraf.js</div></div><span class="status s-done">✅ Onaylı</span><span class="chevron">▶</span></div><div class="card-body"><p class="desc">7 dosyada _esc() kullanımı doğrulandı. Eksik: speaking.js ve ai-quiz.js (kritik bölümde raporlandı).</p></div></div>
+<div class="card" data-sev="done" data-status="done"><div class="card-head" onclick="tog(this)"><span class="sev" style="background:var(--green-dim);color:var(--green);border:1px solid var(--green-mid)">DONE</span><div class="card-info"><div class="card-title">_toastQueue — toast kuyruğu</div><div class="card-sub">ai.js:30 — kuyruklama ve flood koruması</div></div><span class="status s-done">✅ Onaylı</span><span class="chevron">▶</span></div><div class="card-body"><p class="desc"><code>_toastQueue[]</code>, <code>_toastActive</code>, <code>TOAST_MAX_QUEUE=3</code> kodu doğrulandı.</p></div></div>
+<div class="card" data-sev="done" data-status="done"><div class="card-head" onclick="tog(this)"><span class="sev" style="background:var(--green-dim);color:var(--green);border:1px solid var(--green-mid)">DONE</span><div class="card-info"><div class="card-title">AI rate limiting — _aiCallQueue</div><div class="card-sub">ai.js:179 — inFlight + debounce limiter</div></div><span class="status s-done">✅ Onaylı</span><span class="chevron">▶</span></div><div class="card-body"><p class="desc"><code>_aiCallQueue</code>, <code>AI_MAX_PARALLEL=3</code>, <code>AI_RATE_LIMIT_MS=800</code> doğrulandı.</p></div></div>
+<div class="card" data-sev="done" data-status="done"><div class="card-head" onclick="tog(this)"><span class="sev" style="background:var(--green-dim);color:var(--green);border:1px solid var(--green-mid)">DONE</span><div class="card-info"><div class="card-title">Offline sync — PENDING_SYNC_KEY + navigator.onLine</div><div class="card-sub">index.html:2418 — offline queue ve network restore</div></div><span class="status s-done">✅ Onaylı</span><span class="chevron">▶</span></div><div class="card-body"><p class="desc"><code>PENDING_SYNC_KEY</code>, <code>_onNetworkRestore()</code>, <code>window.addEventListener('online')</code> doğrulandı.</p></div></div>
+<div class="card" data-sev="done" data-status="done"><div class="card-head" onclick="tog(this)"><span class="sev" style="background:var(--green-dim);color:var(--green);border:1px solid var(--green-mid)">DONE</span><div class="card-info"><div class="card-title">window.YDT namespace — lsSet, lsGet, canAICall</div><div class="card-sub">utils.js:749 — QuotaExceeded korumalı wrapper</div></div><span class="status s-done">✅ Onaylı</span><span class="chevron">▶</span></div><div class="card-body"><p class="desc"><code>window.YDT</code> objesi, <code>YDT.lsSet</code>, <code>YDT.lsGet</code>, <code>YDT.canAICall</code> doğrulandı. Backward compat alias'ları da var.</p></div></div>
+<div class="card" data-sev="done" data-status="done"><div class="card-head" onclick="tog(this)"><span class="sev" style="background:var(--green-dim);color:var(--green);border:1px solid var(--green-mid)">DONE</span><div class="card-info"><div class="card-title">games.js: _cleanupAllGames — interval temizleme</div><div class="card-sub">games.js:113 — tüm interval'lar merkezi olarak temizleniyor</div></div><span class="status s-done">✅ Onaylı</span><span class="chevron">▶</span></div><div class="card-body"><p class="desc"><code>_cleanupAllGames()</code>, <code>showGamesPage()</code> ve back'de çağrılıyor. _mem.tmr, _rf.loop, _rf.spawnI, _fr.tmr temizleniyor.</p></div></div>
+<div class="card" data-sev="done" data-status="done"><div class="card-head" onclick="tog(this)"><span class="sev" style="background:var(--green-dim);color:var(--green);border:1px solid var(--green-mid)">DONE</span><div class="card-info"><div class="card-title">Puter.js: _puterReady watcher eklendi</div><div class="card-sub">ai.js — cascade'de sona alınıyor, hazır olunca ilk sıraya</div></div><span class="status s-done">✅ Onaylı</span><span class="chevron">▶</span></div><div class="card-body"><p class="desc">Audit doğru kapanmış. ai.js'de puter readiness watcher kodu mevcut.</p></div></div>
+<div class="card" data-sev="done" data-status="done"><div class="card-head" onclick="tog(this)"><span class="sev" style="background:var(--green-dim);color:var(--green);border:1px solid var(--green-mid)">DONE</span><div class="card-info"><div class="card-title">QuotaExceededError — YDT.lsSet korumalı</div><div class="card-sub">utils.js — quota aşılınca eski cache temizleniyor</div></div><span class="status s-done">✅ Onaylı</span><span class="chevron">▶</span></div><div class="card-body"><p class="desc">YDT.lsSet QuotaExceededError yakalar, _lsPurgeOldCache() tetikler, kullanıcıya toast gösterir. Doğrulandı.</p></div></div>
+<div class="card" data-sev="done" data-status="done"><div class="card-head" onclick="tog(this)"><span class="sev" style="background:var(--green-dim);color:var(--green);border:1px solid var(--green-mid)">DONE</span><div class="card-info"><div class="card-title">boş catch blokları temizlendi</div><div class="card-sub">motor.js, rss_paragraf.js, ai-daily.js, utils.js</div></div><span class="status s-done">✅ Onaylı</span><span class="chevron">▶</span></div><div class="card-body"><p class="desc">Taramada catch(_){} pattern'i bulunmadı. catch bloklarında console.warn kullanımı var. Doğrulandı.</p></div></div>
+<div class="card" data-sev="done" data-status="done"><div class="card-head" onclick="tog(this)"><span class="sev" style="background:var(--green-dim);color:var(--green);border:1px solid var(--green-mid)">DONE</span><div class="card-info"><div class="card-title">games.js iOS touch desteği eklendi</div><div class="card-sub">_injectTouchCSS(), touchstart listener, webkit-tap-highlight</div></div><span class="status s-done">✅ Onaylı</span><span class="chevron">▶</span></div><div class="card-body"><p class="desc">games.js'de _cleanupAllGames, setInterval/clearInterval eşleşmeleri ve touch listener'lar doğrulandı.</p></div></div>
+<div class="card" data-sev="done" data-status="done"><div class="card-head" onclick="tog(this)"><span class="sev" style="background:var(--green-dim);color:var(--green);border:1px solid var(--green-mid)">DONE</span><div class="card-info"><div class="card-title">Offline sync stratejisi — PENDING_SYNC</div><div class="card-sub">index.html — online/offline event listener'lar</div></div><span class="status s-done">✅ Onaylı</span><span class="chevron">▶</span></div><div class="card-body"><p class="desc">PENDING_SYNC_KEY, _clearPendingSync(), window.addEventListener('online') kodu doğrulandı.</p></div></div>
+<div class="card" data-sev="done" data-status="done"><div class="card-head" onclick="tog(this)"><span class="sev" style="background:var(--green-dim);color:var(--green);border:1px solid var(--green-mid)">DONE</span><div class="card-info"><div class="card-title">rss_paragraf.js: RSS sıralama, cache, filtre</div><div class="card-sub">pubDate sıralama, 1 saatlik cache, min 4 cümle filtresi</div></div><span class="status s-done">✅ Onaylı</span><span class="chevron">▶</span></div><div class="card-body"><p class="desc">Audit doğru kapanmış — yeni→eski sıralama, cache TTL ve cümle filtresi uygulanmış.</p></div></div>
+<div class="card" data-sev="done" data-status="done"><div class="card-head" onclick="tog(this)"><span class="sev" style="background:var(--green-dim);color:var(--green);border:1px solid var(--green-mid)">DONE</span><div class="card-info"><div class="card-title">authSaveInterval guard — write exhausted fix</div><div class="card-sub">index.html — save interval deduplication</div></div><span class="status s-done">✅ Onaylı</span><span class="chevron">▶</span></div><div class="card-body"><p class="desc">authSaveInterval guard, 5dk interval ve beforeunload listener mevcut. Duplicate save önleniyor.</p></div></div>
+<div class="card" data-session="true" data-sev="done" data-status="done"><div class="card-head" onclick="tog(this)"><span class="sev" style="background:var(--green-dim);color:var(--green);border:1px solid var(--green-mid)">DONE</span><div class="card-info"><div class="card-title">Admin e-posta hardcode → Firebase custom claim <span class="new-badge">Bu Oturumda</span></div><div class="card-sub">index.html · aig.js · admin.js — 4 nokta temizlendi, custom claim set edildi</div></div><span class="status s-done">✅ Onaylı</span><span class="chevron">▶</span></div><div class="card-body"><p class="desc">Cloud Shell ile <code>setCustomUserClaims(uid, {admin:true})</code> uygulandı. <code>_isAdminUser()</code> async custom claim kontrolüne çevrildi. <code>_updateAdminVisibility()</code> async + await ile düzeltildi. <code>adminCheckAccess()</code> Worker yerine doğrudan token claim okuyor.</p><div class="tags"><span class="tag green">SECURITY</span><span class="tag green">NO_EMAIL_LEAK</span><span class="tag blue">index.html</span><span class="tag blue">aig.js</span><span class="tag blue">admin.js</span></div></div></div>
+<div class="card" data-session="true" data-sev="done" data-status="done"><div class="card-head" onclick="tog(this)"><span class="sev" style="background:var(--green-dim);color:var(--green);border:1px solid var(--green-mid)">DONE</span><div class="card-info"><div class="card-title">XSS — ai-quiz.js qData.explanation <span class="new-badge">Bu Oturumda</span></div><div class="card-sub">ai-quiz.js — _sanitizeExplanation() whitelist filtresi (b, strong, em, br)</div></div><span class="status s-done">✅ Onaylı</span><span class="chevron">▶</span></div><div class="card-body"><p class="desc"><code>_sanitizeExplanation(html)</code> fonksiyonu eklendi: önce tüm HTML escape, sonra sadece güvenli tag'ler (b, strong, em, br) geri açılıyor. <code>qData.explanation</code> artık bu filtreden geçiyor.</p><div class="tags"><span class="tag green">XSS_FIXED</span><span class="tag green">WHITELIST</span><span class="tag blue">ai-quiz.js</span></div></div></div>
+<div class="card" data-session="true" data-sev="done" data-status="done"><div class="card-head" onclick="tog(this)"><span class="sev" style="background:var(--green-dim);color:var(--green);border:1px solid var(--green-mid)">DONE</span><div class="card-info"><div class="card-title">XSS — speaking.js card.en / card.cat <span class="new-badge">Bu Oturumda</span></div><div class="card-sub">speaking.js:1159,1166,1168 — DOM API + _esc() ile güvenli hale getirildi</div></div><span class="status s-done">✅ Onaylı</span><span class="chevron">▶</span></div><div class="card-body"><p class="desc"><code>card.en</code>: innerHTML yerine <code>span.textContent = card.en</code> (DOM API, XSS-safe). <code>card.cat</code>: lbl.innerHTML içinde <code>_esc(card.cat)</code> ile escape ediliyor.</p><div class="tags"><span class="tag green">XSS_FIXED</span><span class="tag green">DOM_API</span><span class="tag blue">speaking.js</span></div></div></div>
+<div class="card" data-session="true" data-sev="done" data-status="done"><div class="card-head" onclick="tog(this)"><span class="sev" style="background:var(--green-dim);color:var(--green);border:1px solid var(--green-mid)">DONE</span><div class="card-info"><div class="card-title">paragraf.js: JSON.parse try/catch koruması <span class="new-badge">Bu Oturumda</span></div><div class="card-sub">paragraf.js:12 — try/catch sarıldı, bozuk veri reset + localStorage temizleniyor</div></div><span class="status s-done">✅ Onaylı</span><span class="chevron">▶</span></div><div class="card-body"><p class="desc">Korumasız <code>JSON.parse(localStorage.getItem(...))</code> try/catch ile sarıldı. Bozuk veri: <code>window.paragrafSorular = {}</code> sıfırlanır ve <code>localStorage.removeItem()</code> ile temizlenir. index.html'deki 3 ayrı JSON.parse noktası da (initData, guest login, startFallback) bağımsız try/catch bloklarına alındı.</p><div class="tags"><span class="tag green">CRASH_SAFE</span><span class="tag green">TRY_CATCH</span><span class="tag blue">paragraf.js</span><span class="tag blue">index.html</span></div></div></div>
+<div class="card" data-session="true" data-sev="done" data-status="done"><div class="card-head" onclick="tog(this)"><span class="sev" style="background:var(--green-dim);color:var(--green);border:1px solid var(--green-mid)">DONE</span><div class="card-info"><div class="card-title">motor.js + ai-daily.js: DOM cache ($id) <span class="new-badge">Bu Oturumda</span></div><div class="card-sub">motor.js — _domCache, $id(), _invalidateDomCache(); 37 getElementById dönüştürüldü</div></div><span class="status s-done">✅ Onaylı</span><span class="chevron">▶</span></div><div class="card-body"><p class="desc"><code>_domCache (Map)</code>, <code>$id(id)</code> (stale check dahil) ve <code>_invalidateDomCache()</code> motor.js başına eklendi. 27 statik + 10 dinamik çağrı dönüştürüldü. <code>showPage()</code> her çağrıldığında cache temizleniyor. ai-daily.js için <code>_aid$id()</code>: motor.js yüklüyse paylaşılan <code>$id()</code>'yi, yoksa kendi cache'ini kullanıyor.</p><div class="tags"><span class="tag green">PERFORMANCE</span><span class="tag green">DOM_CACHE</span><span class="tag blue">motor.js</span><span class="tag blue">ai-daily.js</span></div></div></div>
+<div class="card" data-session="true" data-sev="done" data-status="done"><div class="card-head" onclick="tog(this)"><span class="sev" style="background:var(--green-dim);color:var(--green);border:1px solid var(--green-mid)">DONE</span><div class="card-info"><div class="card-title">rss_paragraf.js: 5 fonksiyon window'a export edildi <span class="new-badge">Bu Oturumda</span></div><div class="card-sub">rss_paragraf.js — _analyzeWithAI, _toPassageSync, _cleanText, _hasMinSentences, _vocabFallback</div></div><span class="status s-done">✅ Onaylı</span><span class="chevron">▶</span></div><div class="card-body"><p class="desc">Dosya sonuna 5 <code>window.*</code> export satırı eklendi. Her biri <code>typeof fn === 'function' ? fn : null</code> guard'ı ile koruluyor. Script sırasında rss_paragraf.js, ai-daily.js'den önce geliyor.</p><div class="tags"><span class="tag green">MODULE_EXPORT</span><span class="tag blue">rss_paragraf.js</span></div></div></div>
+<div class="card" data-session="true" data-sev="done" data-status="done"><div class="card-head" onclick="tog(this)"><span class="sev" style="background:var(--green-dim);color:var(--green);border:1px solid var(--green-mid)">DONE</span><div class="card-info"><div class="card-title">35 script tag'e defer eklendi + sıra düzenlendi <span class="new-badge">Bu Oturumda</span></div><div class="card-sub">index.html — kelimeler→utils→motor→rss_paragraf→ai→diğerleri; puter.js hariç</div></div><span class="status s-done">✅ Onaylı</span><span class="chevron">▶</span></div><div class="card-body"><p class="desc">Tüm script tag'lere <code>defer</code> eklendi. Bağımlılık sırası: <code>kelimeler.js → utils.js → motor.js → rss_paragraf.js → ai.js/ai-daily.js/ai-quiz.js/aig.js → diğerleri</code>. puter.js CDN bağımlılıkları nedeniyle defer'sız bırakıldı.</p><div class="tags"><span class="tag green">PERF</span><span class="tag green">DEFER</span><span class="tag blue">index.html</span></div></div></div>
+<div class="card" data-session="true" data-sev="done" data-status="done"><div class="card-head" onclick="tog(this)"><span class="sev" style="background:var(--green-dim);color:var(--green);border:1px solid var(--green-mid)">DONE</span><div class="card-info"><div class="card-title">utils.js: setNavActive ReferenceError — lazy patch <span class="new-badge">Bu Oturumda</span></div><div class="card-sub">utils.js — _patchBottomNavSync IIFE → DOMContentLoaded lazy pattern + 50ms retry</div></div><span class="status s-done">✅ Onaylı</span><span class="chevron">▶</span></div><div class="card-body"><p class="desc">defer sonrası utils.js, motor.js'den önce çalışıyordu; <code>setNavActive</code> henüz tanımsızdı → ReferenceError. Çözüm: <code>_applyPatch()</code> DOMContentLoaded'a bağlandı. O noktada tüm defer script'ler tamamlanmış olur. Nadir race condition için 50ms retry döngüsü eklendi.</p><div class="tags"><span class="tag green">BUG_FIXED</span><span class="tag green">RACE_CONDITION</span><span class="tag blue">utils.js</span></div></div></div>
+</div>
+
+</div><!-- /page -->
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+function tog(head) {
+  head.closest('.card').classList.toggle('open');
+}
+function cp(btn) {
+  const ta = btn.closest('.prompt-wrap').querySelector('textarea');
+  navigator.clipboard.writeText(ta.value).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = '✅ Kopyalandı';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 2000);
+  });
+}
+function filter(btn, type) {
+  document.querySelectorAll('.fbtn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.card').forEach(c => {
+    const sev    = c.dataset.sev;
+    const status = c.dataset.status;
+    let show = false;
+    if (type === 'all')          show = true;
+    else if (type === 'critical') show = sev === 'critical';
+    else if (type === 'high')    show = sev === 'high';
+    else if (type === 'medium')  show = sev === 'medium';
+    else if (type === 'design')  show = sev === 'design';
+    else if (type === 'done')    show = status === 'done';
+    else if (type === 'open')    show = status === 'open';
+    else if (type === 'session') show = c.dataset.session === 'true';
+    c.style.display = show ? '' : 'none';
+  });
+}
+</script>
+</body>
+</html>

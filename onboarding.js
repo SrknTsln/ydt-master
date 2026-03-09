@@ -10,93 +10,144 @@
    Her soruya CEFRLevel atandı (A1-C1)
    Doğru cevap sayısına göre seviye hesaplanır
    ════════════════════════════════════════════ */
-const OB_QUESTIONS = [
-    // A1
-    {
-        level: 'A1',
-        q: 'She ___ to school every day.',
-        blank: true,
-        opts: ['go', 'goes', 'going', 'gone'],
-        ans: 1
-    },
-    // A2
-    {
-        level: 'A2',
-        q: 'I have lived in this city ___ ten years.',
-        blank: true,
-        opts: ['since', 'for', 'from', 'during'],
-        ans: 1
-    },
-    // A2
-    {
-        level: 'A2',
-        q: 'What is the meaning of "ancient"?',
-        blank: false,
-        opts: ['Very new', 'Very old', 'Very large', 'Very fast'],
-        ans: 1
-    },
-    // B1
-    {
-        level: 'B1',
-        q: 'By the time we arrived, the film ___ already started.',
-        blank: true,
-        opts: ['has', 'had', 'was', 'is'],
-        ans: 1
-    },
-    // B1
-    {
-        level: 'B1',
-        q: 'If I ___ rich, I would travel the world.',
-        blank: true,
-        opts: ['am', 'was', 'were', 'be'],
-        ans: 2
-    },
-    // B1
-    {
-        level: 'B1',
-        q: '"Eloquent" means someone who is ___.',
-        blank: false,
-        opts: ['Very strong', 'Well-spoken and expressive', 'Extremely lazy', 'Easily confused'],
-        ans: 1
-    },
-    // B2
-    {
-        level: 'B2',
-        q: 'The project was completed ___ schedule, much to everyone\'s surprise.',
-        blank: true,
-        opts: ['ahead of', 'in front of', 'on top of', 'in spite of'],
-        ans: 0
-    },
-    // B2
-    {
-        level: 'B2',
-        q: 'Choose the sentence in passive voice:',
-        blank: false,
-        opts: [
-            'They built the bridge in 1990.',
-            'The bridge was built in 1990.',
-            'Building the bridge took years.',
-            'The bridge building ended in 1990.'
-        ],
-        ans: 1
-    },
-    // C1
-    {
-        level: 'C1',
-        q: '"Meticulous" is closest in meaning to ___.',
-        blank: false,
-        opts: ['Careless', 'Extremely thorough and careful', 'Somewhat interested', 'Overly emotional'],
-        ans: 1
-    },
-    // C1
-    {
-        level: 'C1',
-        q: 'The scientist\'s findings were so ___ that they challenged decades of established theory.',
-        blank: true,
-        opts: ['mundane', 'ambiguous', 'groundbreaking', 'redundant'],
-        ans: 2
-    }
-];
+/* ════════════════════════════════════════════════════════════════
+   OB_QUESTION_POOL — 100 soruluk havuz (A1×20, A2×20, B1×20, B2×20, C1×20)
+   Her test oturumunda her seviyeden 2 soru rastgele seçilir → toplam 10 soru.
+   Kullanıcı her girişte farklı sorularla karşılaşır.
+   ════════════════════════════════════════════════════════════════ */
+const OB_QUESTION_POOL = {
+    A1: [
+        { q: 'She ___ to school every day.',               blank:true,  opts:['go','goes','going','gone'],                                       ans:1 },
+        { q: 'They ___ football every Saturday.',          blank:true,  opts:['play','plays','playing','played'],                                 ans:0 },
+        { q: 'What is the meaning of "happy"?',            blank:false, opts:['Sad','Angry','Joyful','Tired'],                                    ans:2 },
+        { q: 'I ___ a student.',                           blank:true,  opts:['am','is','are','be'],                                             ans:0 },
+        { q: 'She ___ a book right now.',                  blank:true,  opts:['read','reads','is reading','has read'],                            ans:2 },
+        { q: 'What does "big" mean?',                      blank:false, opts:['Small','Fast','Large','Cold'],                                     ans:2 },
+        { q: 'There ___ a cat on the roof.',               blank:true,  opts:['am','is','are','be'],                                             ans:1 },
+        { q: 'He ___ coffee every morning.',               blank:true,  opts:['drink','drinks','drinking','drank'],                               ans:1 },
+        { q: 'The opposite of "hot" is ___.',              blank:false, opts:['Warm','Cool','Cold','Wet'],                                        ans:2 },
+        { q: 'We ___ to the cinema yesterday.',            blank:true,  opts:['go','goes','went','gone'],                                         ans:2 },
+        { q: 'What is a "chair" used for?',                blank:false, opts:['Eating','Sitting','Sleeping','Writing'],                           ans:1 },
+        { q: 'She ___ not like spicy food.',               blank:true,  opts:['do','does','did','is'],                                           ans:1 },
+        { q: 'I have ___ brothers.',                       blank:true,  opts:['two','a','an','much'],                                            ans:0 },
+        { q: 'The sun ___ in the east.',                   blank:true,  opts:['rise','rises','rising','rose'],                                    ans:1 },
+        { q: 'What does "fast" mean?',                     blank:false, opts:['Slow','Quick','Heavy','Quiet'],                                    ans:1 },
+        { q: '___ you speak English?',                     blank:true,  opts:['Do','Does','Are','Is'],                                           ans:0 },
+        { q: 'My mother ___ dinner every evening.',        blank:true,  opts:['cook','cooks','cooking','cooked'],                                 ans:1 },
+        { q: 'What is the plural of "child"?',             blank:false, opts:['Childs','Childen','Children','Childrens'],                         ans:2 },
+        { q: 'He ___ football yesterday.',                 blank:true,  opts:['play','plays','played','playing'],                                 ans:2 },
+        { q: 'What does "cold" mean?',                     blank:false, opts:['Very hot','Not warm','Wet','Loud'],                                ans:1 },
+    ],
+    A2: [
+        { q: 'I have lived here ___ ten years.',           blank:true,  opts:['since','for','from','during'],                                     ans:1 },
+        { q: 'What is the meaning of "ancient"?',          blank:false, opts:['Very new','Very old','Very large','Very fast'],                    ans:1 },
+        { q: 'She ___ to Paris three times.',              blank:true,  opts:['has been','have been','was','been'],                               ans:0 },
+        { q: 'If you ___ harder, you will pass.',          blank:true,  opts:['study','studied','studying','studies'],                            ans:0 },
+        { q: 'The book ___ by Orwell.',                    blank:true,  opts:['write','wrote','was written','is writing'],                        ans:2 },
+        { q: 'What does "exhausted" mean?',                blank:false, opts:['Very happy','Extremely tired','Very strong','Well-rested'],         ans:1 },
+        { q: 'He asked me ___ I was fine.',                blank:true,  opts:['that','if','what','which'],                                        ans:1 },
+        { q: 'I ___ in London since 2015.',                blank:true,  opts:['live','lived','have lived','am living'],                           ans:2 },
+        { q: 'She ___ when the phone rang.',               blank:true,  opts:['cooks','was cooking','cooked','has cooked'],                       ans:1 },
+        { q: '"Curious" means someone who ___.',           blank:false, opts:['Dislikes others','Wants to know things','Is very shy','Sleeps a lot'], ans:1 },
+        { q: 'They ___ the project by Friday.',            blank:true,  opts:['finish','finished','will have finished','are finishing'],           ans:2 },
+        { q: 'What does "nervous" mean?',                  blank:false, opts:['Angry','Excited','Worried or anxious','Bored'],                    ans:2 },
+        { q: 'He ___ to the store, so he\'s not here.',   blank:true,  opts:['goes','went','has gone','had gone'],                               ans:2 },
+        { q: '"Generous" means someone who ___.',          blank:false, opts:['Is selfish','Gives freely to others','Is very shy','Talks too much'], ans:1 },
+        { q: 'I wish I ___ speak French.',                 blank:true,  opts:['can','could','will','would'],                                      ans:1 },
+        { q: 'The report ___ before the meeting.',         blank:true,  opts:['finish','finished','was finished','finishing'],                     ans:2 },
+        { q: 'What does "rare" mean?',                     blank:false, opts:['Common','Unusual or not often seen','Cheap','Loud'],               ans:1 },
+        { q: 'She ___ her homework before dinner.',        blank:true,  opts:['finish','finishes','had finished','has finished'],                  ans:3 },
+        { q: '"Fortunate" is closest in meaning to ___.',  blank:false, opts:['Unlucky','Wealthy','Lucky','Miserable'],                           ans:2 },
+        { q: 'He told me not ___ late.',                   blank:true,  opts:['be','to be','being','been'],                                       ans:1 },
+    ],
+    B1: [
+        { q: 'By the time we arrived, the film ___ started.', blank:true,  opts:['has','had','was','is'],                                        ans:1 },
+        { q: 'If I ___ rich, I would travel the world.',   blank:true,  opts:['am','was','were','be'],                                           ans:2 },
+        { q: '"Eloquent" means someone who is ___.',        blank:false, opts:['Very strong','Well-spoken','Extremely lazy','Easily confused'],    ans:1 },
+        { q: 'Despite ___ hard, he failed the exam.',      blank:true,  opts:['study','studied','studying','studies'],                            ans:2 },
+        { q: 'She suggested ___ a taxi.',                  blank:true,  opts:['take','to take','taking','took'],                                  ans:2 },
+        { q: '"Ambiguous" means something that ___.',       blank:false, opts:['Is very clear','Has more than one meaning','Is expensive','Moves quickly'], ans:1 },
+        { q: 'He would have passed if he ___ studied.',    blank:true,  opts:['has','had','was','were'],                                          ans:1 },
+        { q: 'The results are ___ than expected.',         blank:true,  opts:['more better','worse','more worse','gooder'],                       ans:1 },
+        { q: '"Inevitable" is closest in meaning to ___.',  blank:false, opts:['Avoidable','Certain to happen','Very expensive','Easy to forget'], ans:1 },
+        { q: 'She ___ the task before he arrived.',        blank:true,  opts:['completes','completed','had completed','will complete'],           ans:2 },
+        { q: 'Not only ___ he arrive late, but he forgot the report.', blank:true, opts:['did','had','was','were'],                              ans:0 },
+        { q: '"Skeptical" describes someone who ___.',      blank:false, opts:['Believes everything','Questions and doubts','Is very social','Is always cheerful'], ans:1 },
+        { q: 'The sooner we start, ___ we finish.',        blank:true,  opts:['the sooner','the soon','sooner','soon'],                          ans:0 },
+        { q: '"Diligent" means someone who ___.',           blank:false, opts:['Is very lazy','Works hard and carefully','Speaks fast','Is distracted'], ans:1 },
+        { q: 'I had my car ___.',                          blank:true,  opts:['repair','repaired','repairing','to repair'],                       ans:1 },
+        { q: 'She is used to ___ early.',                  blank:true,  opts:['wake','wakes','waking','woken'],                                   ans:2 },
+        { q: '"Substantial" is closest in meaning to ___.',blank:false, opts:['Very small','Quite large or significant','Extremely fast','Barely noticeable'], ans:1 },
+        { q: 'Rarely ___ so motivated.',                   blank:true,  opts:['I feel','I have felt','have I felt','do I feel'],                  ans:2 },
+        { q: '"Persevere" means to ___.',                  blank:false, opts:['Give up quickly','Continue despite difficulty','Change your mind','Avoid challenges'], ans:1 },
+        { q: 'The experiment ___ by the team overnight.',  blank:true,  opts:['conduct','conducted','was conducted','is conducting'],             ans:2 },
+    ],
+    B2: [
+        { q: 'The project was completed ___ schedule.',    blank:true,  opts:['ahead of','in front of','on top of','in spite of'],                ans:0 },
+        { q: 'Choose the sentence in passive voice:',      blank:false, opts:['They built the bridge in 1990.','The bridge was built in 1990.','Building took years.','Bridge building ended in 1990.'], ans:1 },
+        { q: '"Pragmatic" describes someone who ___.',     blank:false, opts:['Is very idealistic','Deals with things practically','Is overly emotional','Avoids responsibility'], ans:1 },
+        { q: 'Had I known earlier, I ___ differently.',   blank:true,  opts:['act','acted','would have acted','will act'],                        ans:2 },
+        { q: '"Superficial" means something that ___.',    blank:false, opts:['Is very deep','Only deals with the surface','Is extremely important','Is permanent'], ans:1 },
+        { q: 'The findings ___ further investigation.',    blank:true,  opts:['warrant','warrants','warranted','warranting'],                      ans:0 },
+        { q: '"Verbose" describes writing or speech that is ___.',blank:false, opts:['Brief and clear','Using too many words','Very poetic','Technically precise'], ans:1 },
+        { q: 'She managed to ___ all expectations.',       blank:true,  opts:['surpass','bypass','overpass','underpass'],                         ans:0 },
+        { q: '"Tenacious" describes someone who ___.',     blank:false, opts:['Gives up easily','Holds on firmly to goals','Changes opinions often','Is overly emotional'], ans:1 },
+        { q: 'The proposal was met with ___ criticism.',   blank:true,  opts:['scathing','scathe','scathed','scathingly'],                        ans:0 },
+        { q: '"Coherent" means an argument that is ___.',  blank:false, opts:['Confusing and unclear','Logical and well-organized','Very emotional','Heavily biased'], ans:1 },
+        { q: 'The policy aims to ___ inequality.',         blank:true,  opts:['mitigate','mitigating','mitigated','mitigates'],                   ans:0 },
+        { q: '"Ephemeral" means something that ___.',      blank:false, opts:['Lasts forever','Lasts a very short time','Is very large','Is very important'], ans:1 },
+        { q: 'The journalist ___ the story with great care.', blank:true, opts:['broke','break','breaking','broken'],                            ans:0 },
+        { q: '"Plausible" describes a story that is ___.',blank:false, opts:['Clearly false','Seemingly reasonable','Very complicated','Emotionally moving'], ans:1 },
+        { q: 'No sooner ___ sat down than the alarm rang.',blank:true, opts:['I had','had I','I have','have I'],                                  ans:1 },
+        { q: '"Clandestine" describes activities done ___.',blank:false, opts:['Openly and proudly','In secret','Very noisily','With great skill'], ans:1 },
+        { q: 'The committee ___ its decision tomorrow.',   blank:true,  opts:['will announce','announced','has announced','announces'],            ans:0 },
+        { q: '"Altruistic" describes someone who ___.',    blank:false, opts:['Acts only for personal gain','Acts for the benefit of others','Is very aggressive','Avoids social contact'], ans:1 },
+        { q: 'The evidence was ___ to support the claim.', blank:true, opts:['insufficient','sufficiently','sufficient','insuf'],                 ans:0 },
+    ],
+    C1: [
+        { q: '"Meticulous" is closest in meaning to ___.',  blank:false, opts:['Careless','Extremely thorough','Somewhat interested','Overly emotional'], ans:1 },
+        { q: 'The findings were so ___ they challenged decades of theory.', blank:true, opts:['mundane','ambiguous','groundbreaking','redundant'], ans:2 },
+        { q: '"Equivocal" describes a statement that is ___.',blank:false, opts:['Very direct','Deliberately vague or ambiguous','Extremely rude','Very enthusiastic'], ans:1 },
+        { q: 'The policy has far-reaching ___ for education.', blank:true, opts:['implications','implication','implicate','implicating'],         ans:0 },
+        { q: '"Obfuscate" means to ___.',                   blank:false, opts:['Make very clear','Make unnecessarily confusing','Strongly disagree','Carefully organize'], ans:1 },
+        { q: 'Her argument was ___ by her failure to cite evidence.', blank:true, opts:['undermined','undermine','undermining','is undermined'], ans:0 },
+        { q: '"Recalcitrant" describes someone who ___.',   blank:false, opts:['Is very cooperative','Stubbornly resists authority','Is extremely talented','Speaks very eloquently'], ans:1 },
+        { q: 'The legislation ___ widespread controversy among academics.', blank:true, opts:['precipitated','precipitate','precipitating','has precipitate'], ans:0 },
+        { q: '"Inimical" means something that is ___.',     blank:false, opts:['Very friendly','Harmful or adverse to','Extremely useful','Widely accepted'], ans:1 },
+        { q: 'The philosopher\'s works ___ the intellectual landscape.', blank:true, opts:['permeated','permeate','permeating','had permeate'],   ans:0 },
+        { q: '"Solipsistic" thinking involves ___.',         blank:false, opts:['Considering others\' views','Belief only in one\'s own existence','Critical analysis','Scientific reasoning'], ans:1 },
+        { q: 'The analysis was ___ by incomplete data.',    blank:true,  opts:['confounded','confound','confounding','confounds'],                ans:0 },
+        { q: '"Inveterate" describes a habit that is ___.',  blank:false, opts:['Easily broken','Deeply established over time','Recently acquired','Very beneficial'], ans:1 },
+        { q: 'Only by ___ can we hope to resolve systemic inequality.', blank:true, opts:['collaboration','collaborate','collaborating','collaborated'], ans:0 },
+        { q: '"Perspicacious" describes someone with ___.',  blank:false, opts:['Poor judgment','Keen insight and understanding','A very loud personality','A tendency to procrastinate'], ans:1 },
+        { q: 'The study\'s conclusions were ___ by its narrow sample.', blank:true, opts:['circumscribed','circumscribe','circumscribing','circumscribe'], ans:0 },
+        { q: '"Didactic" literature primarily aims to ___.',  blank:false, opts:['Entertain without teaching','Instruct or teach a moral','Provoke emotions','Describe history objectively'], ans:1 },
+        { q: 'The diplomat\'s remarks were deliberately ___.',blank:true,  opts:['elliptical','ellipse','elliptically','ellipting'],              ans:0 },
+        { q: '"Iconoclast" refers to someone who ___.',      blank:false, opts:['Upholds tradition','Attacks cherished beliefs','Is deeply religious','Studies ancient symbols'], ans:1 },
+        { q: 'The evidence ___ the prosecution\'s case beyond doubt.', blank:true, opts:['corroborated','corroborate','corroborating','corroborates'], ans:0 },
+    ]
+};
+
+/**
+ * _obBuildTestSet — Her test oturumunda havuzdan rastgele 2 soru/seviye seçer.
+ * Toplam: A1×2 + A2×2 + B1×2 + B2×2 + C1×2 = 10 soru, kolaydan zora.
+ * Fisher-Yates shuffle ile her seviye havuzu karıştırılır, ilk 2 alınır.
+ */
+function _obBuildTestSet() {
+    const selected = [];
+    ['A1','A2','B1','B2','C1'].forEach(lvl => {
+        const pool = OB_QUESTION_POOL[lvl].map((q,i) => ({...q, level:lvl}));
+        for (let i = pool.length-1; i > 0; i--) {
+            const j = Math.floor(Math.random()*(i+1));
+            [pool[i],pool[j]] = [pool[j],pool[i]];
+        }
+        selected.push(...pool.slice(0,2));
+    });
+    return selected; // A1→C1 sırası korunuyor
+}
+
+// Aktif test seti — obRenderStep2'de her seferinde yenilenir
+let OB_QUESTIONS = _obBuildTestSet();
 
 /* Doğru sayısına göre seviye */
 const OB_LEVEL_MAP = [
@@ -245,13 +296,33 @@ function obClose(skipAll = false) {
    ADIM 1 — Yaş Grubu Seç
    ════════════════════════════════════════════ */
 function obBuildStep1() {
+    // Giriş yapan kullanıcının adını al (varsa)
+    const user = window._currentUser;
+    const firstName = user?.displayName ? user.displayName.split(' ')[0] : null;
+    const welcomeTitle = firstName
+        ? `Hoş Geldin, ${firstName}! 🎉`
+        : 'Hoş Geldin! 🎉';
+
     return `
     <div class="ob-card ob-step">
         <div class="ob-header">
             <div class="ob-logo">🎓</div>
-            <div class="ob-title">Hoş Geldin!</div>
-            <div class="ob-sub">Sana en uygun deneyimi sunabilmemiz için<br>yaş grubunu seçmeni istiyoruz.</div>
-            <div class="ob-dots">
+            <div class="ob-title">${welcomeTitle}</div>
+            <div class="ob-sub">YDT Master Pro'ya ilk girişin bu — sana özel bir<br>deneyim oluşturmak için <strong>yaş grubunu</strong> seç.</div>
+            <div class="ob-welcome-note" style="
+                margin:12px auto 0;
+                max-width:340px;
+                background:rgba(99,102,241,.12);
+                border:1px solid rgba(99,102,241,.25);
+                border-radius:10px;
+                padding:10px 14px;
+                font-size:.8rem;
+                color:var(--ink2, #a0a8c0);
+                line-height:1.5;
+            ">
+                💡 Bu adım isteğe bağlı — <em>Atla</em> butonuyla doğrudan<br>tüm içeriklere erişebilirsin.
+            </div>
+            <div class="ob-dots" style="margin-top:14px;">
                 <div class="ob-dot active"></div>
                 <div class="ob-dot"></div>
                 <div class="ob-dot"></div>
@@ -305,7 +376,7 @@ function obBuildStep1() {
                 Devam Et →
             </button>
             <div class="ob-skip-link">
-                <button class="ob-skip-btn" onclick="obClose(true)">Atla, direkt başla</button>
+                <button class="ob-skip-btn" onclick="obClose(true)">⚡ Atla — direkt siteye git</button>
             </div>
         </div>
     </div>`;
@@ -340,6 +411,8 @@ function obRenderStep2() {
     OB.quizIdx = 0;
     OB.quizScore = 0;
     OB.answered = false;
+    // Her test başında havuzdan yeni rastgele soru seti oluştur
+    OB_QUESTIONS = _obBuildTestSet();
 
     const card = document.querySelector('.ob-card');
     if (!card) return;
@@ -349,7 +422,17 @@ function obRenderStep2() {
             <div class="ob-logo">🧠</div>
             <div class="ob-title">Seviye Testi</div>
             <div class="ob-sub">10 kısa soru — yaklaşık <strong>2 dakika</strong>.<br>Cevaplarına göre sana özel içerik önereceğiz.</div>
-            <div class="ob-dots">
+            <div class="ob-welcome-note" style="
+                margin:8px auto 0;
+                max-width:320px;
+                background:rgba(99,102,241,.1);
+                border:1px solid rgba(99,102,241,.2);
+                border-radius:8px;
+                padding:8px 12px;
+                font-size:.78rem;
+                color:var(--ink2,#a0a8c0);
+            ">⚡ Testi geçmek istersen <strong>Testi Atla</strong>'ya tıkla — tüm içeriklere anında erişirsin.</div>
+            <div class="ob-dots" style="margin-top:12px;">
                 <div class="ob-dot done"></div>
                 <div class="ob-dot active"></div>
                 <div class="ob-dot"></div>

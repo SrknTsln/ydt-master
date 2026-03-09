@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://js.puter.com https://*.puter.com https://www.gstatic.com https://apis.google.com https://cdnjs.cloudflare.com https://cdn-cgi.cloudflare.com; connect-src 'self' https://autumn-hill-be24ydt-master.stasalan.workers.dev https://*.googleapis.com https://*.google.com https://apis.google.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://*.groq.com https://openrouter.ai https://api.mistral.ai https://api.anthropic.com https://generativelanguage.googleapis.com https://feeds.bbci.co.uk https://www.theguardian.com https://feeds.npr.org https://api.rss2json.com https://api.allorigins.win https://corsproxy.io https://api.codetabs.com https://oauth2.googleapis.com https://*.puter.com wss://*.puter.com; font-src 'self' https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https://*.googleusercontent.com https://lh3.googleusercontent.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com; object-src 'none';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://js.puter.com https://*.puter.com https://www.gstatic.com https://apis.google.com https://cdnjs.cloudflare.com https://cdn-cgi.cloudflare.com; connect-src 'self' https://autumn-hill-be24ydt-master.stasalan.workers.dev https://*.googleapis.com https://*.google.com https://apis.google.com https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://*.groq.com https://openrouter.ai https://api.mistral.ai https://api.anthropic.com https://generativelanguage.googleapis.com https://feeds.bbci.co.uk https://www.theguardian.com https://feeds.npr.org https://www.newscientist.com https://newscientist.com https://api.rss2json.com https://api.allorigins.win https://corsproxy.io https://api.codetabs.com https://oauth2.googleapis.com https://*.puter.com wss://*.puter.com; font-src 'self' https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https://*.googleusercontent.com https://lh3.googleusercontent.com; frame-src https://*.firebaseapp.com https://accounts.google.com https://apis.google.com; object-src 'none';">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>YDT Master Pro — AI Destekli İngilizce</title>
@@ -90,11 +90,11 @@
     <nav class="mob-drawer-nav" aria-label="Mobil menü">
         <div class="mob-drawer-sec">Ana Menü</div>
         <button class="mob-drawer-btn active" id="di-home"     onclick="mobGoTo('index-page')">              <span aria-hidden="true" class="mob-d-icon">🏠</span> Ana Sayfa</button>
-        <button class="mob-drawer-btn"        id="di-ai-ydt"   onclick="mobRun(startAIQuizMode)">            <span aria-hidden="true" class="mob-d-icon">🤖</span> AI Vocabulary Test</button>
+        <button class="mob-drawer-btn"        id="di-ai-ydt"   onclick="_requireAuth(()=>mobRun(startAIQuizMode),'AI Vocabulary Test')">            <span aria-hidden="true" class="mob-d-icon">🤖</span> AI Vocabulary Test</button>
         <button class="mob-drawer-btn"        id="di-paragraf" onclick="mobRun(showParagrafListesi)">         <span aria-hidden="true" class="mob-d-icon">📖</span> AI Reading</button>
+        <button class="mob-drawer-btn"        id="di-speaking" onclick="_requireAuth(()=>mobRun(()=>openSpeakingSection('overview')),'AI Konuşma Pratiği')"><span aria-hidden="true" class="mob-d-icon">🗣️</span> AI Konuşma Pratiği</button>
         <button class="mob-drawer-btn"        id="di-study"    onclick="mobRun(startStudyFromNav)">          <span aria-hidden="true" class="mob-d-icon">📖</span> Kelime Öğren</button>
         <button class="mob-drawer-btn"        id="di-quiz"     onclick="mobRun(startQuizFromNav)">           <span aria-hidden="true" class="mob-d-icon">🎯</span> Vocabulary Test</button>
-        <button class="mob-drawer-btn"        id="di-speaking" onclick="mobRun(()=>openSpeakingSection('overview'))"><span aria-hidden="true" class="mob-d-icon">🗣️</span> Speaking</button>
 
         <!-- Grammar — Speaking altında, Alıştırmalar üstünde -->
         <button class="mob-grammar-toggle" id="di-grammar-toggle-main" onclick="mobToggleGrammarMain()" aria-expanded="false" aria-controls="di-grammar-list-main">
@@ -183,11 +183,11 @@
     <nav class="sb-nav sb-nav-primary" aria-label="Ana menü">
         <div class="sb-sec">Ana Menü</div>
         <button class="sb-btn active" id="sb-home" title="Ana Sayfa" data-nav="index-page">             <span aria-hidden="true" class="sb-icon">🏠</span> Ana Sayfa</button>
-        <button class="sb-btn"        id="sb-ai-ydt" title="AI Vocab Test" onclick="startAIQuizMode()">               <span aria-hidden="true" class="sb-icon">🤖</span> AI Vocabulary Test</button>
+        <button class="sb-btn"        id="sb-ai-ydt" title="AI Vocab Test" onclick="_requireAuth(startAIQuizMode,'AI Vocabulary Test')">               <span aria-hidden="true" class="sb-icon">🤖</span> AI Vocabulary Test</button>
         <button class="sb-btn"        id="sb-paragraf" title="AI Reading" onclick="showParagrafListesi()">              <span aria-hidden="true" class="sb-icon">📖</span> AI Reading</button>
+        <button class="sb-btn"        id="sb-speaking" title="AI Konuşma Pratiği" onclick="_requireAuth(()=>openSpeakingSection('overview'),'AI Konuşma Pratiği')"> <span aria-hidden="true" class="sb-icon">🗣️</span> AI Konuşma Pratiği</button>
         <button class="sb-btn"        id="sb-study" title="Kelime Öğren" onclick="startStudyFromNav()">             <span aria-hidden="true" class="sb-icon">📖</span> Kelime Öğren</button>
         <button class="sb-btn"        id="sb-quiz" title="Vocabulary Test" onclick="startQuizFromNav()">              <span aria-hidden="true" class="sb-icon">🎯</span> Vocabulary Test</button>
-        <button class="sb-btn"        id="sb-speaking" title="Speaking" onclick="openSpeakingSection('overview')"> <span aria-hidden="true" class="sb-icon">🗣️</span> Speaking</button>
 
         <!-- Grammar — daraltılabilir grup (Ana Menü altında) -->
         <button class="sb-grammar-toggle" id="sb-grammar-toggle-main" onclick="sbToggleGrammarMain()" aria-expanded="false" aria-controls="sb-grammar-list-main" style="margin-top:2px;">
@@ -315,7 +315,7 @@
                     <span class="dash-qa-title">Vocab Test</span>
                     <span class="dash-qa-desc">Çoktan seçmeli</span>
                 </button>
-                <button class="dash-qa dash-qa-3" onclick="startAIQuizMode()">
+                <button class="dash-qa dash-qa-3" onclick="_requireAuth(startAIQuizMode,'AI Vocabulary Test')">
                     <span aria-hidden="true" class="dash-qa-icon">🤖</span>
                     <span class="dash-qa-title">AI Test</span>
                     <span class="dash-qa-desc">YDT formatı</span>
@@ -325,9 +325,9 @@
                     <span class="dash-qa-title">Paragraf</span>
                     <span class="dash-qa-desc">C1/C2 metinler</span>
                 </button>
-                <button class="dash-qa dash-qa-5" onclick="openSpeakingSection('overview')">
+                <button class="dash-qa dash-qa-5" onclick="_requireAuth(()=>openSpeakingSection('overview'),'AI Konuşma Pratiği')">
                     <span aria-hidden="true" class="dash-qa-icon">🗣️</span>
-                    <span class="dash-qa-title">Speaking</span>
+                    <span class="dash-qa-title">AI Konuşma Pratiği</span>
                     <span class="dash-qa-desc">Konuşma pratiği</span>
                 </button>
                 <button class="dash-qa dash-qa-6" onclick="sbToggleGrammarMain()">
@@ -370,7 +370,7 @@
                         <div class="dash-ss-bar"><div id="ss-kelime-fill" style="background:var(--c-violet);height:100%;border-radius:3px;width:0%;transition:width .6s;"></div></div>
                     </div>
                 </div>
-                <div class="dash-ss-item" onclick="startAIQuizMode()">
+                <div class="dash-ss-item" onclick="_requireAuth(startAIQuizMode,'AI Vocabulary Test')">
                     <div class="dash-ss-icon" style="background:color-mix(in srgb,var(--color-active) 12%,transparent);color:var(--color-active);">🤖</div>
                     <div class="dash-ss-body">
                         <div class="dash-ss-label">AI Vocabulary</div>
@@ -527,7 +527,7 @@
 
         <!-- ══ TAB SWITCH ══ -->
         <div class="rh2-tabbar">
-            <button class="rh2-tab rh2-tab-active" id="rh-tab-ai" onclick="openReadingHub('ai')">
+            <button class="rh2-tab rh2-tab-active" id="rh-tab-ai" onclick="_requireAuth(()=>openReadingHub('ai'),'Günlük Haber AI')">
                 <span aria-hidden="true" class="rh2-tab-icon">🤖</span>
                 <span>Günlük AI</span>
                 <span class="rh2-tab-pill" id="ai-daily-date-badge"></span>
@@ -537,12 +537,12 @@
                 <span>Yüklü Pasajlar</span>
                 <span class="rh2-tab-pill rh2-tab-pill-green" id="reading-hub-saved-count"></span>
             </button>
-            <button class="rh2-tab" id="rh-tab-generate" onclick="openReadingHub('generate')">
+            <button class="rh2-tab" id="rh-tab-generate" onclick="_requireAuth(()=>openReadingHub('generate'),'AI ile Pasaj Üret')">
                 <span aria-hidden="true" class="rh2-tab-icon">✨</span>
                 <span>AI Üret</span>
             </button>
             <!-- Sağ: yenile -->
-            <button id="ai-daily-refresh-btn" onclick="generateAIDailyParagraflar(true)" class="rh2-refresh-btn" style="display:none;">
+            <button id="ai-daily-refresh-btn" onclick="_requireAuth(()=>generateAIDailyParagraflar(true),'Günlük Haber AI')" class="rh2-refresh-btn" style="display:none;">
                 <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
                     <path d="M11.5 2A6 6 0 1 0 12 6.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
                     <path d="M8.5 2H11.5V5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
@@ -552,7 +552,7 @@
         </div>
 
         <!-- ══ MOBİL AI ÜRET SHORTCUT ══ -->
-        <button class="rh2-mob-generate-btn" onclick="openReadingHub('generate')">
+        <button class="rh2-mob-generate-btn" onclick="_requireAuth(()=>openReadingHub('generate'),'AI ile Pasaj Üret')">
             <span>✨</span>
             <span>AI ile Özgün Paragraf Üret</span>
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -1131,7 +1131,7 @@
                         <span aria-hidden="true" class="adm-tab-icon">🔑</span><span>API Anahtarları</span>
                     </button>
                     <button class="adm-tab" data-tab="words" onclick="admSwitchTab('words')">
-                        <span aria-hidden="true" class="adm-tab-icon">📚</span><span>Kelime Listeleri</span>
+                        <span aria-hidden="true" class="adm-tab-icon">📚</span><span>Kelime Listeleri</span> <span style="font-size:.6rem;background:#e63946;color:#fff;border-radius:99px;padding:1px 6px;font-weight:800;vertical-align:middle;">PAYLAŞ</span>
                     </button>
                     <button class="adm-tab" data-tab="paragraf" onclick="admSwitchTab('paragraf')">
                         <span aria-hidden="true" class="adm-tab-icon">📄</span><span>Paragraflar</span>
@@ -1239,6 +1239,31 @@
                             <h2 class="adm-panel-title">📚 Kelime Listesi Yönetimi</h2>
                             <div class="adm-panel-sub">Listeleri oluştur, düzenle, sil.</div>
                         </div>
+                        <!-- ── Paylaşım Kartı — Admin → Tüm Kullanıcılar ── -->
+                        <div class="adm-card adm-share-card" style="margin-bottom:12px;">
+                            <div class="adm-card-title">🌐 Listeleri Tüm Kullanıcılarla Paylaş</div>
+                            <div class="adm-panel-sub" style="margin-bottom:10px;">Seçtiğin listeler <code>shared/content</code>'e kaydedilir — tüm kullanıcılar bir sonraki girişte alır.</div>
+                            <div style="display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap;">
+                                <div style="background:var(--bg,#f8f8fc);border:1.5px solid var(--border,#ebebf0);border-radius:12px;padding:10px 16px;display:flex;flex-direction:column;align-items:center;min-width:90px;">
+                                    <span style="font-size:1.4rem;font-weight:900;color:var(--red,#e63946);line-height:1;" id="adm-words-local-count">—</span>
+                                    <span style="font-size:.65rem;font-weight:700;color:var(--ink3,#888);text-transform:uppercase;letter-spacing:.05em;margin-top:3px;">Yerel Liste</span>
+                                </div>
+                                <div style="background:var(--bg,#f8f8fc);border:1.5px solid var(--border,#ebebf0);border-radius:12px;padding:10px 16px;display:flex;flex-direction:column;align-items:center;min-width:90px;">
+                                    <span style="font-size:1.4rem;font-weight:900;color:#3b82f6;line-height:1;" id="adm-words-shared-count">—</span>
+                                    <span style="font-size:.65rem;font-weight:700;color:var(--ink3,#888);text-transform:uppercase;letter-spacing:.05em;margin-top:3px;">Paylaşılmış</span>
+                                </div>
+                            </div>
+                            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                                <select id="share-list-selector" class="adm-input" style="flex:1;min-width:160px;">
+                                    <option value="__ALL__">— Tüm Listeleri Paylaş —</option>
+                                </select>
+                                <button class="adm-btn-primary" onclick="adminShareLists()" id="adm-share-btn">
+                                    ☁️ Firestore'a Yükle
+                                </button>
+                            </div>
+                            <div id="adm-share-note" style="margin-top:6px;font-size:.7rem;color:var(--ink3);"></div>
+                            <div id="adm-share-status" style="margin-top:8px;font-size:.75rem;font-weight:700;"></div>
+                        </div>
                         <div class="adm-words-layout">
                             <div class="adm-card">
                                 <div class="adm-card-title">➕ Yeni Liste</div>
@@ -1269,6 +1294,31 @@
                         <div class="adm-panel-header">
                             <div class="adm-panel-title">📄 Paragraf Yönetimi</div>
                             <div class="adm-panel-sub">Okuma parçalarını ekle, düzenle, sil.</div>
+                        </div>
+                        <!-- ── Pasaj Paylaşım Kartı — Admin → Tüm Kullanıcılar ── -->
+                        <div class="adm-card adm-share-card" style="margin-bottom:12px;">
+                            <div class="adm-card-title">🌐 Pasajları Tüm Kullanıcılarla Paylaş</div>
+                            <div class="adm-panel-sub" style="margin-bottom:10px;">Seçtiğin pasajlar <code>shared/content</code>'e kaydedilir — tüm kullanıcılar bir sonraki girişte alır. Misafir giriş ekranındaki pasaj sayacı otomatik güncellenir.</div>
+                            <div style="display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap;">
+                                <div style="background:var(--bg,#f8f8fc);border:1.5px solid var(--border,#ebebf0);border-radius:12px;padding:10px 16px;display:flex;flex-direction:column;align-items:center;min-width:90px;">
+                                    <span style="font-size:1.4rem;font-weight:900;color:var(--red,#e63946);line-height:1;" id="adm-para-local-count">—</span>
+                                    <span style="font-size:.65rem;font-weight:700;color:var(--ink3,#888);text-transform:uppercase;letter-spacing:.05em;margin-top:3px;">Yerel</span>
+                                </div>
+                                <div style="background:var(--bg,#f8f8fc);border:1.5px solid var(--border,#ebebf0);border-radius:12px;padding:10px 16px;display:flex;flex-direction:column;align-items:center;min-width:90px;">
+                                    <span style="font-size:1.4rem;font-weight:900;color:#3b82f6;line-height:1;" id="adm-para-shared-count">—</span>
+                                    <span style="font-size:.65rem;font-weight:700;color:var(--ink3,#888);text-transform:uppercase;letter-spacing:.05em;margin-top:3px;">Paylaşılmış</span>
+                                </div>
+                            </div>
+                            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                                <select id="share-para-selector" class="adm-input" style="flex:1;min-width:180px;">
+                                    <option value="__ALL__">— Tüm Pasajları Paylaş —</option>
+                                </select>
+                                <button class="adm-btn-primary" onclick="adminShareParagraflar()" id="adm-share-para-btn">
+                                    ☁️ Firestore'a Yükle
+                                </button>
+                            </div>
+                            <div id="adm-share-para-note" style="margin-top:6px;font-size:.7rem;color:var(--ink3);"></div>
+                            <div id="adm-share-para-status" style="margin-top:8px;font-size:.75rem;font-weight:700;"></div>
                         </div>
                         <div class="adm-para-layout">
                             <div class="adm-card" style="flex:1; overflow-y:auto;">
@@ -2010,8 +2060,10 @@
     <div id="profil-page" class="container hidden" style="text-align:left; padding-bottom: 32px;">
         <button class="back-btn" data-nav="index-page">←</button>
 
-        <!-- Google Auth Hero -->
-        <div class="profil-google-hero">
+        <!-- Profil Hero — giriş yapan / misafir durumuna göre render edilir -->
+
+        <!-- DURUM A: Giriş yapılmış — _updateProfilUI() tarafından doldurulur -->
+        <div class="profil-google-hero" id="profil-hero-auth" style="display:none;">
             <div class="profil-gh-top">
                 <img id="profil-gh-photo" class="profil-gh-photo"
                      src="" alt="Profil" style="display:none;"
@@ -2021,7 +2073,7 @@
                     <div class="profil-gh-greeting">
                         Hoş geldin, <span id="profil-gh-greeting-name">Kullanıcı</span>!
                     </div>
-                    <div id="profil-gh-name" class="profil-gh-name">Yükleniyor…</div>
+                    <div id="profil-gh-name" class="profil-gh-name">—</div>
                     <div id="profil-gh-email" class="profil-gh-email">—</div>
                     <div class="profil-gh-badge">🔒 Veriler güvende · Google ile giriş</div>
                 </div>
@@ -2029,6 +2081,48 @@
                     Çıkış
                 </button>
             </div>
+        </div>
+
+        <!-- DURUM B: Misafir — giriş teşvik hero -->
+        <div class="profil-guest-hero" id="profil-hero-guest" style="display:none;">
+            <div class="pgh-orb pgh-orb-1" aria-hidden="true"></div>
+            <div class="pgh-orb pgh-orb-2" aria-hidden="true"></div>
+            <div class="pgh-content">
+                <div class="pgh-avatar" aria-hidden="true">👤</div>
+                <div class="pgh-text">
+                    <div class="pgh-label">MİSAFİR MODU</div>
+                    <div class="pgh-title">İlerlemen kaybolmasın</div>
+                    <div class="pgh-sub">Giriş yap — kelimeler, istatistikler ve streak her cihazda senkronize olsun.</div>
+                </div>
+            </div>
+            <div class="pgh-perks" aria-label="Giriş avantajları">
+                <div class="pgh-perk">
+                    <span class="pgh-perk-icon" aria-hidden="true">☁️</span>
+                    <span>Bulut yedekleme</span>
+                </div>
+                <div class="pgh-perk">
+                    <span class="pgh-perk-icon" aria-hidden="true">📊</span>
+                    <span>Kişisel istatistik</span>
+                </div>
+                <div class="pgh-perk">
+                    <span class="pgh-perk-icon" aria-hidden="true">🔥</span>
+                    <span>Streak koruması</span>
+                </div>
+                <div class="pgh-perk">
+                    <span class="pgh-perk-icon" aria-hidden="true">🤖</span>
+                    <span>AI özellikleri</span>
+                </div>
+            </div>
+            <button class="pgh-btn-google" id="profil-guest-signin-btn">
+                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                </svg>
+                Google ile Giriş Yap
+                <span class="pgh-btn-arrow" aria-hidden="true">→</span>
+            </button>
         </div>
 
         <!-- Sync durumu -->
@@ -2356,11 +2450,12 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
              }
            }
 
-           // Paylaşımlı içerik: herkes okur, sadece admin yazar
+           // Paylaşımlı içerik: herkes okur, sadece admin custom claim'i olanlar yazar
+           // Firebase Console > Firestore Rules > admin custom claim kontrolü:
+           // allow write: if request.auth != null && request.auth.token.admin == true;
            match /shared/{docId} {
              allow read: if true;
-             allow write: if request.auth != null
-                          && request.auth.token.email == 'stasalan@gmail.com';
+             allow write: if request.auth != null && request.auth.token.admin == true;
            }
          }
        }
@@ -2497,14 +2592,29 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
         // "Bağlantı hatası" gösterir. Gerçek Firebase sync'i
         // onAuthStateChanged → _loadUserData() / _saveUserData() üstleniyor.
         document.getElementById('loading-overlay').style.display = 'flex';
+        // Her anahtar bağımsız try/catch ile sarılı — biri bozuk olursa diğerleri çökmez
         try {
-            const raw  = localStorage.getItem('ydt_all_data');
-            if (raw)  window.allData = { ...(window.allData || {}), ...JSON.parse(raw) };
+            const raw = localStorage.getItem('ydt_all_data');
+            if (raw) window.allData = { ...(window.allData || {}), ...JSON.parse(raw) };
+        } catch(e) {
+            console.warn('[initData] ydt_all_data parse hatası, sıfırlandı:', e.message);
+            localStorage.removeItem('ydt_all_data');
+        }
+        try {
             const rawP = localStorage.getItem('ydt_paragraf_sorular');
             if (rawP) window.paragrafSorular = JSON.parse(rawP);
+        } catch(e) {
+            console.warn('[initData] ydt_paragraf_sorular parse hatası, sıfırlandı:', e.message);
+            window.paragrafSorular = {};
+            localStorage.removeItem('ydt_paragraf_sorular');
+        }
+        try {
             const rawA = localStorage.getItem('ydt_ai_arsiv');
             if (rawA) window.aiArsiv = JSON.parse(rawA);
-        } catch(e) { console.warn('localStorage okuma hatası', e); }
+        } catch(e) {
+            console.warn('[initData] ydt_ai_arsiv parse hatası, sıfırlandı:', e.message);
+            localStorage.removeItem('ydt_ai_arsiv');
+        }
         setSyncStatus('idle');
         document.getElementById('loading-overlay').style.display = 'none';
         if (typeof updateSelectors    === 'function') updateSelectors();
@@ -2518,13 +2628,39 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
     // ════════════════════════════════════════════════════
     // AUTH — Google Giriş / Çıkış
     // ════════════════════════════════════════════════════
-    const { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
-        = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js");
+    const {
+        initializeAuth,
+        browserLocalPersistence,
+        indexedDBLocalPersistence,
+        browserPopupRedirectResolver,
+        GoogleAuthProvider,
+        signInWithPopup,
+        signInWithRedirect,
+        getRedirectResult,
+        signOut,
+        onAuthStateChanged
+    } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js");
     const { getFirestore, doc, getDoc, setDoc, collection, getDocs, deleteDoc, writeBatch }
         = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
 
-    const auth = getAuth(firebaseApp);
+    /**
+     * initializeAuth — persistence zinciri [indexedDB, localStorage].
+     * Android Chrome ve bazı desktop tarayıcılarda COOP header'ı popup'ı bloke eder.
+     * Hem mobil hem desktop için signInWithRedirect kullanılır.
+     */
+    const auth = initializeAuth(firebaseApp, {
+        persistence: [indexedDBLocalPersistence, browserLocalPersistence],
+        popupRedirectResolver: browserPopupRedirectResolver,
+    });
     const fsdb = getFirestore(firebaseApp);
+
+    // ── Admin modülleri için global Firestore referansları ────────────────
+    // admin.js ES module scope dışında olduğundan window üzerinden erişir.
+    window._fsdb   = fsdb;
+    window._doc    = doc;
+    window._setDoc = setDoc;
+    window._getDoc = getDoc;
+    // ──────────────────────────────────────────────────────────────────────
 
     let authTimerInterval = null;
     let authSaveInterval  = null;
@@ -2618,6 +2754,24 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
     }
 
     function _updateProfilUI(user) {
+        // Hero switching — giriş yapılmışsa auth hero, yoksa guest hero
+        const heroAuth  = document.getElementById('profil-hero-auth');
+        const heroGuest = document.getElementById('profil-hero-guest');
+        if (user) {
+            if (heroAuth)  heroAuth.style.display  = 'block';
+            if (heroGuest) heroGuest.style.display = 'none';
+        } else {
+            if (heroAuth)  heroAuth.style.display  = 'none';
+            if (heroGuest) heroGuest.style.display = 'block';
+            // Misafir giriş butonu
+            const guestBtn = document.getElementById('profil-guest-signin-btn');
+            if (guestBtn && !guestBtn._bound) {
+                guestBtn._bound = true;
+                guestBtn.addEventListener('click', _authSignIn);
+            }
+            return; // Misafir için profil alanları doldurma
+        }
+
         const photo = document.getElementById('profil-gh-photo');
         const placeholder = document.getElementById('profil-gh-photo-placeholder');
         if (photo && user.photoURL) {
@@ -2626,7 +2780,7 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
             if (placeholder) placeholder.style.display = 'none';
         }
         const displayName = user.displayName || 'Kullanıcı';
-        const firstName = displayName.split(' ')[0];
+        const firstName   = displayName.split(' ')[0];
         const greetEl = document.getElementById('profil-gh-greeting-name');
         const nameEl  = document.getElementById('profil-gh-name');
         const emailEl = document.getElementById('profil-gh-email');
@@ -2749,11 +2903,14 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
         }
 
         // ── Paylaşımlı (admin) içerikleri yükle ──────────────────────────
+        // shared/content dökümanı: paragraflar + paragrafSorular + sharedLists
         try {
             const _lsSet2 = (k, v) => { try { if (v !== null && v !== undefined) localStorage.setItem(k, JSON.stringify(v)); } catch(e){} };
             const sharedSnap = await getDoc(doc(fsdb, 'shared', 'content'));
             if (sharedSnap.exists()) {
                 const sharedData = sharedSnap.data();
+
+                // ── Paragraflar ──────────────────────────────────────────────
                 if (Array.isArray(sharedData.paragraflar) && sharedData.paragraflar.length > 0) {
                     const sharedPara = sharedData.paragraflar;
                     const current = window.paragraflar || [];
@@ -2763,10 +2920,42 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
                     _lsSet2('ydt_paragraflar', window.paragraflar);
                     console.log(`[shared] ${sharedPara.length} paylaşımlı paragraf yüklendi, ${personalExtra.length} kişisel ek`);
                 }
+
+                // ── Paragraf Soruları ────────────────────────────────────────
                 if (sharedData.paragrafSorular && typeof sharedData.paragrafSorular === 'object') {
                     window.paragrafSorular = { ...sharedData.paragrafSorular, ...(window.paragrafSorular || {}) };
                     _lsSet2('ydt_paragraf_sorular', window.paragrafSorular);
                 }
+
+                // ── Paylaşımlı Kelime Listeleri ──────────────────────────────
+                // Admin'in shared/content'e yüklediği listeler — tüm kullanıcılara merge edilir.
+                // Kullanıcının kendi ilerlemesi (errorCount, correctStreak) korunur — overwrite olmaz.
+                if (sharedData.sharedLists && typeof sharedData.sharedLists === 'object') {
+                    let mergeCount = 0;
+                    Object.entries(sharedData.sharedLists).forEach(([listName, words]) => {
+                        if (!Array.isArray(words) || words.length === 0) return;
+                        if (!window.allData[listName]) {
+                            // Liste yok — direkt ekle
+                            window.allData[listName] = words;
+                            mergeCount++;
+                        } else {
+                            // Liste var — sadece eksik kelimeleri ekle, mevcut kelimelerin progress'ini koru
+                            const existingEngSet = new Set(window.allData[listName].map(w => w.eng));
+                            const newWords = words.filter(w => !existingEngSet.has(w.eng));
+                            if (newWords.length > 0) {
+                                window.allData[listName] = [...window.allData[listName], ...newWords];
+                                mergeCount++;
+                            }
+                        }
+                    });
+                    if (mergeCount > 0) {
+                        // Merge edilen veriyi localStorage'a yaz
+                        const userKey = typeof getUserKey === 'function' ? getUserKey('all_data') : null;
+                        if (userKey) localStorage.setItem(userKey, JSON.stringify(window.allData));
+                        console.info(`[shared] ${mergeCount} kelime listesi merge edildi`);
+                    }
+                }
+
                 if (typeof window._populateParagrafListesi === 'function') window._populateParagrafListesi();
             }
         } catch(e) {
@@ -2871,9 +3060,13 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
             });
             await bankBatch.commit();
 
-            // ── Admin: shared/content güncelle ───────────────────────────────
-            const ADMIN_EMAIL_SYNC = window.ADMIN_EMAIL || 'stasalan@gmail.com';
-            if (window._currentUser?.email === ADMIN_EMAIL_SYNC && paragraflarData.length > 0) {
+            // ── Admin: shared/content güncelle — custom claim kontrolü ───────────
+            let _isAdminForSync = false;
+            try {
+                const _tokenResult = await window._currentUser?.getIdTokenResult?.();
+                _isAdminForSync = _tokenResult?.claims?.admin === true;
+            } catch(_) {}
+            if (_isAdminForSync && paragraflarData.length > 0) {
                 try {
                     await setDoc(doc(fsdb, 'shared', 'content'), {
                         paragraflar:     paragraflarData,
@@ -2904,17 +3097,203 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
         const overlay = document.createElement('div');
         overlay.id = 'login-overlay';
         overlay.innerHTML = `
-            <div class="login-card">
-                <div class="login-logo">🎓</div>
-                <div class="login-title">YDT Master Pro</div>
-                <div class="login-sub">Devam etmek için Google hesabınla giriş yap.</div>
-                <div class="login-features">
-                    <div class="login-feat-row"><span aria-hidden="true" class="login-feat-icon">☁️</span><div class="login-feat-text"><strong>Bulut Senkronizasyon</strong>Her cihazda aynı ilerleme</div></div>
-                    <div class="login-feat-row"><span aria-hidden="true" class="login-feat-icon">📊</span><div class="login-feat-text"><strong>Kişisel İstatistikler</strong>Gelişimini takip et</div></div>
-                    <div class="login-feat-row"><span aria-hidden="true" class="login-feat-icon">🔒</span><div class="login-feat-text"><strong>Güvenli & Özel</strong>Sadece sen erişebilirsin</div></div>
+            <div class="lo-bg-layer" aria-hidden="true">
+                <div class="lo-orb lo-orb-1"></div>
+                <div class="lo-orb lo-orb-2"></div>
+                <div class="lo-orb lo-orb-3"></div>
+                <div class="lo-grid-lines"></div>
+            </div>
+            <div class="lo-card">
+                <!-- Üst logo + marka -->
+                <div class="lo-brand">
+                    <div class="lo-logo-wrap">
+                        <div class="lo-logo-ring"></div>
+                        <span class="lo-logo-icon" aria-hidden="true">🎓</span>
+                    </div>
+                    <div class="lo-brand-text">
+                        <span class="lo-brand-name">YDT Master Pro</span>
+                        <span class="lo-brand-tag">by Serkan Hoca</span>
+                    </div>
                 </div>
-                <button class="btn-google" id="btn-google-signin">
-                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+
+                <!-- Başlık -->
+                <div class="lo-headline">
+                    <h1 class="lo-title">Kelime Ustası <span class="lo-title-accent">ol.</span></h1>
+                    <p class="lo-subtitle">Hafıza teknikleriyle kalıcı İngilizce öğrenme</p>
+                </div>
+
+                <!-- Stats bar — pasaj sayısı Firestore'dan dinamik okunur -->
+                <div class="lo-stats-row" aria-label="Uygulama istatistikleri">
+                    <div class="lo-stat">
+                        <span class="lo-stat-num">1300+</span>
+                        <span class="lo-stat-lbl">Kelime</span>
+                    </div>
+                    <div class="lo-stat-div" aria-hidden="true"></div>
+                    <div class="lo-stat">
+                        <span class="lo-stat-num" id="lo-stat-pasaj">…</span>
+                        <span class="lo-stat-lbl">Pasaj</span>
+                    </div>
+                    <div class="lo-stat-div" aria-hidden="true"></div>
+                    <div class="lo-stat">
+                        <span class="lo-stat-num">SM-2</span>
+                        <span class="lo-stat-lbl">Algoritma</span>
+                    </div>
+                </div>
+
+                <!-- Google giriş butonu -->
+                <button class="lo-btn-google" id="btn-google-signin" aria-label="Google hesabınla giriş yap">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" width="20" height="20">
+                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                    </svg>
+                    <span>Google ile Giriş Yap</span>
+                    <span class="lo-btn-google-arrow" aria-hidden="true">→</span>
+                </button>
+
+                <!-- Fayda maddecikleri -->
+                <div class="lo-perks" aria-label="Giriş yapmanın avantajları">
+                    <div class="lo-perk">
+                        <span class="lo-perk-dot" aria-hidden="true"></span>
+                        <span>Her cihazda senkronize ilerleme</span>
+                    </div>
+                    <div class="lo-perk">
+                        <span class="lo-perk-dot" aria-hidden="true"></span>
+                        <span>Kişisel istatistik & streak takibi</span>
+                    </div>
+                    <div class="lo-perk">
+                        <span class="lo-perk-dot" aria-hidden="true"></span>
+                        <span>Admin'in paylaştığı tüm içeriklere erişim</span>
+                    </div>
+                </div>
+
+                <!-- Ayırıcı -->
+                <div class="lo-divider" aria-hidden="true"><span>ya da</span></div>
+
+                <!-- Misafir butonu -->
+                <button class="lo-btn-guest" id="btn-guest">
+                    Misafir olarak devam et
+                    <span class="lo-guest-note">İlerleme kaydedilmez</span>
+                </button>
+
+                <!-- Yasal not -->
+                <p class="lo-legal">Giriş yaparak <a href="#" class="lo-legal-link">Gizlilik Politikası</a>'nı kabul etmiş olursunuz.</p>
+            </div>`;
+
+        document.body.appendChild(overlay);
+
+        // Animasyon — kartı sahneye sok
+        requestAnimationFrame(() => overlay.classList.add('lo-ready'));
+
+        // Pasaj sayısını dinamik yükle — her zaman Firestore'dan taze veri çek.
+        // localStorage / window.paragraflar sadece Firestore erişilemezse fallback.
+        (async () => {
+            const el = document.getElementById('lo-stat-pasaj');
+            if (!el) return;
+
+            // Hemen yerel değeri göster (kullanıcı boş görmesin)
+            const _localCount = (() => {
+                if (Array.isArray(window.paragraflar) && window.paragraflar.length)
+                    return window.paragraflar.length;
+                try {
+                    const c = localStorage.getItem('ydt_paragraflar');
+                    const a = c ? JSON.parse(c) : null;
+                    return Array.isArray(a) ? a.length : 0;
+                } catch(_) { return 0; }
+            })();
+            if (_localCount > 0) el.textContent = _localCount;
+
+            // Firestore'dan her zaman taze sayıyı çek ve override et
+            try {
+                // Firestore modülleri henüz hazır değilse bekle (max 4sn)
+                if (!window._fsdb || !window._doc || !window._getDoc) {
+                    await new Promise((resolve) => {
+                        const _t0 = Date.now();
+                        const _poll = () => {
+                            if (window._fsdb && window._doc && window._getDoc) return resolve();
+                            if (Date.now() - _t0 > 4000) return resolve();
+                            setTimeout(_poll, 200);
+                        };
+                        _poll();
+                    });
+                }
+                if (!window._fsdb || !window._doc || !window._getDoc) return;
+
+                const snap = await window._getDoc(window._doc(window._fsdb, 'shared', 'content'));
+                if (snap.exists()) {
+                    const d = snap.data();
+                    if (Array.isArray(d.paragraflar) && d.paragraflar.length > 0) {
+                        el.textContent = d.paragraflar.length;
+                    }
+                }
+            } catch(e) {
+                console.warn('[lo-stat] Firestore pasaj sayısı alınamadı:', e.message);
+            }
+        })();
+
+        // Google giriş
+        document.getElementById('btn-google-signin').addEventListener('click', _authSignIn);
+
+        // Misafir girişi
+        document.getElementById('btn-guest').addEventListener('click', () => {
+            overlay.classList.add('lo-exit');
+            setTimeout(() => overlay.remove(), 380);
+
+            // Starter Pack yükle — misafir verisi
+            if (typeof loadUserScopedData === 'function') {
+                loadUserScopedData();
+            } else {
+                try {
+                    const raw = localStorage.getItem('ydt_guest_all_data') || localStorage.getItem('ydt_all_data');
+                    if (raw) window.allData = JSON.parse(raw);
+                } catch(e) { console.warn('[guest] parse hatası:', e.message); }
+                if (!window.allData || Object.keys(window.allData).length === 0) {
+                    if (typeof DEFAULT_VOCAB !== 'undefined') window.allData = { ...DEFAULT_VOCAB };
+                    else if (typeof YDT_STARTER_PACK !== 'undefined') window.allData = { ...YDT_STARTER_PACK };
+                }
+            }
+
+            // Misafir banner'ını göster — kayıt ol teşviki
+            setTimeout(_showGuestBanner, 800);
+
+            document.dispatchEvent(new Event('ydtDataReady'));
+        });
+    }
+
+    /* ── Auth Guard — misafir AI özelliklerine erişmeye çalışırsa ─────── */
+    /**
+     * Kullanıcı giriş yapmışsa fn() çalıştırır.
+     * Misafirse "Bu özellik için giriş gerekli" modal'ı gösterir.
+     * @param {Function} fn       — Çalıştırılacak fonksiyon
+     * @param {string}   label    — Özellik adı (modal başlığı için)
+     */
+    window._requireAuth = function(fn, label) {
+        if (window._currentUser) {
+            fn();
+        } else {
+            _showAuthRequiredModal(label || 'Bu özellik');
+        }
+    };
+
+    function _showAuthRequiredModal(featureName) {
+        if (document.getElementById('auth-required-modal')) return;
+        const modal = document.createElement('div');
+        modal.id = 'auth-required-modal';
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-modal', 'true');
+        modal.setAttribute('aria-label', 'Giriş Gerekli');
+        modal.innerHTML = `
+            <div class="arm-backdrop"></div>
+            <div class="arm-card">
+                <div class="arm-icon" aria-hidden="true">🔐</div>
+                <h2 class="arm-title">Giriş Gerekli</h2>
+                <p class="arm-desc">
+                    <strong>${featureName}</strong> için Google hesabınla giriş yapman gerekiyor.
+                    <br><span class="arm-sub">Veriler buluta kaydedilir, her cihazda erişebilirsin.</span>
+                </p>
+                <button class="arm-btn-google" id="arm-signin-btn">
+                    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
                         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
                         <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
                         <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
@@ -2922,22 +3301,91 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
                     </svg>
                     Google ile Giriş Yap
                 </button>
-                <div class="login-divider">veya</div>
-                <button class="btn-guest" id="btn-guest">Misafir olarak devam et</button>
-                <div class="login-note">Giriş yaparak gizlilik politikamızı kabul etmiş olursunuz.</div>
+                <button class="arm-btn-cancel" id="arm-cancel-btn">Şimdi Değil</button>
             </div>`;
-        document.body.appendChild(overlay);
-        document.getElementById('btn-google-signin').addEventListener('click', _authSignIn);
-        document.getElementById('btn-guest').addEventListener('click', () => {
-            overlay.classList.add('fade-out');
-            setTimeout(() => overlay.remove(), 400);
-            // Guest: localStorage'dan veriyi yükle, sonra dashboard'u tetikle
-            try {
-                const raw = localStorage.getItem('ydt_all_data');
-                if (raw) window.allData = JSON.parse(raw);
-            } catch(e) {}
-            document.dispatchEvent(new Event('ydtDataReady'));
+        document.body.appendChild(modal);
+        requestAnimationFrame(() => modal.classList.add('arm-visible'));
+
+        const close = () => {
+            modal.classList.remove('arm-visible');
+            setTimeout(() => modal.remove(), 280);
+        };
+
+        document.getElementById('arm-signin-btn').addEventListener('click', () => {
+            close();
+            // Mevcut AuthModule üzerinden giriş başlat
+            if (window.AuthModule && typeof window.AuthModule.authSignIn === 'function') {
+                window.AuthModule.authSignIn();
+            } else if (typeof _authSignIn === 'function') {
+                _authSignIn();
+            }
         });
+        document.getElementById('arm-cancel-btn').addEventListener('click', close);
+        modal.querySelector('.arm-backdrop').addEventListener('click', close);
+    }
+
+    /* ── Misafir Banner — sayfa içinde sabit şerit ─────────────────────── */
+    function _showGuestBanner() {
+        if (document.getElementById('guest-banner')) return;
+        const banner = document.createElement('div');
+        banner.id = 'guest-banner';
+        banner.setAttribute('role', 'banner');
+        banner.innerHTML = `
+            <div class="gb-inner">
+                <span class="gb-icon" aria-hidden="true">☁️</span>
+                <div class="gb-text">
+                    <strong>İlerlemen kaydedilmiyor</strong>
+                    <span>Giriş yap — tüm veriler bulutta korunsun</span>
+                </div>
+                <button class="gb-btn" id="gb-signin-btn">Giriş Yap</button>
+                <button class="gb-close" id="gb-close-btn" aria-label="Kapat">✕</button>
+            </div>`;
+        document.body.appendChild(banner);
+        requestAnimationFrame(() => banner.classList.add('gb-visible'));
+
+        document.getElementById('gb-signin-btn').addEventListener('click', () => {
+            banner.remove();
+            _showLoginOverlay();
+        });
+        document.getElementById('gb-close-btn').addEventListener('click', () => {
+            banner.classList.remove('gb-visible');
+            setTimeout(() => banner.remove(), 300);
+        });
+    }
+
+    /**
+     * _setSignInBtnState — Google giriş butonunun görsel durumunu günceller.
+     * state: 'loading' | 'idle' | 'error'
+     */
+    function _setSignInBtnState(state, msg) {
+        const btn = document.getElementById('btn-google-signin');
+        if (!btn) return;
+        if (state === 'loading') {
+            btn.disabled = true;
+            btn.style.opacity = '0.7';
+            btn.querySelector('span') && (btn.querySelector('span').textContent = 'Yükleniyor...');
+        } else if (state === 'error') {
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            const sp = btn.querySelector('span');
+            if (sp) sp.textContent = msg || 'Hata — tekrar dene';
+        } else {
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            const sp = btn.querySelector('span');
+            if (sp) sp.textContent = 'Google ile Giriş Yap';
+        }
+    }
+
+    /** Tüm Google giriş butonları için durum güncelle */
+    function _triggerAllGoogleBtns(state, msg) {
+        ['btn-google-signin', 'pgh-btn-google', 'arm-btn-google'].forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.disabled = state === 'loading';
+            el.style.opacity = state === 'loading' ? '0.7' : '1';
+        });
+        _setSignInBtnState(state, msg);
     }
 
     function _hideLoginOverlay() {
@@ -2947,10 +3395,88 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
         setTimeout(() => overlay.remove(), 400);
     }
 
+    /**
+     * _authSignIn — Ortama göre strateji seçer:
+     *
+     *  • localhost / 127.0.0.1 / 192.168.x.x  → signInWithPopup
+     *    Redirect kullanılırsa Firebase, authDomain (firebaseapp.com) üzerinden
+     *    döner ve token localhost'ta yakalanamaz. Popup bu durumda hatasız çalışır.
+     *
+     *  • Production (firebaseapp.com / özel domain) → signInWithRedirect
+     *    COOP header'ı olan sunucularda popup bloke edilebilir; redirect daha güvenilir.
+     */
+    function _isLocalEnv() {
+        const h = location.hostname;
+        return h === 'localhost' || h === '127.0.0.1' || /^192\.168\.\d+\.\d+$/.test(h) || /^10\.\d+\.\d+\.\d+$/.test(h);
+    }
+
     async function _authSignIn() {
+        const provider = new GoogleAuthProvider();
+        provider.addScope('profile');
+        provider.addScope('email');
+        _triggerAllGoogleBtns('loading');
         try {
-            await signInWithPopup(auth, new GoogleAuthProvider());
-        } catch(e) { console.error('Giriş hatası:', e.code, e.message); }
+            if (_isLocalEnv()) {
+                // ── Lokal geliştirme: popup ──────────────────────────────────
+                await signInWithPopup(auth, provider, browserPopupRedirectResolver);
+                // signInWithPopup tamamlanınca onAuthStateChanged(user) tetiklenir
+                _triggerAllGoogleBtns('idle');
+            } else {
+                // ── Production: redirect ─────────────────────────────────────
+                await signInWithRedirect(auth, provider);
+                // Sayfa yönlendirilir — sonraki satıra dönülmez
+            }
+        } catch(e) {
+            _triggerAllGoogleBtns('idle');
+            if (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request' || e.code === 'auth/redirect-cancelled-by-user') return;
+            const domain = location.hostname + (location.port ? ':' + location.port : '');
+            if (e.code === 'auth/unauthorized-domain') {
+                console.error(`[auth] Yetkisiz domain: "${domain}". Firebase Console → Authentication → Authorized domains.`);
+                _triggerAllGoogleBtns('error', `"${domain}" yetkisiz`);
+            } else {
+                console.error('[auth] Giriş hatası:', e.code, e.message);
+                _triggerAllGoogleBtns('error', 'Giriş başarısız — tekrar dene');
+            }
+        }
+    }
+
+    /**
+     * _authReady — Firebase auth durumu netleşene kadar overlay açılmaz.
+     *
+     * Strateji:
+     *   • Localhost/LAN  → signInWithPopup  → getRedirectResult null döner → hemen ready
+     *   • Production     → signInWithRedirect → getRedirectResult user/null → sonra ready
+     *
+     * onAuthStateChanged(null) her iki durumda da ilk tetiklenişte overlay
+     * açmamalı; auth durumu netleştikten sonra açmalı.
+     */
+    /**
+     * Auth başlatma — tek kaynaktan, race-condition'sız.
+     *
+     * Firebase'in auth başlatma sırası:
+     *   1. initializeAuth() çağrıldı — persistence (IndexedDB/localStorage) kontrol ediliyor
+     *   2. onAuthStateChanged ilk tetiklenişi — user var mı yok mu belli oluyor
+     *   3. (production only) getRedirectResult — redirect token'ı yakalar
+     *
+     * Çözüm: onAuthStateChanged'i TEK karar noktası yap.
+     * _authInitDone flag'i ile ilk tetiklenişi bekle, o noktada karar ver.
+     * getRedirectResult'ı sadece production'da, sessizce çalıştır.
+     */
+    let _overlayShown = false;   // Overlay açıldı mı — çift açılmayı önler
+
+    // Production'da redirect token'ı yakala — hata olsa da onAuthStateChanged'e güven
+    if (!_isLocalEnv()) {
+        getRedirectResult(auth).then(result => {
+            if (result?.user) console.info('[auth] Redirect giriş OK:', result.user.displayName);
+        }).catch(e => {
+            const domain = location.hostname + (location.port ? ':' + location.port : '');
+            if (e.code === 'auth/unauthorized-domain') {
+                console.error('[auth] Yetkisiz domain:', domain);
+                _triggerAllGoogleBtns('error', `"${domain}" yetkisiz domain`);
+            } else if (e.code && !['auth/redirect-cancelled-by-user','auth/no-current-user'].includes(e.code)) {
+                console.warn('[auth] getRedirectResult:', e.code, e.message);
+            }
+        });
     }
 
     async function _authSignOut() {
@@ -2958,19 +3484,27 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
         if (authSaveInterval)  { clearInterval(authSaveInterval);  authSaveInterval  = null; }
         const user = auth.currentUser;
         if (user) await _saveUserData(user.uid);
+        _overlayShown = false; // Çıkışta yeni overlay açılmasına izin ver
         await signOut(auth);
-        _showLoginOverlay();
+        // onAuthStateChanged(null) overlay'i açacak
     }
 
-    window.ADMIN_EMAIL = 'stasalan@gmail.com';
-    function _updateAdminVisibility(email) {
-        const isAdmin = email === window.ADMIN_EMAIL;
+    // Admin görünürlüğü — Firebase custom claim kontrolü (admin:true)
+    async function _updateAdminVisibility(user) {
+        let isAdmin = false;
+        if (user) {
+            try {
+                const tokenResult = await user.getIdTokenResult();
+                isAdmin = tokenResult.claims.admin === true;
+            } catch(e) {
+                console.warn('[auth] Admin claim kontrol hatası:', e.message);
+            }
+        }
         ['sb-admin','di-admin'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.style.display = isAdmin ? '' : 'none';
         });
         window._isAdmin = isAdmin;
-        // _currentUser'a dokunma — onAuthStateChanged hallediyor
     }
 
     onAuthStateChanged(auth, async (user) => {
@@ -2980,7 +3514,7 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
             window.stats   = { totalAnswers: 0, correctAnswers: 0, totalMinutes: 0 };
             window.allData = {};
             _updateAuthStats();
-            _updateAdminVisibility(user.email);
+            await _updateAdminVisibility(user);
             _hideLoginOverlay();
             _updateProfilUI(user);
             await _loadUserData(user.uid);
@@ -3001,13 +3535,30 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
                 window.addEventListener('beforeunload', () => _saveUserData(user.uid), { once: true });
             }
         } else {
-            // Çıkışta da sıfırla
-            window.stats   = { totalAnswers: 0, correctAnswers: 0, totalMinutes: 0 };
-            window.allData = {};
+            // Oturum yok / çıkış yapıldı
+            window.stats        = { totalAnswers: 0, correctAnswers: 0, totalMinutes: 0 };
             window._currentUser = null;
             _updateAuthStats();
             _updateAdminVisibility(null);
-            _showLoginOverlay();
+            _updateProfilUI(null);
+
+            if (typeof loadUserScopedData === 'function') {
+                loadUserScopedData();
+            } else if (typeof DEFAULT_VOCAB !== 'undefined') {
+                window.allData = { ...DEFAULT_VOCAB };
+                allData = window.allData;
+            } else {
+                window.allData = {};
+            }
+            document.dispatchEvent(new Event('ydtDataReady'));
+
+            // İlk tetiklenişte overlay göster (tek seferlik).
+            // Sonraki null tetiklenişleri (çıkış) da overlay göstermeli —
+            // _overlayShown sadece aynı "oturum"da çift açılmayı önler.
+            if (!_overlayShown) {
+                _overlayShown = true;
+                _showLoginOverlay();
+            }
         }
     });
 
@@ -3031,40 +3582,44 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
 
 </script>
 
-<script src="kelimeler.js"></script>
-<script src="motor.js"></script>
-<script src="js/ai.js"></script>
-<script src="js/sm2-typing.js"></script>
-<script src="js/utils.js"></script>
-<script src="js/paragraf.js"></script>
-<script src="js/ai-quiz.js"></script>
-<script src="js/bank.js"></script>
-<script src="js/admin.js"></script>
-<script src="js/stats-widgets.js"></script>
-<script src="js/stats.js"></script>
-<script src="js/quiz.js"></script>
-<script src="js/study.js"></script>
-<script src="js/games.js"></script>
-<!-- rss_paragraf.js, ai-daily.js'den önce yüklenmeli: _analyzeWithAI, _toPassageSync bağımlılıkları -->
-<script src="rss_paragraf.js"></script>
-<script src="js/ai-daily.js"></script>
-<script src="js/aig.js"></script>
-<script src="js/profile.js"></script>
-<script src="grammar-engine.js"></script>
-<script src="grammar.js"></script>
-<script src="modals.js"></script>
-<script src="pronouns.js"></script>
-<script src="passive.js"></script>
-<script src="conditionals.js"></script>
-<script src="relative.js"></script>
-<script src="noun.js"></script>
-<script src="conj.js"></script>
-<script src="gerund.js"></script>
-<script src="adjadv.js"></script>
-<script src="tagquant.js"></script>
-<script src="speaking.js"></script>
-<script src="kids.js"></script>
-<script src="onboarding.js"></script>
+<!-- ═══ SCRIPT YÜKLEMESİ ═══════════════════════════════════════════════
+     defer: DOM hazır olunca, sırayla çalışır — render blocking yok
+     Bağımlılık sırası: kelimeler → utils → motor → rss_paragraf → ai modülleri → diğerleri
+     puter.js defer yok (CDN, üçüncü taraf — kendi iç bağımlılıkları var)
+     ═══════════════════════════════════════════════════════════════════ -->
+<script src="kelimeler.js" defer></script>
+<script src="js/utils.js" defer></script>
+<script src="motor.js" defer></script>
+<script src="rss_paragraf.js" defer></script>
+<script src="js/ai.js" defer></script>
+<script src="js/ai-daily.js" defer></script>
+<script src="js/ai-quiz.js" defer></script>
+<script src="js/aig.js" defer></script>
+<script src="js/sm2-typing.js" defer></script>
+<script src="js/paragraf.js" defer></script>
+<script src="js/bank.js" defer></script>
+<script src="js/admin.js" defer></script>
+<script src="js/stats-widgets.js" defer></script>
+<script src="js/stats.js" defer></script>
+<script src="js/quiz.js" defer></script>
+<script src="js/study.js" defer></script>
+<script src="js/games.js" defer></script>
+<script src="js/profile.js" defer></script>
+<script src="grammar-engine.js" defer></script>
+<script src="grammar.js" defer></script>
+<script src="modals.js" defer></script>
+<script src="pronouns.js" defer></script>
+<script src="passive.js" defer></script>
+<script src="conditionals.js" defer></script>
+<script src="relative.js" defer></script>
+<script src="noun.js" defer></script>
+<script src="conj.js" defer></script>
+<script src="gerund.js" defer></script>
+<script src="adjadv.js" defer></script>
+<script src="tagquant.js" defer></script>
+<script src="speaking.js" defer></script>
+<script src="kids.js" defer></script>
+<script src="onboarding.js" defer></script>
 
     <!-- AI YDT ARŞİV SAYFASI -->
     <div id="ai-arsiv-page" class="hidden arsiv-full-page">
@@ -3167,14 +3722,31 @@ function mobToggleGrammarMain() { mobToggleGrammar(); }
 <script>
 /* ── Günün Görevi CTA ── */
 function initDashToday() {
-    if (typeof getUserKey === 'function') {
-        const raw = localStorage.getItem(getUserKey('all_data'));
-        if (raw) { try { allData = JSON.parse(raw); } catch(e) {} }
+    // allData yoksa veya boşsa localStorage'dan yükle (giriş yapan + misafir)
+    if (!window.allData || Object.keys(window.allData).length === 0) {
+        if (typeof loadUserScopedData === 'function') {
+            loadUserScopedData();
+        } else if (typeof getUserKey === 'function') {
+            const key = getUserKey('all_data');
+            if (key) {
+                try {
+                    const raw = localStorage.getItem(key);
+                    if (raw) { window.allData = JSON.parse(raw); allData = window.allData; }
+                } catch(e) {}
+            }
+        }
     }
 
+    // Kullanıcı çıkış yaptıysa dashboard'u render etme
+    if (!window._currentUser && (!window.allData || Object.keys(window.allData).length === 0)) return;
+
     const sm2Due  = (typeof countSM2Due === 'function') ? countSM2Due() : 0;
-    const allKeys = (typeof allData !== 'undefined') ? Object.keys(allData) : [];
-    const totalW  = allKeys.reduce((s,k) => s + (allData[k]||[]).length, 0);
+    const allKeys = Object.keys(window.allData || {});
+    // Array.isArray guard — object/string key'ler NaN'e yol açar
+    const totalW  = allKeys.reduce((s, k) => {
+        const v = (window.allData || {})[k];
+        return s + (Array.isArray(v) ? v.length : 0);
+    }, 0);
 
     const titleEl    = document.getElementById('dash-today-title');
     const metaEl     = document.getElementById('dash-today-meta');
@@ -3199,6 +3771,17 @@ function initDashToday() {
         ctaLabel.textContent = 'Tekrara Başla';
         window._dashCTAFn   = () => (typeof startSM2Review === 'function') && startSM2Review();
     } else if (totalW === 0) {
+        // Kelime yok — Starter Pack varsa otomatik yükle
+        const _pack = (typeof DEFAULT_VOCAB !== 'undefined') ? DEFAULT_VOCAB
+                    : (typeof YDT_STARTER_PACK !== 'undefined') ? YDT_STARTER_PACK : null;
+        if (_pack && Object.keys(_pack).length > 0) {
+            Object.keys(_pack).forEach(k => { if (!window.allData[k]) window.allData[k] = _pack[k]; });
+            allData = window.allData;
+            if (typeof _saveData === 'function') _saveData();
+            initDashToday(); // Yeniden render — bu sefer totalW > 0 olacak
+            return;
+        }
+        // Pack yoksa fallback mesaj göster
         titleEl.innerHTML    = 'YDT Starter Pack\'i <strong>yükle</strong>';
         metaEl.textContent   = '1300+ hazır kelimeyle hemen başla';
         iconEl.textContent   = '🚀';
@@ -3272,7 +3855,10 @@ document.addEventListener('ydtDataReady', function () {
             const key = (typeof getUserKey === 'function') ? getUserKey('all_data') : 'ydt_guest_all_data';
             const raw = localStorage.getItem(key) || localStorage.getItem('ydt_all_data');
             if (raw) allData = JSON.parse(raw);
-        } catch(e) {}
+        } catch(e) {
+            console.warn('[startFallback] allData parse hatası, sıfırlandı:', e.message);
+            allData = {};
+        }
         document.dispatchEvent(new Event('ydtDataReady'));
     }
     if (document.readyState === 'loading') {

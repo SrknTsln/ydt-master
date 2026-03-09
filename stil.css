@@ -3479,8 +3479,12 @@ select:focus,input:focus,textarea:focus{border-color:var(--color-focus);}
    ══════════════════════════ */
 .rh2-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 14px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    align-items: stretch;
+}
+@media (max-width: 1100px) and (min-width: 700px) {
+    .rh2-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 /* ── Yükleniyor ── */
@@ -3645,12 +3649,11 @@ select:focus,input:focus,textarea:focus{border-color:var(--color-focus);}
     .rh2-mob-generate-btn:active {
         background: #ddd6fe;
     }
-}
     .rh2-hero-title { font-size: 1.6rem; }
     .rh2-hero-stats { padding: 10px 14px; }
     .rh2-hstat { padding: 0 12px; }
     .rh2-hstat-val { font-size: 1.2rem; }
-    .rh2-grid { grid-template-columns: 1fr; }
+    .rh2-grid { grid-template-columns: 1fr; gap: 12px; }
     .rh2-tabbar {
         padding: 4px 6px;
         overflow-x: auto;
@@ -7560,3 +7563,16 @@ body:has(#kids-page:not(.hidden)) .kw-world-bg { opacity: 1; }
     border-top: 1px solid var(--border);
     text-align: center;
 }
+
+/* ── Stat bandı ── */
+.rh2-card { min-height: 260px; }
+.rh2-card-statband { display:flex; align-items:stretch; margin:0 16px 10px; background:#f7f8fc; border:1px solid #ecedf5; border-radius:10px; overflow:hidden; flex-shrink:0; }
+.rh2-sband-cell { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; padding:8px 6px; flex:1; min-width:0; }
+.rh2-sband-div  { width:1px; background:#ecedf5; margin:5px 0; flex-shrink:0; }
+.rh2-sband-ico  { font-size:.68rem; line-height:1; }
+.rh2-sband-num  { font-size:.86rem; font-weight:900; color:#111827; line-height:1.1; white-space:nowrap; }
+.rh2-sband-lbl  { font-size:.5rem; font-weight:700; color:#9ca3af; text-transform:uppercase; letter-spacing:.4px; }
+.rh2-sband-max  { background:#fff5f5; flex-shrink:0; padding:8px 10px; }
+.rh2-sband-maxlbl { font-size:.5rem; font-weight:800; color:#c1121f; text-transform:uppercase; }
+.rh2-sband-maxnum { font-size:.9rem; font-weight:900; color:#c1121f; line-height:1.1; }
+.rh2-sband-maxsub { font-size:.48rem; font-weight:700; color:#f87171; text-transform:uppercase; }
