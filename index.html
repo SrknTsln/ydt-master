@@ -125,7 +125,7 @@
 
         <!-- Admin — en alt -->
         <div class="mob-drawer-admin-bar">
-            <button class="mob-drawer-btn mob-drawer-btn-sec" id="di-profil" data-action="mobGoTo('profil-page'); showProfilPage(); setTimeout(()=>window.AuthModule&&window.AuthModule.updateProfilWidgets(),100)" style="margin-bottom:4px;"><span aria-hidden="true" class="mob-d-icon">👤</span> Profil</button>
+            <button class="mob-drawer-btn mob-drawer-btn-sec" id="di-profil" data-action="mobCloseDrawer(); showProfilPage()" style="margin-bottom:4px;"><span aria-hidden="true" class="mob-d-icon">👤</span> Profil</button>
             <button class="mob-drawer-btn mob-drawer-btn-admin" id="di-admin" data-action="mobGoTo('admin-page')" style="display:none;">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0;opacity:.55;margin-right:2px;">
                     <circle cx="7" cy="7" r="2.5" stroke="currentColor" stroke-width="1.4"/>
@@ -223,7 +223,7 @@
             <button class="sb-btn sb-btn-sec" id="sb-theme-toggle" data-action="toggleTheme()" aria-label="Tema değiştir" title="Aydınlık / Karanlık mod">
                 <span aria-hidden="true" class="sb-icon" id="sb-theme-icon">🌙</span> <span id="sb-theme-label">Karanlık Mod</span>
             </button>
-            <button class="sb-btn sb-btn-sec" id="sb-profil" title="Profil" data-action="navTo('profil-page'); showProfilPage(); setTimeout(()=>window.AuthModule&&window.AuthModule.updateProfilWidgets(),100)" style="margin-bottom:4px;">
+            <button class="sb-btn sb-btn-sec" id="sb-profil" title="Profil" data-action="showProfilPage()" style="margin-bottom:4px;">
                 <span aria-hidden="true" class="sb-icon">👤</span> Profil
             </button>
             <button class="sb-btn sb-btn-admin" id="sb-admin" title="Yönetim" data-nav="admin-page" data-action="navToAdmin()" style="display:none;">

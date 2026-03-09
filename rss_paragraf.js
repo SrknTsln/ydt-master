@@ -312,14 +312,27 @@ async function _fetchAllRSS(count) {
 
 /* ── Ham metni temizle ──────────────────────────────────────── */
 function _cleanText(article) {
-    // description + content birleştir — önce content'i tercih et (genellikle daha uzun)
-    const desc = (article.description || '').replace(/<[^>]+>/g, ' ').trim();
-    const cont = (article.content    || '').replace(/<[^>]+>/g, ' ').trim();
+    // HTML tag'ları sökerken kelime birleşmesini önle:
+    // <a>forms</a>Craig → "forms Craig" (tag yerine boşluk)
+    const stripHTML = (str) => (str || '')
+        .replace(/<br\s*\/?>/gi, ' ')           // <br> → boşluk
+        .replace(/<\/(?:p|div|li|h[1-6]|tr|td)>/gi, ' ')  // kapanan blok tag → boşluk
+        .replace(/<[^>]+>/g, ' ')               // kalan tüm tag'lar → boşluk
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&amp;/g,  '&')
+        .replace(/&lt;/g,   '<')
+        .replace(/&gt;/g,   '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#\d+;/g, ' ')               // numeric entities
+        .replace(/\s+/g, ' ')
+        .trim();
 
-    // İkisini de birleştir; description çok kısaysa content'i öne al
+    const desc = stripHTML(article.description || '');
+    const cont = stripHTML(article.content     || '');
+
+    // İkisini birleştir; content belirgin şekilde daha uzunsa önce al
     let raw;
     if (cont.length > desc.length * 1.5 && cont.length > 200) {
-        // content belirgin şekilde daha uzunsa onu kullan, desc'i sona ekle
         raw = cont + (desc && desc !== cont ? ' ' + desc : '');
     } else {
         raw = [desc, cont].filter(Boolean).join(' ');
@@ -328,16 +341,12 @@ function _cleanText(article) {
     raw = raw.replace(/\s+/g, ' ').trim();
 
     let t = raw;
-    // Çok kısaysa başlığı öne ekle
     if (t.length < 120) t = (article.title || '') + '. ' + t;
 
-    // Cümleleri say — 4'e ulaşana kadar kırpma
     const sentences = t.match(/[^.!?]+[.!?]+/g) || [];
     if (sentences.length >= 4) {
-        // 4+ cümle var, gerekirse 1200 char'a kadar izin ver
         if (t.length > 1200) t = t.slice(0, 1200).replace(/\s\S+$/, '') + '…';
     } else {
-        // 4 cümle yok, 700 char sınırını koru
         if (t.length > 700) t = t.slice(0, 700).replace(/\s\S+$/, '') + '…';
     }
     return t;
@@ -375,7 +384,7 @@ const _TR_MAP = {
     'fundamental':'temel','generate':'üretmek','identify':'tanımlamak','indicate':'göstermek',
     'maintain':'sürdürmek','obtain':'elde etmek','participate':'katılmak','potential':'potansiyel',
     'previous':'önceki','primary':'birincil','process':'süreç/işlem','require':'gerektirmek',
-    'research':'araştırma','response':'yanıt','significant':'önemli','structure':'yapı',
+    'research':'araştırma','response':'yanıt','structure':'yapı',
     'suggest':'önermek','therefore':'bu nedenle','traditional':'geleneksel','various':'çeşitli',
     // Teknoloji
     'algorithm':'algoritma','artificial':'yapay','autonomous':'özerk','bandwidth':'bant genişliği',
@@ -404,7 +413,7 @@ const _TR_MAP = {
     'magnitude':'büyüklük/boyut','mandatory':'zorunlu','mechanism':'mekanizma',
     'minimize':'en aza indirmek','monitor':'izlemek','negligible':'ihmal edilebilir',
     'nevertheless':'bununla birlikte','obscure':'belirsiz/gizlemek','opponent':'rakip/karşı taraf',
-    'perceive':'algılamak','phenomenon':'fenomen','predominantly':'ağırlıklı olarak',
+    'perceive':'algılamak','predominantly':'ağırlıklı olarak',
     'preliminary':'ön/hazırlık aşaması','profound':'derin/köklü','prohibit':'yasaklamak',
     'promote':'teşvik etmek','proportion':'orantı','pursue':'peşinden gitmek',
     'radical':'köklü','rational':'mantıklı','recover':'iyileşmek/kurtarmak',
@@ -413,23 +422,63 @@ const _TR_MAP = {
     'retrieve':'geri almak','reveal':'ortaya çıkarmak','scrutiny':'titiz inceleme',
     'simultaneously':'eş zamanlı olarak','sophisticated':'gelişmiş/karmaşık',
     'speculate':'spekülasyon yapmak','substantial':'önemli/büyük miktarda',
-    'suppress':'bastırmak','sustainable':'sürdürülebilir','thorough':'kapsamlı/titiz',
+    'suppress':'bastırmak','thorough':'kapsamlı/titiz',
     'transform':'dönüştürmek','transition':'geçiş','tremendous':'muazzam',
-    'ultimately':'sonuç itibarıyla','unprecedented':'emsalsiz','volatile':'değişken'
+    'ultimately':'sonuç itibarıyla','unprecedented':'emsalsiz','volatile':'değişken',
+    // Ek B2/C1 — sık RSS kelimeleri
+    'adventure':'macera','subscription':'abonelik','evolution':'evrim',
+    'examining':'incelemek','charting':'haritalamak','recently':'yakın zamanda',
+    'palaeontology':'paleontoloji','honours':'onur/birincilik','electronics':'elektronik',
+    'trainee':'stajyer','rankled':'rahatsız etmek','decided':'karar verdi',
+    'graduated':'mezun oldu','library':'kütüphane','degree':'derece/diploma',
+    'studying':'çalışmak','discovery':'keşif','climate':'iklim','species':'tür',
+    'habitat':'yaşam alanı','extinct':'nesli tükenmiş','fossil':'fosil',
+    'ancient':'antik/kadim','modern':'modern','digital':'dijital','global':'küresel',
+    'complex':'karmaşık','critical':'kritik','creative':'yaratıcı','diverse':'çeşitli',
+    'dynamic':'dinamik','flexible':'esnek','stable':'kararlı/istikrarlı',
+    'unique':'benzersiz','visible':'görünür','crucial':'çok önemli',
+    'challenge':'meydan okuma/zorluk','achieve':'başarmak','impact':'etki',
+    'support':'desteklemek','develop':'geliştirmek','improve':'geliştirmek',
+    'reduce':'azaltmak','increase':'artırmak','provide':'sağlamak',
+    'expand':'genişletmek','decline':'azalmak/reddetmek','emerge':'ortaya çıkmak',
+    'acquire':'edinmek','pursue':'takip etmek','consider':'düşünmek',
+    'explain':'açıklamak','describe':'tanımlamak','measure':'ölçmek',
+    'analyse':'analiz etmek','compare':'karşılaştırmak','predict':'tahmin etmek',
+    'benefit':'fayda/yararlanmak','consequence':'sonuç','circumstance':'durum/koşul',
+    'assumption':'varsayım','perspective':'bakış açısı','principle':'ilke',
+    'solution':'çözüm','challenge':'zorluk','opportunity':'fırsat',
+    'diversity':'çeşitlilik','inequality':'eşitsizlik','innovation':'yenilik',
+    'consciousness':'bilinç','perception':'algı','motivation':'motivasyon',
+    'intelligence':'zeka','population':'nüfus','territory':'bölge/toprak',
+    'resource':'kaynak','demand':'talep','competition':'rekabet',
+    'strategy':'strateji','technology':'teknoloji','community':'topluluk',
+    'authority':'otorite','responsibility':'sorumluluk','capability':'yetenek'
 };
 
-/* ── Kelime analizi: sözlük + fallback ──────────────────────── */
+/* ── Kelime analizi: sözlük + akıllı fallback ───────────────── */
 function _vocabFallback(text) {
     const words = text.replace(/[^a-zA-Z\s]/g,'').toLowerCase().split(/\s+/)
-                      .filter(w => w.length >= 6 && !_SW.has(w));
+                      .filter(w => w.length >= 5 && !_SW.has(w));
     const unique = [...new Set(words)];
     const vocab  = {};
-    // Önce sözlükte olanları al
-    unique.filter(w => _TR_MAP[w]).slice(0, 6).forEach(w => { vocab[w] = _TR_MAP[w]; });
-    // Kalan slotları uzun kelimelerle doldur
-    unique.filter(w => !_TR_MAP[w] && w.length >= 8)
-          .slice(0, 10 - Object.keys(vocab).length)
-          .forEach(w => { vocab[w] = '—'; });
+
+    // 1. Önce sözlükte olan kelimeleri al (Türkçe çevirisi kesin)
+    unique.filter(w => _TR_MAP[w]).forEach(w => { vocab[w] = _TR_MAP[w]; });
+
+    // 2. Sözlükte olmayan ama uzun (8+ harf) kelimeleri de ekle
+    if (Object.keys(vocab).length < 12) {
+        unique.filter(w => !_TR_MAP[w] && w.length >= 8)
+              .slice(0, 15 - Object.keys(vocab).length)
+              .forEach(w => { vocab[w] = ''; }); // boş çeviri → hover'da AI çevirecek
+    }
+
+    // 3. Hâlâ < 12 ise 7+ harf kelimeleri de ekle
+    if (Object.keys(vocab).length < 12) {
+        unique.filter(w => !vocab[w] && w.length >= 7)
+              .slice(0, 15 - Object.keys(vocab).length)
+              .forEach(w => { vocab[w] = ''; });
+    }
+
     const level = _guessCEFR(text);
     return { level, levelNote: 'Otomatik analiz', vocabulary: vocab };
 }
@@ -451,19 +500,55 @@ async function _batchAnalyzeWithAI(articles) {
             }));
 
             const prompt =
-`You are an English teacher for Turkish YDT students.
-Analyze the ${items.length} passages below. Return ONLY a JSON array, no markdown.
+`You are an expert English teacher preparing materials for Turkish YDT (university entrance) students.
+Analyze the ${items.length} passages below. Return ONLY a valid JSON array — no markdown, no prose.
 
 ${items.map(it => `[${it.i}] "${it.title}"\n${it.snippet}`).join('\n\n')}
 
-Return a JSON array with exactly ${items.length} objects in this format:
-[{"level":"B2","levelNote":"kısa Türkçe not","vocabulary":{"actual_english_word":"Türkçe karşılık","another_word":"çevirisi"}}, ...]
+Return a JSON array with exactly ${items.length} objects. Each object MUST use this exact structure:
+[
+  {
+    "level": "C1",
+    "levelNote": "kısa Türkçe not (maks 6 kelime)",
+    "vocabulary": {
+      "actual_word_from_text": "Türkçe karşılık"
+    },
+    "questions": [
+      {
+        "type": "Ana Fikir",
+        "icon": "💡",
+        "question": "English question about main idea",
+        "options": ["A) ...", "B) ...", "C) ...", "D) ...", "E) ..."],
+        "answer": "A",
+        "explanation": "Türkçe açıklama — doğru şık neden doğru, diğerleri neden yanlış"
+      },
+      {
+        "type": "Çıkarım",
+        "icon": "🔎",
+        "question": "English inference question",
+        "options": ["A) ...", "B) ...", "C) ...", "D) ...", "E) ..."],
+        "answer": "C",
+        "explanation": "Türkçe açıklama"
+      },
+      {
+        "type": "Kelime Anlamı",
+        "icon": "📖",
+        "question": "English vocabulary-in-context question",
+        "options": ["A) ...", "B) ...", "C) ...", "D) ...", "E) ..."],
+        "answer": "B",
+        "explanation": "Türkçe açıklama"
+      }
+    ]
+  }
+]
 
-Rules:
-- level: A2/B1/B2/C1/C2
+Strict rules:
+- level: one of A2/B1/B2/C1/C2
 - levelNote: max 6 Turkish words describing difficulty
-- vocabulary: 5-6 hardest/most advanced English words ACTUALLY found in the text, each mapped to its Turkish translation
-- NEVER use placeholder keys like "word" or "english_word" — use the real words from the text`;
+- vocabulary: EXACTLY 12-15 B2/C1/C2 level words ACTUALLY present in the text — real words as keys, NEVER "word" or "english_word"
+- questions: exactly 3 per passage, ÖSYM YDT exam format, 5 options each labeled A)–E), grounded in the passage text
+- answer: single capital letter A/B/C/D/E only
+- No placeholder text anywhere`;
 
             try {
                 const result = await Promise.race([
@@ -495,24 +580,55 @@ async function _analyzeWithAI(text, title) {
     try {
         const prompt =
     `You are an expert English teacher for Turkish YDT exam students.
-    Analyze this passage and return ONLY valid JSON (no markdown).
+    Analyze this passage and return ONLY valid JSON (no markdown, no prose).
 
     Title: "${title}"
-    Text: "${text.slice(0, 400)}"
+    Text: "${text.slice(0, 500)}"
 
-    Return exactly this structure (replace examples with real words from the text):
-    {"level":"C1","levelNote":"Akademik söz varlığı yoğun","vocabulary":{"sophisticated":"sofistike/karmaşık","inevitable":"kaçınılmaz"}}
+    Return exactly this JSON structure:
+    {
+      "level": "C1",
+      "levelNote": "Akademik söz varlığı yoğun",
+      "vocabulary": {
+        "sophisticated": "karmaşık/sofistike",
+        "inevitable": "kaçınılmaz"
+      },
+      "questions": [
+        {
+          "type": "Ana Fikir", "icon": "💡",
+          "question": "English main idea question",
+          "options": ["A) ...", "B) ...", "C) ...", "D) ...", "E) ..."],
+          "answer": "A",
+          "explanation": "Türkçe açıklama"
+        },
+        {
+          "type": "Çıkarım", "icon": "🔎",
+          "question": "English inference question",
+          "options": ["A) ...", "B) ...", "C) ...", "D) ...", "E) ..."],
+          "answer": "C",
+          "explanation": "Türkçe açıklama"
+        },
+        {
+          "type": "Kelime Anlamı", "icon": "📖",
+          "question": "English vocabulary-in-context question",
+          "options": ["A) ...", "B) ...", "C) ...", "D) ...", "E) ..."],
+          "answer": "B",
+          "explanation": "Türkçe açıklama"
+        }
+      ]
+    }
 
-    Rules:
+    Strict rules:
     - level: A2/B1/B2/C1/C2
     - levelNote: max 6 Turkish words
-    - vocabulary: 6-8 hardest words ACTUALLY FROM the text with accurate Turkish translations
-    - Use the real English words as keys, NOT placeholders like "english_word" or "word"`;
+    - vocabulary: 12-15 B2/C1/C2 level words ACTUALLY from the text — real words as keys, NEVER "word" or placeholders
+    - questions: exactly 3, ÖSYM YDT format, 5 options A)–E), grounded in the text
+    - answer: single capital letter only`;
         try {
             if (typeof aiCall === 'function') {
                 return await Promise.race([
                     aiCall(prompt),
-                    new Promise((_, rej) => setTimeout(() => rej(new Error('single_timeout')), 7000))
+                    new Promise((_, rej) => setTimeout(() => rej(new Error('single_timeout')), 10000))
                 ]);
             }
         } catch(_) {}
@@ -542,6 +658,21 @@ function _toPassageSync(article, aiData) {
         cleanVoc[eng.trim()] = tr;
     }
 
+    // Questions: AI'dan gelen 3 YDT sorusunu doğrula
+    const rawQuestions = Array.isArray(data.questions) ? data.questions : [];
+    const VALID_ANSWERS = new Set(['A','B','C','D','E']);
+    const cleanQuestions = rawQuestions
+        .filter(q => q && q.question && Array.isArray(q.options) && q.options.length === 5
+                      && VALID_ANSWERS.has((q.answer || '').trim().toUpperCase()))
+        .map(q => ({
+            type:        q.type        || 'Soru',
+            icon:        q.icon        || '📝',
+            question:    q.question,
+            options:     q.options,
+            answer:      q.answer.trim().toUpperCase(),
+            explanation: q.explanation || ''
+        }));
+
     return {
         title,
         topic:      article.sourceName,
@@ -549,6 +680,7 @@ function _toPassageSync(article, aiData) {
         vocabulary: cleanVoc,
         level:      data.level      || 'B2',
         levelNote:  data.levelNote  || '',
+        questions:  cleanQuestions,           // ← YDT soruları passage ile birlikte gelir
         sourceIcon: article.sourceIcon || '📰',
         sourceName: article.sourceName || '',
         link:       article.link       || '',
@@ -787,6 +919,30 @@ async function generateAIDailyParagraflar(force) {
         }
         if (!passages.length) passages = staticPool.slice(0, 30);
 
+        // ── YDT sorularını paragrafSorular'a otomatik yaz ──────────────
+        // RSS+AI tek istekte üretilen soruları cache'e alır.
+        // Kullanıcı "Soru Üret" butonuna basmadan sorular hazır gelir.
+        window.paragrafSorular = window.paragrafSorular || {};
+        let _newQCount = 0;
+        passages.forEach(p => {
+            if (!Array.isArray(p.questions) || p.questions.length === 0) return;
+            const key = `p_${(p.title || '').replace(/[^a-zA-Z0-9ğüşıöçĞÜŞİÖÇ\s]/g,'').trim().slice(0,40)}_${(p.text || '').length}`;
+            if (!window.paragrafSorular[key]) {
+                window.paragrafSorular[key] = {
+                    baslik:    p.title,
+                    savedAt:   new Date().toISOString(),
+                    questions: p.questions
+                };
+                _newQCount++;
+            }
+        });
+        if (_newQCount > 0) {
+            try { localStorage.setItem('ydt_paragraf_sorular', JSON.stringify(window.paragrafSorular)); } catch(_) {}
+            if (window._saveData) window._saveData();
+            console.log(`[rss_paragraf] ✅ ${_newQCount} pasaj için YDT soruları otomatik üretildi`);
+        }
+        // ────────────────────────────────────────────────────────────────
+
         // Kaydet ve render
         _saveToLS(passages);
         _syncRSSToFirebase(passages);
@@ -807,6 +963,22 @@ async function generateAIDailyParagraflar(force) {
         window.renderAIDailyParagraflar = function(passages, listEl) {
             if (!listEl || !passages || !passages.length)  { _orig(passages, listEl); return; }
             if (!passages.some(p => p._fromRSS))           { _orig(passages, listEl); return; }
+
+            // ── Eski cache'deki az kelimeli pasajları zenginleştir ──────────
+            // Cache silinmeden, render anında vocabulary < 12 ise fallback ile takviye
+            passages = passages.map(p => {
+                if (!p._fromRSS) return p;
+                const vocCount = Object.keys(p.vocabulary || {}).length;
+                if (vocCount >= 12) return p;
+                const text = p.text || '';
+                if (!text) return p;
+                const fb = _vocabFallback(text);
+                const enriched = Object.assign({}, p.vocabulary || {});
+                for (const [w, tr] of Object.entries(fb.vocabulary || {})) {
+                    if (!enriched[w]) enriched[w] = tr;
+                }
+                return Object.assign({}, p, { vocabulary: enriched });
+            });
 
             const lvlClr = { A2:'#94a3b8', B1:'#22c55e', B2:'#3b82f6', C1:'#f97316', C2:'#e63946' };
             const fbIcons = ['🌿','🔬','🚀','🧪','📡','🤖'];

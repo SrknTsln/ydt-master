@@ -75,6 +75,11 @@ function showProfilPage() {
     }
 
     showPage('profil-page');
+
+    // Profil widget'larını güncelle (avatar, isim, rozet)
+    if (window.AuthModule && typeof window.AuthModule.updateProfilWidgets === 'function') {
+        window.AuthModule.updateProfilWidgets();
+    }
 }
 
 function saveProfilInfo() {

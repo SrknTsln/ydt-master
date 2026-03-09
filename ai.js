@@ -551,13 +551,46 @@ function showParagrafOku(index) {
         .filter(s => s.length > 3);
 
     // Her cümleye c1-word renklendirme + tıklanabilir span ekle
-    // Sadece C1/C2 seviyesi kelimeler highlight edilir
-    const c1c2Kelimeler = _filterC1C2Words(p.kelimeler || {});
+    // AI'dan gelen kelimeleri _COMMON_WORDS filtresi olmadan kullan —
+    // AI zaten B2/C1/C2 seviyesinde kelimeler seçiyor.
+    // Hem exact key hem de metindeki morfolojik varyantları (ing/ed/s...) eşleştir.
+    const rawKelimeler = p.kelimeler || {};
+
+    // Vocabulary < 12 ise _vocabFallback ile takviye et (cache'deki eski/az kelimeli pasajlar için)
+    const _enrichedKelimeler = Object.assign({}, rawKelimeler);
+    if (Object.keys(_enrichedKelimeler).length < 12 && typeof _vocabFallback === 'function') {
+        const _fb = _vocabFallback(p.metin || '');
+        const _fbVoc = (_fb && _fb.vocabulary) ? _fb.vocabulary : {};
+        for (const [w, tr] of Object.entries(_fbVoc)) {
+            if (!_enrichedKelimeler[w]) _enrichedKelimeler[w] = tr;
+        }
+    }
+
+    // Her vocabulary entry için metinde aranacak pattern'i üret
+    const vocPatterns = [];
+    for (const [eng, tr] of Object.entries(_enrichedKelimeler)) {
+        const root = eng.trim();
+        if (!root || root.length <= 2) continue;
+        // data-tr'de özel HTML karakterlerini escape et
+        const safeTr = tr.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const escaped = root.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        // Hem tam eşleşme hem suffix varyantlarını yakala
+        const pattern = `${escaped}(?:ing|ed|s|es|er|ly|ion|tion|ment|ness|ful|less)?`;
+        vocPatterns.push({ regex: new RegExp(`\\b(${pattern})\\b`, 'gi'), safeTr });
+    }
+
     const islenmisMetin = paragrafSentences.map((sent, si) => {
         let s = sent;
-        for (let [ing, tr] of Object.entries(c1c2Kelimeler)) {
-            const regex = new RegExp(`\\b(${ing.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})\\b`, 'gi');
-            s = s.replace(regex, `<span class="c1-word" data-tr="${tr}">$1</span>`);
+        // Zaten span içine alınmış kelimeleri tekrar işleme (iç içe span önlemi)
+        const _applied = new Set();
+        for (const { regex, safeTr } of vocPatterns) {
+            s = s.replace(regex, (match) => {
+                const lm = match.toLowerCase();
+                if (_applied.has(lm)) return match; // aynı kelimeyi tekrar sarma
+                _applied.add(lm);
+                return `<span class="c1-word" data-tr="${safeTr}">${match}</span>`;
+            });
+            regex.lastIndex = 0; // global regex reset
         }
         return `<span class="p-sentence" data-idx="${si}" data-action="analyzeGrammarXRay(${si})" title="Tıkla: Grammar X-Ray">${s}</span> `;
     }).join('');
@@ -583,30 +616,38 @@ function showParagrafOku(index) {
     // Kaydedilmiş soruları yükle
     loadSavedQuestions(index);
 
-    // ── Sidebar: Paragraf İstatistikleri ──
-    const words = (p.metin || '').trim().split(/\s+/).filter(w => w.length > 0);
-    const sentCount = paragrafSentences.length;
-    const vocCount  = Object.keys(c1c2Kelimeler).length;
-    const readMin   = Math.ceil(words.length / 180); // ~180 kelime/dk
-    const el = (id, v) => { const e = document.getElementById(id); if(e) e.textContent = v; };
-    el('ps-word-count', words.length);
-    el('ps-sent-count', sentCount);
-    el('ps-voc-count',  vocCount);
-    el('ps-read-time',  readMin + ' dk');
+    // ── Sidebar: İstatistikler — showPage sonrası DOM hazır olunca yaz ──
+    requestAnimationFrame(() => {
+        const _el = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
 
-    // ── Sidebar: Genel İstatistikler ──
-    const allWords  = Object.values(allData).flat();
-    const totalW    = allWords.length;
-    const learnedW  = allWords.filter(w => (w.correctStreak||0) >= 3).length;
-    const accuracy  = stats.totalAnswers ? Math.round(stats.correctAnswers / stats.totalAnswers * 100) : 0;
-    const streak    = parseInt(localStorage.getItem('ydt_streak') || '0');
-    el('ps-total-words', totalW);
-    el('ps-learned',     learnedW);
-    el('ps-accuracy',    accuracy + '%');
-    el('ps-streak',      streak);
+        // Paragraf istatistikleri
+        const _words    = (p.metin || '').trim().split(/\s+/).filter(w => w.length > 0);
+        const _sentCount = paragrafSentences.length;
+        const _vocCount  = Object.keys(_enrichedKelimeler || rawKelimeler || {}).length;
+        const _readMin   = Math.max(1, Math.ceil(_words.length / 180));
+        _el('ps-word-count', _words.length || '—');
+        _el('ps-sent-count', _sentCount    || '—');
+        _el('ps-voc-count',  _vocCount     || '—');
+        _el('ps-read-time',  _vocCount > 0 ? _readMin + ' dk' : '—');
 
-    // ── Sidebar: Mini Sözlük — sadece C1/C2 kelimeler ──
-    window._currentParagrafKelimeler = _filterC1C2Words(p.kelimeler || {});
+        // Genel istatistikler — allData / stats guard
+        try {
+            const _allWords = typeof allData !== 'undefined' ? Object.values(allData).flat() : [];
+            const _totalW   = _allWords.length;
+            const _learnedW = _allWords.filter(w => (w.correctStreak || 0) >= 3).length;
+            const _safeStats = typeof stats !== 'undefined' ? stats : { totalAnswers: 0, correctAnswers: 0 };
+            const _accuracy  = _safeStats.totalAnswers
+                ? Math.round(_safeStats.correctAnswers / _safeStats.totalAnswers * 100) : 0;
+            const _streak    = parseInt(localStorage.getItem('ydt_streak') || '0');
+            _el('ps-total-words', _totalW   || '—');
+            _el('ps-learned',     _learnedW || '—');
+            _el('ps-accuracy',    _safeStats.totalAnswers ? _accuracy + '%' : '—');
+            _el('ps-streak',      _streak   || '—');
+        } catch(_) {}
+    });
+
+    // ── Sidebar: Mini Sözlük — zenginleştirilmiş kelime listesi ──
+    window._currentParagrafKelimeler = _enrichedKelimeler;
 
     // Mobil touch bubble için c1-word
     // Use event delegation on container to avoid per-span listener memory leaks

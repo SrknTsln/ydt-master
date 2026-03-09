@@ -436,8 +436,7 @@ function saveAIPasajToArsiv(passage) {
     if (typeof paragraflar !== 'undefined') {
         const alreadyIn = paragraflar.findIndex(p => p.baslik === passage.title);
         if (alreadyIn < 0) {
-            // Başa ekle — Yüklü Pasajlar sekmesinde en son eklenen ilk sırada görünsün
-            paragraflar.unshift(newEntry);
+            paragraflar.push(newEntry);
         }
     }
     // paragraflar'ı doğrudan localStorage'a yaz (motorun okuduğu key)
@@ -533,7 +532,7 @@ function _saveAIPasaj(index) {
     }
 
     // paragraflar listesine de ekle (Yüklü Pasajlar tab'ında görünsün)
-    const tempP = { baslik: p.title, metin: p.text, kelimeler: p.vocabulary || {}, _aiSaved: true };
+    const tempP = { baslik: p.title, metin: p.text, kelimeler: p.vocabulary || {}, questions: Array.isArray(p.questions) ? p.questions : [], _aiSaved: true };
     const exists = paragraflar.findIndex(x => x.baslik === p.title);
     if (exists < 0) paragraflar.unshift(tempP); // başa ekle — yeni pasaj ilk sıraya geçsin
 
@@ -619,11 +618,41 @@ async function openAIDailyParagraf(index) {
         normalizedVoc[eng.trim()] = tr;
         if (!_translationCache[k]) _translationCache[k] = tr;
     }
+
+    // ── Vocabulary < 12 ise _vocabFallback ile takviye et ──────────────
+    // Cache'deki eski pasajlar için — sayfa yenilemeden anında düzeltir
+    if (Object.keys(normalizedVoc).length < 12 && typeof _vocabFallback === 'function') {
+        const _fb = _vocabFallback(p.text || '');
+        for (const [w, tr] of Object.entries(_fb.vocabulary || {})) {
+            const wk = w.trim().toLowerCase();
+            if (wk.length > 2 && !normalizedVoc[wk]) {
+                normalizedVoc[wk] = tr;
+                if (tr && !_translationCache[wk]) _translationCache[wk] = tr;
+            }
+        }
+    }
+
     const tempP = {
         baslik:    p.title,
         metin:     p.text,
-        kelimeler: normalizedVoc
+        kelimeler: normalizedVoc,
+        questions: Array.isArray(p.questions) ? p.questions : []  // RSS/AI sorularını taşı
     };
+
+    // ── RSS passage'ın soruları varsa paragrafSorular'a hemen yaz ──
+    // Böylece showParagrafOku → loadSavedQuestions sorular hazır bulur
+    if (tempP.questions.length > 0) {
+        window.paragrafSorular = window.paragrafSorular || {};
+        const _pKey = `p_${(p.title || '').replace(/[^a-zA-Z0-9ğüşıöçĞÜŞİÖÇ\s]/g,'').trim().slice(0,40)}_${(p.text || '').length}`;
+        if (!window.paragrafSorular[_pKey]) {
+            window.paragrafSorular[_pKey] = {
+                baslik:    p.title,
+                savedAt:   new Date().toISOString(),
+                questions: tempP.questions
+            };
+            try { localStorage.setItem('ydt_paragraf_sorular', JSON.stringify(window.paragrafSorular)); } catch(_) {}
+        }
+    }
 
     // Paragrafı geçici olarak diziye ekle — okuma moduna geçebilmek için
     const exists = paragraflar.findIndex(x => x.baslik === p.title);
@@ -717,11 +746,28 @@ function _bindWordHoverListeners(metinEl) {
 
 function _onWordHover(e) {
     clearTimeout(_hoverTimer);
-    const el = e.target;
-    // Sadece c1-word: vocabulary kelimesi — data-tr aninda mevcut
-    if (el.classList.contains('c1-word')) {
-        const tr = el.dataset.tr;
-        if (tr) _showTranslateTip(el.dataset.word || el.textContent.trim(), e.clientX, e.clientY, false, tr);
+    // e.target text node olabilir — en yakın c1-word span'ına çık
+    const el = e.target.closest ? e.target.closest('.c1-word') : null;
+    if (!el) return;
+
+    const word = el.textContent.trim();
+    const key  = word.toLowerCase();
+
+    // Çeviriyi şu sırayla ara: data-tr attr → cache → kelimeler objesi
+    const p   = paragraflar[currentParagrafIndex];
+    const voc = (p && p.kelimeler) ? p.kelimeler : {};
+    const tr  = el.dataset.tr
+             || _translationCache[key]
+             || voc[key]
+             || voc[word]
+             || null;
+
+    if (tr) {
+        _showTranslateTip(word, e.clientX, e.clientY, false, tr);
+    } else {
+        // Fallback: AI'dan çevir, tooltip'i bekletme modunda aç
+        _showTranslateTip(word, e.clientX, e.clientY, false, null);
+        _fetchWordTranslation(word);
     }
 }
 
@@ -735,10 +781,15 @@ function _onWordOut(e) {
 
 function _onWordClick(e) {
     const el = e.target;
-    // Sadece c1-word tiklama: tooltip'i pinle
-    if (el.classList.contains('c1-word')) {
-        const tr = el.dataset.tr;
-        if (tr) _showTranslateTip(el.dataset.word || el.textContent.trim(), e.clientX, e.clientY, true, tr);
+    // c1-word tiklama: tooltip'i pinle
+    const wordEl = el.closest ? el.closest('.c1-word') : null;
+    if (wordEl) {
+        const word = wordEl.textContent.trim();
+        const key  = word.toLowerCase();
+        const p    = paragraflar[currentParagrafIndex];
+        const voc  = (p && p.kelimeler) ? p.kelimeler : {};
+        const tr   = wordEl.dataset.tr || _translationCache[key] || voc[key] || voc[word] || null;
+        if (tr) _showTranslateTip(word, e.clientX, e.clientY, true, tr);
         return;
     }
     // p-sentence: Grammar X-Ray devralir — tooltip kapat
